@@ -1,0 +1,1796 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "AgentLoom SD-3 core design projections — not full production DTOs",
+  "$defs": {
+    "VersionRef": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "version": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "content_hash": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "id",
+        "version",
+        "content_hash"
+      ],
+      "additionalProperties": false
+    },
+    "RoleDefinition": {
+      "type": "object",
+      "properties": {
+        "role_key": {
+          "type": "string",
+          "minLength": 1
+        },
+        "kind": {
+          "enum": [
+            "react",
+            "planner",
+            "executor"
+          ]
+        },
+        "prompt_ref": {
+          "type": "string",
+          "minLength": 1
+        },
+        "capability_refs": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      },
+      "required": [
+        "role_key",
+        "kind",
+        "prompt_ref",
+        "capability_refs"
+      ],
+      "additionalProperties": false
+    },
+    "AgentDefinition": {
+      "type": "object",
+      "properties": {
+        "schema_version": {
+          "const": 3
+        },
+        "definition_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "version": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "agent_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "mode": {
+          "enum": [
+            "react",
+            "plan_executor"
+          ]
+        },
+        "model_ref": {
+          "type": "string",
+          "minLength": 1
+        },
+        "roles": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/RoleDefinition"
+          }
+        }
+      },
+      "required": [
+        "schema_version",
+        "definition_id",
+        "version",
+        "agent_id",
+        "mode",
+        "model_ref",
+        "roles"
+      ],
+      "additionalProperties": false
+    },
+    "NodeDefinition": {
+      "type": "object",
+      "properties": {
+        "node_key": {
+          "type": "string",
+          "minLength": 1
+        },
+        "node_type": {
+          "enum": [
+            "react",
+            "planner",
+            "executor",
+            "capability",
+            "agent"
+          ]
+        },
+        "implementation_version": {
+          "type": "string",
+          "minLength": 1
+        },
+        "binding_slot": {
+          "type": "string",
+          "minLength": 1
+        },
+        "allowed_dispatch_targets": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      },
+      "required": [
+        "node_key",
+        "node_type",
+        "implementation_version",
+        "binding_slot",
+        "allowed_dispatch_targets"
+      ],
+      "additionalProperties": false
+    },
+    "RouteDefinition": {
+      "type": "object",
+      "properties": {
+        "route_key": {
+          "type": "string",
+          "minLength": 1
+        },
+        "source_node_key": {
+          "type": "string",
+          "minLength": 1
+        },
+        "kind": {
+          "enum": [
+            "direct",
+            "conditional",
+            "dispatch",
+            "fork",
+            "branch_exit"
+          ]
+        },
+        "targets": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "completion_policy": {
+          "enum": [
+            "activate_target",
+            "return_to_owner",
+            "activate_branches",
+            "close_branch"
+          ]
+        }
+      },
+      "required": [
+        "route_key",
+        "source_node_key",
+        "kind",
+        "targets",
+        "completion_policy"
+      ],
+      "additionalProperties": false
+    },
+    "GraphDefinition": {
+      "type": "object",
+      "properties": {
+        "schema_version": {
+          "const": 3
+        },
+        "graph_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "version": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "origin": {
+          "enum": [
+            "generated_agent",
+            "authored_workflow"
+          ]
+        },
+        "nodes": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/NodeDefinition"
+          }
+        },
+        "routes": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/RouteDefinition"
+          }
+        },
+        "entry_nodes": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "finish_rule": {
+          "type": "string",
+          "minLength": 1
+        },
+        "joins": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/JoinDefinition"
+          }
+        },
+        "loops": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/LoopDefinition"
+          }
+        },
+        "engine_kind": {
+          "enum": [
+            "agent",
+            "workflow"
+          ]
+        }
+      },
+      "required": [
+        "schema_version",
+        "graph_id",
+        "version",
+        "origin",
+        "nodes",
+        "routes",
+        "entry_nodes",
+        "finish_rule",
+        "joins",
+        "loops",
+        "engine_kind"
+      ],
+      "additionalProperties": false
+    },
+    "NodeBinding": {
+      "type": "object",
+      "properties": {
+        "node_key": {
+          "type": "string",
+          "minLength": 1
+        },
+        "target_kind": {
+          "enum": [
+            "role",
+            "capability",
+            "agent_release"
+          ]
+        },
+        "target_ref": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "node_key",
+        "target_kind",
+        "target_ref"
+      ],
+      "additionalProperties": false
+    },
+    "AgentRelease": {
+      "type": "object",
+      "properties": {
+        "schema_version": {
+          "const": 3
+        },
+        "release_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "agent_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "agent_definition_ref": {
+          "$ref": "#/$defs/VersionRef"
+        },
+        "graph_definition_ref": {
+          "$ref": "#/$defs/VersionRef"
+        },
+        "node_bindings": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/NodeBinding"
+          }
+        },
+        "compiled_graph_hash": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "schema_version",
+        "release_id",
+        "agent_id",
+        "agent_definition_ref",
+        "graph_definition_ref",
+        "node_bindings",
+        "compiled_graph_hash"
+      ],
+      "additionalProperties": false
+    },
+    "WorkflowRelease": {
+      "type": "object",
+      "properties": {
+        "schema_version": {
+          "const": 3
+        },
+        "release_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "workflow_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "workflow_definition_ref": {
+          "$ref": "#/$defs/VersionRef"
+        },
+        "graph_definition_ref": {
+          "$ref": "#/$defs/VersionRef"
+        },
+        "node_bindings": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/NodeBinding"
+          }
+        },
+        "compiled_graph_hash": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "schema_version",
+        "release_id",
+        "workflow_id",
+        "workflow_definition_ref",
+        "graph_definition_ref",
+        "node_bindings",
+        "compiled_graph_hash"
+      ],
+      "additionalProperties": false
+    },
+    "ConversationRef": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "enum": [
+            "agent_session",
+            "workflow_session"
+          ]
+        },
+        "id": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "kind",
+        "id"
+      ],
+      "additionalProperties": false
+    },
+    "Run": {
+      "type": "object",
+      "properties": {
+        "schema_version": {
+          "const": 3
+        },
+        "run_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "conversation_ref": {
+          "$ref": "#/$defs/ConversationRef"
+        },
+        "release_ref": {
+          "type": "string",
+          "minLength": 1
+        },
+        "root_graph_execution_id": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "status": {
+          "enum": [
+            "queued",
+            "running",
+            "stopping",
+            "succeeded",
+            "failed",
+            "cancelled",
+            "timed_out",
+            "budget_exhausted"
+          ]
+        },
+        "loop_limit": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "loops_consumed": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "loops_reserved": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "lease_epoch": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "deadline_at": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "schema_version",
+        "run_id",
+        "conversation_ref",
+        "release_ref",
+        "root_graph_execution_id",
+        "status",
+        "loop_limit",
+        "loops_consumed",
+        "loops_reserved",
+        "lease_epoch",
+        "deadline_at"
+      ],
+      "additionalProperties": false
+    },
+    "AgentInvocation": {
+      "type": "object",
+      "properties": {
+        "schema_version": {
+          "const": 3
+        },
+        "invocation_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "run_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "agent_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "release_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "graph_execution_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "parent_node_task_id": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "conversation_scope": {
+          "enum": [
+            "agent_session",
+            "input_only",
+            "authorized_history"
+          ]
+        },
+        "workspace_scope_ref": {
+          "type": "string",
+          "minLength": 1
+        },
+        "budget_scope": {
+          "enum": [
+            "run",
+            "invocation"
+          ]
+        },
+        "local_loop_limit": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 1
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "started_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "local_deadline_at": {
+          "anyOf": [
+            {
+              "type": "string",
+              "format": "date-time"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "control_state": {
+          "enum": [
+            "active",
+            "stopping",
+            "terminal"
+          ]
+        },
+        "terminal_reason": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "schema_version",
+        "invocation_id",
+        "run_id",
+        "agent_id",
+        "release_id",
+        "graph_execution_id",
+        "parent_node_task_id",
+        "conversation_scope",
+        "workspace_scope_ref",
+        "budget_scope",
+        "local_loop_limit",
+        "started_at",
+        "local_deadline_at",
+        "control_state",
+        "terminal_reason"
+      ],
+      "additionalProperties": false
+    },
+    "GraphExecution": {
+      "type": "object",
+      "properties": {
+        "schema_version": {
+          "const": 3
+        },
+        "graph_execution_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "run_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "graph_definition_ref": {
+          "$ref": "#/$defs/VersionRef"
+        },
+        "compiled_graph_hash": {
+          "type": "string",
+          "minLength": 1
+        },
+        "invocation_id": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "parent_node_task_id": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "status": {
+          "enum": [
+            "ready",
+            "running",
+            "waiting",
+            "succeeded",
+            "failed",
+            "cancelled"
+          ]
+        },
+        "scope_commit_seq": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "engine_kind": {
+          "enum": [
+            "agent",
+            "workflow"
+          ]
+        },
+        "engine_protocol_version": {
+          "type": "integer",
+          "minimum": 1
+        }
+      },
+      "required": [
+        "schema_version",
+        "graph_execution_id",
+        "run_id",
+        "graph_definition_ref",
+        "compiled_graph_hash",
+        "invocation_id",
+        "parent_node_task_id",
+        "status",
+        "scope_commit_seq",
+        "engine_kind",
+        "engine_protocol_version"
+      ],
+      "additionalProperties": false
+    },
+    "NodeTask": {
+      "type": "object",
+      "properties": {
+        "schema_version": {
+          "const": 3
+        },
+        "node_task_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "run_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "graph_execution_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "node_key": {
+          "type": "string",
+          "minLength": 1
+        },
+        "parent_task_id": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "dispatch_id": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "status": {
+          "enum": [
+            "ready",
+            "running",
+            "waiting",
+            "succeeded",
+            "failed",
+            "cancelled"
+          ]
+        },
+        "continuation_ref": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "revision": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "branch_ref": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/BranchRef"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "loop_path": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/LoopFrame"
+          }
+        },
+        "input_state_view": {
+          "$ref": "#/$defs/InputStateView"
+        }
+      },
+      "required": [
+        "schema_version",
+        "node_task_id",
+        "run_id",
+        "graph_execution_id",
+        "node_key",
+        "parent_task_id",
+        "dispatch_id",
+        "status",
+        "continuation_ref",
+        "revision",
+        "branch_ref",
+        "loop_path",
+        "input_state_view"
+      ],
+      "additionalProperties": false
+    },
+    "ReactContinuation": {
+      "type": "object",
+      "properties": {
+        "schema_version": {
+          "const": 3
+        },
+        "node_task_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "phase": {
+          "enum": [
+            "prepare_context",
+            "prepare_model",
+            "compact_context",
+            "call_model",
+            "interpret_response",
+            "wait_batch",
+            "consume_results",
+            "validate_output",
+            "completed"
+          ]
+        },
+        "context_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "context_revision": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "role_loop_index": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "model_operation_id": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "pending_batch_id": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "schema_version",
+        "node_task_id",
+        "phase",
+        "context_id",
+        "context_revision",
+        "role_loop_index",
+        "model_operation_id",
+        "pending_batch_id"
+      ],
+      "additionalProperties": false
+    },
+    "WaitMember": {
+      "type": "object",
+      "properties": {
+        "member_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "ordinal": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "state": {
+          "enum": [
+            "queued",
+            "admitting",
+            "admitted",
+            "settled"
+          ]
+        },
+        "target_ref": {
+          "anyOf": [
+            {
+              "type": "object",
+              "properties": {
+                "kind": {
+                  "enum": [
+                    "operation",
+                    "node_task",
+                    "child_graph"
+                  ]
+                },
+                "id": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              },
+              "required": [
+                "kind",
+                "id"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "result_operation_id": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "branch_data": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/BranchData"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "local_outcome": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/LocalMemberOutcome"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "member_id",
+        "ordinal",
+        "state",
+        "target_ref",
+        "result_operation_id",
+        "branch_data",
+        "local_outcome"
+      ],
+      "additionalProperties": false
+    },
+    "WaitGroup": {
+      "type": "object",
+      "properties": {
+        "schema_version": {
+          "const": 3
+        },
+        "wait_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "owner_task_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "generation": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "policy": {
+          "const": "all_settled"
+        },
+        "members": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/WaitMember"
+          }
+        },
+        "delivery_state": {
+          "enum": [
+            "open",
+            "settled",
+            "consumed",
+            "cancelled"
+          ]
+        },
+        "member_scope": {
+          "enum": [
+            "dispatch_batch",
+            "branch_scope"
+          ]
+        },
+        "join_key": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "dispatch_id": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "base_state_revision": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "loop_path": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/LoopFrame"
+          }
+        }
+      },
+      "required": [
+        "schema_version",
+        "wait_id",
+        "owner_task_id",
+        "generation",
+        "policy",
+        "members",
+        "delivery_state",
+        "member_scope",
+        "join_key",
+        "dispatch_id",
+        "base_state_revision",
+        "loop_path"
+      ],
+      "additionalProperties": false
+    },
+    "Operation": {
+      "type": "object",
+      "properties": {
+        "schema_version": {
+          "const": 3
+        },
+        "operation_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "run_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "node_task_id": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "kind": {
+          "enum": [
+            "model",
+            "tool",
+            "context",
+            "environment",
+            "delegation"
+          ]
+        },
+        "processing_phase": {
+          "enum": [
+            "prepared",
+            "request_hooks",
+            "executing",
+            "raw_saved",
+            "response_hooks",
+            "completed"
+          ]
+        },
+        "status": {
+          "enum": [
+            "pending",
+            "succeeded",
+            "failed",
+            "blocked"
+          ]
+        },
+        "effective_request_ref": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "raw_result_ref": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "final_response_ref": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "schema_version",
+        "operation_id",
+        "run_id",
+        "node_task_id",
+        "kind",
+        "processing_phase",
+        "status",
+        "effective_request_ref",
+        "raw_result_ref",
+        "final_response_ref"
+      ],
+      "additionalProperties": false
+    },
+    "EventResponse": {
+      "type": "object",
+      "properties": {
+        "schema_version": {
+          "const": 3
+        },
+        "request_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "operation_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "status": {
+          "enum": [
+            "succeeded",
+            "failed",
+            "blocked"
+          ]
+        },
+        "result_ref": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "error_code": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "effective_context_ref": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "schema_version",
+        "request_id",
+        "operation_id",
+        "status",
+        "result_ref",
+        "error_code",
+        "effective_context_ref"
+      ],
+      "additionalProperties": false
+    },
+    "NodeCheckpoint": {
+      "type": "object",
+      "properties": {
+        "format_version": {
+          "const": 1
+        },
+        "node_checkpoint_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "node_task_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "node_revision": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "activation_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "continuation_ref": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "scope_commit_seq": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "format_version",
+        "node_checkpoint_id",
+        "node_task_id",
+        "node_revision",
+        "activation_id",
+        "continuation_ref",
+        "scope_commit_seq"
+      ],
+      "additionalProperties": false
+    },
+    "GraphCheckpoint": {
+      "type": "object",
+      "properties": {
+        "format_version": {
+          "const": 1
+        },
+        "checkpoint_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "graph_execution_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "checkpoint_seq": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "previous_checkpoint_id": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "covered_commit_seq": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "compiled_graph_hash": {
+          "type": "string",
+          "minLength": 1
+        },
+        "engine_kind": {
+          "enum": [
+            "agent",
+            "workflow"
+          ]
+        },
+        "engine_protocol_version": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "engine_state_ref": {
+          "$ref": "#/$defs/CheckpointPayloadRef"
+        }
+      },
+      "required": [
+        "format_version",
+        "checkpoint_id",
+        "graph_execution_id",
+        "checkpoint_seq",
+        "previous_checkpoint_id",
+        "covered_commit_seq",
+        "compiled_graph_hash",
+        "engine_kind",
+        "engine_protocol_version",
+        "engine_state_ref"
+      ],
+      "additionalProperties": false
+    },
+    "LoopFrame": {
+      "type": "object",
+      "properties": {
+        "loop_key": {
+          "type": "string",
+          "minLength": 1
+        },
+        "loop_instance_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "iteration": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "loop_key",
+        "loop_instance_id",
+        "iteration"
+      ],
+      "additionalProperties": false
+    },
+    "LoopDefinition": {
+      "type": "object",
+      "properties": {
+        "loop_key": {
+          "type": "string",
+          "minLength": 1
+        },
+        "header_node_key": {
+          "type": "string",
+          "minLength": 1
+        },
+        "body_node_keys": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "back_route_keys": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "exit_route_keys": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      },
+      "required": [
+        "loop_key",
+        "header_node_key",
+        "body_node_keys",
+        "back_route_keys",
+        "exit_route_keys"
+      ],
+      "additionalProperties": false
+    },
+    "JoinDefinition": {
+      "type": "object",
+      "properties": {
+        "join_key": {
+          "type": "string",
+          "minLength": 1
+        },
+        "member_scope": {
+          "enum": [
+            "dispatch_batch",
+            "branch_scope"
+          ]
+        },
+        "settle_policy": {
+          "const": "all_settled"
+        },
+        "resume_owner": {
+          "type": "boolean"
+        },
+        "fork_route_key": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "region_node_keys": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "branch_exit_routes": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "success_target_node_key": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "error_target_node_key": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "join_key",
+        "member_scope",
+        "settle_policy",
+        "resume_owner",
+        "fork_route_key",
+        "region_node_keys",
+        "branch_exit_routes",
+        "success_target_node_key",
+        "error_target_node_key"
+      ],
+      "additionalProperties": false
+    },
+    "BranchRef": {
+      "type": "object",
+      "properties": {
+        "wait_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "member_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "task_sequence": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "wait_id",
+        "member_id",
+        "task_sequence"
+      ],
+      "additionalProperties": false
+    },
+    "BranchData": {
+      "type": "object",
+      "properties": {
+        "entry_node_key": {
+          "type": "string",
+          "minLength": 1
+        },
+        "cursor_task_id": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "next_task_sequence": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "view_write_ids": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "terminal_reason": {
+          "anyOf": [
+            {
+              "enum": [
+                "reached_join",
+                "skipped",
+                "failed",
+                "cancelled"
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "entry_node_key",
+        "cursor_task_id",
+        "next_task_sequence",
+        "view_write_ids",
+        "terminal_reason"
+      ],
+      "additionalProperties": false
+    },
+    "InputStateView": {
+      "type": "object",
+      "properties": {
+        "base_state_revision": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "write_ids": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      },
+      "required": [
+        "base_state_revision",
+        "write_ids"
+      ],
+      "additionalProperties": false
+    },
+    "LoopTicket": {
+      "type": "object",
+      "properties": {
+        "ticket_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "run_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "invocation_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "node_task_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "model_operation_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "role_loop_index": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "state": {
+          "enum": [
+            "reserved",
+            "consumed",
+            "released"
+          ]
+        }
+      },
+      "required": [
+        "ticket_id",
+        "run_id",
+        "invocation_id",
+        "node_task_id",
+        "model_operation_id",
+        "role_loop_index",
+        "state"
+      ],
+      "additionalProperties": false
+    },
+    "OwnerRef": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "enum": [
+            "agent",
+            "workflow"
+          ]
+        },
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "space_id": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "kind",
+        "id",
+        "space_id"
+      ],
+      "additionalProperties": false
+    },
+    "WorkspaceScope": {
+      "type": "object",
+      "properties": {
+        "workspace_scope_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "owner_ref": {
+          "$ref": "#/$defs/OwnerRef"
+        },
+        "file_root_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "partition_kind": {
+          "enum": [
+            "agent_session",
+            "workflow_session",
+            "invocation"
+          ]
+        },
+        "partition_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "run_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "invocation_id": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "persistent": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "workspace_scope_id",
+        "owner_ref",
+        "file_root_id",
+        "partition_kind",
+        "partition_id",
+        "run_id",
+        "invocation_id",
+        "persistent"
+      ],
+      "additionalProperties": false
+    },
+    "LocalMemberOutcome": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "enum": [
+            "rejected",
+            "cancelled"
+          ]
+        },
+        "error_code": {
+          "type": "string",
+          "minLength": 1
+        },
+        "error_ref": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "kind",
+        "error_code",
+        "error_ref"
+      ],
+      "additionalProperties": false
+    },
+    "AgentCheckpointPayload": {
+      "type": "object",
+      "properties": {
+        "ready_task_ids": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "node_checkpoint_refs": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "wait_refs": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      },
+      "required": [
+        "ready_task_ids",
+        "node_checkpoint_refs",
+        "wait_refs"
+      ],
+      "additionalProperties": false
+    },
+    "CheckpointPayloadRef": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "inline"
+            },
+            "value": {
+              "type": "object"
+            }
+          },
+          "required": [
+            "kind",
+            "value"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "blob"
+            },
+            "blob_id": {
+              "type": "string",
+              "minLength": 1
+            },
+            "sha256": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            },
+            "size_bytes": {
+              "type": "integer",
+              "minimum": 0
+            }
+          },
+          "required": [
+            "kind",
+            "blob_id",
+            "sha256",
+            "size_bytes"
+          ],
+          "additionalProperties": false
+        }
+      ]
+    }
+  }
+}

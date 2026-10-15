@@ -1,0 +1,20 @@
+{
+  "name": "agent-loom",
+  "private": true,
+  "scripts": {
+    "docs:dev": "vitepress dev docs --host 127.0.0.1 --port 8767",
+    "docs:build": "vitepress build docs",
+    "docs:preview": "vitepress preview docs --host 127.0.0.1 --port 8767",
+    "docs:check": "python3 docs/.vitepress/check-site.py"
+  },
+  "devDependencies": {
+    "mermaid": "12.1.0",
+    "vitepress": "1.6.4",
+    "vue": "3.5.43"
+  },
+  "overrides": {
+    "vite": "7.3.7",
+    "@vitejs/plugin-vue": "6.0.8",
+    "katex": "0.19.0"
+  }
+}
