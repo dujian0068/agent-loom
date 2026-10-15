@@ -39,18 +39,22 @@ AGENTLOOM_DOCS_BASE=/agent-loom/ npm run docs:preview
 
 ## GitHub Pages 自动部署
 
-项目文档入口：[AgentLoom 文档站](https://agentloom.bmilk.cn/)。这是 `agent-loom` 仓库的项目站，使用独立自定义域名，与个人博客分别部署。
+项目文档入口：[AgentLoom 文档站](https://doc.agentloom.bmilk.cn/)。这是 `agent-loom` 仓库的项目站，使用独立自定义域名，与个人博客分别部署。
 
 首次启用：
 
 1. 打开本仓库的 [Settings → Pages](https://github.com/dujian0068/agent-loom/settings/pages)。
 2. 在 **Build and deployment → Source** 选择 **GitHub Actions**。
-3. 向 `master` 推送提交，或到 [Actions](https://github.com/dujian0068/agent-loom/actions/workflows/docs-pages.yml) 选择 **Deploy documentation to GitHub Pages → Run workflow → master**。
-4. 等待 Build 和 Deploy 都成功，再通过部署结果中的链接打开网站。初次部署前入口可能返回 404。
+3. 在 **Custom domain** 中设置 `doc.agentloom.bmilk.cn`。DNS 中的 `doc.agentloom` CNAME 指向 `dujian0068.github.io`，不包含仓库名。
+4. DNS 检查通过、证书就绪后勾选 **Enforce HTTPS**。
+5. 向 `master` 推送提交，或到 [Actions](https://github.com/dujian0068/agent-loom/actions/workflows/docs-pages.yml) 选择 **Deploy documentation to GitHub Pages → Run workflow → master**。
+6. 等待 Build 和 Deploy 都成功，再通过部署结果中的链接打开网站。初次部署前入口可能返回 404。
 
-工作流位于 [docs-pages.yml](../.github/workflows/docs-pages.yml)。每次更新 `master` 自动执行 `npm ci`、以根路径 `/` 构建（对应自定义域名）、校验站内链接并发布；也支持手动重跑。仅上传 `docs/.vitepress/dist`，不启动业务后端、不读取本地 `.env` 或连接数据库。
+工作流位于 [docs-pages.yml](../.github/workflows/docs-pages.yml)。`master` 上的文档、文档依赖或此工作流更新时，自动执行 `npm ci`、构建、校验站内链接并发布；也支持手动重跑。构建前通过 `actions/configure-pages` 读取实际 Pages 地址：自定义域名使用根路径 `/`，未绑定自定义域名时自动使用对应项目子路径，确保页面、导航和资源地址一致。仅上传 `docs/.vitepress/dist`。
 
-构建任务只有仓库读取权限；部署任务使用 GitHub 内置 `GITHUB_TOKEN` 的 Pages 写入权限和 OIDC，不需要添加个人 Token 或服务器密码。部署使用 `github-pages` 环境，并串行执行，避免覆盖正在发布的版本。无需创建 `gh-pages` 分支，也无需改动个人博客仓库。
+自定义域名以仓库 **Settings → Pages** 的绑定为准。使用 GitHub Actions 发布时，GitHub 不会通过仓库里的 `CNAME` 文件设置域名；保留的 CNAME 文件仅与当前绑定保持一致，修改文件后仍须同步修改 Pages 设置。
+
+构建任务只有仓库和 Pages 设置的读取权限；部署任务使用 GitHub 内置 `GITHUB_TOKEN` 的 Pages 写入权限和 OIDC，不需要添加个人 Token 或服务器密码。部署使用 `github-pages` 环境，并串行执行，避免覆盖正在发布的版本。无需创建 `gh-pages` 分支，也无需改动个人博客仓库。
 
 发布失败时先查看 Actions 中失败的步骤：构建或链接校验失败须修正文档；Pages 未启用时先完成第 2 步再重跑；若仓库有环境审批规则，需要按已有规则批准部署。要发布旧版内容，应将文档变更恢复到 `master` 后重新部署。
 

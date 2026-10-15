@@ -38,6 +38,6 @@ npm run docs:build
 npm run docs:check
 ```
 
-根目录 Node.js 依赖只服务于文档站。发布流程见[文档站维护](docs/documentation-site.md)，线上地址为 [agentloom.bmilk.cn](https://agentloom.bmilk.cn/)；线上内容随 GitHub Pages 发布更新。
+根目录 Node.js 依赖只服务于文档站。发布流程见[文档站维护](docs/documentation-site.md)，线上地址为 [doc.agentloom.bmilk.cn](https://doc.agentloom.bmilk.cn/)；线上内容随 GitHub Pages 发布更新。
 
 `.env`、本地数据和未提交的示例素材不属于这次旧源码删除范围，不会被加入 Git。独立运行的 ReAct、Plan–Executor、Workflow 示例将在 SDK 实现后交付。

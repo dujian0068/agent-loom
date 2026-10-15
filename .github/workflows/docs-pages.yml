@@ -22,14 +22,18 @@ jobs:
     name: Build and check documentation
     runs-on: ubuntu-latest
     timeout-minutes: 15
-    env:
-      AGENTLOOM_DOCS_BASE: /
+    permissions:
+      contents: read
+      pages: read
     steps:
       - name: Checkout
         uses: actions/checkout@v6
         with:
           fetch-depth: 0
           persist-credentials: false
+      - name: Read GitHub Pages configuration
+        id: pages
+        uses: actions/configure-pages@v5
       - name: Set up Node.js
         uses: actions/setup-node@v6
         with:
@@ -39,8 +43,12 @@ jobs:
       - name: Install documentation dependencies
         run: npm ci
       - name: Build documentation
+        env:
+          AGENTLOOM_DOCS_BASE: ${{ steps.pages.outputs.base_path }}/
         run: npm run docs:build
       - name: Check pages, anchors and assets
+        env:
+          AGENTLOOM_DOCS_BASE: ${{ steps.pages.outputs.base_path }}/
         run: npm run docs:check -- --base "$AGENTLOOM_DOCS_BASE"
       - name: Upload documentation artifact
         uses: actions/upload-pages-artifact@v4
@@ -59,8 +67,6 @@ jobs:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
-      - name: Configure Pages
-        uses: actions/configure-pages@v5
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
