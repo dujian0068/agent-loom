@@ -177,7 +177,7 @@ async def activate(task_ref, lease):
 ### 4.1 prepare_context 与 prepare_model
 
 1. 检查根控制，再检查 Invocation 控制；返回控制错误时走第 8 节。对新 Loop，任何层 consumed==limit 就持久关闭对应 scope。reserved 暂满仍可读取已有上下文，但不得运行压缩，先登记 budget_available 等待。
-2. 根 ReAct/Planner 领取顺序水位以内的 pending UserInputDelivery；Executor 不领取用户补充。此时只是选入 projection，冻结请求时才 claimed。ContextManager 按构造策略 recent_runs=2、角色私有范围、已提交 effective revision 生成 projection；同 input_id 去重。已发生的上下文 Hook 修改通过重新读取 authoritative revision 生效。
+2. 直接 Agent Run 的根 ReAct/Planner 领取顺序水位以内的 pending UserInputDelivery；Executor 和 Workflow 内 AgentInvocation 不领取根补充。后者只使用 input_only 输入和本次私有过程。直接 Agent 此时只是选入 projection，冻结请求时才 claimed；ContextManager 按构造策略 recent_runs=2、角色私有范围、已提交 effective revision 生成 projection，同 input_id 去重。已发生的上下文 Hook 修改通过重新读取 authoritative revision 生效。
 3. 以 `(task_id,"context-prepare",role_loop_index+1,source_revision,input_watermark)` 形成准备键，提交 projection_ref/context revision/水位和 phase=prepare_model。准备期间新到补充留下一轮；不能补写到已经冻结请求。
 4. 新模型 Operation 的 purpose_key 固定 `business-model:{role_loop_index+1}`。不存在时在 Progress 同事务保存 prepared Operation 意图、递增角色序号、写 model_operation_id；存在则复用，不递增。压缩 Operation 使用不同 purpose，不增加此序号。
 5. 调用 `InvocationPipeline.prepare_business_model(op_ref, scope) -> PreparedModelRequest | FinalResponseRef`，请求 Hook 已提交而 Operation 仍保持 request_hooks，等待模型执行许可。前置 deny 作为模型失败按角色范围处理；Hook 自身错误按调用规范 fail-open。请求与 context 的有效 revision 必须一致，不允许 Driver 从原 projection 覆盖 Hook 结果。
@@ -235,7 +235,7 @@ async def call_model(c, runtime):  # 阶段伪代码：yield用于commit-ack，r
 ### 4.3 interpret_response、wait_batch、consume_results
 
 1. 读取 EventResponse，先检查是否已经接受该 operation；已接受就读取其下一 phase，不再次 append、consume 或分派。failed/blocked 不构造空 ModelDecision，按第 7 节角色失败会计处理。
-2. normalizer 必须得到完整消息；正文和 actions 都空、重复 provider_call_id、无法定位参数片段为 `MODEL_PROTOCOL_ERROR`。该检查在 ModelGateway completed 前已执行，响应 Hook 修改后的有效结果还须再次验证；已有 completed 结果不退回新 Attempt。
+2. normalizer 必须得到合法完成证据及完整消息结构；重复 provider_call_id、无法定位参数片段为 `MODEL_PROTOCOL_ERROR`。该检查在 ModelGateway completed 前已执行，响应 Hook 修改后的有效结果还须再次验证；已有 completed 结果不退回新 Attempt。合法终帧但正文和 actions 皆空属于完整的空候选，交 validate_output 处理，不能与传输协议损坏混为一谈。
 3. 仅按当前角色冻结目录解释动作名称。每项复用raw结果提交时固定的 ordinal 和服务端 call_id；未知名称、未授权、单项参数 JSON/schema 错误成为 rejected 成员，其错误含原 provider_call_id/ordinal，不影响其他合法项。文本与动作共存时文本只是过程消息。
 4. 调用 `ContextManager.prepare_accept_model(context_ref, operation_response, mutation_key="model:{operation_id}:accept") -> ContextDelta`，它不独立提交；同 RuntimeCommit 保存消息引用、accepted_decision_ref、ticket consumed、business_loop_no、phase。有动作同时创建 CallBatch/WaitGroup，全部成员及本地 rejected 结果一次冻结；此事务不调用 begin。无动作固定 final_output_ref 并进入 validate_output。
 5. 有 batch 则 yield Wait，条件为 `(batch_settled,wait_id,generation)`；冻结 batch 时已提交父等待事实/准入意图，故响应恰好先结算也不会丢唤醒。GraphEngine 在同一事实上执行第 5 节准入。
@@ -245,9 +245,9 @@ async def call_model(c, runtime):  # 阶段伪代码：yield用于commit-ack，r
 
 ### 4.4 validate_output
 
-无 output_schema 时以 effective 完整正文为自由文本；有 schema 时按配置编码解析候选，再执行本地冻结 schema 验证。无效 JSON 也为输出校验错误，不是供应商网络重试。诊断最多 20 个，按 JSON Pointer 排序，每项保留 code/path/expected，单项说明最多 512 字符；完整原候选仍保留。
+无动作且 effective 正文为空／纯空白时返回输出校验错误 EMPTY_MODEL_OUTPUT；其他候选无 output_schema 时按自由文本验证，有 schema 时按配置编码解析，再执行本地冻结 schema 验证。无效 JSON 也是输出校验错误，不是供应商网络重试。诊断使用 OutputValidator 的 ValidationIssue（json_pointer／keyword／message／expected_ref?），最多 20 个，按 pointer／keyword 排序，单项说明最多 512 字符；完整原候选仍保留。
 
-通过则直接 Complete（continuation.phase=completed），生成唯一 TaskResult；不通过则以 `validation:{model_operation_id}` 保存候选与修正反馈 ContextDelta、phase=prepare_context，并清空本轮引用。该决策此前已 consumed；修正必须申请下一张票据，不能直接再次执行旧 Operation。根最终交付还须通过 Run 终态事务；Executor Complete 只给父委派管道 raw 结果，不直接给用户答案。完成与新输入竞态由输入篇规定的 Session/Run 事务仲裁；本模块不得让迟到 Complete 覆盖已经关闭的 scope。
+通过则直接 Complete（continuation.phase=completed），生成唯一 TaskResult；不通过则以 `format:<model_operation_id>:feedback` 保存修正反馈 ContextDelta、phase=prepare_context，并清空本轮引用。原候选已在接受响应时保存，票据也已 consumed；此处不得重复追加原候选或再次 consume。修正必须申请下一张票据，不能直接再次执行旧 Operation。根最终交付还须通过 Run 终态事务；Executor Complete 只给父委派管道 raw 结果，不直接给用户答案。完成与新输入竞态由输入篇规定的 Session/Run 事务仲裁；本模块不得让迟到 Complete 覆盖已经关闭的 scope。
 
 ## 5. 批次准入、Executor 槽位和结果汇合
 
@@ -410,7 +410,7 @@ Executor 错误反馈槽键为 `(parent_context_id,batch_id,member_id)`；记录
 1. 短事务锁控制范围并固定首个终结原因，关闭新 Loop、未启动 action、Executor、Attempt 的门；同一竞争中以事务先提交者为准，迟到成功不能改写。根截止检查早于局部检查。
 2. 取消未 begin 成员、本机 ready 意图和未 converted token；已存在 Operation 保留原引用，由调用管道保存已取得事实及取消结果。所有业务后置 Hook 在关闭 scope 下不得发起新业务调用。调用管道使用control_finalize_operation将未启动Hook记skipped_control并结清Operation；不是卡在raw_saved等一条不能运行的后链。
 3. 向已开始模型/工具/脚本发送支持的取消信号，登记 WriterBarrier；不把取消本机 Future 当成外部写入已结束。不可取消外部操作按剩余尝试/scope 时间收束，未确认结果记录 unknown；环境写能力由代次 fence 撤销。
-4. 对当前无完整决策且不反馈票据 release；接受过决策的保持 consumed。所有子任务达到终态或其写权限已确认撤销后，保存 scope 终态、唯一结果与父通知；根终态同时处理补充交接及 cleanup intent，需预锁 Conversation。
+4. 对当前无完整决策且不反馈票据 release；接受过决策的保持 consumed。所有子任务达到终态或其写权限已确认撤销后，保存 scope 终态、唯一结果与父通知；根终态同时处理补充交接及 cleanup intent，需预锁 Session。
 5. 根全部写入者静默后才清理临时工作文件。Invocation 局部结束不清理全 Run 共享目录。cleanup_state 独立，清理失败只重试清理，不重新打开业务。
 
 控制期间允许的提交仅限：记录已取得 raw/effective 事实、Hook 已有决定/失联故障、取消/错误结算、票据 release/已有决策 consume、输入交接、WriterBarrier、终态与清理。禁止新 dispatch、模型准备、Attempt 及普通完成后继。真实迟到结果可以记审计，但不得让 cancelled task 成功或重新唤醒终态 scope。
@@ -466,7 +466,7 @@ async def recover_run(run_id, new_lease):
 
 ## 9. RuntimeCommit 的读写集合、锁序与幂等
 
-事务总序为 `Conversation（仅触及会话时）→root Run→Invocation 按 ID→Graph 按 ID→NodeTask 按 ID→Operation 按 ID→Context 按 ID→子记录按类型/ID`。通常 RuntimeCommit 从 Run 开始；终态/补充交接必须预先声明 Conversation，禁止拿 Run 后临时补锁 Conversation。跨图、父子任务、父反馈 Context 均先收集完整集合再按序加锁。平台发布和删除任务只通过公共控制接口请求停止，不参与 SDK 提交事务。
+事务总序为 `Session（仅触及会话时）→root Run→Invocation 按 ID→Graph 按 ID→NodeTask 按 ID→Operation 按 ID→Context 按 ID→子记录按类型/ID`。通常 RuntimeCommit 从 Run 开始；终态/补充交接必须预先声明 Session，禁止拿 Run 后临时补锁 Session。跨图、父子任务、父反馈 Context 均先收集完整集合再按序加锁。平台发布和删除任务只通过公共控制接口请求停止，不参与 SDK 提交事务。
 
 所有下表提交都额外读最新 lease/epoch/数据库时钟/control，写 ScopeCommit 与所需 outbox；表内“读”含 expected_revision 和相应引用归属。“任务终态”同时结束 Activation，state/result/next intent 不得拆开。纯映射和 schema 在锁外基于冻结版本计算；锁内只重验版本、约束和写事实，不等待 LLM、工具、Hook、文件 IO。
 
@@ -485,7 +485,7 @@ async def recover_run(run_id, new_lease):
 | CompleteTask | graph/task/parent operation | 终态/TaskResult、父结果或根完成意图 | `task-result:{task}` |
 | StartChild | 父/子graph、父task/op、子invocation | 父wait、子invocation/graph/root task、关联和启动意图 | `agent-child:{parent_task}:{logical_call_key}` |
 | CompleteChild | 两图/child invocation/parent op | 子终态、父op raw关联、后处理意图 | `invocation-result:{child_invocation}` |
-| 控制收束/根终态 | Conversation如需要、run/调用树/writer barrier | control、取消/票据、终态、补充交接、cleanup intent | `close:{scope}:{control_revision}` / `terminal:{run}` |
+| 控制收束/根终态 | Session如需要、run/调用树/writer barrier | control、取消/票据、终态、补充交接、cleanup intent | `close:{scope}:{control_revision}` / `terminal:{run}` |
 
 `RuntimeCommit` 的 read_set 必须完整声明其 PreparedEffect 所触及实体；Coordinator 以 `expected revisions + stable input hash` 校验。一个逻辑提交键只对应一种内容；lease_epoch、提交时间和纯重投传输字段不进入业务效果 hash，已存在 receipt 先于重复执行检查返回，但旧 lease 不因此获得新执行权。任务结果键与持久后继意图键使恢复不会多创建下一任务。
 

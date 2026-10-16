@@ -36,9 +36,13 @@ Platform → SDK 单向依赖。SDK 不要求平台数据库、应用和发布�
 
 两层对照、版本责任与调用数据见[职责边界](sdk-platform-boundary.md)。
 
-## 四、后续实现需要验证的事项
+## 四、详细设计与实施的剩余工作
 
-这些是工程验收，不是把已确认需求重新列为未决项：
+2026-10-16 对重组版本逐项复核发现了跨层环境绑定、图与正文的执行职责、DTO 和计票不一致，并已修正；有效 Workflow 约定也已补回。详见[整理复核记录](reorganization-review.md)。这表示职责拆分得到校正，不表示详细设计已全部闭合。
+
+仍需补齐的是工程合同：SDK 机器可验证 Schema／样例、公共端口完整签名与注册 DTO、Workflow 原生 Saver 的逐方法／存储映射、Workflow 输入状态协议及生命周期 Hook。这里不撤回已确认的产品规则；Workflow 的追加输入接收点也不能靠直接 Agent 的补充协议代替。
+
+完成合同后还需要以下实施验收：
 
 - LangGraph 源码迁入范围、许可证保留和版本基线；native task identity、pending writes 及保存屏障适配。
 - Skill／MCP／模型 profile 的实际兼容清单，以实现测试声明，不宣称全量兼容。

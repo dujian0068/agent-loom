@@ -85,7 +85,7 @@ class ContextManager:
 
 上述准备端口无持久状态推进；写出的不可变 blob 尚未被事务引用时都是可回收材料。调用方将 ContextDelta／ContextWriteSet／ModelFreezeWriteSet 放入 `RuntimeCommit`，唯一写入口为 `CommitCoordinator.commit(RuntimeCommit, ExecutionLease)`。普通 ContextPort.append_original 门面也由所属 Manager 准备并提交该写集，不开放数据库 writer 给节点。
 
-`Pipeline.prepare_business_model(ref,scope)` 在 request_hooks 阶段返回前置 Hook 已应用的 `PreparedModelRequest`；尚未最终冻结，不授予出网许可。其字段以 event-bus.md 为准，至少关联 `operation_id,effective_payload_ref,effective_payload_hash,context_revision_refs[],hook_cursor_ref,effective_parameters_ref`。ContextManager.materialize_prepared_model 只根据新上下文／摘要重建 messages，逐项保留原 effective_parameters_ref 中的非messages参数；不重新运行已完成 Hook。
+`Pipeline.prepare_business_model(ref,scope)` 在 request_hooks 阶段返回前置 Hook 已应用的 `PreparedModelRequest`；尚未最终冻结，不授予出网许可。字段使用[调用协议的唯一 DTO](event-bus.md#22-持久调用记录)：以 operation_ref／operation_revision 关联调用，以 candidate_payload_ref／prepared_hash 关联前置处理后的候选，以 request_hook_state_ref、context_revision_refs 和 effective_parameters_ref 固定处理依据，另保存 purpose、protection_manifest_ref、model_budget_ref。候选不等于最终 FrozenModelRequest。ContextManager.materialize_prepared_model 只根据新上下文／摘要重建 messages，逐项保留原 effective_parameters_ref 中的非messages参数；不重新运行已完成 Hook。
 
 NodeDriver 用 `commit_model_ready(RuntimeCommit)` 同事务发布最终请求／hash、InputClaim、LoopTicket预占、execution_permit 和 continuation，成功后 Pipeline 才出网。ModelFreezeWriteSet 不自行扣票据。压缩模型不占业务票据，仍有相同scope控制。
 
@@ -116,9 +116,11 @@ ContextManager 执行以下校验，任何一个失败都不发布部分写集�
 
 跨多个 ContextScope 的写集先全部验证，统一事务发布。revision 冲突时重新读取并重建纯函数写集；相同 mutation_id 已提交则直接返回原修订，不能再应用两次 patch。
 
-普通事务锁序为 **根 Run → Invocation → GraphExecution 按 ID → NodeTask 按 ID → Operation 按 ID → Context 按 ID → 子记录**。涉及会话的输入领取、补充转移和终态命令预先锁 Conversation，再按上述顺序；严禁持有Run后补拿Conversation。待验证大正文在事务前读取和 hash 校验；事务内验证版本／授权前置并发布引用，网络和文件写不放入事务。
+普通事务锁序为 **根 Run → Invocation → GraphExecution 按 ID → NodeTask 按 ID → Operation 按 ID → Context 按 ID → 子记录**。涉及会话的输入领取、补充转移和终态命令预先锁 Session，再按上述顺序；严禁持有Run后补拿Session。待验证大正文在事务前读取和 hash 校验；事务内验证版本／授权前置并发布引用，网络和文件写不放入事务。
 
 ## 3. 历史投影与输入投递
+
+本节的 Session 历史选择和补充领取适用于直接 Agent Run。Workflow 的 AgentNode 使用 input_only 的 Invocation 私有上下文，不能沿父 Run 的 session_id 自动读取历史或领取补充；外层输入与状态映射见[Workflow 上下文边界](workflow.md#41-输入历史与角色上下文)。无 AgentInvocation 的根 Workflow 不调用下文根角色定位逻辑。
 
 ### 3.1 查询 DTO 与唯一历史算法
 

@@ -73,7 +73,7 @@ class OutputValidation:
 
 `ContextManager.prepare_output_correction(context_ref,model_operation_id,validation_ref,output_schema_ref)` 返回 ContextDelta；只追加带来源的格式反馈与输出要求，不覆盖原候选答案。幂等键 `format:<model_operation_id>:feedback`。
 
-NodeDriver 在同一提交中保存反馈、consume 已完成决策票据及下一 prepare_context 阶段；下一次修正获得新的业务模型 Operation 和 LoopTicket，使用同一根额度／deadline。没有独立修正次数、重试开关或额外额度；已耗尽直接按图运行协议结束。空完整候选不满足已配输出格式时也走此流程。
+NodeDriver 在同一提交中保存反馈及下一 prepare_context 阶段；该决策的票据已在接受模型响应时 consumed，此处不得再次消费。下一次修正获得新的业务模型 Operation 和 LoopTicket，使用同一根额度／deadline。没有独立修正次数、重试开关或额外额度；已耗尽直接按图运行协议结束。合法完整终帧只是传输完成证据；无动作且正文为空／纯空白，或候选不符合输出 Schema，进入同一输出修正流程，不因此发起连接重试。
 
 ## 2. 冻结能力目录、调用结果与按需读取
 
@@ -84,17 +84,17 @@ NodeDriver 在同一提交中保存反馈、consume 已完成决策票据及下�
 | `CapabilitySpec` | `resource_key, capability_key, kind:builtin\|hosted\|mcp\|script, model_name, description, input_schema, output_schema?, handler_ref, credential_binding_ref?` |
 | `ResolvedCatalog` | `program_key, binding_key, capabilities[], model_name_to_key, skill_entries[], access_scope, environment_policy`；调用方已解析的不可变目录 |
 | `CapabilityRequest` | `operation_id, resource_key, capability_key, arguments` |
-| `ToolInvocationContext` | `content_scope_ref, run_id, graph_execution_id, node_task_id?, invocation_id?, conversation_ref?, role_key?, execution_binding_ref, workspace_scope_ref?, operation_id, attempt_id, attempt_no, lease_epoch, deadline_at, authorization_ref, cancellation` |
+| `ToolInvocationContext` | `content_scope_ref, run_id, graph_execution_id, node_task_id?, invocation_id?, session_id?, role_key?, execution_binding_ref, workspace_scope_ref?, operation_id, attempt_id, attempt_no, lease_epoch, deadline_at, authorization_ref, cancellation` |
 | `ToolResult` | `status:succeeded\|failed\|unknown, content:ContentBlock[], error?, artifacts:ArtifactRef[], metadata` |
 | `ContentBlock` | `type:text\|json\|artifact_ref`，分别含 `text`、`json_ref`、`artifact_ref`；不能内嵌任意系统路径 |
 
 `CapabilityRegistry.for_role(program_key,role_key)`、`for_node_binding(program_key,binding_key)` 返回已注入目录；`resolve(catalog,model_name)` 只查本目录。构造时拒绝 model_name 冲突，运行时缺名返回 CAPABILITY_NOT_FOUND；不搜索平台目录，也不比较平台发布版本指纹。
 
-`CapabilityHandler.invoke_once(request,context)->ToolResult` 只执行一次；Manager 校验调用可信范围、最终 schema、凭据撤销及执行许可，再调用原 Handler。Hook allow 不扩大目录。普通工具不创建新 NodeTask；Planner 委派 action 由图运行负责，不能交给普通 handler_ref。
+`CapabilityAdapter.invoke_once(request,context)->ToolResult` 只执行一次；Manager 校验调用可信范围、最终 schema、凭据撤销及执行许可，再调用原 Adapter 并规范化为管道 RawResult。它不同于总线的 EventHandler：后者由 Manager 实现，前者只实现一次具体能力调用。Hook allow 不扩大目录。普通工具不创建新 NodeTask；Planner 委派 action 由图运行负责，不能交给普通 handler_ref。
 
 SDK 生成的对象 input_schema 默认 additionalProperties=false；MCP schema 保留其声明扩展语义。导入收拢许可本地 `$ref`，拒绝外部网络 `$ref`；运行校验不得顺带出网取 schema。
 
-`OperationError` 固定字段为 `code, category:validation|permission|not_found|conflict|transport|rate_limit|timeout|business|protocol|cancelled|unknown, message, phase:connect|send|receive|execute, external_outcome:not_started|known|unknown, provider_code?`。成功没有 error；unknown 必须有 error 且 external_outcome=unknown。
+`OperationError` 复用[调用协议的唯一 DTO 定义](event-bus.md#21-范围信封和响应)，不另定义精简枚举。Adapter 通常填 connect／send／receive／execute，Pipeline 还可产生 prepare／after 阶段错误。成功没有 error；unknown 必须有 error 且 external_outcome=unknown。
 
 ### 2.2 结果预览与 result.read
 
@@ -122,7 +122,7 @@ SDK 在使用边界验证包内路径、manifest 完整性、SKILL.md 元数据�
 
 `model,effort,context:fork,agent` 拒绝装配；动态 shell 注入和未支持的专属变量／设置拒绝。hooks 只产出待显式绑定资源，不能因读 SKILL.md 就激活 Hook。
 
-`SkillLoader.list_entries(scope)->SkillEntrySummary[]` 只返回名称、说明、固定入口和 resource_key；`read_entry(SkillRead{resource_key,entry_name,relative_path,arguments[]?},scope)->SkillReadResult` 返回 `text,result_ref,resource_key,path,rendered_arguments_hash?`。相对引用只能在该 Skill 根内解析。read_resource(key,path,scope) 用同一校验读取 scripts/references/assets；list_entries 不执行脚本。
+`SkillLoader.list_entries(scope)->SkillEntrySummary[]` 只返回名称、说明、固定入口和 resource_key；`read_entry(SkillRead{resource_key,entry_name,relative_path,arguments[]?},scope)->SkillReadResult` 返回 `text,result_ref,resource_key,path,rendered_arguments_hash?`。相对引用只能在该 Skill 根内解析。`read_resource(resource_key,path,scope)->SkillReadResult` 用同一校验读取 scripts/references/assets，非文本资源仅返回内容引用和元信息，text 为 null；list_entries 不执行脚本。
 
 资源挂载为 `/skills/<name>` 只读，references／assets 按需读取。执行脚本必须单独调用 exec，例如 `argv=["python3","/skills/report/scripts/build.py","--output","/work/report.md"]`；skill.read 不执行脚本、不建业务 NodeTask。
 
@@ -173,25 +173,28 @@ annotations 仅展示；只读／幂等声明不参与 SDK 重试准入。远端
 
 ## 5. WorkspaceScope、挂载与文件生命周期
 
-### 5.1 持久身份和派生路径
+### 5.1 构造绑定、持久身份和派生路径
 
-`WorkspaceScope` 的完整字段为 `workspace_scope_id,content_scope_ref,root_handle,partition_kind:session|invocation,partition_key,run_id,invocation_id?,persistent`。当前 lease_epoch 不存入此 DTO；旧 scope 的存在不代表旧执行权仍有效。
+`WorkspaceBinding` 为构造时的配置值：`root_handle,content_scope_ref,environment_policy,resource_mounts[]`。root_handle 由调用方／EnvironmentProvider 解析为受限文件根；environment_policy 使用下文 EnvironmentPolicy；每个 resource_mount 包含 `resource_key,resource_handle,logical_path,read_only`，并须满足策略中的 ResourceMountRule。资源句柄可以是已准备 Skill 包，不能是供 SDK 回查的平台资源 ID。绑定不含 run_id、invocation_id、workspace_scope_id、partition_key 或 lease。
+
+`WorkspaceScope` 是 SDK 创建的持久运行身份，完整字段为 `workspace_scope_id,content_scope_ref,root_handle,partition_kind:session|invocation|run,partition_key,run_id,invocation_id?,persistent`。当前 lease_epoch 不存入此 DTO；旧 scope 的存在不代表旧执行权仍有效。
 
 `WorkspaceRegistration` 为 `scope_ref,creation_key,program_key,environment_policy_ref,mount_intent_id,state:registered|ready|cleanup_pending|cleaned,revision`。creation_key=`(content_scope_ref,partition_kind,partition_key,run_id)`，同键参数不一致返回 `WORKSPACE_BINDING_CONFLICT`。
 
-WorkspaceProvider 由调用方提供稳定 root_handle 和目录解析策略；SDK 只生成并验证会话／调用分区与授权句柄，不硬编码平台 application_id 或 /shared/agentloom。
+EnvironmentProvider 接收绑定中的稳定 root_handle 和目录解析策略；SDK 在初始化执行身份后生成并登记 WorkspaceScope，再按持久登记准备目录及授权句柄，不硬编码平台 application_id 或 /shared/agentloom。
 
 | 调用位置 | 相对注入根的分区 | persistent=true | persistent=false |
 | --- | --- | --- | --- |
 | 直接 Agent | sessions/<session_key> | work/ | runs/<run_id>/work/ |
-| Workflow 外层能力 | sessions/<session_key> | work/ | runs/<run_id>/work/ |
+| 有 Session 的 Workflow 外层能力 | sessions/<session_key> | work/ | runs/<run_id>/work/ |
+| 无 Session 的 Workflow 外层能力 | runs/<run_id> | work/，Run 后保留 | work/，Run 收束后删除 |
 | 完整子 Agent 调用 | invocations/<invocation_id> | work/ | runs/<run_id>/work/ |
 
-高代码调用无 Session 时使用 invocation 分区。调用方可将 Agent 的 root_handle 映射到创建时固定的应用目录；SDK 不负责创建应用。模型／Hook 不提交宿主路径或 partition_key。Planner／Executor 复用所属 Invocation 的工作分区，跨完整 Agent 调用只能显式授权文件。
+表中后两列拼在分区路径之后；run 分区不再重复嵌套 runs/<run_id>。直接 Agent 未传 session_id 时创建一次性 Session；无 Session／AgentInvocation 的纯能力 Workflow 使用 run 分区；Workflow 中完整 Agent 调用使用 invocation 分区。session_key 是 SDK 派生的稳定路径键。调用方可将 Agent 的 root_handle 映射到创建时固定的应用目录；SDK 不负责创建应用。模型／Hook 不提交宿主路径或 partition_key。Planner／Executor 复用所属 Invocation 的工作分区，跨完整 Agent 调用只能显式授权文件。
 
 `EnvironmentManager.prepare(EnvironmentRequest,ExecutionScope)` 的 request 字段为 `workspace_scope_ref,environment_policy_ref,image_digest,resource_manifest_ref,expected_registration_revision`，返回 `EnvironmentHandle{workspace_handle,sandbox_handle,resource_mounts[],expires_at}`。先事务登记 scope 和 mount_intent，事务后幂等创建目录并验证根 manifest，再提交 ready；同 ID 重入不生成新目录。
 
-`EnvironmentPolicy` 固定 `persistent,image_digest,exec_timeout_ms,egress_allowlist[],resource_mount_rules[]`；`EgressRule` 为 `kind:domain|cidr,value,ports[]`，空列表表示禁外网。`ResourceMountRule` 为 `resource_key,logical_path,read_only=true`，资源写权限不能由调用参数覆盖。执行服务部署配置额外固定 runner_limits_version、tmp_size_bytes 和 max_processes，写入policy_digest；它们是已验收的基础设施参数，不增加Agent用户配置。
+`EnvironmentPolicy` 固定 `persistent,image_digest,exec_timeout_ms,egress_allowlist[],resource_mount_rules[]`；`EgressRule` 为 `kind:domain|cidr,value,ports[]`，空列表表示禁外网。`ResourceMountRule` 为 `resource_key,logical_path,read_only=true`，资源写权限不能由调用参数覆盖。执行服务部署配置额外固定 runner_limits_version、tmp_size_bytes 和 max_processes，写入policy_digest；它们属于需验收的基础设施参数，不增加Agent用户配置。
 
 `WorkspaceHandle` 为 `handle_id,workspace_scope_id,run_id,lease_epoch,execution_domain_id,authorized_mounts[],issued_at,expires_at`；只存在服务端／受限 SDK 中，不入 GraphState。`authorized_mounts` 每项含 `logical_root:/work|/skills/<name>|/wiki|/resources/<key>,resource_ref?,read_only`。
 
@@ -213,7 +216,7 @@ Planner／Executor 使用同 Invocation `/work`，各自只读资源目录按角
 
 `CleanupRequest` 为 `run_id,workspace_scope_ids[],reason:run_terminal|scope_deleted,expected_cleanup_revision,idempotency_key`，由 SystemCleanupScope 调用。`CleanupReceipt` 为 `run_id,scope_results[{workspace_scope_id,status:retained|removed|retry_pending,error?}],revocation_receipt_refs[],completed_at?`。
 
-顺序固定：关闭新业务准入 → 收束全部写任务 → 取得每个 scope 的撤销证据 → 运行有界 run.ending 扩展 → 删除登记的全部非持久目录 → 提交 cleanup receipt。某个子 Invocation 完成不得提前清理；根超时不等待扩展 Hook 延长期限。
+顺序固定：关闭新业务准入 → 收束全部写任务 → 取得每个 scope 的撤销证据 → 删除登记的全部非持久目录 → 提交 cleanup receipt。某个子 Invocation 完成不得提前清理。run.ending 是待细化的生命周期扩展，不直接复用 Operation HookContext，也不承担必要清理；未来接入仍不得延长根截止或阻止收束，见[挂点覆盖](event-bus.md#12-挂点覆盖与尚未细化的生命周期扩展)。
 
 物理删除仅操作登记的精确 work 目录，拒绝 owner 根、系统 blob、共享资源；重复删除不存在目录视为已完成。中途失败登记 cleanup_pending 继续重试，Run 的终态与 cleanup_state 分开。持久 scope 标 retained，无 TTL。页面关闭、SSE 断开、机器故障不触发临时目录清理。
 

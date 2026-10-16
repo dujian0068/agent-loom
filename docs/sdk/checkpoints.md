@@ -66,8 +66,8 @@ class LeaseService(Protocol):
 使用 READ COMMITTED + 显式行锁 + revision CAS。不可用“一个 Python asyncio.Lock”替代数据库边界。
 
 ```text
-初始化与停止：RunAdmissionControl → Conversation → Run
-运行推进：                          [Conversation] → Run
+初始化与停止：RunAdmissionControl → Session → Run
+运行推进：                          [Session] → Run
                                     → Invocation（UUID排序）
                                     → GraphExecution（UUID排序）
                                     → NodeTask（UUID排序）
@@ -76,7 +76,7 @@ class LeaseService(Protocol):
                                     → 各子记录（表名、主键排序）
 ```
 
-只有初始化／停止入口取得 admission 行锁；普通推进不需要该锁，也不得逆序追加。普通 RuntimeCommit 从 Run 开始，不再回头拿 Conversation；终态和补充转交命令先取 Conversation，再 Run。跨图提交先收集完整锁集合排序；若计算期间发现还需要更早的锁，回滚重新读取，禁止途中逆序补锁。平台发布与删除 gate 不在此锁序内。
+只有初始化／停止入口取得 admission 行锁；普通推进不需要该锁，也不得逆序追加。普通 RuntimeCommit 从 Run 开始，不再回头拿 Session；终态和补充转交命令先取 Session，再 Run。跨图提交先收集完整锁集合排序；若计算期间发现还需要更早的锁，回滚重新读取，禁止途中逆序补锁。平台发布与删除 gate 不在此锁序内。
 
 数据库事务内不调用模型、MCP、Hook、脚本、共享盘写入、DNS 或沙箱停止。commit 超时不意味着外部能力失败；先按 command_id 查询回执，不直接重复业务调用。
 
@@ -194,7 +194,7 @@ RuntimeCommit
   expected: [{kind,id,revision}]
   body: typed command payload
   blob_candidates: [{blob_id,sha256,size_bytes,source_scopes}]
-  requires_conversation_lock: bool # 由command registry决定，调用方不能任意覆盖
+  requires_session_lock: bool # 由command registry决定，调用方不能任意覆盖
 
 CommitReceipt
   command_id, fingerprint, committed_at, run_revision
@@ -260,7 +260,7 @@ commit(command, lease):
 | settle_member | BatchMember结果、WaitMember settled、settled_count | 已有Operation须最终EventResponse；local_outcome仅未begin |
 | consume_batch | 按ordinal追加tool结果、补齐反馈槽、WaitGroup consumed、Continuation.prepare_context | settled_count=member_count，消费标记CAS |
 | stop_run（T_STOP／ControlCommand） | admission closed、StopReceipt；Run已存在时另写stopping/control_reason、取消未准入意图、stop intent、outbox | 独立控制身份，无需Worker活跃lease；Run不存在也阻止迟到初始化；不伪造活跃工具终态 |
-| finalize_run | Run终态、根输出、Session输入转交、Session.active清空、cleanup意图 | Conversation先锁，全部写任务已收束；终态不可复活 |
+| finalize_run | Run终态、根输出、Session输入转交、Session.active清空、cleanup意图 | Session先锁，全部写任务已收束；终态不可复活 |
 
 表中命令是允许的语义提交，不要求每个命令独立公开HTTP。Driver可以一次Progress调用其中一个typed命令；命令可以拥有多个内部handler，但最终只能提交一个事务。
 
@@ -290,7 +290,7 @@ Executor前置deny没有票据但需向父反馈时，使用相同额度准入�
 
 公共 SDK 控制门面、调用方管理任务和 SDK deadline 扫描器调用 `RunControl.request_stop(run_id, reason, ControlIdentity, idempotency_key)`。它使用Coordinator的**受限控制命令入口**，不是拿一个伪造ExecutionLease调用普通RuntimeCommit。
 
-Run 尚不存在时先关闭 run_admission_controls，保存 StopReceipt；Run 初始化必须在相同 admission 行锁内验证未关闭。已存在 Run 的控制事务先锁 admission、Conversation（若修改输入交接）再Run，校验调用方持有的 Runtime scope/control capability及幂等键；终态则返回原结果，否则固定第一个终结原因、设置stopping、关闭新工作、保存stop intent/outbox。允许Run尚queued无lease、lease过期或phase=recovering；只能写这些控制事实，不能写TaskResult、有效Context、模型response或绕过writer barrier直接宣称已收束。
+Run 尚不存在时先关闭 run_admission_controls，保存 StopReceipt；Run 初始化必须在相同 admission 行锁内验证未关闭。已存在 Run 的控制事务先锁 admission、Session（若修改输入交接）再Run，校验调用方持有的 Runtime scope/control capability及幂等键；终态则返回原结果，否则固定第一个终结原因、设置stopping、关闭新工作、保存stop intent/outbox。允许Run尚queued无lease、lease过期或phase=recovering；只能写这些控制事实，不能写TaskResult、有效Context、模型response或绕过writer barrier直接宣称已收束。
 
 Worker每次准入读取当前控制，不靠旧快照授权。接管中的Worker看到stopping只执行撤权/收束，不能激活正常Loop。queued且从未有execution_domain的Run，控制服务可用empty-writer-set证明完成终态；已有writer时须由有效恢复/清理执行权持有者完成barrier后再finalize。deadline扫描器使用DB时间，按同一入口请求停止，不能因无active租约使超时永远失效。
 
@@ -450,7 +450,7 @@ classDiagram
     class ContextRevisionRef
     class Operation
     class ScopeCommit
-    Run "1" *-- "1..*" GraphExecution
+    Run "1" *-- "0..*" GraphExecution
     GraphExecution "1" *-- "0..*" GraphCheckpoint
     GraphExecution "1" *-- "0..*" ScopeCommit
     GraphCheckpoint --> AgentCheckpointPayload : engine_kind为agent

@@ -42,6 +42,39 @@ Prompt 支持 inline 或已固定资源版本；变量声明 name/type/required/
 
 凭据只由 CredentialsService 读写；模型 SDK 收到 client／credential resolver。更新 Key 不改变模型身份或 endpoint；新物理 Attempt 可解析已授权的新密钥，旧请求不换 Key。明文不进入定义、Run、检查点或公开事件。
 
+### 2.1 Workflow 草稿与节点绑定
+
+Workflow 使用独立草稿，不复用 AgentDraft.roles 或把 Workflow 放进 Agent 的 mode。下面是逻辑配置结构；机器可验证的完整 Schema 仍需补齐。
+
+```text
+WorkflowDraft
+  graph_definition: WorkflowGraphDefinition
+  node_bindings: WorkflowNodeBindingDraft[]
+  execution: WorkflowExecutionPolicy
+  environment: EnvironmentBindingDraft
+  hooks: HookBindingDraft[]
+
+WorkflowGraphDefinition                 # GraphDefinition 的 workflow 分支
+  input_schema, output_schema
+  state_schema, reducers
+  nodes, edges, entry, finish
+  conditions, dispatch_rules, error_routes
+
+WorkflowNodeBindingDraft
+  node_key
+  target: AgentReleaseRef | CapabilityBindingDraft | RegisteredFunctionRef
+  input_mapping, output_mapping
+  file_grants
+```
+
+GraphDefinition 拥有业务状态 schema、reducer 与流转关系；node_bindings 只绑定执行位置、依赖和映射，不再保存另一份图。编译后的程序保存它们的已解析表示。平台用受控表达式／注册函数描述条件、reducer 与映射；不接收任意 Python 代码执行，不用 LLM 计划文本替代这些配置。表达式语法与 JSON Schema 属于后续实施细化，不应由前后端各自猜测。
+
+节点选择完整已发布 Agent、Tool／MCP 或已注册业务函数；Executor 是 Agent 内部角色，不能直接拖入外层当作独立应用。AgentReleaseRef 在发布时固定，输入来自显式状态映射，输出只写声明字段，文件通过 file_grants 授权。
+
+WorkflowExecutionPolicy 控制根 Run 额度、总截止及外层分派策略；各 Agent 保留自身模型、上下文及局部约束，并受根控制限制。外层同时运行两个 AgentNode，不会自动将这两个 Agent 内部的 parallel_enabled 改为 true。
+
+WorkflowSession 对应 WorkflowApplication 的 SessionBinding；它不是所有子 Agent 的共享聊天会话。AgentNode 按 input_only 方式启动独立上下文，只读取映射输入、显式材料和本次 Invocation 的过程；故障恢复接回原 Invocation。Workflow 运行中补充输入的接收点见[接入边界](sdk-integration.md#4-执行中补充)，不能套用 Planner 的输入领取协议。
+
 ## 3. 资源目录与导入
 
 ```text
@@ -81,6 +114,6 @@ WorkflowRelease 固定节点绑定及被调用 Agent 的 Release。被调用 Age
 
 ## 5. 配置如何进入 SDK
 
-管理配置可以包含用户、空间、发布和资源版本；AssemblyService 必须先解析它们。转换结果是 AgentDefinition／GraphDefinition、角色绑定、model client、CapabilityRegistry、HookBinding、环境 scope 和 Runtime adapters。
+管理配置可以包含用户、空间、发布和资源版本；AssemblyService 必须先解析它们。转换结果是 AgentDefinition／GraphDefinition、角色绑定、model client、CapabilityRegistry、HookBinding、WorkspaceBinding 与 EnvironmentProvider 和 Runtime adapters。
 
 SDK 不接收一个 application_id 后自行查数据库，也不导入平台 ORM。具体映射、跨存储接入及故障恢复见[SDK 装配](sdk-integration.md)。

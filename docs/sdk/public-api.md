@@ -18,6 +18,7 @@ agent = PlanAgent(
     model=model_client,
     capabilities=capability_registry,
     hooks=hook_bindings,
+    workspace=workspace_binding, # 固定根及策略；运行 scope 由 SDK 生成
     runtime=runtime,
 )
 
@@ -33,6 +34,8 @@ result = await agent.ainvoke(
 
 调用者传入已经解析的模型连接、资源路径／加载器、原始能力适配器、Hook 和可访问工作空间；SDK 不携带一个平台 ID 再回平台查询。凭据可由调用方提供的 resolver 按需取得，但该扩展不能成为 SDK 对平台的内置依赖，也不把明文写入检查点。
 
+ReactAgent、PlanAgent 及 Workflow 编译装配均接收 WorkspaceBinding，字段见[环境绑定](capabilities.md#51-构造绑定持久身份和派生路径)。Runtime.environment 是 EnvironmentProvider 服务；workspace 是某个可执行程序的环境配置。调用方不预造 WorkspaceScope／lease：SDK 在初始化 Run／Invocation 后登记 scope，恢复时读取原登记。只使用模型、不访问文件的程序也可用 SDK 提供的临时本地绑定。
+
 ## 2. 执行门面
 
 | 入口 | 输入 | 输出和语义 |
@@ -42,7 +45,7 @@ result = await agent.ainvoke(
 | workflow.ainvoke / astream | 工作流业务状态及上述执行关联 | 使用 Workflow 输出契约；共享 Run 控制与恢复协议 |
 | runtime.runs.get | run_id | 不可变 RunSnapshot 或明确不存在 |
 | runtime.runs.stop | run_id、command_id、reason | StopReceipt；关闭该稳定 ID 的准入，重复请求幂等，终态不重新启动 |
-| runtime.inputs.append | run_id、input_id、content | InputReceipt；由 SDK 处理补充、消费和转交 |
+| runtime.inputs.append | run_id、input_id、content | Agent Run 的 InputReceipt；由 SDK 处理补充、消费和转交；Workflow 接收点见下文边界 |
 | runtime.sessions.history / inputs | session_id、游标 | 授权范围内的历史或正式输入及投递状态，分页读取 |
 | runtime.tasks.list / operations.get | run_id、task游标／operation_id | 已提交只读进度和结果；不能修改执行状态 |
 | runtime.events.read | run_id、after_seq、limit | 已提交事件分页，供跨进程订阅或平台 SSE |
@@ -63,6 +66,8 @@ result = await agent.ainvoke(
 调用方保证重入时提供该 Run 原配置。SDK 不选择平台版本、不维护配置版本指纹；只验证恢复载荷格式、引用和执行协议是否可处理。
 
 ## 3. 补充输入与结束竞态
+
+本节适用于直接 ReAct／Plan Run。Workflow 运行中的新输入必须有显式接收点和状态映射，不能自动送给某个内层 Agent 或广播给所有 AgentNode；该扩展接口仍待详细设计，当前接口不宣称支持它。未定义接收点时应在接收前明确拒绝，不得先返回 accepted 再丢弃输入。新 Workflow Run 的初始输入不受此限制。
 
 InputReceipt 至少包含 input_id、run_id、acceptance、delivery_state、session_seq、commit_ref。
 

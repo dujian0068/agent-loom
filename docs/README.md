@@ -4,10 +4,11 @@
 | --- | --- |
 | [设计约定](agent-design-decisions.md) | 已确认需求与权威文档位置 |
 | [SDK／Platform 边界](sdk-platform-boundary.md) | 领域归属、单向依赖和恢复责任 |
-| [SDK 总览](sdk/index.md) | 高代码底座完整设计 |
+| [SDK 总览](sdk/index.md) | 高代码底座设计入口 |
 | [SDK 对象 UML](sdk/object-collaboration.md) | Agent、Node、EventBus、Hook、Skill 协作 |
-| [Platform 总览](platform/index.md) | 配置化平台完整设计 |
+| [Platform 总览](platform/index.md) | 配置化平台设计入口 |
 | [阅读指南](reading-guide.md) | 按角色选择阅读顺序 |
+| [整理复核记录](reorganization-review.md) | 已修正的不一致及尚未闭合的详细设计 |
 | [目录规划](directory-plan.md) | 实际目录与后续代码组织 |
 | [文档站维护](documentation-site.md) | 本地预览与 GitHub Pages 发布 |
 

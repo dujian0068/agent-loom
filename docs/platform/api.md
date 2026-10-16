@@ -6,7 +6,7 @@
 
 使用 /api/v1 前缀，不保留旧原型路由。JSON 为 snake_case；请求结构拒绝未知字段。列表返回 {items,next_cursor}，limit 默认 50、范围 1..200；请求正文最大 2 MiB，文件另走上传接口。
 
-创建及变更请求要求 Idempotency-Key；草稿修改／发布另要求 If-Match。相同键且正文不同返回 409 IDEMPOTENCY_CONFLICT。请求哈希不包含凭据值和传输时间。平台 HTTP 幂等回执与 SDK input／run 幂等是两层机制，不能互相取代。
+创建及变更请求要求 Idempotency-Key；草稿修改／发布另要求 If-Match。相同键且正文不同返回 409 IDEMPOTENCY_CONFLICT。幂等摘要排除传输时间，但必须覆盖全部业务字段；凭据字段用服务端专用密钥 HMAC 后参与摘要，不保存或输出明文，也不把可离线猜测的裸密钥 hash 放入日志。相同幂等键提交不同 Key 必须冲突；摘要密钥轮换期间保留原回执所需的 key_id。平台 HTTP 幂等回执与 SDK input／run 幂等是两层机制，不能互相取代。
 
 认证、Space 成员关系和权限在 API 层完成；不可见对象返回 404。公开 ID 不赋予 SDK 操作权，也不允许 HTTP 客户端提交 lease、continuation 或强制 Run 状态。
 
@@ -42,7 +42,7 @@
 | --- | --- | --- |
 | POST /agents/{a}/sessions | 建 SessionBinding，固定 Agent 和用户 | 延迟创建 SDK Session |
 | POST /workflows/{w}/sessions | 固定 Workflow 及状态输入类型 | 延迟创建 SDK Session |
-| POST /sessions/{s}/inputs | 保存提交意图，判定新提问或补充并处理竞态 | ainvoke 或 inputs.append |
+| POST /sessions/{s}/inputs | 保存提交意图；Agent 判定新提问或补充；Workflow 当前仅定义新 Run 输入 | ainvoke；直接 Agent 的活动补充调用 inputs.append |
 | GET /sessions/{s}/history | 验证会话可见性、分页投影 | 公共历史查询 |
 | GET /sessions/{s}/inputs | 返回正式输入及投递状态 | 公共输入查询 |
 | GET /runs/{r} | 合并 RunBinding 的应用和 Release 标识 | runs.get |
@@ -54,6 +54,8 @@
 SDK 查询门面是唯一运行事实来源。平台不得为了这些 HTTP 接口查询 SDK 私有表或自己修改执行状态。
 
 UserInputCommand 为 client_message_id、content、variables?。同 client_message_id 重投返回原归属；首次用户问题需要验证输入 Schema／变量。运行中补充不修改原 Definition 或 Prompt 变量快照。
+
+以下补充、carried 和结束竞态针对直接 Agent 会话。Workflow 活动输入的接收点和回执未定稿，发布前必须明确不支持此入口并返回可识别诊断，不能保存为 accepted 后丢失，也不能转发到任意内层 Planner。Workflow 初始状态输入和 Agent 会话输入的具体序列化仍需在接口 Schema 中分别定义。
 
 InputReceipt 至少包含 submission_id、input_id、session_id、run_id?、disposition、status。平台可靠保存但 SDK 尚未确认时，status=submitting；收到 SDK InputReceipt 后才标 accepted。disposition 为 new_run/supplement/pending_next_run。不能在 SDK 尚未接收时显示“模型已收到”。
 

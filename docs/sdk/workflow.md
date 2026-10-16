@@ -91,6 +91,19 @@ GraphDefinition 保留公共本地 key、节点绑定及输入输出契约；增
 
 直接调用 Agent：一个根 AgentInvocation 和一个 `engine_kind=agent` 的图。Workflow 调用一个 Plan Agent：一个 `workflow` 图和一个 `agent` 图；Plan 内两个 Executor 只是后者的两个任务。被调用 Agent 复用根 Run，保留自身局部限制和文件授权，不能重置根额度或继承整个外层上下文。
 
+### 4.1 输入、历史与角色上下文
+
+| 执行入口 | 初始内容 | 历史与后续上下文 |
+| --- | --- | --- |
+| 直接 ReactAgent／PlanAgent | 本次问题、正式补充及按策略投影的 Session 历史 | 根角色保留本 Run 有效过程；Executor 只获得显式委派输入及自己的过程 |
+| Workflow 根图 | 本次结构化输入，按输入 Schema 初始化 GraphState | Workflow Session 记录交互，不自动把历史问答注入业务状态或每个模型请求 |
+| Workflow 的 AgentNode | input_mapping 产生的 input_only 输入及 file_grants | 新 Invocation 的独立上下文；不复用该 Agent 其他 Session，也不继承外层全部状态 |
+| 原任务故障重入 | 已固定的原输入和运行关联 | 接续原 Graph／Task／Context，不再次做新任务的初始化或历史选取 |
+
+AgentNode 的输入成为受保护任务原文；后续压缩不得省略。它没有根 Agent Session 的补充领取权，其他 AgentNode 的私有消息不通过 GraphState 共享。需要传递前一步材料时必须显式映射输出／授权文件。
+
+外层初始输入写入和历史查询应与其状态初始化协议一致；不能用“某个子 Agent 首输出”代表整个 Workflow 已消费用户输入。Workflow 运行中的追加输入尚需定义接收节点、投递回执和终态交接，本版不将直接 Agent 的 inputs.append 协议视作已覆盖此场景。
+
 ## 5. 父子调用交接协议
 
 ### 5.1 开始与等待

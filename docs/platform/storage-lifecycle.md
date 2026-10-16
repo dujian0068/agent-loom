@@ -45,7 +45,7 @@
 
 ## 4. 文件生命周期分工
 
-平台创建 Agent 应用时分配固定文件根；SDK 接收受限 WorkspaceScope。在同一个 AgentInvocation 内 Planner 和 Executor 共享授权工作区，私有消息与检查点存储不挂给脚本修改。
+平台创建 Agent 应用时分配固定文件根，装配时传入 WorkspaceBinding 和 EnvironmentProvider。SDK 在 Run／Invocation 初始化后派生并登记 WorkspaceScope，接管沿用原 scope。平台不代建含运行身份或执行权的对象。在同一个 AgentInvocation 内 Planner 和 Executor 共享授权工作区，私有消息与检查点存储不挂给脚本修改。
 
 持久沙箱文件暂不过期，删除应用时清理；关闭持久沙箱时，仅 Run 工作文件在整次执行收束后删除。系统会话／检查点、预配置 Skill 与应用资源另行管理。故障或浏览器断线不是清理触发点。
 

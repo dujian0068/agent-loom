@@ -17,6 +17,8 @@
 | 领域 Manager | 已解析能力目录和原始 Adapter | 生成原始结果或图执行计划，不发布伪造响应 |
 | `CommitCoordinator` | 事务 writer | 全部权威运行事实、CAS、幂等及 outbox |
 
+HookManager 的固定绑定按 program_key 分组。每次从可信 ExecutionBindingRef 选择所属程序，再按 event_type／stage／matcher 选择链；相同 Run 内不同 AgentInvocation 不共享一条混合 Hook 链。Operation 固定选中的链及处理游标，恢复复用原链。共享一个 EventBus 只共享调用设施，不合并资源授权、Hook 或私有上下文。
+
 请求键只匹配一个 Manager。绑定清单为 `model.generate/model.embed → ModelManager`，`capability.invoke/result.read → ToolManager`，`context.materialize/context.mutate/context.compact → ContextManager`，`environment.prepare/environment.read/environment.write → EnvironmentManager`，`executor.delegate/agent.invoke → GraphExecutionManager`。一个 Manager 可绑定多个键；不通过继承、多播或“第一个返回成功”选择 Manager。
 
 ContextManager 的内部 mutation、额度事务、检查点 writer、HookAdapter、outbox ACK 不再次进入业务代理。GraphExecutionManager 返回图计划，由对应引擎决定启动；普通工具没有第二个 Executor 调度器。RunControl 有独立任务和持久控制记录，不等待业务队列或 Hook 执行，也不接受 Hook deny。
@@ -41,9 +43,21 @@ ContextManager 的内部 mutation、额度事务、检查点 writer、HookAdapte
 
 运行设施固定默认值：runner 通知队列 1024、每订阅实时队列 256、结果复查间隔 1000ms、观察回调时限 5000ms、关闭等待 5000ms。它们属于部署参数，有界且启动时固定，不是用户的模型／工具并发额度。runner 队列满时仅合并唤醒提示，持久意图保留并由 1 秒扫描补齐；停止通道不使用这些队列。
 
+### 1.2 挂点覆盖与尚未细化的生命周期扩展
+
+| 边界 | 当前设计入口 | 允许的作用 |
+| --- | --- | --- |
+| 模型、能力、环境、委派及完整 Agent 调用 | Operation 的 request／response Hook 链 | 按注册白名单修改、允许或拒绝；决定与有效上下文一致提交 |
+| 上下文物化、修改及压缩请求 | 对应 ContextManager 请求的 Hook 链 | 使用本页字段规则；内部提交／物化子步骤不递归触发 Hook |
+| Run、节点、批次及环境的已提交生命周期变化 | CommittedEvent 的观察订阅 | 读取授权投影、告警或展示；返回值不改变原执行 |
+| run.ending 等用户生命周期 Hook | 预留，仍需定义独立输入、身份、去重与超时协议 | 不得套用要求 operation_id 的 HookContext，也不得把观察回调当作已支持的修改型 Hook |
+| 停止、额度、租约和必要清理 | 受信控制／存储入口 | 不接受用户 Hook 拒绝或延长根截止 |
+
+Lifecycle Hook 的完整事件目录和输入 Schema 仍是设计缺口。已有调用型 Hook 的算法不等于覆盖了全部时机；在补齐协议前，run.ending 不参与必要清理，也不成为 SDK 成功收束的前提。
+
 ## 2. DTO 与校验
 
-所有 DTO 都是不可变对象；JSON Schema 使用 `additionalProperties:false`。ID、UTC 时间、PayloadRef、ContentScopeRef、ExecutionLease 采用[数据契约](definitions.md)及持久化篇的共同类型。本文列出的可空字段必须显式为 null，不能利用省略与 null 表达不同状态。整数禁止浮点及布尔值冒充，revision/seq 从 0 开始，schema_version 从 1 开始。
+所有 DTO 都是不可变对象；JSON Schema 使用 `additionalProperties:false`。ID、UTC 时间、PayloadRef、ContentScopeRef、ExecutionLease 采用[数据契约](definitions.md)及持久化篇的共同类型。本文列出的可空字段必须显式为 null，不能利用省略与 null 表达不同状态。整数禁止浮点及布尔值冒充。普通实体 revision、schema_version 从 1 开始；Context.effective_revision、记录水位初始为 0，首条记录 seq 为 1；数组 ordinal／handler index 从 0 开始，attempt_no 从 1 开始。
 
 JSON hash 使用 RFC 8785 规范化后的 UTF-8 字节 SHA-256；BlobRef 验证长度、摘要、owner 和读取授权，不能接受任意 URL／宿主路径。请求 payload、结果、诊断的大内容先写不可变 Blob；没有 CommitReceipt 的 Blob 只是孤儿材料，不是已提交事实。
 
@@ -435,7 +449,7 @@ CAS 处理：若 context head 与 original_base_revision 不同，读取中间 m
 
 以下每个 T 都使用 `CommitCoordinator.commit(RuntimeCommit,ExecutionLease)`。业务写、Context head、Operation head、ScopeCommit 与 OutboxRecord 在一个短事务完成；不可变 Blob 在事务前写好。所有事务都重新验证根 lease、有效截止和该动作的控制准入类型。
 
-总锁序固定为 **Conversation → root Run → Invocation → Graph 按 ID → NodeTask 按 ID → Operation 按 ID → Context 按 ID → 子记录**；没有该类对象时跳过。普通 RuntimeCommit 不触会话，从 Run 开始；终态／补充转移命令须预先声明并先锁 Conversation，禁止拿 Run 后补拿 Conversation。HookInvocation／Attempt 在其 Operation 之后锁定；Batch／Wait 在其 Graph/NodeTask 之后锁定。事务内禁止 await 网络、模型、Hook、文件或观察者。
+总锁序固定为 **Session → root Run → Invocation → Graph 按 ID → NodeTask 按 ID → Operation 按 ID → Context 按 ID → 子记录**；没有该类对象时跳过。普通 RuntimeCommit 不触会话，从 Run 开始；终态／补充转移命令须预先声明并先锁 Session，禁止拿 Run 后补拿 Session。HookInvocation／Attempt 在其 Operation 之后锁定；Batch／Wait 在其 Graph/NodeTask 之后锁定。事务内禁止 await 网络、模型、Hook、文件或观察者。
 
 | 事务／幂等键 | 读取与版本检查 | 同事务写入 |
 | --- | --- | --- |

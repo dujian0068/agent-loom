@@ -11,6 +11,7 @@
 | GraphDefinition | 独立描述组织关系 | 节点位置、边、条件、入口、汇合 |
 | NodeDefinition | 属于一份 GraphDefinition，node_key 在图中唯一 | node_type、输入输出及路由配置 |
 | NodeBinding | 一次装配的值对象 | node_key 与已解析角色／能力／可执行 Agent 的绑定 |
+| WorkspaceBinding | 调用方提供的环境配置值；没有 Run 身份 | 稳定文件根句柄、内容范围、环境策略及授权资源挂载 |
 | ExecutableAgent | 已构造的可执行程序 | AgentDefinition、生成图及绑定、依赖工厂 |
 | CompiledWorkflow | 已编译的工作流 | GraphDefinition、状态 schema、reducer 与已解析节点绑定 |
 
@@ -78,21 +79,25 @@ CapabilityBinding
 classDiagram
     class Node {
       <<interface>>
-      +activate(input, continuation, services) ActivationStream
+      +activate(input, continuation, runtime) ActivationStream
     }
     class ReactNode
     class PlannerNode
     class ExecutorNode
+    class WorkflowNodeAdapter {
+      <<interface>>
+      +invoke(state, context) TaskWriteProposal
+    }
     class AgentNode
     class CapabilityNode
     Node <|.. ReactNode
     ReactNode <|-- PlannerNode
     ReactNode <|-- ExecutorNode
-    Node <|.. AgentNode
-    Node <|.. CapabilityNode
+    WorkflowNodeAdapter <|.. AgentNode
+    WorkflowNodeAdapter <|.. CapabilityNode
 ```
 
-这是节点能力的语义关系。内层由 NodeDriver 驱动；外层的 AgentNode／CapabilityNode 通过 WorkflowNodeAdapter 接入原生内核，不要求原生 Pregel 直接调用内层生成器。
+这是运行接口的实现关系。Node 是内层可恢复节点协议，由 NodeDriver 驱动；外层的 AgentNode／CapabilityNode 实现 WorkflowNodeAdapter，由迁移内核调用。它们都可绑定到图中的 NodeDefinition，但不因此实现同一个激活接口。TaskWriteProposal 表示外层输出及 SDK 结果消费提案；其原生写入类型与逐方法映射仍需在 Workflow 适配中定稿，不等同于已经提交的 pending writes。
 
 ReactNode 一次激活可以推进到 Progress、Wait 或 Complete；运行位置保存在 ReactContinuation，恢复不依赖原协程。Planner 在 React 能力上增加委派；Executor 使用同一 Loop，但不能递归创建新 Executor。不是每一次模型调用都新建一个节点任务。
 
@@ -111,7 +116,7 @@ classDiagram
     class Operation
     class Attempt
     Run "1" *-- "0..*" AgentInvocation : 完整Agent调用
-    Run "1" *-- "1..*" GraphExecution : 执行范围
+    Run "1" *-- "0..*" GraphExecution : 执行范围
     AgentInvocation "1" --> "1" GraphExecution : 内层根图
     GraphExecution "1" *-- "0..*" NodeTask : 逻辑任务
     NodeTask "1" *-- "0..*" NodeActivation : 物理激活
@@ -130,7 +135,7 @@ classDiagram
 | 普通 MCP 调用 | 增加 Operation；实际请求可以增加 Attempt，不增加图 |
 | 接管未完成 Run | 保留原 Run／Invocation／Graph／Task／Operation；新进程创建新的物理对象和激活 |
 
-一个纯工具 Workflow 可以没有 AgentInvocation 和 RoleContext。Operation 也可由 SDK 系统组件发起，因此不能强制每个 Operation 都有 node_task_id。
+图的数量表描述已初始化的执行。queued Run 在完成初始化前可没有图；开始执行时恰好有一个根图，之后可以创建子图。一个纯工具 Workflow 可以没有 AgentInvocation 和 RoleContext。Operation 也可由 SDK 系统组件发起，因此不能强制每个 Operation 都有 node_task_id。
 
 ## 5. SDK 身份与作用域
 

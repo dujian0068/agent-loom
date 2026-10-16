@@ -15,7 +15,7 @@
 | 工具／MCP／Skill 资源版本 | 已解析 Registry、MCP 连接配置、只读 Skill 目录／Loader |
 | Hook 配置 | 有序 HookBinding 和受限处理器 |
 | 上下文、执行、并行策略 | SDK Policy 值对象 |
-| 应用文件根、会话和持久策略 | WorkspaceScope 与 EnvironmentProvider |
+| 应用文件根、持久策略及授权挂载 | WorkspaceBinding；另注入 EnvironmentProvider，运行期 WorkspaceScope 由 SDK 创建／恢复 |
 | 部署的执行存储 | RuntimeStore、ContentStore、StorageNamespace |
 | Workflow 中的 Agent 引用 | 预先装配的 ExecutableAgent 或 PreparedAgentRef |
 
@@ -40,6 +40,7 @@ sequenceDiagram
     participant A as AssemblyService
     participant S as SDK执行入口
     participant C as SDK RuntimeStore
+    participant K as SDK提交协调器
     participant E as SDK图与节点
     H->>A: 原配置快照与同一个run_id
     A-->>H: 新构造的Agent及依赖
@@ -47,7 +48,8 @@ sequenceDiagram
     S->>C: 查原Run并申请有效执行权
     C-->>S: 检查点、增量、已保存结果
     S->>E: 恢复原Planner/Executor及等待关系
-    E->>C: 继续一致提交
+    E->>K: 提交原位置的状态推进
+    K->>C: 执行权校验与原子写入
     S-->>H: 已提交进度和终态
 ```
 
@@ -56,6 +58,8 @@ sequenceDiagram
 有效 owner 尚在执行时，平台重复投递不能强行夺权；SDK 拒绝或附着观察。已终态的 Run 不重新开始，原输入不重复追加，额度和截止时间不重置。
 
 ## 4. 执行中补充
+
+以下流程用于直接 Agent 应用。Workflow 的活动输入接收点尚未定稿，平台不能把通用聊天补充入口接到任意 AgentNode；需与 SDK 的显式输入映射合同一起完成后再开放。
 
 平台接收文本时，先根据 SessionBinding 查询 SDK 当前状态；该查询仅用于路由，不能代替 SDK 的原子检查。
 

@@ -30,6 +30,11 @@
 | SDK10 | 外层 AgentNode 调 Plan | 一个根 Run、外图与内图分离；Executor 仍在内图；私有 Context 不进入 GraphState |
 | SDK11 | 纯能力 Workflow | 可以没有 AgentInvocation／RoleContext；不造假上下文 |
 | SDK12 | 同一绑定在不同 Run 并行 | Node 对象不保存可变消息；RunRuntime、总线、Task scope 不串用 |
+| SDK13 | 完整空候选／格式不合规，再修正成功 | 接受每个完整决策只 consume 一次；反馈键固定 format；新修正新票据；不偷换为网络重试 |
+| SDK14 | 第 100 次返回格式错误 | 原票据只扣一次；修正需第 101 次时预算异常；不追加总结调用 |
+| SDK15 | 纯工具 Workflow 未传 session_id | 无 AgentInvocation 仍有合法 run 文件分区；不伪造会话或重复嵌套 runs 目录 |
+| SDK16 | Workflow 两次调用同一 Agent，随后其中一次故障重入 | 两个独立 Invocation、input_only 上下文；恢复复用原实例，不读取既有聊天 Session |
+| SDK17 | 同一 Run 两个 Agent 使用同名 Hook binding_key | 按各自 program_key／ExecutionBindingRef 选链；外层和内层绑定不混用 |
 
 ## 3. Hook 与 EventBus 测试
 
@@ -62,3 +67,7 @@
 三个示例均须只安装 SDK：ReAct 调工具、Plan 两个隔离 Executor、Workflow 组合 Agent 与能力。先用确定模型适配器断言状态与调用次数，再以真实模型检查协议链路。故障恢复采用共享持久后端和两个独立进程；内存演示不能作为跨机恢复证据。
 
 报告必须写明 commit、运行环境、适配器、输入、关键 ID、故障位置、断言和真实结果。未运行项标记未执行。平台权限、发布及 HTTP 路由测试在[平台验收](../platform/verification.md)，不塞入 SDK 单元测试。
+
+## 6. 文档合同门槛
+
+进入实现前仍须补齐 [整理复核记录](../reorganization-review.md#3-仍未完成的详细设计)列出的合同：SDK Schema、公共接口和注册 DTO、Workflow Saver／初始及追加输入、生命周期 Hook。上述测试是待执行验收，不表示这些接口已有可运行代码。实现文档检查至少覆盖 Node 激活签名、OperationError 枚举、PreparedModelRequest 字段、序号初值和修正计票的一致性。

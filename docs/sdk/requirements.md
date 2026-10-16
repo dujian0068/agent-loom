@@ -1,6 +1,6 @@
 # SDK 行为约定与默认值
 
-状态：已确认需求及实现约束，待实现。每份 AgentDefinition 独立配置；一次 Run 使用构造时固定的配置。平台如何编辑、发布和选择配置见[平台配置](../platform/configuration.md)。
+状态：已确认行为与工程设计分列，待实现。每份 AgentDefinition 独立配置；一次 Run 使用构造时固定的配置。平台如何编辑、发布和选择配置见[平台配置](../platform/configuration.md)。
 
 ## 1. 产品能力与运行模式
 
@@ -34,7 +34,9 @@ LLM 计划内容不直接变成任务依赖图。LLM 通过完整响应明确调
 | context.compaction_prompt_addendum | 空字符串 | 补充默认压缩 Prompt，不替换保护规则 |
 | environment.persistent_sandbox | false | 非持久工作文件只存在于当前 Run |
 
-工程取值上界是输入校验范围，不是吞吐保证。Executor 不单独覆盖模型、Loop、上下文和运行策略；角色独立配置 Prompt、变量、输入输出 Schema 与能力目录。Hook 按时机及 matcher 选择适用角色。压缩模型继承当前模型，无独立选择入口。
+已确认的默认行为包括 Loop 100、Run 3600 秒、并行关闭、Executor 并发 2、首输出 60 秒、工具 10 秒、Runtime 重试关闭及已约定尝试上限／间隔、历史 2 轮和压缩阈值 80%。表中的数值校验上界、idle=null、输出预留／安全边距／摘要目标推导及默认非持久环境属于工程默认方案，不是新增的用户确认记录；其中各上界只作输入校验，不是吞吐保证。
+
+Executor 不单独覆盖模型、Loop、上下文和运行策略；角色独立配置 Prompt、变量、输入输出 Schema 与能力目录。Hook 按时机及 matcher 选择适用角色。压缩模型继承当前模型，无独立选择入口。
 
 ## 3. Loop、并行与重试
 

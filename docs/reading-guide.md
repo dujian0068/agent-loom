@@ -2,6 +2,8 @@
 
 先读[SDK／Platform 边界](sdk-platform-boundary.md)，确定要了解的是执行底座还是管理平台。
 
+需要确认这次整理是否完整，先看[复核结论](reorganization-review.md)：它区分已修正的错误、仍需补齐的合同和尚未执行的实现测试。
+
 ## 阅读 SDK
 
 1. [行为约定](sdk/requirements.md)：执行模式和已经确认的规则。

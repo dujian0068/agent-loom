@@ -27,6 +27,8 @@ classDiagram
     class PlanAgent
     class AgentDefinition
     class GraphDefinition
+    class WorkspaceBinding
+    class EnvironmentProvider
     class Runtime {
       +open_run(program, request) RunHandle
     }
@@ -46,21 +48,25 @@ classDiagram
     ExecutableAgent <|-- PlanAgent
     ExecutableAgent --> AgentDefinition : 固定行为配置
     ExecutableAgent --> GraphDefinition : 生成的内层图
+    ExecutableAgent --> WorkspaceBinding : 固定环境配置
     ExecutableAgent --> Runtime : 注入运行依赖
     Runtime ..> RunRuntime : 为本次执行创建
     Runtime --> RuntimeStore : 注入
     Runtime --> ContentStore : 注入
+    Runtime --> EnvironmentProvider : 注入环境服务
     RunRuntime "1" *-- "1" EventBusImpl
     RunRuntime "1" *-- "1" InvocationPipeline
     RunRuntime "1" *-- "1" HookManager
     RunRuntime "1" *-- "1" CommitCoordinator
-    RunRuntime "1" *-- "1" AgentGraphEngine
+    RunRuntime "1" *-- "0..1" AgentGraphEngine
     RunRuntime "1" *-- "0..1" WorkflowEngine
     CommitCoordinator --> RuntimeStore : 唯一命令提交入口
     InvocationPipeline --> ContentStore : 原始及有效正文
 ```
 
 RunRuntime 具有一个逻辑总线，外层 Workflow 与其中的 AgentInvocation 共享它，按 scope 隔离。不同 Run 各建自己的总线和本机等待器。GraphExecution 可以有多个，AgentGraphEngine 是推进这些内层图的服务，不要求每个 Executor 新建一个 Engine。
+
+引擎服务按需装配：直接 Agent 只需要 AgentGraphEngine，纯工具 Workflow 只需要 WorkflowEngine，包含 AgentNode 的 Workflow 两者都需要。这里的 0..1 表示本机服务对象数量，不是持久 GraphExecution 数量。
 
 RuntimeStore／ContentStore 由调用方注入，不能画成 Agent 销毁就级联删除的子对象。SDK 关闭本机 RunRuntime 只释放连接、等待者和执行权；持久记录由独立删除操作处理。
 
@@ -70,15 +76,15 @@ RuntimeStore／ContentStore 由调用方注入，不能画成 Agent 销毁就级
 classDiagram
     class Node {
       <<interface>>
-      +activate(input, continuation, services) ActivationStream
+      +activate(input, continuation, runtime) ActivationStream
     }
     class ReactNode
     class PlannerNode
     class ExecutorNode
     class NodeDriver {
-      +advance(task_ref, lease) DriverResult
+      +activate(task, claim) ActivationReceipt
     }
-    class NodeServices
+    class NodeRuntime
     class ModelPort
     class CapabilityPort
     class DelegationPort
@@ -92,11 +98,11 @@ classDiagram
     NodeDriver --> Node : 激活实现
     NodeDriver --> NodeTask : 读取及准备进度
     NodeDriver --> CommitCoordinator : 提交进度
-    NodeDriver ..> NodeServices : 注入受限服务
-    NodeServices --> ModelPort
-    NodeServices --> CapabilityPort
-    NodeServices --> ContextPort
-    NodeServices --> DelegationPort : 仅授权Planner
+    NodeDriver ..> NodeRuntime : 注入受限服务
+    NodeRuntime --> ModelPort
+    NodeRuntime --> CapabilityPort
+    NodeRuntime --> ContextPort
+    NodeRuntime --> DelegationPort : 仅授权Planner
     NodeTask "1" *-- "1" ReactContinuation : React类任务
     NodeTask "1" --> "1" RoleContext : React类任务
 ```
@@ -109,7 +115,7 @@ classDiagram
 - 同一 Executor 配置被调用两次：两个 NodeTask、两个 RoleContext，一个内层 GraphExecution。
 - 恢复新建 NodeDriver 和本机协程，沿用 NodeTask、RoleContext 和 Operation ID，不从头重复完整任务。
 
-NodeServices 不暴露数据库连接、平台应用服务、原始凭据或无限制文件路径。模型／能力／委派端口注入代理；ContextManager 的内部纯物化和准备写集可以直接调用，不能为了“全部经过总线”递归包装持久化基础操作。
+NodeRuntime 是本次任务激活的受限服务视图，不保存另一份持久上下文，也不暴露数据库连接、平台应用服务、原始凭据或无限制文件路径。其接口名与[Node 协议](runtime.md)一致。模型／能力／委派端口注入代理；ContextManager 的内部纯物化和准备写集可以直接调用，不能为了“全部经过总线”递归包装持久化基础操作。
 
 ## 4. EventBus、EventHandler 与 Manager
 
@@ -272,6 +278,8 @@ classDiagram
 
 Hook 是用户处理器，HookBinding 描述何时运行，HookManager 负责筛选、顺序、超时、校验与恢复链游标。它不是全局事件观察者；需要修改或阻止调用时必须在 Pipeline 中被有序 await。
 
+同一 Run 可能包含多个可执行 Agent 的配置。HookManager 按可信 ExecutionBindingRef 选择该程序的绑定，再用 stage／matcher 筛选角色；不会将外层 Workflow、Planner 和所有子 Agent 的 Hook 合成全局链。绑定 key 在 program_key 内唯一，固定链及已选绑定保存到 Operation，恢复不跨程序重新选取。
+
 FunctionHook 面向可信高代码函数；不可信脚本通过受限 HookAdapter 执行。脚本失败、非法修改和合法拒绝分别处理：
 
 1. 失败或超时：记录诊断，放行原有效值。
@@ -295,14 +303,14 @@ classDiagram
       +files_manifest
     }
     class SkillLoader {
-      +list_entries(scope) SkillMetadataList
-      +read_entry(key, scope) SkillContent
-      +read_resource(key, path, scope) Content
+      +list_entries(scope) SkillEntrySummary[]
+      +read_entry(request, scope) SkillReadResult
+      +read_resource(resource_key, path, scope) SkillReadResult
     }
     class ToolManager
     class CapabilityAdapter {
       <<interface>>
-      +invoke_once(input, context) RawResult
+      +invoke_once(request, context) ToolResult
     }
     class FileToolAdapter
     class ScriptToolAdapter
@@ -367,36 +375,49 @@ sequenceDiagram
 
 ```mermaid
 sequenceDiagram
-    participant N as 当前角色Node
+    participant N as Node与NodeDriver
+    participant J as CallBatchCoordinator
+    participant C as CommitCoordinator
+    participant E as AgentGraphEngine
     participant B as EventBus与Pipeline
     participant T as ToolManager
     participant A as CapabilityAdapter
     participant G as GraphExecutionManager
-    participant E as AgentGraphEngine
-    participant J as CallBatchCoordinator
-    N->>J: 提交完整模型响应的固定批次
-    J->>B: 按配置准入各成员
+    N->>J: freeze完整决策
+    J-->>N: PreparedBatch
+    N->>C: 接受决策并提交批次及父等待
+    E->>C: 按串并行策略提交成员准入意图
+    E->>B: begin已提交的成员意图
     alt 普通工具或MCP
-        B->>T: 获准的有效参数
+        B->>T: 前置处理后交有效参数
         T->>A: invoke_once
-        A-->>B: 原始结果，经后置Hook提交
+        A-->>T: 原始结果
+        T-->>B: RawResult
     else Skill文件阅读或脚本
         B->>T: capability.invoke
         T->>A: 文件scope或受限脚本视图
-        A-->>B: 内容或脚本结果，经后置Hook提交
+        A-->>T: 内容或脚本结果
+        T-->>B: RawResult
     else Executor委派
         B->>G: executor.delegate有效任务
-        G-->>E: 准备子Task和父等待关联
-        E->>E: 提交后激活Executor私有Loop
-        E-->>B: 子Task结果接回原Operation
+        G-->>B: PreparedDelegate启动计划
+        B->>E: register_executor校验并准备注册
+        E->>C: 原子登记子Task、Context、父关联及ready意图
+        E->>E: 读取已提交意图，激活Executor私有Loop
+        E->>C: 子终态与父Operation raw结果同提交
     end
-    B-->>J: 最终EventResponse
-    J->>J: 等全部成员settled并按ordinal整理
-    J-->>N: 一次交付整批结果
-    N->>N: 下一次模型决策
+    B->>C: 保存raw、后置Hook及最终effective响应
+    E->>J: plan_settlement读取最终响应
+    J-->>E: 成员结算及可选父唤醒写集
+    E->>C: 提交成员settled；全批完成后唤醒父任务
+    N->>J: plan_delivery读取全批结果
+    J-->>N: 按ordinal排序的交付写集
+    N->>C: 上下文、consumed与下一Loop位置同提交
 ```
 
 图中的分支是单个成员的不同类型，不表示整批只能选一种。一个批次可以同时有 Tool、MCP 和多个 Executor；只有 parallel_enabled 开启才并行。工具执行不会新增图实例，Executor 也只新增本内层图的 NodeTask。
+
+图中一次“保存”箭头概括相应阶段的提交，raw、各 Hook 与最终响应仍遵循调用协议各自的原子边界；Executor 的 raw 已在子终态事务保存，Pipeline 只续后置阶段。Coordinator 才能写入事实；CallBatchCoordinator／GraphExecutionManager 返回准备结果，不能自行启动协程或提交。批次本地拒绝项无 Operation，按 Runtime 协议直接结算。
 
 ## 10. 故障恢复的对象重建
 
@@ -405,10 +426,13 @@ sequenceDiagram
     participant A as 调用方
     participant R as 新Runtime与Agent对象
     participant S as RuntimeStore
+    participant L as LeaseService
+    participant V as EnvironmentProvider
     participant E as 对应图引擎
     participant P as Pipeline
+    participant C as CommitCoordinator
     A->>R: 同配置、同store、同run_id调用
-    R->>S: 读取Run并申请执行权
+    R->>S: 读取Run状态
     alt 已终态
         S-->>R: 原结果
         R-->>A: 原结果，不执行
@@ -416,17 +440,26 @@ sequenceDiagram
         S-->>R: 占用状态
         R-->>A: 附着或明确busy，不争抢
     else 可接管
-        R->>S: 新epoch并完成旧环境撤权
+        R->>L: 申请接管
+        L->>S: 原子claim recovering及候选epoch
+        R->>V: 撤销旧scope全部写入视图
+        V-->>R: RevocationReceipt或未确认
         R->>S: 快照加后续已提交增量
         S-->>R: 图、Task、Context、Operation及等待关系
+        R->>R: 校验恢复载荷、关联和依赖格式
+        R->>L: 撤权及现场校验通过后激活候选epoch
+        L->>S: 校验回执并提交有效执行权
         R->>E: 按engine_kind恢复原位置
         E->>P: 继续原Operation或消费已存结果
         P-->>E: 最终响应
-        E->>S: 同事务保存任务完成与后继意图
+        E->>C: 准备任务完成与后继意图
+        C->>S: 校验lease并原子提交
     end
 ```
 
 恢复时新建的是 Python 对象、连接和协程；被恢复的是持久身份及执行位置。检查点不保存平台对象，不重新查发布，不要求 LLM 重新规划全部工作。外层 AgentNode 恢复接回同一子 Invocation；具体 pending writes 屏障见[Workflow 适配](workflow.md)。
+
+LeaseService 的控制面 claim／激活通过 RuntimeStore 的受控事务入口执行，不经业务 Hook。EnvironmentProvider 负责实际撤权，数据库仅保存回执与执行权；未取得撤权确认就不能激活新 writer。图中后续激活步骤以撤权成功为前提。
 
 ## 11. 实现时的唯一责任清单
 

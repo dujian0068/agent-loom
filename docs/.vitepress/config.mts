@@ -79,6 +79,7 @@ export default defineConfig({
         items: [
           { text: "目录规划", link: "/directory-plan" },
           { text: "完整索引", link: "/README" },
+          { text: "整理复核记录", link: "/reorganization-review" },
           { text: "维护文档站", link: "/documentation-site" },
         ],
       },

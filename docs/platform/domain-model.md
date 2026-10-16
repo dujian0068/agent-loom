@@ -41,8 +41,9 @@ classDiagram
     Resource "1" *-- "0..*" ResourceVersion
     ApplicationRelease --> ResourceVersion : 固定引用
     Application "1" *-- "0..*" SessionBinding
-    ApplicationRelease --> RunBinding : 本次使用的配置
-    SessionBinding --> RunBinding : 会话关联
+    RunBinding --> ApplicationRelease : 固定使用的配置
+    RunBinding --> SessionBinding : 所属会话
+    ApplicationRelease --> ApplicationRelease : Workflow固定引用Agent发布
 ```
 
 发布包引用资源，不拥有共享资源；删除 Agent 不能连带删除模型连接或别的应用使用的 Skill。Workflow 发布包可以引用完整 Agent 发布包，不能引用另一个 Agent 的私有 Executor 任务。

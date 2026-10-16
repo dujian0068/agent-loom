@@ -54,7 +54,7 @@ flowchart TB
 
 ## 3. 一次调用传什么
 
-Platform 传入 AgentDefinition／GraphDefinition、已解析模型客户端、能力目录、Hook、Skill 路径／加载器、环境 scope 及存储适配器。资源可按需读取，构造阶段不用加载所有历史正文。
+Platform 传入 AgentDefinition／GraphDefinition、已解析模型客户端、能力目录、Hook、Skill 路径／加载器、WorkspaceBinding 与 EnvironmentProvider 及存储适配器。资源可按需读取，构造阶段不用加载所有历史正文。
 
 高代码调用者直接构造同样的对象；平台只是其中一个调用者。平台特有 resolver 可以实现 SDK 端口，但 SDK 代码不能反向导入平台实现。
 
