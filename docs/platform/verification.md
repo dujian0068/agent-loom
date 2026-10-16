@@ -9,11 +9,11 @@
 | 草稿和发布 | 草稿不能运行；发布校验定位缺少资源和输入错误 |
 | 资源解析 | 平台在构造前解析全部资源和 Workflow Agent 依赖 |
 | SDK 独立边界 | 断开平台目录查询后，已构造 Agent 可完成执行；SDK 无平台实体必填字段 |
-| 版本固定 | 原 Run 恢复用原配置，下一次新提问用当前发布配置 |
-| 发布屏障 | 发布扫描包含直接 Run 和 Workflow 引用；晚到旧分派不启动新工作 |
-| 请求重试 | HTTP 回执丢失，重投同逻辑请求不重复 Run／用户输入 |
-| 进程恢复 | SDK 已接收、平台未记回执时故障，另一 Worker 重投同 Run 继续 |
-| 补充竞态 | SDK 接收与 Run 结束竞争，输入明确 pending／delivered／carried 或成为新提问，不丢不重 |
+| 版本固定 | 原 ExecutionRecord 恢复用原配置，下一次新提问用当前发布配置 |
+| 发布屏障 | 发布扫描包含直接 ExecutionRecord 和 Workflow 引用；晚到旧分派不启动新工作 |
+| 请求重试 | HTTP 回执丢失，重投同逻辑请求不重复 ExecutionRecord／用户输入 |
+| 进程恢复 | SDK 已接收、平台未记回执时故障，另一 Worker 重投同 ExecutionRecord 继续 |
+| 补充竞态 | SDK 接收与 ExecutionRecord 结束竞争，输入明确 pending／delivered／carried 或成为新提问，不丢不重 |
 | Plan 补充 | 只进入 Planner 下一轮，不广播 Executor |
 | SSE 续读 | 单调事件序号、去重和终态；断开连接不停止执行 |
 | 结束 | 用户 stop 被持久接收；无 Worker 时也可终结；不提供用户暂停／恢复按钮 |

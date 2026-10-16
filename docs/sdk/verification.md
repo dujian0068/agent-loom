@@ -26,28 +26,30 @@
 | SDK06 | 同批单项失败 | 其他继续；全批结算一次反馈，不按完成先后逐项 ReAct |
 | SDK07 | 重入 begin、模型重新提出相同参数 | 前者复用 Operation；后者新 Operation；不同语义不合并 |
 | SDK08 | 第 100 张票据仍 reserved | 等待结算，不误报耗尽；第 100 次可成功，第 101 次不能出网 |
-| SDK09 | Runtime 重试、格式纠正、压缩 | 尝试不重复计票；模型纠正正常计票；压缩不计业务票 |
-| SDK10 | 外层 AgentNode 调 Plan | 一个根 Run、外图与内图分离；Executor 仍在内图；私有 Context 不进入 GraphState |
+| SDK09 | SDK 自动重试、格式纠正、压缩 | 尝试不重复计票；模型纠正正常计票；压缩不计业务票 |
+| SDK10 | 外层 AgentNode 调 Plan | 一个根 ExecutionRecord、外图与内图分离；Executor 仍在内图；私有 Context 不进入 GraphState |
 | SDK11 | 纯能力 Workflow | 可以没有 AgentInvocation／RoleContext；不造假上下文 |
-| SDK12 | 同一绑定在不同 Run 并行 | Node 对象不保存可变消息；RunRuntime、总线、Task scope 不串用 |
+| SDK12 | 同一绑定在不同 ExecutionRecord 并行 | Node 对象不保存可变消息；ExecutionRunner、总线、Task scope 不串用 |
 | SDK13 | 完整空候选／格式不合规，再修正成功 | 接受每个完整决策只 consume 一次；反馈键固定 format；新修正新票据；不偷换为网络重试 |
 | SDK14 | 第 100 次返回格式错误 | 原票据只扣一次；修正需第 101 次时预算异常；不追加总结调用 |
 | SDK15 | 纯工具 Workflow 未传 session_id | 无 AgentInvocation 仍有合法 run 文件分区；不伪造会话或重复嵌套 runs 目录 |
 | SDK16 | Workflow 两次调用同一 Agent，随后其中一次故障重入 | 两个独立 Invocation、input_only 上下文；恢复复用原实例，不读取既有聊天 Session |
-| SDK17 | 同一 Run 两个 Agent 使用同名 Hook binding_key | 按各自 program_key／ExecutionBindingRef 选链；外层和内层绑定不混用 |
+| SDK17 | 同一 ExecutionRecord 两个 Agent 使用同名 Hook binding_key | 按各自 program_key／ExecutionBindingRef 选链；外层和内层绑定不混用 |
 | SDK18 | 构造时禁止所有外部 I/O，再修改原配置 dict | 无模型／MCP／Hook／沙箱调用；已构造程序的深冻结配置不变 |
-| SDK19 | 两个调用者重投同 run_id／初始输入 | 默认附着同 Run，仅一个 owner；不同初始内容明确冲突，不追加补充 |
+| SDK19 | 两个调用者重投同 run_id／初始输入 | 默认附着同 ExecutionRecord，仅一个 owner；不同初始内容明确冲突，不追加补充 |
 | SDK20 | 新对象 start(run_id)，不传 input | 接回原检查点；不存在则 RUN_NOT_FOUND，不凭空创建问题 |
-| SDK21 | 取消 ainvoke／关闭 events，再另行 wait | 只解除观察，执行继续；Runtime supervisor 保持任务引用 |
-| SDK22 | stop 先于 start；已有 stopping Run 再次 start | 前者阻止初始化，后者允许观察／恢复收束，均不能启动新业务 |
-| SDK23 | Runtime shutdown，再由新对象恢复 | 不伪造用户停止、不删除现场；注入的共享客户端不被错误关闭 |
+| SDK21 | 取消 ainvoke／关闭 events，再另行 wait | 只解除观察，执行继续；RuntimeEngine supervisor 保持任务引用 |
+| SDK22 | stop 先于 start；已有 stopping ExecutionRecord 再次 start | 前者阻止初始化，后者允许观察／恢复收束，均不能启动新业务 |
+| SDK23 | RuntimeEngine shutdown，再由新对象恢复 | 不伪造用户停止、不删除现场；注入的共享客户端不被错误关闭 |
 | SDK24 | MCP 注册多工具但省略 member_key；Skill 含脚本但未绑定 exec | 构造明确拒绝歧义，脚本能力不因读 Skill 自动授权 |
 | SDK25 | HookReadPort 读其他 Context 或最新版本、Hook 结束后继续读 | 拒绝越权／版本漂移／过期端口；原始元数据中没有存储客户端 |
 | SDK26 | 终态事件后清理缓慢；从 terminal_seq 重连 | 答案流在固定终态序号结束；清理状态单独查询，不重发最终结果 |
-| SDK27 | 相同 command_id 不同 stop 参数；接收回执未知重投 | 冲突明确，重投不双重接收，不把未知提交解释为 Run 失败 |
+| SDK27 | 相同 command_id 不同 stop 参数；接收回执未知重投 | 冲突明确，重投不双重接收，不把未知提交解释为 ExecutionRecord 失败 |
 | SDK28 | ReactAgent／PlanAgent 赋给 Agent 类型，再使用统一入口 | 类型检查与调用合同一致；构造不执行，接口不暴露 Node.activate 或平台 CRUD |
 | SDK29 | StateGraph 编译纯工具图 | 返回 Workflow；不要求模型、AgentDefinition 或 RoleContext，不因复用 RunHandle 继承 Agent |
-| SDK30 | AgentNode 绑定内置 Agent／只实现公共方法的第三方 Agent | 前者走内部调用桥、同根 Run；后者编译时报 ConfigurationError，不偷偷调用 start 新建根 Run |
+| SDK30 | AgentNode 绑定内置 Agent／只实现公共方法的第三方 Agent | 前者走内部调用桥、同根 ExecutionRecord；后者编译时报 ConfigurationError，不偷偷调用 start 新建根 ExecutionRecord |
+| SDK31 | 同一 RuntimeEngine 并发执行两个不同 run_id，其中一个关闭观察或终结 | 两个 ExecutionRecord、两个有效 ExecutionRunner；总线、Manager 活动索引、预算和上下文隔离，共享客户端不被其中一次收尾关闭 |
+| SDK32 | 旧 Runner 失权后重建并接管原 run_id | ExecutionRecord 与已提交 Task／Operation 身份不变，新建 ExecutionRunner／总线／激活端口；旧句柄或代理不能继续以旧 epoch 写入，终态记录只读附着不创建 Runner |
 
 ## 3. Hook 与 EventBus 测试
 
@@ -73,7 +75,7 @@
 | Workflow task writes 未完整提交 | 阻止 reducer／后继推进 | 仅等后台 Future 就宣称可靠 |
 | 新 owner 接管 | 递增 epoch、撤销旧 writer、再激活 | 仅靠本机锁或租约超时推断文件已安全 |
 | stop 时两个子任务仍写文件 | 关闭新准入，全部收束再清理 | 第一个完成时删除共享工作目录 |
-| 终态时补充未消费 | 转 carried，下一次主动提问接回 | 默默丢弃、后台自行创建新 Run |
+| 终态时补充未消费 | 转 carried，下一次主动提问接回 | 默默丢弃、后台自行创建新 ExecutionRecord |
 
 ## 5. 交付示例及实际验证
 

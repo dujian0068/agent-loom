@@ -18,7 +18,7 @@
 | `ContentScopeRef` | `namespace, scope_key`，来自注入的存储分区和内容范围；不包含平台用户或应用 |
 | `PayloadRef` | 公共可辨识union：`{kind:inline,value}` 或 `{kind:blob,content_scope_ref,blob_id,sha256,size_bytes,media_type}`；小值可 inline，大值使用不可变内容引用 |
 | `ContextRevisionRef` | `context_id:UUID, revision:int`；revision 从 0 开始，0 是空 manifest |
-| `ContextReadAuthority` | `run_id, invocation_id?, node_task_id?, allowed_context_ids[], shared_scope_grants[], source_scope_grants[]`，Runtime 装配，不能从模型 JSON 接收 |
+| `ContextReadAuthority` | `run_id, invocation_id?, node_task_id?, allowed_context_ids[], shared_scope_grants[], source_scope_grants[]`，SDK 按任务 scope 装配，不能从模型 JSON 接收 |
 | `SourceDependency` | `source_scope, source_ref, grant_id`；派生结果取全部已消费来源的保守并集 |
 | `ExecutionBindingRef` | `program_key, node_binding_key, role_key?`，定位调用方已装配程序的绑定，不执行远程配置查询 |
 | `DomainFailure` | `code, category, message, retryable_transport:false\|true, external_outcome:not_started\|known\|unknown, detail_ref?`；message 已脱敏 |
@@ -116,19 +116,19 @@ ContextManager 执行以下校验，任何一个失败都不发布部分写集�
 
 跨多个 ContextScope 的写集先全部验证，统一事务发布。revision 冲突时重新读取并重建纯函数写集；相同 mutation_id 已提交则直接返回原修订，不能再应用两次 patch。
 
-普通事务锁序为 **根 Run → Invocation → GraphExecution 按 ID → NodeTask 按 ID → Operation 按 ID → Context 按 ID → 子记录**。涉及会话的输入领取、补充转移和终态命令预先锁 Session，再按上述顺序；严禁持有Run后补拿Session。待验证大正文在事务前读取和 hash 校验；事务内验证版本／授权前置并发布引用，网络和文件写不放入事务。
+普通事务锁序为 **根 ExecutionRecord → Invocation → GraphExecution 按 ID → NodeTask 按 ID → Operation 按 ID → Context 按 ID → 子记录**。涉及会话的输入领取、补充转移和终态命令预先锁 Session，再按上述顺序；严禁持有ExecutionRecord后补拿Session。待验证大正文在事务前读取和 hash 校验；事务内验证版本／授权前置并发布引用，网络和文件写不放入事务。
 
 ## 3. 历史投影与输入投递
 
-本节的 Session 历史选择和补充领取适用于直接 Agent Run。Workflow 的 AgentNode 使用 input_only 的 Invocation 私有上下文，不能沿父 Run 的 session_id 自动读取历史或领取补充；外层输入与状态映射见[Workflow 上下文边界](workflow.md#41-输入历史与角色上下文)。无 AgentInvocation 的根 Workflow 不调用下文根角色定位逻辑。
+本节的 Session 历史选择和补充领取适用于直接 Agent ExecutionRecord。Workflow 的 AgentNode 使用 input_only 的 Invocation 私有上下文，不能沿父 ExecutionRecord 的 session_id 自动读取历史或领取补充；外层输入与状态映射见[Workflow 上下文边界](workflow.md#41-输入历史与角色上下文)。无 AgentInvocation 的根 Workflow 不调用下文根角色定位逻辑。
 
 ### 3.1 查询 DTO 与唯一历史算法
 
-`HistorySelection` 字段为 `session_id, current_run_id, current_question_input_seq, recent_n, ended_runs[], recent_run_ids[], source_revision_refs[], input_watermark`。`recent_n` 是本 Run 冻结配置，默认 2，允许 0。
+`HistorySelection` 字段为 `session_id, current_run_id, current_question_input_seq, recent_n, ended_runs[], recent_run_ids[], source_revision_refs[], input_watermark`。`recent_n` 是本 ExecutionRecord 冻结配置，默认 2，允许 0。
 
 `HistoryItem` 字段为 `item_id, run_id, kind:user_input|effective_record|terminal_marker|transfer_marker, input_id?, record_id?, source_revision_ref?, payload_ref?, terminal_status?, order_key, protected:bool, source_refs[]`。
 
-`HistoryProjector.select(session_id,current_run_id,recent_n,authority)` 固定当前问题的 input_seq，分页读取它之前、属于同 Session 的全部终态 Run，按各轮原问题 input_seq 升序排序。终态集合固定为 `succeeded, failed, cancelled, timed_out, budget_exhausted`；stopping、queued、running 不计入。
+`HistoryProjector.select(session_id,current_run_id,recent_n,authority)` 固定当前问题的 input_seq，分页读取它之前、属于同 Session 的全部终态 ExecutionRecord，按各轮原问题 input_seq 升序排序。终态集合固定为 `succeeded, failed, cancelled, timed_out, budget_exhausted`；stopping、queued、running 不计入。
 
 1. 取排序末尾 N 轮为 recent；N=0 时 recent 为空，其余为 older。不得跳过失败、补取成功轮。
 2. older 按轮次输出该轮原问题和全部补充，再输出已提交最终有效结果（存在时）及真实终态标记；没有最终结果输出“未形成最终结果”。
@@ -136,8 +136,8 @@ ContextManager 执行以下校验，任何一个失败都不发布部分写集�
 4. 当前角色的有效过程单独接入；Executor 只接任务说明、显式约束、材料及自己的过程，不能执行根历史选取器。
 5. 逐 input_id 去重：属于当前保护集合时只保留当前原文位置；否则正文置于最后实际 delivered 位置；从未 delivered 的保留最初接收位置；其他位置留来源／转交标记。
 6. 同轮 UserInput 按 input_seq 排序；角色消息按 context_seq 排序；并行结果按 batch ordinal，不按完成时间排序。
-7. 历史末尾 Run 终态从权威 Run 读，不从消息猜测。故障恢复原 Run 不新增历史轮次。
-8. 首次新 Run 不复用旧 Run 的 ContextSnapshot 代替 recent 选取；全量历史分页物化后再按本次预算压缩。
+7. 历史末尾 ExecutionRecord 终态从权威 ExecutionRecord 读，不从消息猜测。故障恢复原 ExecutionRecord 不新增历史轮次。
+8. 首次新 ExecutionRecord 不复用旧 ExecutionRecord 的 ContextSnapshot 代替 recent 选取；全量历史分页物化后再按本次预算压缩。
 
 根角色过程包括普通工具、MCP、skill.read、exec、委派摘要、拒绝及有效参数来源；大结果保持当时已见的预览和 result_ref，不自动展开未阅读正文。`result.read` 的后续返回形成新的独立过程记录。
 
@@ -152,13 +152,13 @@ ContextManager 执行以下校验，任何一个失败都不发布部分写集�
 
 根角色保护本次原问题、已领取 carried 补充和本次正式补充；Executor 保护 Planner 明确交付的任务／约束／材料。保护对象原文、顺序和身份必须出现在每次实际请求，摘要或原文数据库引用不能代替发送正文。
 
-`InputDeliveryService.claim(run_id,operation_id,cutoff,expected_operation_revision)` 只能在根角色下一业务模型请求冻结时执行。读取 `input_seq<=cutoff`、目标 Run 合法且未 delivered 的记录，与请求引用同事务置 claimed；claim 的唯一键为 `(operation_id,input_id)`。实际入口由 Run.root_graph_execution_id → AgentInvocation → 已创建的入口 NodeTask 解析，不新增 Run.root_node_task_id。
+`InputDeliveryService.claim(run_id,operation_id,cutoff,expected_operation_revision)` 只能在根角色下一业务模型请求冻结时执行。读取 `input_seq<=cutoff`、目标 ExecutionRecord 合法且未 delivered 的记录，与请求引用同事务置 claimed；claim 的唯一键为 `(operation_id,input_id)`。实际入口由 ExecutionRecord.root_graph_execution_id → AgentInvocation → 已创建的入口 NodeTask 解析，不新增 ExecutionRecord.root_node_task_id。
 
 `mark_delivered(FirstOutputReceipt)` 同事务插入首输出证据、更新 Attempt.first_output_at，并把该 Operation 的 claimed 记录置 delivered。先 committed receipt 再取消“未送达”判断；本事务不生成 token outbox。重投同 `(attempt_id,first_output)` 回原 receipt；另一个成功 Attempt 不重复推进同输入。
 
-`carry_unconsumed(run_id,terminal_commit)` 将本 Run 未 delivered 的 pending／claimed 补充旧记录置 carried，并创建 `target_run_id=null,state=pending,previous_delivery_id=旧ID` 新记录；唯一键 `(input_id,previous_delivery_id)`。原始问题不是待补充队列的新输入。新 Run 在用户主动提问后绑定这些 pending；不因 pending 自动启动。
+`carry_unconsumed(run_id,terminal_commit)` 将本 ExecutionRecord 未 delivered 的 pending／claimed 补充旧记录置 carried，并创建 `target_run_id=null,state=pending,previous_delivery_id=旧ID` 新记录；唯一键 `(input_id,previous_delivery_id)`。原始问题不是待补充队列的新输入。新 ExecutionRecord 在用户主动提问后绑定这些 pending；不因 pending 自动启动。
 
-API `InputReceipt.delivery_state=pending_next_run` 是上述“旧delivery=carried＋新delivery.target_run_id=null且state=pending”的投影，不是UserInput上的独立可写状态。UserInput保持不可变，所有领取／送达／转交只修改或追加UserInputDelivery；不得另建SessionInput.delivery_state作为第二权威。初次 append 时指定 Run 已终态且此前未接收该 input_id，返回 RUN_ENDED，不保存补充；调用方按新提问协议发起下一 Run。同 input_id 的回执未知重投先查原接收事实，不能把已经转交的输入重新当作新问题。
+API `InputReceipt.delivery_state=pending_next_run` 是上述“旧delivery=carried＋新delivery.target_run_id=null且state=pending”的投影，不是UserInput上的独立可写状态。UserInput保持不可变，所有领取／送达／转交只修改或追加UserInputDelivery；不得另建SessionInput.delivery_state作为第二权威。初次 append 时指定 ExecutionRecord 已终态且此前未接收该 input_id，返回 RUN_ENDED，不保存补充；调用方按新提问协议发起下一 ExecutionRecord。同 input_id 的回执未知重投先查原接收事实，不能把已经转交的输入重新当作新问题。
 
 prepare_context固定本轮input_cutoff，压缩与Hook处理期间不刷新这个水位；新到补充留下一Loop，终态没有下一Loop则转交。冻结只领取已物化且input_seq<=cutoff的投递，逐项核对投影与保护原文，不能临时追加未经过准备流程的输入。Attempt 重试保持原 claim、input_cutoff 和请求 hash，不注入后来输入。
 
@@ -166,12 +166,12 @@ prepare_context固定本轮input_cutoff，压缩与Hook处理期间不刷新这�
 
 | 边界 | 事务读取／前置 | 事务写入及幂等键 |
 | --- | --- | --- |
-| 根输入投影追加 | Run 可推进；入口 NodeTask、context head、input_seq 水位和未送达记录 | user_ref、revision、delivery.context_seq；`input-project:<context>:<input>` |
-| 请求冻结与领取 | Operation request_hooks 已完成、有效请求 hash、所有 context heads、保护清单、Run／局部控制 | FrozenModelRequestRef、claimed、Operation phase、continuation；`model-freeze:<operation>` |
+| 根输入投影追加 | ExecutionRecord 可推进；入口 NodeTask、context head、input_seq 水位和未送达记录 | user_ref、revision、delivery.context_seq；`input-project:<context>:<input>` |
+| 请求冻结与领取 | Operation request_hooks 已完成、有效请求 hash、所有 context heads、保护清单、ExecutionRecord／局部控制 | FrozenModelRequestRef、claimed、Operation phase、continuation；`model-freeze:<operation>` |
 | 首输出接收 | 当前 lease、Attempt 仍归属原 Operation、claim 引用一致 | receipt、first_output_at、delivered；`first-output:<attempt>` |
-| Run 终态转交 | 根 Run 已关闭准入、未 delivered 记录 | carried／pending 链和终态一并提交；`carry:<run>:<input>:<delivery>` |
+| ExecutionRecord 终态转交 | 根 ExecutionRecord 已关闭准入、未 delivered 记录 | carried／pending 链和终态一并提交；`carry:<run>:<input>:<delivery>` |
 
-终态事务和首输出事务以根 Run 锁串行化：先送达则终态不转交；先终态则迟到旧结果不能撤销转交。数据库提交失败时暂停推进，保存可重试提交命令；不得把内存首片段当作已持久送达。权限错误不返回其他角色的 input_id 或正文。
+终态事务和首输出事务以根 ExecutionRecord 锁串行化：先送达则终态不转交；先终态则迟到旧结果不能撤销转交。数据库提交失败时暂停推进，保存可重试提交命令；不得把内存首片段当作已持久送达。权限错误不返回其他角色的 input_id 或正文。
 
 ## 4. 模型视图、协议组与预算
 
@@ -308,7 +308,7 @@ blob 已写未提交是孤儿；不得据此跳过 cursor。块 raw 已提交则
 
 ## 6. 历史与压缩的边界示例
 
-一次提问及其正式补充属于一个 Run；故障接管沿用原 Run，不增加历史轮次。最近 N 次指当前 Run 之前最近 N 次已终结提问，成功、失败、用户结束都算，不向前补找成功轮次。较早记录保留全部用户输入（含补充）、最终结果及结束状态。Executor 私有过程不会自动进入 Planner 历史，只进入委派结果。
+一次提问及其正式补充属于一个 ExecutionRecord；故障接管沿用原 ExecutionRecord，不增加历史轮次。最近 N 次指当前 ExecutionRecord 之前最近 N 次已终结提问，成功、失败、用户结束都算，不向前补找成功轮次。较早记录保留全部用户输入（含补充）、最终结果及结束状态。Executor 私有过程不会自动进入 Planner 历史，只进入委派结果。
 
 无最终结果明确标记未完成。工具协议组必须完整，历史被中断的调用使用未完成占位，不能将占位写回真实 Operation 成功状态。大结果保留实际交付给模型的预览和可查引用，不声称模型读过全部正文。所有历史投影读取有效修订，不能绕过 Hook 变更重新读取 raw 内容。
 
@@ -333,7 +333,7 @@ B=100000、O=8192、F=65000、材料20000：触发85000≥80000，H=35000，D=-5
 | 编号／注入点 | 必须断言 |
 | --- | --- |
 | C01 N=0、N=2、终态混合 | 每轮全部UserInput保留；最近N按问题顺序且包含全部终态种类；无成功补位 |
-| C02 一轮五条补充 | 五个input_id、一个Run；历史裁剪不丢任一补充 |
+| C02 一轮五条补充 | 五个input_id、一个ExecutionRecord；历史裁剪不丢任一补充 |
 | C03 Executor读根历史 | 未获授权的materialize返回permission；显式任务输入逐字保留 |
 | C04 同一mutation重投 | revision、record_seq只推进一次，原receipt与hash一致 |
 | C05 patch并发 | 不相交字段重定位；重叠字段返回CONTEXT_REVISION_CONFLICT；合法deny仍有效 |

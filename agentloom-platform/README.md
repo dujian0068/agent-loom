@@ -7,8 +7,8 @@
 - 管理用户、空间、权限、应用、草稿与发布版本。
 - 管理模型凭据、Skill、Tool、MCP、Hook 等可复用资源，提供配置页面。
 - 将已选配置解析为 SDK 构造参数及依赖；发布前完成权限、资源和应用配置检查。
-- 准备运行机器、会话标识、稳定 Run 标识及存储／工作空间依赖，通过 SDK 公共接口发起执行。
-- 故障后使用该 Run 原配置重新构造 Agent，交回原 Run 标识；不在平台重写 Planner／Executor 的恢复算法。
+- 准备运行机器、会话标识、稳定 ExecutionRecord 标识及存储／工作空间依赖，通过 SDK 公共接口发起执行。
+- 故障后使用该 ExecutionRecord 原配置重新构造 Agent，交回原 ExecutionRecord 标识；不在平台重写 Planner／Executor 的恢复算法。
 - 提供网页、HTTP API、运行状态展示与运维接入。
 
 ## 目录

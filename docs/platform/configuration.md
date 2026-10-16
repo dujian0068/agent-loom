@@ -40,7 +40,7 @@ Prompt 支持 inline 或已固定资源版本；变量声明 name/type/required/
 
 模型字段为 connection_ref、credential_slot_id、model_id、think、context_window_tokens、max_output_tokens、metadata_source。供应商地址及 API／Coding Plan profile 由连接管理提供，用户选模型后带入已核验元信息；获取不到则显式填写。UI 使用 K（1K=1024），API 存整数 tokens，不用猜测窗口伪装自动识别。
 
-凭据只由 CredentialsService 读写；模型 SDK 收到 client／credential resolver。更新 Key 不改变模型身份或 endpoint；新物理 Attempt 可解析已授权的新密钥，旧请求不换 Key。明文不进入定义、Run、检查点或公开事件。
+凭据只由 CredentialsService 读写；模型 SDK 收到 client／credential resolver。更新 Key 不改变模型身份或 endpoint；新物理 Attempt 可解析已授权的新密钥，旧请求不换 Key。明文不进入定义、ExecutionRecord、检查点或公开事件。
 
 ### 2.1 Workflow 草稿与节点绑定
 
@@ -71,7 +71,7 @@ GraphDefinition 拥有业务状态 schema、reducer 与流转关系；node_bindi
 
 节点选择完整已发布 Agent、Tool／MCP 或已注册业务函数；Executor 是 Agent 内部角色，不能直接拖入外层当作独立应用。AgentReleaseRef 在发布时固定，输入来自显式状态映射，输出只写声明字段，文件通过 file_grants 授权。
 
-WorkflowExecutionPolicy 控制根 Run 额度、总截止及外层分派策略；各 Agent 保留自身模型、上下文及局部约束，并受根控制限制。外层同时运行两个 AgentNode，不会自动将这两个 Agent 内部的 parallel_enabled 改为 true。
+WorkflowExecutionPolicy 控制根 ExecutionRecord 额度、总截止及外层分派策略；各 Agent 保留自身模型、上下文及局部约束，并受根控制限制。外层同时运行两个 AgentNode，不会自动将这两个 Agent 内部的 parallel_enabled 改为 true。
 
 WorkflowSession 对应 WorkflowApplication 的 SessionBinding；它不是所有子 Agent 的共享聊天会话。AgentNode 按 input_only 方式启动独立上下文，只读取映射输入、显式材料和本次 Invocation 的过程；故障恢复接回原 Invocation。Workflow 运行中补充输入的接收点见[接入边界](sdk-integration.md#4-执行中补充)，不能套用 Planner 的输入领取协议。
 
@@ -85,13 +85,13 @@ CapabilityBindingDraft
   binding_key, kind, resource_ref, member_key?, visible_name, config, authorization
 ```
 
-共享资源有自己的生命周期，不归某一个 Agent 所有；Agent 删除不级联删除共享模型连接、Skill、MCP。撤销资源后平台拦截新的装配，并通过公共 SDK 控制接口停止受影响 Run。
+共享资源有自己的生命周期，不归某一个 Agent 所有；Agent 删除不级联删除共享模型连接、Skill、MCP。撤销资源后平台拦截新的装配，并通过公共 SDK 控制接口停止受影响 ExecutionRecord。
 
 上传文件夹或 Git 导入先产生 ImportJob，实际获取和校验完成后才提交 ResourceVersion。Git 固定 commit SHA，不用运行中的分支名指代资源；失败暂存包不进入可选目录。
 
 - Skill：查找 SKILL.md，校验元数据及目录清单，拒绝越界软链接、设备文件、绝对路径；保存 scripts/references/assets，不在导入时运行脚本。SDK 再验证其支持的 profile。
 - Tool：保存输入输出 Schema 和受信执行配置；不允许 HTTP 用户随意指定服务器 Python import。平台托管函数和外部标准接口最终都装配为 CapabilityAdapter。
-- MCP：连接、认证、transport、发现的工具 Schema 独立保存；discovery 是管理操作，普通 Run 不自动查询最新工具再改变已发布目录。
+- MCP：连接、认证、transport、发现的工具 Schema 独立保存；discovery 是管理操作，普通 ExecutionRecord 不自动查询最新工具再改变已发布目录。
 - Hook：保存时机、matcher、顺序、配置及处理器定位；可信函数／隔离脚本绑定到 SDK HookAdapter，不获得管理数据库写入权。
 - 模型：连接和元信息是管理资源，SDK ModelAdapter 负责协议请求、完整响应和错误归一。
 - 知识文件：上传、格式与读取范围由目录管理；文本解析、检索或文件读取作为已绑定能力提供，不能把上传等同于自动具备完整 RAG。
@@ -106,14 +106,14 @@ validate 按 DTO → Prompt／Schema → 资源与授权 → SDK 纯构造／图
 
 1. 解析草稿、固定资源版本、SDK 定义及工作流依赖；保存候选不可变 Release 数据。
 2. 平台事务 CAS 校验 revision、权限与资源状态，建立 publishing gate、ReleaseJob 和幂等回执。
-3. 通过 RunBinding／DependencyBinding 找到依赖旧配置的根 Run，调用 SDK stop；不持管理数据库锁等待。
+3. 通过 RunBinding／DependencyBinding 找到依赖旧配置的根 ExecutionRecord，调用 SDK stop；不持管理数据库锁等待。
 4. SDK 收束并报告终态后，平台事务切换当前 Release 并清除 gate；失败保留诊断与可重入 Job。
-5. 同一 Session 的下一提问采用新 Release；已有 Run 的恢复仍用原配置。SDK 不负责查版本或比较发布指纹。
+5. 同一 Session 的下一提问采用新 Release；已有 ExecutionRecord 的恢复仍用原配置。SDK 不负责查版本或比较发布指纹。
 
 WorkflowRelease 固定节点绑定及被调用 Agent 的 Release。被调用 Agent 的发布不会自动改写 Workflow。装配一个 Workflow 时解析完整依赖闭包，在 SDK 执行前提供所有可执行 Agent，外层运行中不回查目录。
 
 ## 5. 配置如何进入 SDK
 
-管理配置可以包含用户、空间、发布和资源版本；AssemblyService 必须先解析它们。转换结果是 AgentDefinition／GraphDefinition、角色绑定、model client、CapabilityRegistry、HookBinding、WorkspaceBinding 与 EnvironmentProvider 和 Runtime adapters。
+管理配置可以包含用户、空间、发布和资源版本；AssemblyService 必须先解析它们。转换结果是 AgentDefinition／GraphDefinition、角色绑定、model client、CapabilityRegistry、HookBinding、WorkspaceBinding 与 EnvironmentProvider、存储适配器和 RuntimeEngine。
 
 SDK 不接收一个 application_id 后自行查数据库，也不导入平台 ORM。具体映射、跨存储接入及故障恢复见[SDK 装配](sdk-integration.md)。

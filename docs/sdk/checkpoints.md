@@ -17,7 +17,7 @@ persistence/
   adapters/workflow.py  # 外层原生Saver接口与公共事务适配；待迁移实现
   content_store.py     # put/read/verify/delete不可变内容
   outbox.py            # 提交事实、游标投递
-  cleanup.py           # 指定scope删除、Run文件清理、无引用暂存回收
+  cleanup.py           # 指定scope删除、ExecutionRecord文件清理、无引用暂存回收
   schema/              # SQL schema及显式format_version
 ```
 
@@ -66,8 +66,8 @@ class LeaseService(Protocol):
 使用 READ COMMITTED + 显式行锁 + revision CAS。不可用“一个 Python asyncio.Lock”替代数据库边界。
 
 ```text
-初始化与停止：RunAdmissionControl → Session → Run
-运行推进：                          [Session] → Run
+初始化与停止：RunAdmissionControl → Session → ExecutionRecord
+运行推进：                          [Session] → ExecutionRecord
                                     → Invocation（UUID排序）
                                     → GraphExecution（UUID排序）
                                     → NodeTask（UUID排序）
@@ -76,13 +76,13 @@ class LeaseService(Protocol):
                                     → 各子记录（表名、主键排序）
 ```
 
-只有初始化／停止入口取得 admission 行锁；普通推进不需要该锁，也不得逆序追加。普通 RuntimeCommit 从 Run 开始，不再回头拿 Session；终态和补充转交命令先取 Session，再 Run。跨图提交先收集完整锁集合排序；若计算期间发现还需要更早的锁，回滚重新读取，禁止途中逆序补锁。平台发布与删除 gate 不在此锁序内。
+只有初始化／停止入口取得 admission 行锁；普通推进不需要该锁，也不得逆序追加。普通 RuntimeCommit 从 ExecutionRecord 开始，不再回头拿 Session；终态和补充转交命令先取 Session，再 ExecutionRecord。跨图提交先收集完整锁集合排序；若计算期间发现还需要更早的锁，回滚重新读取，禁止途中逆序补锁。平台发布与删除 gate 不在此锁序内。
 
 数据库事务内不调用模型、MCP、Hook、脚本、共享盘写入、DNS 或沙箱停止。commit 超时不意味着外部能力失败；先按 command_id 查询回执，不直接重复业务调用。
 
 ## 3. 持久表字典
 
-以下是目标物理表，不要求名称与原型一致。公共 ID 使用 DTO 名称的 `_id`，例如 runs.run_id。JSON列对应的完整字段在关联实施规格中定义，未知版本必须拒绝装载。
+以下是目标物理表，不要求名称与原型一致。ExecutionRecord 映射到 `runs` 表，持久身份仍为 `runs.run_id`；ExecutionRunner 是本机驱动对象，没有对应数据表。其余公共 ID 使用已定义 DTO 的 `_id` 字段。JSON列对应的完整字段在关联实施规格中定义，未知版本必须拒绝装载。
 
 ### 3.1 会话与正式输入
 
@@ -96,7 +96,7 @@ class LeaseService(Protocol):
 | user_input_deliveries | delivery_id,input_id,target_run_id?,operation_id?,previous_delivery_id?,state,context_seq?,first_output_receipt_ref?,delivered_at? | 当前投递唯一；state=pending/claimed/delivered/carried；旧投递不可覆盖 |
 | first_output_receipts | attempt_id,operation_id,kind,has_display_content,received_at | PK(attempt_id)；heartbeat 不算首输出 |
 
-SDK 保证同一 Session 的顺序与活动 Run 约束。平台保证同一 Session 绑定同一应用；独立 SDK 调用者负责为同一 Session 提供正确的可执行配置。
+SDK 保证同一 Session 的顺序与活动 ExecutionRecord 约束。平台保证同一 Session 绑定同一应用；独立 SDK 调用者负责为同一 Session 提供正确的可执行配置。
 
 ### 3.2 根执行、图与任务
 
@@ -114,7 +114,7 @@ SDK 保证同一 Session 的顺序与活动 Run 约束。平台保证同一 Sess
 
 复合FK保证 task.graph_id 和 task.run_id 一致，不能只分别检查两个ID存在。图、任务、Operation之间同样使用 `(run_id,id)` 或 `(graph_id,id)` FK；其他跨图关联由命令handler校验显式父子关系。
 
-Root Run 和 Invocation 计数是 loop_tickets 的受事务维护投影。恢复时校验流水，不在发现不一致后静默“修成看起来合理”，应报 `PERSISTENCE_INVARIANT_BROKEN` 并停止推进。
+Root ExecutionRecord 和 Invocation 计数是 loop_tickets 的受事务维护投影。恢复时校验流水，不在发现不一致后静默“修成看起来合理”，应报 `PERSISTENCE_INVARIANT_BROKEN` 并停止推进。
 
 ### 3.3 等待和批次
 
@@ -146,7 +146,7 @@ admission 是准备Hook期间防并发越界的短暂占位，不是活跃Execut
 
 Operation.status固定为pending/succeeded/failed/blocked，处理阶段另存processing_phase；控制取消以failed + error.category=cancelled表示。Attempt.status为prepared/started/succeeded/failed/unknown/cancelled，unknown不是Operation终态名。Hook执行状态和allow/deny决定分开。
 
-同一次Runtime自动重试沿用Operation，只新增Attempt。网络重投 begin 复用purpose_key；模型下一Loop再次调用相同参数使用新purpose_key。请求指纹按原始业务信封计算，用于检测重投冲突；effective_request_hash是Hook/上下文处理完成后冻结的实际输入，两个hash不混用。
+同一次 SDK 自动重试沿用Operation，只新增Attempt。网络重投 begin 复用purpose_key；模型下一Loop再次调用相同参数使用新purpose_key。请求指纹按原始业务信封计算，用于检测重投冲突；effective_request_hash是Hook/上下文处理完成后冻结的实际输入，两个hash不混用。
 
 ### 3.5 上下文、内容和环境
 
@@ -176,7 +176,7 @@ SQL 列展开 namespace 和 scope_key；DTO 仅表达逻辑引用。影响唯一
 | node_checkpoints | node_checkpoint_id,task_id,node_revision,scope_seq,continuation_ref,status,result_ref? | UNIQUE(task_id,node_revision)；不可变 |
 | graph_checkpoints | checkpoint_id,graph_id,engine_kind,engine_protocol_version,checkpoint_seq,covered_scope_seq,previous_id?,payload_ref,content_hash,format_version | UNIQUE(graph_id,checkpoint_seq); UNIQUE(graph_id,covered_scope_seq)；payload保存公共信封及专属engine_state_ref |
 | workflow_task_bindings | graph_id,origin_engine_checkpoint_id,engine_task_id,engine_task_path,node_task_id | UNIQUE(graph_id,origin_engine_checkpoint_id,engine_task_id,engine_task_path)；node_task_id唯一；在能力或Agent调用前保存 |
-| workflow_checkpoint_mappings | graph_id,engine_checkpoint_ns,engine_checkpoint_id,checkpoint_id | UNIQUE(graph_id,engine_checkpoint_ns,engine_checkpoint_id)；命名空间由Runtime确定；原生父快照链不可丢失 |
+| workflow_checkpoint_mappings | graph_id,engine_checkpoint_ns,engine_checkpoint_id,checkpoint_id | UNIQUE(graph_id,engine_checkpoint_ns,engine_checkpoint_id)；命名空间由 SDK 检查点适配层按图身份确定；原生父快照链不可丢失 |
 | outbox | event_id,run_id,public_seq?,scope_kind,scope_id,scope_seq,ordinal,type,payload_ref | UNIQUE(run_id,public_seq) WHERE非空；UNIQUE(scope_kind,scope_id,scope_seq,ordinal) |
 | subscription_cursors | consumer_id,scope_kind,scope_id,commit_seq,ordinal,filter_hash,lease_generation | 联合PK；ACK单调，过滤变化需新consumer版本 |
 
@@ -212,7 +212,7 @@ commit(command, lease):
   verify staged blob checksum/existence outside transaction
   BEGIN
     acquire conversation lock if registry requires it
-    lock Run
+    lock ExecutionRecord
     verify caller lease epoch, phase=active, expires_at > DB now
     old_receipt = lookup(run_id, command_id)
     if exists:
@@ -237,8 +237,8 @@ commit(command, lease):
 
 | 命令 | 原子写集合 | 幂等／关键前置 |
 | --- | --- | --- |
-| initialize_run（T_INIT） | Run、Session轮次与活动引用、初始输入、初始化回执 | admission 行未关闭；同 run_id/input_id 重入复用，内容不同报冲突；公开入口使用受限初始化权限 |
-| create_root_execution | Invocation、Graph、入口Task、Context、WorkspaceScope引用、ready intent | Run queued且root未建；UNIQUE Run根引用 |
+| initialize_run（T_INIT） | ExecutionRecord、Session轮次与活动引用、初始输入、初始化回执 | admission 行未关闭；同 run_id/input_id 重入复用，内容不同报冲突；公开入口使用受限初始化权限 |
+| create_root_execution | Invocation、Graph、入口Task、Context、WorkspaceScope引用、ready intent | ExecutionRecord queued且root未建；UNIQUE ExecutionRecord根引用 |
 | activate_task | Task running、Activation、intent claimed | Task ready、无活跃同epochActivation |
 | commit_progress | Continuation、NodeCheckpoint、相关wait/op引用 | task revision CAS；Progress receipt后才asend继续 |
 | begin_operation | Operation prepared、权威EventRequest、调用关联 | trusted_subject+purpose_key唯一且fingerprint相同 |
@@ -259,14 +259,14 @@ commit(command, lease):
 | CommitWorkflowCheckpoint | 原生快照、原生ID映射、parent chain、已确认writes水位、公共检查点信封 | 所属step写入已确认；验证原生版本／执行权；不得先开始下一step再等待回执 |
 | settle_member | BatchMember结果、WaitMember settled、settled_count | 已有Operation须最终EventResponse；local_outcome仅未begin |
 | consume_batch | 按ordinal追加tool结果、补齐反馈槽、WaitGroup consumed、Continuation.prepare_context | settled_count=member_count，消费标记CAS |
-| stop_run（T_STOP／ControlCommand） | admission closed、StopReceipt；Run已存在时另写stopping/control_reason、取消未准入意图、stop intent、outbox | 独立控制身份，无需Worker活跃lease；Run不存在也阻止迟到初始化；不伪造活跃工具终态 |
-| finalize_run | Run终态、根输出、Session输入转交、Session.active清空、cleanup意图、公开终态事件及terminal_seq | Session先锁，全部写任务已收束；终态不可复活；terminal_seq是该公开事件序号，恢复不能分配第二个结束事件 |
+| stop_run（T_STOP／ControlCommand） | admission closed、StopReceipt；ExecutionRecord已存在时另写stopping/control_reason、取消未准入意图、stop intent、outbox | 独立控制身份，无需Worker活跃lease；ExecutionRecord不存在也阻止迟到初始化；不伪造活跃工具终态 |
+| finalize_run | ExecutionRecord终态、根输出、Session输入转交、Session.active清空、cleanup意图、公开终态事件及terminal_seq | Session先锁，全部写任务已收束；终态不可复活；terminal_seq是该公开事件序号，恢复不能分配第二个结束事件 |
 
 表中命令是允许的语义提交，不要求每个命令独立公开HTTP。Driver可以一次Progress调用其中一个typed命令；命令可以拥有多个内部handler，但最终只能提交一个事务。
 
 ### 5.1 额度的具体 SQL 逻辑
 
-在锁Run及Invocation后：
+在锁ExecutionRecord及Invocation后：
 
 ```text
 if consumed >= limit: exhausted(scope)
@@ -280,7 +280,7 @@ else:
 
 Executor前置deny没有票据但需向父反馈时，使用相同额度准入，在一个事务创建并立即consume一张consumption_kind=error_feedback票据及反馈槽，不造Attempt/permit；暂满等待、真正耗尽控制优先。根角色前置deny直接失败，不造票据。
 
-消费时条件更新 `reserved→consumed`，reserved减1、consumed加1；release仅reserved减1。`business_loop_no`在根Run锁内按consume顺序分配，role_loop_index表达本角色模型决策位置。重复consume查原票据不再扣。根暂时reserved满不能直接终结整个Run，否则并发的第100次合法调用会被错误取消。
+消费时条件更新 `reserved→consumed`，reserved减1、consumed加1；release仅reserved减1。`business_loop_no`在根ExecutionRecord锁内按consume顺序分配，role_loop_index表达本角色模型决策位置。重复consume查原票据不再扣。根暂时reserved满不能直接终结整个ExecutionRecord，否则并发的第100次合法调用会被错误取消。
 
 ### 5.2 节点刚完成时崩溃
 
@@ -290,9 +290,9 @@ Executor前置deny没有票据但需向父反馈时，使用相同额度准入�
 
 公共 SDK 控制门面、调用方管理任务和 SDK deadline 扫描器调用 `RunControl.request_stop(run_id, reason, ControlIdentity, idempotency_key)`。它使用Coordinator的**受限控制命令入口**，不是拿一个伪造ExecutionLease调用普通RuntimeCommit。
 
-Run 尚不存在时先关闭 run_admission_controls，保存 StopReceipt；Run 初始化必须在相同 admission 行锁内验证未关闭。已存在 Run 的控制事务先锁 admission、Session（若修改输入交接）再Run，校验调用方持有的 Runtime scope/control capability及幂等键；终态则返回原结果，否则固定第一个终结原因、设置stopping、关闭新工作、保存stop intent/outbox。允许Run尚queued无lease、lease过期或phase=recovering；只能写这些控制事实，不能写TaskResult、有效Context、模型response或绕过writer barrier直接宣称已收束。
+ExecutionRecord 尚不存在时先关闭 run_admission_controls，保存 StopReceipt；ExecutionRecord 初始化必须在相同 admission 行锁内验证未关闭。已存在 ExecutionRecord 的控制事务先锁 admission、Session（若修改输入交接）再ExecutionRecord，校验调用方持有的 SDK 执行 scope/control capability及幂等键；终态则返回原结果，否则固定第一个终结原因、设置stopping、关闭新工作、保存stop intent/outbox。允许ExecutionRecord尚queued无lease、lease过期或phase=recovering；只能写这些控制事实，不能写TaskResult、有效Context、模型response或绕过writer barrier直接宣称已收束。
 
-Worker每次准入读取当前控制，不靠旧快照授权。接管中的Worker看到stopping只执行撤权/收束，不能激活正常Loop。queued且从未有execution_domain的Run，控制服务可用empty-writer-set证明完成终态；已有writer时须由有效恢复/清理执行权持有者完成barrier后再finalize。deadline扫描器使用DB时间，按同一入口请求停止，不能因无active租约使超时永远失效。
+Worker每次准入读取当前控制，不靠旧快照授权。接管中的Worker看到stopping只执行撤权/收束，不能激活正常Loop。queued且从未有execution_domain的ExecutionRecord，控制服务可用empty-writer-set证明完成终态；已有writer时须由有效恢复/清理执行权持有者完成barrier后再finalize。deadline扫描器使用DB时间，按同一入口请求停止，不能因无active租约使超时永远失效。
 
 控制receipt另带control_identity而非lease_epoch，ScopeCommit显式标记control命令来源；普通业务命令仍全部要求active lease。这个例外由CommandRegistry白名单固定，用户不能把任意RuntimeCommit标成control。
 
@@ -327,7 +327,7 @@ AgentCheckpointPayload（位于公共 GraphCheckpoint.engine_state_ref 中）
   context_revision_refs[], source_scopes[]
 ```
 
-Run／图身份、定义／编译版本和覆盖水位保存在公共信封，内层载荷不维护另一份可变副本。外层通过WorkflowCheckpointAdapter保存专属载荷及原生writes，不能使用此角色任务清单替代原生快照。
+ExecutionRecord／图身份、定义／编译版本和覆盖水位保存在公共信封，内层载荷不维护另一份可变副本。外层通过WorkflowCheckpointAdapter保存专属载荷及原生writes，不能使用此角色任务清单替代原生快照。
 
 恢复使用调用方重新构造的执行程序及原绑定，校验 SDK 协议版本、节点 key、状态载荷格式与内容完整性；不读取平台 Release、不比较配置版本指纹。调用方必须保证本次提供原配置。内层恢复从最近校验通过快照S装载，按ScopeCommit顺序应用S+1..head的不可变after引用；发现缺号/hash错误先尝试更早完整快照，仍缺失则 `CHECKPOINT_CORRUPT` 停止。不得“跳过一条看起来不重要的增量”。`read latest RoleContext`不是读取指定历史快照的实现。
 
@@ -337,17 +337,17 @@ Run／图身份、定义／编译版本和覆盖水位保存在公共信封，�
 
 基础设施默认lease TTL=30s，每10s续期；这是Worker参数，不是Agent业务超时。工作节点不能因本机墙钟不同判断别人lease过期。claim/renew在DB端判断。
 
-1. 锁Run和execution_leases，Run非终态且现lease过期/明确释放才可claim。epoch加1，phase=recovering，记录新worker；原worker从此提交必然被fence拒绝。
+1. 锁ExecutionRecord和execution_leases，ExecutionRecord非终态且现lease过期/明确释放才可claim。epoch加1，phase=recovering，记录新worker；原worker从此提交必然被fence拒绝。
 2. 新Worker取得原execution_domains清单，请SandboxGateway撤销旧进程/挂载写权限，等待RevocationReceipt。**DB epoch不能阻止旧进程继续写NFS文件。**
-3. 无法证明旧writer已停止时保持recovering并告警，不启动新的写任务。Run总deadline仍继续流逝。
+3. 无法证明旧writer已停止时保持recovering并告警，不启动新的写任务。ExecutionRecord总deadline仍继续流逝。
 4. 已撤权后验证快照与增量、定义/ABI/blob完整性；绑定新scope handle，activate lease为active；重建bus/Manager/Driver。
-5. 扫描原图/task/op IDs继续，不重新创建Run或替换业务配置。续租失败立即关闭新工作，撤销本地能力句柄，不提交伪造完成。
+5. 扫描原图/task/op IDs继续，不重新创建ExecutionRecord或替换业务配置。续租失败立即关闭新工作，撤销本地能力句柄，不提交伪造完成。
 
-启动queued Run没有旧writer时，revocation receipt明确为empty-domain-set。正常停止/终态释放lease前也要完成或撤销旧writer；不能把“本地Future取消了”当远端脚本已经停下。
+启动queued ExecutionRecord没有旧writer时，revocation receipt明确为empty-domain-set。正常停止/终态释放lease前也要完成或撤销旧writer；不能把“本地Future取消了”当远端脚本已经停下。
 
 ### 7.2 恢复包与恢复分派
 
-RecoveryBundle包含执行位置 key 与引擎协议、Run控制、全部Invocation、按engine_kind分类的图恢复载荷、Task/Continuation、OperationJournal、未消费结果、未完成压缩episode、WorkspaceScope和当前lease。内层Adapter折叠ScopeCommit和角色现场；外层Adapter读取原生checkpoint、任务映射及pending writes，保留其同步语义，不将全部外层任务标ready后塞入内层队列。实际payload按需加载，不能装载后自动执行Hook或工具。
+RecoveryBundle包含执行位置 key 与引擎协议、ExecutionRecord控制、全部Invocation、按engine_kind分类的图恢复载荷、Task/Continuation、OperationJournal、未消费结果、未完成压缩episode、WorkspaceScope和当前lease。内层Adapter折叠ScopeCommit和角色现场；外层Adapter读取原生checkpoint、任务映射及pending writes，保留其同步语义，不将全部外层任务标ready后塞入内层队列。实际payload按需加载，不能装载后自动执行Hook或工具。
 
 外层原生 writes 的持久键、保留channel更新规则及修订表须随导入版本逐项定义，不能复用内层 TaskResult 表冒充。新增 `CommitWorkflowCheckpoint / CommitWorkflowTaskWrites` 经相同锁序／lease／receipt路径提交；其中完成AgentNode的任务writes与父Operation结果消费、NodeTask终态投影同事务。随后由外层内核应用状态和安排后继，不能由Coordinator再执行一次外层reducer。具体步骤见[父子交接](workflow.md)。
 
@@ -370,7 +370,7 @@ CommitWorkflowTaskWrites 区分 task_result、task_error、task_interruption、s
 | stopping | 只收束/补齐终态，不恢复正常下一Loop |
 | terminal | 只允许cleanup/查询；拒绝启动/late result复活 |
 
-异常分类由能力Manager给出规范错误；恢复层不通过字符串里有没有“timeout”判断幂等或业务失败。所有自动重试仍尊重Run控制和原始max_attempts/next_retry_at。
+异常分类由能力Manager给出规范错误；恢复层不通过字符串里有没有“timeout”判断幂等或业务失败。所有自动重试仍尊重ExecutionRecord控制和原始max_attempts/next_retry_at。
 
 ## 8. Outbox、停止、清理
 
@@ -378,9 +378,9 @@ Outbox与事实同事务写。dispatcher至少一次投递；订阅者以event_i
 
 可靠订阅ACK要求当前lease，且单独更新cursor，不产生新的outbox避免递归；观察者失败不让业务回滚。普通诊断订阅可丢弃；HTTP公开事件从public_seq持久回放，不依赖Worker的EventBus是否还活着。
 
-用户停止、超时、额度耗尽进入相同ControlCoordinator：先close admission/关闭后续模型与重试，再收束在途任务。Run已经进入stopping后，允许raw/result/Task终态写入，拒绝新的模型permit、子任务和非收束工作。
+用户停止、超时、额度耗尽进入相同ControlCoordinator：先close admission/关闭后续模型与重试，再收束在途任务。ExecutionRecord已经进入stopping后，允许raw/result/Task终态写入，拒绝新的模型permit、子任务和非收束工作。
 
-清理分两个事实：`Run.status`已经终态表示无活跃执行/写句柄；`cleanup_state=pending/running/succeeded/failed`表示临时文件删除进度。已撤权但文件删除失败时可以看到终态和cleanup_failed，不能谎称文件已销毁。新Run使用新临时目录，不复用清理失败目录。持久沙箱不执行普通Run结束删除，只释放本Run句柄。
+清理分两个事实：`ExecutionRecord.status`已经终态表示无活跃执行/写句柄；`cleanup_state=pending/running/succeeded/failed`表示临时文件删除进度。已撤权但文件删除失败时可以看到终态和cleanup_failed，不能谎称文件已销毁。新ExecutionRecord使用新临时目录，不复用清理失败目录。持久沙箱不执行普通ExecutionRecord结束删除，只释放本ExecutionRecord句柄。
 
 ## 9. 故障注入矩阵
 
@@ -394,9 +394,9 @@ Outbox与事实同事务写。dispatcher至少一次投递；订阅者以event_i
 | DB-04 | Hook result_saved、尚未apply | 原决定应用一次，ContextRevision只加一次 |
 | DB-05 | Task终态提交后、唤醒前 | 后继从intent启动；旧Task不重跑 |
 | DB-06 | 三分支完成两个 | 两个TaskResult保留，第三个接续；join只消费一次 |
-| DB-07 | 同一Run两个新Worker抢claim | 一个epoch active；旧Worker提交被拒绝 |
+| DB-07 | 同一ExecutionRecord两个新Worker抢claim | 一个epoch active；旧Worker提交被拒绝 |
 | DB-08 | 旧沙箱无法撤权 | 新Worker不能写同scope，不能只凭lease抢跑 |
-| DB-09 | 完成与新输入争锁 | 无死锁、无丢输入；恰一个active Run |
+| DB-09 | 完成与新输入争锁 | 无死锁、无丢输入；恰一个active ExecutionRecord |
 | DB-10 | 节点提交成功但HTTP/DB连接报错 | 重投command_id取得原receipt，不重复扣额/推进 |
 | DB-11 | 快照生成期间继续提交10步 | head不倒退，回放到最新scope_seq一致 |
 | DB-12 | root剩1额度、两个Executor抢票 | 一个reserve，另一个等待；不能超额或提前结束获准者 |
@@ -440,7 +440,7 @@ WorkflowCheckpointPayload 保留迁入内核的 checkpoint、metadata、parent c
 
 ```mermaid
 classDiagram
-    class Run
+    class ExecutionRecord
     class GraphExecution
     class GraphCheckpoint
     class AgentCheckpointPayload
@@ -450,7 +450,7 @@ classDiagram
     class ContextRevisionRef
     class Operation
     class ScopeCommit
-    Run "1" *-- "0..*" GraphExecution
+    ExecutionRecord "1" *-- "0..*" GraphExecution
     GraphExecution "1" *-- "0..*" GraphCheckpoint
     GraphExecution "1" *-- "0..*" ScopeCommit
     GraphCheckpoint --> AgentCheckpointPayload : engine_kind为agent

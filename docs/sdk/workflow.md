@@ -11,7 +11,7 @@ AgentLoom 包内保留两套用途明确的执行内核：
 | `AgentGraphEngine` | 配置生成的 ReAct／Plan–Executor 图 | 角色任务、ReactContinuation、一次模型响应的动作批次、按配置准入、全批汇合回原角色 | 任意用户工作流、channels／Pregel、外层节点路由 |
 | `WorkflowEngine` | 用户编排的完整 Agent、工具及业务流程 | 迁移并适配 LangGraph 的编译、状态、channels／reducer、super-step、动态分派和任务写入机制 | 接管角色私有 Loop、解释模型消息、重新执行已经完成的 Agent 调用 |
 
-这是**两套引擎实现**，不是给同一内核起两个名字，也不是再加第三套总调度器。两者共用 Run 控制、调用管道、能力服务和持久化基础设施；每个 GraphExecution 固定一个 `engine_kind`，只由对应内核推进。
+这是**两套图引擎实现**，不是给同一内核起两个名字，也不是再加第三套总调度器。RuntimeEngine 是托管它们的运行时宿主，不是另一套图内核。两者共用 ExecutionRecord 控制、调用管道、能力服务和持久化基础设施；每个 GraphExecution 固定一个 `engine_kind`，只由对应内核推进。
 
 小图可以运行在通用引擎上；选择双引擎的理由是内层只需要有限的角色调度规则，可以独立演进，不必随外层的状态和同步机制变化。代价是必须维护父子调用、两种现场格式和故障切点的适配测试。不能因为流程简单就省略内层恢复、调用去重或停止协议。
 
@@ -41,15 +41,16 @@ flowchart LR
 - **Executor** 是同一内层图中被分派的 NodeTask，继承 ReactNode，拥有私有上下文。同一角色配置委派两次产生两个任务，不增加两个图实例。
 - **Join** 是固定批次的结算条件，属于引擎与批次协调器；不调用模型。关闭并行时逐项执行，开启后按配置准入；单项业务错误不取消其他成员，全批 settled 后一次交回原 Planner。
 - **Replan** 表示 Planner 调整任务方案并继续原任务。它不是默认新增的 Agent、必经图节点或额外模型请求。收到工具结果后的下一次决策本身就可以重新规划；不能因为“尚无最终答案”再插入一次强制模型调用。
-- **Final** 要求节点输出通过配置的校验、子任务已收束且有效结果已提交。模型流中的文字或单次模型完成事件不能直接宣告 Run 成功。
+- **Final** 要求节点输出通过配置的校验、子任务已收束且有效结果已提交。模型流中的文字或单次模型完成事件不能直接宣告 ExecutionRecord 成功。
 
 Planner 的等待、再次决策和故障恢复沿用原 NodeTask。ReAct 模式使用同一轻量引擎，只保留入口 ReactNode 和普通能力批次，没有业务 Executor。两种模式继续使用同一公共 Loop；不把 LLM 的 `plan_steps` 编译成外层工作流。
 
-## 3. 两套引擎怎样接入 SDK Runtime
+## 3. 两套图引擎怎样接入 RuntimeEngine
 
 ```mermaid
 flowchart TB
-    R[RunRuntime 根控制与恢复分派]
+    H[RuntimeEngine 运行时引擎]
+    R[ExecutionRunner 根控制与恢复分派]
     W[WorkflowEngine 外层编排]
     A[AgentGraphEngine 内层角色调度]
     P[统一 EventBus 与调用管道]
@@ -57,6 +58,7 @@ flowchart TB
     AS[AgentCheckpointAdapter]
     C[CommitCoordinator]
     S[(CheckpointStore 与共享内容存储)]
+    H -->|获得执行权后装配本次现场| R
     R -->|外层控制| W
     R -->|内层控制| A
     W -->|AgentNode 调用或接回原 Agent；工具调用| P
@@ -69,7 +71,7 @@ flowchart TB
     C -->|验证 lease 与版本后持久提交| S
 ```
 
-图表达两套引擎对共同服务的依赖，不表示实体归属或执行先后。外层经 AgentNode／调用管道请求内层，内层结果经原父调用返回；详细顺序见第 5 节。`RunRuntime` 只控制整次执行和分派恢复，不判断下一节点，也不维护第三份 ready 队列。`GraphExecutionManager` 在调用桥内准备关联命令，不启动角色协程；所属引擎在提交成功后读取持久启动意图并调度。
+图表达运行时装配和两套图引擎对共同服务的依赖，不表示完整执行先后。RuntimeEngine 可同时托管多次执行，图中的 ExecutionRunner 及其调用服务是其中一次执行的现场。外层经 AgentNode／调用管道请求内层，内层结果经原父调用返回；详细顺序见第 5 节。`ExecutionRunner` 只控制整次执行和分派恢复，不判断下一节点，也不维护第三份 ready 队列。`GraphExecutionManager` 在调用桥内准备关联命令，不启动角色协程；所属引擎在提交成功后读取持久启动意图并调度。
 
 外层自己的 CapabilityNode 也通过同一 EventBus／InvocationPipeline 调用工具和 MCP，但不产生 AgentInvocation。Hook、上下文、权限、Operation／Attempt 不在两套引擎内各实现一份。节点及工具不能直接写检查点表。
 
@@ -83,19 +85,19 @@ GraphDefinition 保留公共本地 key、节点绑定及输入输出契约；增
 | --- | --- |
 | `GraphDefinition` | `engine_kind: agent 或 workflow`；Agent 图只接受生成模板允许的结构，Workflow 图按迁移后的编译规则验证 |
 | `CompiledGraphDescriptor` | `engine_kind`、`engine_protocol_version`、节点契约、已解析绑定 key、引擎专属编译描述；不保存运行进度 |
-| `GraphExecution` | `engine_kind`、调用方重建的编译程序引用、Run 归属、parent 引用；恢复不能换引擎或换业务配置 |
+| `GraphExecution` | `engine_kind`、调用方重建的编译程序引用、ExecutionRecord 归属、parent 引用；恢复不能换引擎或换业务配置 |
 | `NodeTask` | SDK 逻辑身份；内层由轻量引擎创建，外层由内核任务身份映射；同名节点的再次业务执行不是同一任务 |
 | `WorkflowTaskBinding` | `(graph_execution_id, origin_engine_checkpoint_id, engine_task_id, engine_task_path) → node_task_id` 的持久映射；用于将外层任务接回SDK Operation |
 
 外层任务恢复复用原映射；不能用节点名称、输入参数、内存 Activation ID 或网络重试次数生成新的子调用键。正常工作流回边产生新的原生任务身份，从而创建新的 NodeTask。迁移前必须验证所选源码版本在恢复／重试时的身份稳定性；不支持时应在内核任务创建边界固定映射，而非运行时猜测。
 
-直接调用 Agent：一个根 AgentInvocation 和一个 `engine_kind=agent` 的图。Workflow 调用一个 Plan Agent：一个 `workflow` 图和一个 `agent` 图；Plan 内两个 Executor 只是后者的两个任务。被调用 Agent 复用根 Run，保留自身局部限制和文件授权，不能重置根额度或继承整个外层上下文。
+直接调用 Agent：一个根 AgentInvocation 和一个 `engine_kind=agent` 的图。Workflow 调用一个 Plan Agent：一个 `workflow` 图和一个 `agent` 图；Plan 内两个 Executor 只是后者的两个任务。被调用 Agent 复用根 ExecutionRecord，保留自身局部限制和文件授权，不能重置根额度或继承整个外层上下文。
 
 ### 4.1 输入、历史与角色上下文
 
 | 执行入口 | 初始内容 | 历史与后续上下文 |
 | --- | --- | --- |
-| 直接 ReactAgent／PlanAgent | 本次问题、正式补充及按策略投影的 Session 历史 | 根角色保留本 Run 有效过程；Executor 只获得显式委派输入及自己的过程 |
+| 直接 ReactAgent／PlanAgent | 本次问题、正式补充及按策略投影的 Session 历史 | 根角色保留本 ExecutionRecord 有效过程；Executor 只获得显式委派输入及自己的过程 |
 | Workflow 根图 | 本次结构化输入，按输入 Schema 初始化 GraphState | Workflow Session 记录交互，不自动把历史问答注入业务状态或每个模型请求 |
 | Workflow 的 AgentNode | input_mapping 产生的 input_only 输入及 file_grants | 新 Invocation 的独立上下文；不复用该 Agent 其他 Session，也不继承外层全部状态 |
 | 原任务故障重入 | 已固定的原输入和运行关联 | 接续原 Graph／Task／Context，不再次做新任务的初始化或历史选取 |
@@ -134,7 +136,7 @@ AgentNode／CapabilityNode 适配器先区分**已经形成有效响应的业务
 | --- | --- | --- |
 | 有效响应 succeeded | 保存带原 Operation／response 引用的完成输出 | 原生正常任务写入；恢复复用输出，不再调用能力 |
 | 有效响应 failed／blocked，包括局部 Agent 超时、模型失败、前后置 deny | 保存 `business_outcome` 和错误引用；这是正常完成交付的任务输出，不向原生 ERROR channel 抛业务异常 | 由构造时固定的错误路由选择后继；本 super-step 其他任务继续。无错误路由时，待本 step 收束后 Workflow 失败，不走成功后继、不默默当作成功 |
-| 父节点等待 Future 被取消，但根 Run 仍 active | 只解除本次本机等待／激活；不据此取消 Operation 或子 Invocation，不创建新调用，不标记已消费 | 接回原 NodeTask、Operation、child；不得把本机 CancelledError 当成子业务结果或用户停止 |
+| 父节点等待 Future 被取消，但根 ExecutionRecord 仍 active | 只解除本次本机等待／激活；不据此取消 Operation 或子 Invocation，不创建新调用，不标记已消费 | 接回原 NodeTask、Operation、child；不得把本机 CancelledError 当成子业务结果或用户停止 |
 | 根停止／总超时／根额度耗尽 | 先提交根控制关闭新工作；两套内核及调用管道按收束协议完成或撤销在途工作 | 不走业务错误后继；收束记录可以保存，禁止普通后继启动和终态复活；仅局部 Invocation 关闭不冒充根停止 |
 | 存储不可用、提交回执不明、进程故障 | 关闭当前 Worker 新工作门，保留未完成关联；先查原 command_id 回执，不伪造 completed/failed 能力响应 | 属于内部接管／修复路径；没有成功写入依据就不推进下一 step，也不能通过换 Operation ID 重试业务 |
 | 租约失效 | 旧 Worker 停止推进及提交；只允许撤权／本地收束动作 | 新 Worker 取得执行权后按原关联恢复；旧 CancelledError／迟到结果不能覆盖新状态 |
@@ -143,7 +145,7 @@ AgentNode／CapabilityNode 适配器先区分**已经形成有效响应的业务
 
 **原生任务完成**表示其输出可供下一步读取；SDK NodeTask 的业务终态使用既定枚举：succeeded 响应对应 succeeded，failed／blocked 响应对应 failed。具体 blocked 保存在 Operation／有效响应中，不给 NodeTask 新增 blocked 枚举。不能因为用了原生成功写入路径而把业务失败改成成功。
 
-对这两种SDK 节点，不另启用一层会重新执行业务的原生 RetryPolicy。同一次失败节点重入、连接重试或接管均读取同一个 Operation；Runtime 的 Attempt 重试继续由用户固定策略控制。工作流若通过显式回边再次调用同一 Agent，是新原生 task／NodeTask 和新业务调用，不能由异常处理器悄悄替代。
+对这两种SDK 节点，不另启用一层会重新执行业务的原生 RetryPolicy。同一次失败节点重入、连接重试或接管均读取同一个 Operation；SDK 调用管道的 Attempt 重试继续由用户固定策略控制。工作流若通过显式回边再次调用同一 Agent，是新原生 task／NodeTask 和新业务调用，不能由异常处理器悄悄替代。
 
 原生 ERROR／INTERRUPT 写入只记录其真实原生故障／中断语义，不自动消费SDK 结果、不直接终结子 Invocation。迁移内核保留这些记录用于诊断与恢复；恢复先检查根控制和SDK 调用事实，再决定接回原调用或只执行收束。本版不因迁移引入用户 pause／resume。
 
@@ -191,7 +193,7 @@ engine_state_ref 指向一种受版本约束的载荷：
 
 ### 6.2 恢复分派
 
-根 Run 接管先关闭旧执行权、撤销旧文件写入者，并取得统一读水位。随后按 `engine_kind` 装载各自恢复包，验证父子关系和已保存结果，再恢复可执行任务。RunRuntime 不把所有图都塞进内部 Agent 的 ready heap，也不将外层每个 NodeTask 标成 ready 来取代原生恢复。
+根 ExecutionRecord 接管先关闭旧执行权、撤销旧文件写入者，并取得统一读水位。随后按 `engine_kind` 装载各自恢复包，验证父子关系和已保存结果，再恢复可执行任务。ExecutionRunner 不把所有图都塞进内部 Agent 的 ready heap，也不将外层每个 NodeTask 标成 ready 来取代原生恢复。
 
 | 持久现场 | 应采取的动作 |
 | --- | --- |
@@ -204,7 +206,7 @@ engine_state_ref 指向一种受版本约束的载荷：
 | 后继已保存但唤醒通知丢失 | 按所属引擎恢复依据继续，不能重跑前序 Agent／工具 |
 | 任一层发现根停止／超时／额度耗尽 | 两套引擎关闭新工作，收束整树；写入者静默后统一清理 |
 
-没有外层时，AgentGraphEngine 单独工作，无需创建空 Workflow。发生接管时恢复整棵 Run，当前不要求把内外层同时调度到不同机器。外部工具“已经生效但尚未保存结果”的窗口依然存在，检查点不保证业务副作用恰好一次。
+没有外层时，AgentGraphEngine 单独工作，无需创建空 Workflow。发生接管时恢复整棵 ExecutionRecord，当前不要求把内外层同时调度到不同机器。外部工具“已经生效但尚未保存结果”的窗口依然存在，检查点不保证业务副作用恰好一次。
 
 ### 6.3 任务写入的持久提交屏障
 
@@ -231,7 +233,7 @@ engine_state_ref 指向一种受版本约束的载荷：
 - 在第 5 节每次提交的前后断开进程，验证调用身份、Hook、消费和原生 pending writes 不重复。
 - 暂无下一快照但已有成功 writes 时仍可恢复；保存失败时不发布未持久的成功。
 - 外层循环再次访问同名节点会创建新任务；同一任务故障重入复用原子调用。
-- 根停止、租约失效、发布停止和删除覆盖两套引擎；不能由迟到结果重新启动终态 Run。
+- 根停止、租约失效、发布停止和删除覆盖两套引擎；不能由迟到结果重新启动终态 ExecutionRecord。
 - 对迁移的状态可见性、reducer、super-step、动态分派和 Saver 原生测试保留回归；AgentLoom 的 Hook／调用／恢复另做适配测试。
 
 下列是迁移后的故障验收要求，**当前尚未执行**：
@@ -250,10 +252,10 @@ engine_state_ref 指向一种受版本约束的载荷：
 
 ## 8. 对外 Workflow API 的兼容范围
 
-拟提供 StateGraph(schema)、add_node、add_edge、add_conditional_edges、set_entry_point、compile。StateGraph 是构建器，compile 返回公开类型 Workflow；Workflow 提供 start／ainvoke／astream，复用 Runtime 和 RunHandle，但不实现面向智能体输入的 Agent 接口。支持状态字段 reducer、Send、Command 和条件循环。“兼容 LangGraph”指声明的图构建与状态语义 profile；不承诺任意 LangChain Runnable、第三方 saver、全部上游配置项或持久数据可以直接替换。
+拟提供 StateGraph(schema)、add_node、add_edge、add_conditional_edges、set_entry_point、compile。StateGraph 是构建器，compile 返回公开类型 Workflow；Workflow 提供 start／ainvoke／astream，复用 RuntimeEngine 和 RunHandle，但不实现面向智能体输入的 Agent 接口。支持状态字段 reducer、Send、Command 和条件循环。“兼容 LangGraph”指声明的图构建与状态语义 profile；不承诺任意 LangChain Runnable、第三方 saver、全部上游配置项或持久数据可以直接替换。
 
 AgentNode 绑定已构造 ReactAgent／PlanAgent；CapabilityNode 绑定已解析 Tool／MCP／函数适配器。输入映射从当前 Workflow 状态显式生成任务输入；输出映射只写声明状态字段；角色私有消息不自动写入 GraphState。高代码用户可以注册普通纯函数节点，外部副作用必须使用可恢复调用端口，不可藏在 reducer 或 predicate 中。
 
-AgentNode 与 Agent 是组合关系；与 ReactNode 没有继承关系。AgentNode 使用 WorkflowNodeAdapter 和 SDK 内部调用桥，不能通过公共 agent.start／ainvoke 创建另一个根 Run。首版只接受两种内置 Agent 的可恢复绑定；只有同名公共方法的第三方对象须在编译阶段拒绝，不能假定它支持嵌套恢复。
+AgentNode 与 Agent 是组合关系；与 ReactNode 没有继承关系。AgentNode 使用 WorkflowNodeAdapter 和 SDK 内部调用桥，不能通过公共 agent.start／ainvoke 创建另一个根 ExecutionRecord。首版只接受两种内置 Agent 的可恢复绑定；只有同名公共方法的第三方对象须在编译阶段拒绝，不能假定它支持嵌套恢复。
 
 首批迁移包含图编译、channels／reducers、调度、Send／Command、原生快照、pending writes、任务身份和本页适配；通用 UI、平台发布和用户服务不在 SDK。源码迁入必须保留原许可证与版权声明，固定基线并记录修改。业务发布版本由调用方处理，SDK 不为恢复反查发布目录。

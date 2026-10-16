@@ -6,7 +6,7 @@
 
 输入：已固定的 execution_snapshot_ref、运行身份、所需资源访问授权。
 
-输出：可执行 Agent／Workflow、SDK Runtime 及受限依赖。输出只存在于本机，不序列化模型客户端、连接或协程。
+输出：可执行 Agent／Workflow、SDK RuntimeEngine 及受限依赖。输出只存在于本机，不序列化模型客户端、连接或协程。
 
 | 平台配置 | 传入 SDK |
 | --- | --- |
@@ -21,7 +21,7 @@
 
 装配所有 Workflow Agent 依赖时固定所引用配置并保存依赖清单。SDK 运行中不调用平台发布查询接口，AgentNode 通过已装配程序注册表启动内层执行。
 
-SDK 构造字段和所有权遵循[装配合同](../sdk/assembly.md)。同一 Workflow 的 Agent 使用同一个 Runtime，平台注册本地 agent_key，SDK 派生 program_key；平台发布号不进入该地址。公开 Agent 格式取主角色 Schema，不维护另一份顶层格式。
+SDK 构造字段和所有权遵循[装配合同](../sdk/assembly.md)。同一 Workflow 的 Agent 使用同一个 RuntimeEngine，平台注册本地 agent_key，SDK 派生 program_key；平台发布号不进入该地址。公开 Agent 格式取主角色 Schema，不维护另一份顶层格式。
 
 AssemblyService 根据固定 mode 选择 ReactAgent 或 PlanAgent 构造函数；两者返回值都可按 SDK 的 Agent 接口使用。Workflow 则通过 StateGraph.compile 构造。平台的 Agent 应用实体与 SDK 的 Agent 接口属于不同模块；不要让 SDK 接口兼任平台应用工厂或资源查询服务。
 
@@ -30,9 +30,9 @@ AssemblyService 根据固定 mode 选择 ReactAgent 或 PlanAgent 构造函数�
 1. HTTP 层认证，校验空间与应用访问权、发布状态、输入格式和幂等键。
 2. 平台事务锁应用接入 gate 和 SessionBinding；生成稳定 sdk_run_id、input_id，保存原发布配置引用、RunBinding、DispatchIntent。先提交，再通知 Worker。
 3. Worker 重新检查该分派未被平台屏障取消，按保存配置调用 AssemblyService。
-4. 调用 SDK start 并取得 RunHandle。SDK 在自己的存储中幂等初始化 Run、输入及执行意图，由本机 supervisor 取得执行权后运行；start 不等待答案。HTTP 需要直接等待时可用 ainvoke，底层复用同一路径。
+4. 调用 SDK start 并取得 RunHandle。SDK 在自己的存储中幂等初始化 ExecutionRecord、输入及执行意图，由本机 supervisor 取得执行权后运行；start 不等待答案。HTTP 需要直接等待时可用 ainvoke，底层复用同一路径。
 5. SDK 回执返回后平台更新分派投影；如果回执丢失，重投同 run_id/input_id，SDK 返回原运行／原结果。
-6. 平台通过 SDK 事件／查询展示结果，HTTP 连接断开不撤销 Run。
+6. 平台通过 SDK 事件／查询展示结果，HTTP 连接断开不撤销 ExecutionRecord。
 
 两个存储不依赖跨库事务。平台 DispatchIntent 保证不会丢请求，SDK 的执行入口幂等保证不会重复初始化；dispatch_status 只表示传输，不成为运行事实。
 
@@ -48,11 +48,11 @@ sequenceDiagram
     participant E as SDK图与节点
     H->>A: 原配置快照与同一个run_id
     A-->>H: 新构造的Agent及依赖
-    H->>S: start(run_id)，接续已接收Run
-    S->>C: 核对原Run、输入身份和当前控制状态
-    C-->>S: 已接收Run引用
+    H->>S: start(run_id)，接续已接收ExecutionRecord
+    S->>C: 核对原ExecutionRecord、输入身份和当前控制状态
+    C-->>S: 已接收ExecutionRecord引用
     S-->>H: RunHandle，尚不代表恢复或执行完成
-    S->>C: 查原Run并申请有效执行权
+    S->>C: 查原ExecutionRecord并申请有效执行权
     C-->>S: 检查点、增量、已保存结果
     S->>E: 恢复原Planner/Executor及等待关系
     E->>K: 提交原位置的状态推进
@@ -63,7 +63,7 @@ sequenceDiagram
 
 平台只处理“让哪台机器再调用 SDK”，不处理“恢复哪个 Executor”。失效判断、epoch、旧环境写权限撤销、已有结果复用和下一节点激活均由 SDK／其注入适配器完成。
 
-有效 owner 尚在执行时，平台重复投递不能强行夺权；SDK 默认附着观察。已终态的 Run 不重新开始，原输入不重复追加，额度和截止时间不重置。仅查询使用 runtime.runs.attach；需要在 owner 失效后接续执行，仍须按原配置构造程序并调用 start。
+有效 owner 尚在执行时，平台重复投递不能强行夺权；SDK 默认附着观察。已终态的 ExecutionRecord 不重新开始，原输入不重复追加，额度和截止时间不重置。仅查询使用 runtime_engine.runs.attach；需要在 owner 失效后接续执行，仍须按原配置构造程序并调用 start。
 
 ## 4. 执行中补充
 
@@ -72,11 +72,11 @@ sequenceDiagram
 平台接收文本时，先根据 SessionBinding 查询 SDK 当前状态；该查询仅用于路由，不能代替 SDK 的原子检查。
 
 - 仍在执行：以稳定 input_id 调用 SDK inputs.append。SDK 将其存为正式用户输入，并决定 pending／delivered／carried。
-- 初次 append 遇到 RUN_ENDED，且 SDK 明确未接收该 input_id：平台在 SessionBinding 事务内将这次请求改为下一提问，创建新的 RunBinding；同一 HTTP 幂等键不得同时形成两次新 Run。
-- 已接收补充后 Run 结束：该输入由 SDK 标为 carried，平台展示“待下次提问”；不再另发一个同内容输入，不自动开始下一 Run。
-- 回执未知：先以同 input_id 重试／查询，不能先创建新 Run。SDK 的去重和终态转交决定最终归属。
+- 初次 append 遇到 RUN_ENDED，且 SDK 明确未接收该 input_id：平台在 SessionBinding 事务内将这次请求改为下一提问，创建新的 RunBinding；同一 HTTP 幂等键不得同时形成两次新 ExecutionRecord。
+- 已接收补充后 ExecutionRecord 结束：该输入由 SDK 标为 carried，平台展示“待下次提问”；不再另发一个同内容输入，不自动开始下一 ExecutionRecord。
+- 回执未知：先以同 input_id 重试／查询，不能先创建新 ExecutionRecord。SDK 的去重和终态转交决定最终归属。
 
-Plan 的补充只交给 Planner；平台不能为了“及时生效”广播到 Executor。下一 Run 的 SDK 初始化会接入 carried 输入，平台不重新拼接历史。
+Plan 的补充只交给 Planner；平台不能为了“及时生效”广播到 Executor。下一 ExecutionRecord 的 SDK 初始化会接入 carried 输入，平台不重新拼接历史。
 
 ## 5. 停止、发布和删除
 
@@ -88,7 +88,7 @@ Plan 的补充只交给 Planner；平台不能为了“及时生效”广播到 
 
 ## 6. 状态和事件展示
 
-SDK 是 Run／任务／调用状态的权威源；平台保存展示缓存和访问关联。SSE 带稳定 seq，可用 Last-Event-ID 续读；重复事件去重，终态优先于迟到进度。完整模型响应可产生进度，不能当成 Run 最终答案。
+SDK 是 ExecutionRecord／任务／调用状态的权威源；平台保存展示缓存和访问关联。SSE 带稳定 seq，可用 Last-Event-ID 续读；重复事件去重，终态优先于迟到进度。完整模型响应可产生进度，不能当成 ExecutionRecord 最终答案。
 
 平台的会话页只访问获授权的 SessionBinding；模型参数、Hook、错误等敏感诊断通过 SDK 权限投影和平台字段过滤输出，不透出凭据或原始宿主路径。
 
@@ -101,7 +101,7 @@ SDK 是 Run／任务／调用状态的权威源；平台保存展示缓存和访
 ## 8. 验收
 
 - 拦截平台目录查询：Agent 构造完成后，SDK 执行不再访问应用／发布表。
-- 在 SDK 已接收、平台尚未收到回执处终止 Worker；重投不新增 Run 和输入。
-- A 机器 Executor 执行中故障，B 使用同配置和 Run 恢复；平台没有任何针对角色阶段的分支。
+- 在 SDK 已接收、平台尚未收到回执处终止 Worker；重投不新增 ExecutionRecord 和输入。
+- A 机器 Executor 执行中故障，B 使用同配置和 ExecutionRecord 恢复；平台没有任何针对角色阶段的分支。
 - 发布与新分派并发，旧发布关联执行全部被纳入停止范围。
 - SDK 存储与平台库分开运行仍能通过上述场景。

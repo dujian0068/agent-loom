@@ -4,7 +4,7 @@
 
 ## 1. 实现边界与模块装配
 
-一个 `RunRuntime` 创建一个 `EventBusImpl`，同时服务直接 Agent、Workflow 外层以及内层 AgentInvocation。隔离由调用方注入的可信 scope、执行绑定和访问范围；共用总线不共用角色上下文。不同 Run 不共享可变总线对象。
+一个 `ExecutionRunner` 创建一个 `EventBusImpl`，同时服务直接 Agent、Workflow 外层以及内层 AgentInvocation。隔离由调用方注入的可信 scope、执行绑定和访问范围；共用总线不共用角色上下文。不同 ExecutionRecord 不共享可变总线对象。
 
 | 模块 | 持有的对象 | 唯一写入职责 |
 | --- | --- | --- |
@@ -17,7 +17,7 @@
 | 领域 Manager | 已解析能力目录和原始 Adapter | 生成原始结果或图执行计划，不发布伪造响应 |
 | `CommitCoordinator` | 事务 writer | 全部权威运行事实、CAS、幂等及 outbox |
 
-HookManager 的固定绑定按 program_key 分组。每次从可信 ExecutionBindingRef 选择所属程序，再按 event_type／stage／matcher 选择链；相同 Run 内不同 AgentInvocation 不共享一条混合 Hook 链。Operation 固定选中的链及处理游标，恢复复用原链。共享一个 EventBus 只共享调用设施，不合并资源授权、Hook 或私有上下文。
+HookManager 的固定绑定按 program_key 分组。每次从可信 ExecutionBindingRef 选择所属程序，再按 event_type／stage／matcher 选择链；相同 ExecutionRecord 内不同 AgentInvocation 不共享一条混合 Hook 链。Operation 固定选中的链及处理游标，恢复复用原链。共享一个 EventBus 只共享调用设施，不合并资源授权、Hook 或私有上下文。
 
 调用者通过 [HookSet／HookBinding](assembly.md#5-hookset-与-hookbinding)装配处理器。matcher 首版只匹配绑定身份、角色及 purpose；业务 payload 条件在 Hook.evaluate 中校验。HookContext 保存持久元数据，读取有效 payload／上下文使用独立的本机 HookReadPort，不将数据库对象或读取函数序列化入 HookInvocation。
 
@@ -37,11 +37,11 @@ ContextManager 的内部 mutation、额度事务、检查点 writer、HookAdapte
 | `draining` | 读结果、已有结果提交、已有调用收束、观察与清理 | close → closed；拒绝新业务准入 |
 | `closed` | 重复 close | 不允许 reopen；接管创建新对象 |
 
-`open(run_ref)` 读取已提交 Run／租约，校验注入 Registry 满足保存的 handler key 和协议格式，重建 scope 工厂及可靠订阅，扫描未完成 Operation、待执行意图和 outbox。扫描只安排 `start_or_resume`，不能根据“没有 Future”重新调用 Manager。重复 open 同一对象、Run、epoch 返回成功；不同 Run 或 epoch 报 `BUS_SCOPE_MISMATCH`。
+`open(run_ref)` 读取已提交 ExecutionRecord／租约，校验注入 Registry 满足保存的 handler key 和协议格式，重建 scope 工厂及可靠订阅，扫描未完成 Operation、待执行意图和 outbox。扫描只安排 `start_or_resume`，不能根据“没有 Future”重新调用 Manager。重复 open 同一对象、ExecutionRecord、epoch 返回成功；不同 ExecutionRecord 或 epoch 报 `BUS_SCOPE_MISMATCH`。
 
 `close(reason)` 的 reason 仅为 `completed|shutdown|lease_lost|startup_failed`。先原子关闭本机准入并使所有 waiter 收到 `BUS_CLOSED` 或 `LEASE_LOST`；停止新观察分发；取消 runner 的网络等待并使受限适配器终止；每个回调最多等待 5 秒；最后解除连接引用和本机索引。重复 close 等待同一 close task，不重复操作资源。
 
-`completed` 只在 Runtime 已提交终态和清理登记后调用。`shutdown` 不把尚未完成的 Run 改成 cancelled：保留恢复阶段，释放执行权。`lease_lost` 立即禁止一切旧 epoch 提交和外部写入，迟到结果不落业务表。close 本身不伪造业务结果；外部副作用无法确认时由持有新租约的恢复器记录 unknown。
+`completed` 只在 提交协调器已提交终态和清理登记后调用。`shutdown` 不把尚未完成的 ExecutionRecord 改成 cancelled：保留恢复阶段，释放执行权。`lease_lost` 立即禁止一切旧 epoch 提交和外部写入，迟到结果不落业务表。close 本身不伪造业务结果；外部副作用无法确认时由持有新租约的恢复器记录 unknown。
 
 运行设施固定默认值：runner 通知队列 1024、每订阅实时队列 256、结果复查间隔 1000ms、观察回调时限 5000ms、关闭等待 5000ms。它们属于部署参数，有界且启动时固定，不是用户的模型／工具并发额度。runner 队列满时仅合并唤醒提示，持久意图保留并由 1 秒扫描补齐；停止通道不使用这些队列。
 
@@ -51,7 +51,7 @@ ContextManager 的内部 mutation、额度事务、检查点 writer、HookAdapte
 | --- | --- | --- |
 | 模型、能力、环境、委派及完整 Agent 调用 | Operation 的 request／response Hook 链 | 按注册白名单修改、允许或拒绝；决定与有效上下文一致提交 |
 | 上下文物化、修改及压缩请求 | 对应 ContextManager 请求的 Hook 链 | 使用本页字段规则；内部提交／物化子步骤不递归触发 Hook |
-| Run、节点、批次及环境的已提交生命周期变化 | CommittedEvent 的观察订阅 | 读取授权投影、告警或展示；返回值不改变原执行 |
+| ExecutionRecord、节点、批次及环境的已提交生命周期变化 | CommittedEvent 的观察订阅 | 读取授权投影、告警或展示；返回值不改变原执行 |
 | run.ending 等用户生命周期 Hook | 预留，仍需定义独立输入、身份、去重与超时协议 | 不得套用要求 operation_id 的 HookContext，也不得把观察回调当作已支持的修改型 Hook |
 | 停止、额度、租约和必要清理 | 受信控制／存储入口 | 不接受用户 Hook 拒绝或延长根截止 |
 
@@ -67,7 +67,7 @@ JSON hash 使用 RFC 8785 规范化后的 UTF-8 字节 SHA-256；BlobRef 验证�
 
 | DTO | 完整字段 | 强校验 |
 | --- | --- | --- |
-| `InvocationScopeRef` | run_id, graph_execution_id?, node_task_id?, invocation_id?, content_scope_ref, session_id?, workspace_scope_ref?, subject_kind, subject_id | subject_kind 为 node_task/graph/system；主体由 Runtime 推导；node_task 非空时主体必须是该任务；引用同 Run，跨图必须有固定父子关系 |
+| `InvocationScopeRef` | run_id, graph_execution_id?, node_task_id?, invocation_id?, content_scope_ref, session_id?, workspace_scope_ref?, subject_kind, subject_id | subject_kind 为 node_task/graph/system；主体由 SDK 按执行 scope 推导；node_task 非空时主体必须是该任务；引用同 ExecutionRecord，跨图必须有固定父子关系 |
 | `EventEnvelope` | event_id, event_type, schema_version, created_at, source, cause_id?, scope_ref, payload_ref | event_type 是已登记的小写点分标识；source 为装配期组件 ID；cause_id 仅追踪、不授权 |
 | `EventRequest` | EventEnvelope 全字段 + purpose_key, purpose | purpose 为 business/compaction/system；purpose_key 长 1..256，禁止空白首尾；不接受调用方覆盖 epoch、权限或凭据 |
 | `PendingOperationRef` | operation_id, request_id, scope_ref | 必须与已存 Operation 全部身份一致；Pending 不是状态断言 |
@@ -94,7 +94,7 @@ EventEnvelope 的 scope、source 和 ID 来自代理；插件只提交 payload �
 | `HookInvocation` | hook_invocation_id, operation_id, stage, hook_binding_key, ordinal, input_revision, input_payload_ref, input_context_refs[], mapping_version, schema_version, status, execution_status?, result_ref?, decision_ref?, normalized_patch_ref?, normalized_patch_hash?, context_change_refs[], patch_status, diagnostic_ref?, before_payload_ref, after_payload_ref?, started_at?, ended_at?, revision |
 | `RetryPolicy` | enabled, max_attempts, interval_ms, tool_timeout_ms, model_first_output_timeout_ms, model_stream_idle_timeout_ms? |
 | `PreparedDomainEffect` | effect_kind(read/context_mutation), expected_context_revisions[], effect_ref?, result_ref, effect_hash；Manager纯准备，只有Coordinator应用写集 |
-| `RecoverableWaitPlan` | wait_kind=compaction_episode, wait_ref, source_operation_id, expected_revision, initial_effects_ref；等待实体必须与当前Operation同Run/授权scope |
+| `RecoverableWaitPlan` | wait_kind=compaction_episode, wait_ref, source_operation_id, expected_revision, initial_effects_ref；等待实体必须与当前Operation同ExecutionRecord/授权scope |
 | `PreparedModelRequest` | operation_ref, operation_revision, candidate_payload_ref, context_revision_refs[], request_hook_state_ref, prepared_hash, effective_parameters_ref, purpose, protection_manifest_ref, model_budget_ref |
 
 Operation.kind 为 model/tool/context/environment/delegation；kind 根据 event_type 的固定映射产生，不能由 payload 选择。Operation.status 为 pending/succeeded/failed/blocked，只有 completed 阶段允许后三者；completed 必须 final_response_ref 非空，其他阶段必须为空。raw_result_ref 是本逻辑调用选定的原始结算结果；重试中间错误只属于 Attempt，不提前成为 Operation 的最终原始结果。
@@ -171,7 +171,7 @@ Pipeline 和内部端口同样是确定契约，不留“实现时自行补全�
 | `detach(handle)->None` | 只删除该 handle，最后一个时回收索引 | 重复删除无作用 |
 | `deliver(subscription,event)->None` | 获授权投影副本交回调，成功后提交 ACK | 回调异常保存诊断并重试；返回值被丢弃 |
 
-`prepare_business_model` 的返回用严格联合类型 `PreparedModelRequest | FinalResponseRef` 表示；上表中的“blocked 引用”不是抛异常。`request_many` 的 BatchPolicy 由 Runtime 创建，包含 `batch_key, parallel_enabled, executor_max_parallel`；后两项必须等于本次固定执行策略，LLM 不能覆盖。model_operation_id／loop_ticket_id 从已提交批次来源读取，不信任额外请求字段。request_many 要求 node_task 主体；不满足时抛 INVALID_BATCH_OWNER。
+`prepare_business_model` 的返回用严格联合类型 `PreparedModelRequest | FinalResponseRef` 表示；上表中的“blocked 引用”不是抛异常。`request_many` 的 BatchPolicy 由 SDK 按本次固定执行配置创建，包含 `batch_key, parallel_enabled, executor_max_parallel`；后两项必须等于本次固定执行策略，LLM 不能覆盖。model_operation_id／loop_ticket_id 从已提交批次来源读取，不信任额外请求字段。request_many 要求 node_task 主体；不满足时抛 INVALID_BATCH_OWNER。
 
 ## 4. 幂等登记、等待和批次算法
 
@@ -265,7 +265,7 @@ async def request_many(events, policy, scope):
 
 子任务终态保存 TaskResult 时释放 Executor 名额，并把结果送入父 Operation.raw_saved；后置 Hook 完成前该成员仍未结算。并行模式可以补位，串行不能提前开始下一项。无批次的单独委派允许先begin登记prepared，但同样必须等Driver在一个图事务提交父Wait、调用/子任务关联及启动意图后才启动。GraphEngine 唯一计算子任务名额；CallBatchCoordinator 不通过本地 semaphore 自建第二套名额账本。
 
-begin 前校验失败：T_LOCAL_SETTLE 同时写 BatchMember.result_ref 和 WaitMember.local_outcome，target_ref/result_operation_id 均为 null。已有 Operation 的成员只能通过该 Operation 最终响应结算。单项 business/blocked 不取消其他成员；根停止关闭新准入，queued 成员记录 cancelled，本 Run 不进入下一 Loop。
+begin 前校验失败：T_LOCAL_SETTLE 同时写 BatchMember.result_ref 和 WaitMember.local_outcome，target_ref/result_operation_id 均为 null。已有 Operation 的成员只能通过该 Operation 最终响应结算。单项 business/blocked 不取消其他成员；根停止关闭新准入，queued 成员记录 cancelled，本 ExecutionRecord 不进入下一 Loop。
 
 CallBatchCoordinator.freeze(owner,accepted_decision,policy) 和 freeze_requests(owner,events,policy) 都只返回 PreparedBatch，复用同一成员冻结内核；只有 CommitCoordinator 保存写集。NodeDriver 的持久用法是 freeze→提交→GraphEngine.advance_batch→返回 Wait；恢复再执行 advance_batch 并查询最终批次，不在节点激活内调用上面阻塞便利封装。wait_changed_or_poll 与 ResultWaitRegistry 使用相同登记后重读原则。最后一项T_MEMBER_SETTLE（空批次由T_BATCH_FREEZE）只产生一次父唤醒意图，父消费 key 固定为 `(owner_task_id,batch_id)`。
 
@@ -282,14 +282,14 @@ CallBatchCoordinator.freeze(owner,accepted_decision,policy) 和 freeze_requests(
 | response_hooks | response_hooks／completed | Hook 决定、有效结果／context、唯一响应已提交 |
 | completed | completed | 同幂等 key 读同响应；禁止改终态或重放 Hook |
 
-Operation.status 在前五阶段保持 pending。系统前置校验失败可以直接 completed/failed；合法 Hook deny 为 completed/blocked。控制取消通过 failed + error.category=cancelled 表达，Run 的 cancelled/timed_out 状态继续由 RunControl 管理。普通业务失败必须经过适用后置链并最终 failed，Hook 不能改成成功。
+Operation.status 在前五阶段保持 pending。系统前置校验失败可以直接 completed/failed；合法 Hook deny 为 completed/blocked。控制取消通过 failed + error.category=cancelled 表达，ExecutionRecord 的 cancelled/timed_out 状态继续由 RunControl 管理。普通业务失败必须经过适用后置链并最终 failed，Hook 不能改成成功。
 
 停止时统一调用 `control_finalize_operation(op,control_ref,writer_barrier_ref)`，这不是普通后置Hook成功路径：
 
 1. 已completed返回原响应；否则验证scope关闭、当前控制原因及有效执行权，阻止新增Attempt和Hook START。
 2. 对已started未结算的外部调用/Hook先核对、收束或确认撤权；没有证据不提前宣称Operation结束。已有raw、partial、已应用有效修改全部保留。
 3. 先处理已有result_saved：不重跑外部Hook，按原schema、双patch归一和CAS规则纯校验/应用一次；合法决定、有效修改或冲突诊断与cursor同提交。若形成合法deny终态则保留blocked；否则继续控制取消。再将前后链内prepared或尚未创建的剩余Hook逐项登记 `status=applied, execution_status=skipped_control, decision_ref=null, patch_status=none`，保存原因与cursor；已started且无法取回结果用indeterminate，不能伪造allow。
-4. 同事务提交取消错误、唯一EventResponse(status=failed,error.category=cancelled,execution_fact按实际证据)、Operation.phase=completed和成员可结算通知。若已有合法deny终态则不覆盖。Run具体终态原因仍由RunControl决定。
+4. 同事务提交取消错误、唯一EventResponse(status=failed,error.category=cancelled,execution_fact按实际证据)、Operation.phase=completed和成员可结算通知。若已有合法deny终态则不覆盖。ExecutionRecord具体终态原因仍由RunControl决定。
 5. 此命令允许任意非终态phase→completed，保留原执行事实，并与控制步骤一起幂等；不要求不可运行的后置链继续正常执行。
 
 ### 5.2 Attempt
@@ -380,7 +380,7 @@ async def start_or_resume(operation_id, lease):
 
 图计划来自该事件唯一GraphExecutionManager的raw port，不绕过Registry另选执行者。bridge_target_or_wait只读已登记NodeTask/Graph/CompactionEpisode的结果；未完成返回WaitingTarget，完成后把同一结果绑定到Operation.raw_saved，且不重新执行目标。Context压缩episode的模型调用各自走独立purpose=compaction的Operation，外层context.compact自身不虚构Attempt。
 
-`local_runner_ownership` 是索引中的唯一 runner task 所有权；它不持有全局同步锁、数据库锁或线程锁等待网络。重复调度只返回现有 runner；同 Operation 递归等待自己在 await_result 入口拒绝。跨 Worker 串行性由 Run lease 和每步 CAS 负责，不靠此本机索引。
+`local_runner_ownership` 是索引中的唯一 runner task 所有权；它不持有全局同步锁、数据库锁或线程锁等待网络。重复调度只返回现有 runner；同 Operation 递归等待自己在 await_result 入口拒绝。跨 Worker 串行性由 ExecutionRecord lease 和每步 CAS 负责，不靠此本机索引。
 
 执行代理业务失败捕获为结构化 raw error；`CancelledError`、LeaseLost、PersistenceUnavailable 不被笼统 `except Exception: fail_open` 捕获。适配器忽略取消时由受限进程／连接层撤销执行能力；不能先宣称已停止写入再删除工作目录。
 
@@ -426,7 +426,7 @@ async def run_one_hook(op, stage, binding, ordinal):
     return await apply_with_context_cas(h, parsed.decision, proposal)
 ```
 
-`retrieve_existing` 对本机结果缓存／已登记远程回执查询一次；不支持查询的适配器返回 unavailable，直接记 indeterminate。查询时限为 min(2000ms,当前有效剩余期限)，不可启动新脚本。Hook 调用时限由绑定 `timeout_ms` 固定，默认 5000ms，受 Run/Invocation 剩余时间截断；绑定超时归 timed_out，根停止／截止走控制收束，不作为“Hook 超时继续执行”放行。
+`retrieve_existing` 对本机结果缓存／已登记远程回执查询一次；不支持查询的适配器返回 unavailable，直接记 indeterminate。查询时限为 min(2000ms,当前有效剩余期限)，不可启动新脚本。Hook 调用时限由绑定 `timeout_ms` 固定，默认 5000ms，受 ExecutionRecord/Invocation 剩余时间截断；绑定超时归 timed_out，根停止／截止走控制收束，不作为“Hook 超时继续执行”放行。
 
 返回 JSON 中 `decision` 非 allow/deny、返回结构错误或异常属于 Hook 自身故障；保存诊断并丢本项全部修改。合法决定的 patch 校验失败只丢 patch，deny 仍生效。后置 Hook 不能把 Manager 的 failed/unknown 改成 succeeded，也不能删除错误后让响应变成功。必要提交失败中止推进，不能据此跳到下一 Hook。
 
@@ -451,11 +451,11 @@ CAS 处理：若 context head 与 original_base_revision 不同，读取中间 m
 
 以下每个 T 都使用 `CommitCoordinator.commit(RuntimeCommit,ExecutionLease)`。业务写、Context head、Operation head、ScopeCommit 与 OutboxRecord 在一个短事务完成；不可变 Blob 在事务前写好。所有事务都重新验证根 lease、有效截止和该动作的控制准入类型。
 
-总锁序固定为 **Session → root Run → Invocation → Graph 按 ID → NodeTask 按 ID → Operation 按 ID → Context 按 ID → 子记录**；没有该类对象时跳过。普通 RuntimeCommit 不触会话，从 Run 开始；终态／补充转移命令须预先声明并先锁 Session，禁止拿 Run 后补拿 Session。HookInvocation／Attempt 在其 Operation 之后锁定；Batch／Wait 在其 Graph/NodeTask 之后锁定。事务内禁止 await 网络、模型、Hook、文件或观察者。
+总锁序固定为 **Session → root ExecutionRecord → Invocation → Graph 按 ID → NodeTask 按 ID → Operation 按 ID → Context 按 ID → 子记录**；没有该类对象时跳过。普通 RuntimeCommit 不触会话，从 ExecutionRecord 开始；终态／补充转移命令须预先声明并先锁 Session，禁止拿 ExecutionRecord 后补拿 Session。HookInvocation／Attempt 在其 Operation 之后锁定；Batch／Wait 在其 Graph/NodeTask 之后锁定。事务内禁止 await 网络、模型、Hook、文件或观察者。
 
 | 事务／幂等键 | 读取与版本检查 | 同事务写入 |
 | --- | --- | --- |
-| T_BEGIN：`op-begin/K` | Run控制/lease、Invocation控制、Graph/NodeTask归属、K唯一键、可选Batch/Wait准入intent与版本 | prepared Operation、原始EventRequest、可选BatchMember/WaitMember调用关联、ScopeCommit、operation.pending outbox |
+| T_BEGIN：`op-begin/K` | ExecutionRecord控制/lease、Invocation控制、Graph/NodeTask归属、K唯一键、可选Batch/Wait准入intent与版本 | prepared Operation、原始EventRequest、可选BatchMember/WaitMember调用关联、ScopeCommit、operation.pending outbox |
 | T_ROUTE：`op-route/O` | O.revision、装配绑定清单/schema hash | Handler绑定、固定 Hook链、phase=request_hooks；路由失败则唯一failed响应 |
 | T_HOOK_PREPARE：`hook-prepare/O/stage/ordinal` | O.revision、Hook链cursor、输入Context revisions | HookInvocation.prepared、固定输入/版本/映射引用、pending_handler_ref |
 | T_HOOK_START：`hook-start/O/stage/ordinal` | O/H.revisions、Hook链cursor、H仍prepared、当前控制 | HookInvocation.started、开始时间；不重复执行已started项 |
@@ -467,7 +467,7 @@ CAS 处理：若 context head 与 original_base_revision 不同，读取中间 m
 | T_INTERNAL_WAIT：`op-wait/O` | O.revision/冻结请求、episode身份唯一、Context versions | 压缩episode初始写集、O.target_ref与待推进意图；不创建Attempt |
 | T_TARGET_RAW：`op-target-raw/O` | 目标已终态、结果hash、O.revision | 目标结果关联raw_saved；子图事务同时验证父子scope，压缩不重调模型 |
 | T_ATTEMPT_PREPARE：`attempt-prepare/O/n` | O.revision、冻结hash、已用attempt数、retry_at与控制 | Attempt.prepared，固定n/hash；不发生网络 |
-| T_ATTEMPT_START：`attempt-start/A` | A.revision=prepared、O/Run/Invocation可发送、permit有效 | Attempt.started、时间/epoch、operation.status outbox；仅首次receipt允许发送 |
+| T_ATTEMPT_START：`attempt-start/A` | A.revision=prepared、O/ExecutionRecord/Invocation可发送、permit有效 | Attempt.started、时间/epoch、operation.status outbox；仅首次receipt允许发送 |
 | T_ATTEMPT_RESULT：`attempt-result/A` | A未终态、O.revision、当前lease | Attempt终态/raw/error/partial；完整模型结果同时保存稳定call_id/ordinal槽；若重试保存next_attempt_at，否则O.raw_saved及raw引用 |
 | T_AFTER_START：`op-after/O` | O.raw_saved与raw引用hash | phase=response_hooks、固定后链与候选有效响应 |
 | T_CONTROL_FINAL：`op-control-final/O` | scope已关闭、Operation版本、Attempt/Hook收束或撤权证据 | 未启动Hook的skipped_control、唯一失败响应、completed、结果唤醒；保留raw/partial/已提交修改 |
@@ -478,7 +478,7 @@ CAS 处理：若 context head 与 original_base_revision 不同，读取中间 m
 | T_MEMBER_SETTLE：`member-settle/B/m` | O.completed且response匹配、Batch/Wait版本 | 结果槽与WaitMember结算；最后一项写唯一父唤醒 |
 | T_OBSERVER_ACK：`observer-ack/S/scope/seq/ordinal` | Subscription revision/代次、旧cursor、已投递event id | 持久cursor、失败重试状态清理；无业务状态更新，不产生递归outbox |
 
-委派启动／子完成的跨 Graph 事务由 Runtime／图篇定义：启动必须同事务保存父 Wait、Operation引用、子任务身份和启动意图；完成必须把 TaskResult 与父 Operation 的 raw_result 关联。上述 T_FINAL 不能跳过父 Operation 后置 Hook。
+委派启动／子完成的跨 Graph 事务由 Agent 执行／图协议定义：启动必须同事务保存父 Wait、Operation引用、子任务身份和启动意图；完成必须把 TaskResult 与父 Operation 的 raw_result 关联。上述 T_FINAL 不能跳过父 Operation 后置 Hook。
 
 节点消费 final_response 时，只引用其中已经提交的有效记录，不再次应用 Hook patch；Context head 若已有后来修订必须保留，不能回退到响应携带的旧 revision。
 
@@ -541,19 +541,19 @@ Subscription DTO：`subscription_id,owner_module_id,consumer_id?,mode,event_type
 
 可靠游标为 `(consumer_id,scope_kind,scope_id) → (last_commit_seq,last_ordinal,revision)`，每个scope只允许一个在途回调，按(seq,ordinal)升序读取；跨scope无时间全序。过滤掉的事件也在验证授权后推进扫描游标，禁止泄露被滤掉的私有payload。filter_hash改变必须创建新consumer_id，不能沿旧游标静默换过滤规则。
 
-可靠投递流程为：读cursor之后一页已提交事件→对首个事件构造权限投影→限时await回调→回调成功后T_OBSERVER_ACK。回调返回值一律丢弃。直接回调只接受Runtime审核过的非阻塞异步实现；用户脚本／插件回调通过受限进程适配器执行，超时可终止进程，不能在事件循环内运行任意同步用户代码。ACK成功前宕机可能重复回调，因此是至少一次交付；消费者有外部副作用时自行按event_id防重，SDK 不宣称exactly once。
+可靠投递流程为：读cursor之后一页已提交事件→对首个事件构造权限投影→限时await回调→回调成功后T_OBSERVER_ACK。回调返回值一律丢弃。直接回调只接受 SDK 审核过的非阻塞异步实现；用户脚本／插件回调通过受限进程适配器执行，超时可终止进程，不能在事件循环内运行任意同步用户代码。ACK成功前宕机可能重复回调，因此是至少一次交付；消费者有外部副作用时自行按event_id防重，SDK 不宣称exactly once。
 
 回调异常／超时不推进该事件游标，记录attempt_count及next_delivery_at，退避 `min(30秒,2**min(attempt_count,5)秒)`；后续该scope事件等待，其他订阅继续。授权被撤销时暂停订阅并报告诊断，不能为了“投递成功”读取不再获准内容。可靠事件不会因重试次数多被丢弃。dispatcher 不删除业务 outbox；保留与清理由持久化篇的归属／删除事务执行，活动订阅游标是保留判断的输入。
 
 实时队列满：diagnostic丢本次通知并计dropped；reliable断开实时推送，保留cursor并转持久扫描，不阻塞业务T_FINAL。可靠payload每次从已提交Blob生成独立不可变投影，不能复用一个可变dict供多个回调修改。回调不持有Manager、Context writer或结果提交能力。
 
-unsubscribe先把本机state设closing并递增generation，阻止新回调；在途回调最多5秒，迟到ACK必须检查generation，取消后不推进。可靠cursor保留为paused，重新装配相同consumer_id继续；诊断订阅直接删除。close对本实例全部订阅执行同样流程，不删除其他Run或其他模块订阅。
+unsubscribe先把本机state设closing并递增generation，阻止新回调；在途回调最多5秒，迟到ACK必须检查generation，取消后不推进。可靠cursor保留为paused，重新装配相同consumer_id继续；诊断订阅直接删除。close对本实例全部订阅执行同样流程，不删除其他ExecutionRecord或其他模块订阅。
 
-本Run总线的cursor写入仍要求有效Runtime租约；租约丢失立即停止ACK，接管者读取同cursor。Run结束后的HTTP/SSE重放直接读持久RunEvent，以Last-Event-ID=run_seq续读，不依赖已关闭EventBus；服务端不把socket write当成客户端已处理。run_seq只提供本Run公开事件顺序，不替代内部跨scope提交位置。
+本ExecutionRecord总线的cursor写入仍要求有效执行租约；租约丢失立即停止ACK，接管者读取同cursor。ExecutionRecord结束后的HTTP/SSE重放直接读持久RunEvent，以Last-Event-ID=run_seq续读，不依赖已关闭EventBus；服务端不把socket write当成客户端已处理。run_seq只提供本ExecutionRecord公开事件顺序，不替代内部跨scope提交位置。
 
 ## 11. 代理绑定与端到端时序
 
-Runtime装配ScopeFactory，按NodeTask/Invocation分别构造 `BoundModelPort`、`BoundCapabilityPorts`、`BoundContextPort`、`BoundEnvironmentPort`。代理内只保存不可变绑定引用和当前lease provider，不序列化进GraphState。恢复按调用方提供的相同执行配置和稳定身份新建代理，凭据／连接重新解析，不能复用旧对象或旧token。
+ExecutionRunner 装配 ScopeFactory，按NodeTask/Invocation分别构造 `BoundModelPort`、`BoundCapabilityPorts`、`BoundContextPort`、`BoundEnvironmentPort`。代理内只保存不可变绑定引用和当前lease provider，不序列化进GraphState。恢复按调用方提供的相同执行配置和稳定身份新建代理，凭据／连接重新解析，不能复用旧对象或旧token。
 
 代理从保存的continuation或批次成员取得purpose_key，把DTO和可信scope交begin；不得从用户参数接受run_id、role_key、workspace或retry policy。Manager绑定raw port时做标记校验，拒绝代理作为Handler。模型Adapter与SDK不会再次发同一逻辑事件。
 
@@ -631,7 +631,7 @@ sequenceDiagram
 | 内部Context变更 | context.mutate成功，raw_saved后崩溃重启 | mutation仅应用一次；无外部Attempt；后处理复用已存raw |
 | 业务失败 | 工具isError=true，后置allow或patch尝试改status | 最终failed；不走Hook fail-open变success；其他成员完成 |
 | unknown分类 | 发出后typed reset vs纯process_lost | 前者按开关重试，后者不猜测重试；前一Attempt保留unknown |
-| 重试停止竞态 | 保存next_attempt_at后停止，随后推进时钟 | 不产生新Attempt；不重新起算Run截止 |
+| 重试停止竞态 | 保存next_attempt_at后停止，随后推进时钟 | 不产生新Attempt；不重新起算ExecutionRecord截止 |
 | 流式完整性 | 心跳59秒、空delta；第二例1秒有效reasoning后长流 | 首例60秒首输出超时；第二例首输出计时取消；无公开token事件 |
 | Hook未知恢复 | started后崩溃，retrieve unavailable | 记录indeterminate、游标+1、Hook外部执行次数不增加 |
 | 可靠观察重投 | 回调完成、ACK前崩溃 | 同event_id至少再投一次；不改变Operation终态 |

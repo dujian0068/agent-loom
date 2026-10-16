@@ -12,7 +12,8 @@ SDK 接收构造参数和运行依赖，自行执行、管理上下文、保存�
 | --- | --- | --- |
 | Agent / Workflow | 完整程序的公共执行入口 | 平台应用管理、节点内部激活 |
 | Definition / 构造与编译 | 行为、角色、图结构、构造校验 | 平台草稿与发布版本 |
-| Runtime / RunControl | 一次执行、预算、截止、停止、执行权 | 用户身份与机器调度策略 |
+| RuntimeEngine | 组织共享运行服务，托管多次执行，协调宿主启动与关闭 | 节点路由、平台用户／应用和机器分派策略 |
+| ExecutionRunner / RunControl | 单次执行的现场、预算、截止、停止和接管 | 跨 ExecutionRecord 的共享可变上下文、另一套节点调度队列 |
 | AgentGraphEngine | 轻量角色调度、批次、等待与汇合 | Workflow 的 channels / super-step |
 | WorkflowEngine | 通用图编排、状态合并、原生恢复 | Planner 的业务决策与 Agent Loop |
 | ReactNode / PlannerNode / ExecutorNode | 共用可恢复 Loop，各自维护 continuation | 独立用户／应用生命周期 |
@@ -36,9 +37,11 @@ SDK 接收构造参数和运行依赖，自行执行、管理上下文、保存�
 
 ## 3. 对平台的保证
 
-调用者负责提供正确配置，SDK 负责执行该配置。平台重新构造 Agent 并交回原 Run 标识即可恢复，不需要知道 Executor 执行到哪一轮。
+调用者负责提供正确配置，SDK 负责执行该配置。平台重新构造 Agent 并交回原 ExecutionRecord 标识即可恢复，不需要知道 Executor 执行到哪一轮。
 
-构造的程序可以复用，运行状态不能保存在共享程序对象上。每次执行／接管创建独立的 RunRuntime；同一 Run 在有效租约下只有一个执行者。
+构造的程序可以复用，运行状态不能保存在共享程序对象上。每次执行／接管创建独立的 ExecutionRunner；同一 ExecutionRecord 在有效租约下只有一个执行者。
+
+RuntimeEngine 是这些本机执行的宿主，一个实例可托管多个 ExecutionRecord。共享存储与环境依赖可以复用；单次现场按 ExecutionRecord 装配，Agent 模型、Prompt 和能力集合仍按各自配置固定。范围与资源所有权见[运行时引擎设计](assembly.md#11-runtimeengine-管理的范围)。
 
 平台删除整个目录后，SDK 的三个示例仍须能运行。平台 API 只能调用 SDK 公共门面，不能通过直接改 SDK 存储表来“帮助恢复”。
 

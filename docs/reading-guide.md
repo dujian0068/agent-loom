@@ -10,7 +10,7 @@
 2. [定义与实例](sdk/definitions.md)：AgentDefinition、GraphDefinition、NodeTask、Operation 分别是什么。
 3. [对象协作 UML](sdk/object-collaboration.md)：Agent、Node、EventBus、Handler、Hook、Skill 的类关系和时序。
 4. [构造与资源绑定](sdk/assembly.md)、[公共接口](sdk/public-api.md)：独立开发者传什么、SDK 创建什么，以及如何执行、停止和恢复。
-5. [Runtime](sdk/runtime.md)、[调用总线](sdk/event-bus.md)、[上下文](sdk/context.md)、[能力环境](sdk/capabilities.md)：进入模块算法和数据字段。
+5. [Agent 执行](sdk/runtime.md)、[调用总线](sdk/event-bus.md)、[上下文](sdk/context.md)、[能力环境](sdk/capabilities.md)：进入模块算法和数据字段；运行时引擎 RuntimeEngine 的服务范围见[装配设计](sdk/assembly.md#11-runtimeengine-管理的范围)。
 6. [检查点](sdk/checkpoints.md)、[Workflow](sdk/workflow.md)：持久化、两套引擎与故障交接。
 7. [验收](sdk/verification.md)：实现顺序和需要证明的不变量。
 

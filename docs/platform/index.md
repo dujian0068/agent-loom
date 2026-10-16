@@ -20,7 +20,7 @@ Platform 是基于 SDK 的低代码产品。当前只有目录骨架；本目录
 | Application / Release | Agent／Workflow 身份、草稿、发布和版本选择 | 构造与执行校验 |
 | ResourceCatalog | 模型凭据、Skill、Tool、MCP、Hook、Prompt 资源 | 资源的实际运行 |
 | AssemblyService | 解析并准备构造参数、存储和环境 | 不再回查目录的执行 |
-| ExecutionHost | 请求幂等、工作分派、机器故障后重投 | Run 执行权、现场恢复和具体 Loop |
+| ExecutionHost | 请求幂等、工作分派、机器故障后重投 | ExecutionRecord 执行权、现场恢复和具体 Loop |
 | RunView / SSE | 展示 SDK 状态与事件，平台关联信息 | 唯一执行终态和调用结果 |
 | DeletionService | 决定应用与专属数据删除范围 | 停止、收束与执行数据清理接口 |
 
@@ -39,6 +39,6 @@ Platform 是基于 SDK 的低代码产品。当前只有目录骨架；本目录
 
 Agent 属于空间；同一 Session 绑定一个 Agent 应用；模式创建后不变；草稿不能运行。ReAct 没有 Executor 配置；Plan 可配置专业 Executor，通用默认执行器当前关闭。
 
-发布会停止使用旧配置的相关活动 Run；下次新 Run 使用新发布配置。运行中和故障接管不悄悄切换版本。用户无暂停／恢复按钮，机器故障由平台调度、SDK 恢复。
+发布会停止使用旧配置的相关活动 ExecutionRecord；下次新 ExecutionRecord 使用新发布配置。运行中和故障接管不悄悄切换版本。用户无暂停／恢复按钮，机器故障由平台调度、SDK 恢复。
 
 能力执行和默认预算统一引用 [SDK 行为约定](../sdk/requirements.md)，不在平台复制另一套默认值。

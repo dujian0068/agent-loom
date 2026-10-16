@@ -4,14 +4,14 @@
 
 ## 1. 四层对象，分别承担什么
 
-| 层次 | 对象 | 谁创建 | 可以跨 Run 复用吗 | 是否进入检查点 |
+| 层次 | 对象 | 谁创建 | 可以跨 ExecutionRecord 复用吗 | 是否进入检查点 |
 | --- | --- | --- | --- | --- |
 | 配置 | AgentDefinition、RoleDefinition、WorkspaceBinding、HookBinding | 调用者 | 可以，构造后不可变 | 保存执行所需的值或引用；不保存平台发布关系 |
 | 可执行程序 | ReactAgent、PlanAgent、Workflow | SDK 构造／编译 | 可以，不存消息和当前进度 | 保存本地绑定 key；不序列化 Python 对象 |
-| 宿主服务 | Runtime、ModelAdapter、CapabilityRegistry、存储和环境适配器 | 调用者装配 | 可以，必须遵守并发契约 | 连接、函数、锁、协程不保存 |
-| 执行现场 | RunRuntime、EventBus、NodeDriver；Run、Task、Operation、Context | SDK 在执行时创建 | 不能把本次可变状态交给另一 Run | 前者是进程设施，后者是持久事实 |
+| 宿主服务 | RuntimeEngine、ModelAdapter、CapabilityRegistry、存储和环境适配器 | 调用者装配 | 可以，必须遵守并发契约 | 连接、函数、锁、协程不保存 |
+| 执行现场 | ExecutionRunner、EventBus、NodeDriver；ExecutionRecord、Task、Operation、Context | SDK 在执行时创建 | 不能把本次可变状态交给另一 ExecutionRecord | 前者是进程设施，后者是持久事实 |
 
-`AgentDefinition` 描述行为，`GraphDefinition` 描述组织，具体的 `ReactAgent`／`PlanAgent` 把两者和依赖关联起来，并实现公共 `Agent` 接口。`Workflow` 是独立的已编译程序，`StateGraph` 是其构建器。`Runtime` 是服务宿主，不是 Agent 配置，也不是某一次 Run。普通开发者构建 Agent 时无需手动创建 EventBus、HookManager、NodeTask 或检查点。
+`AgentDefinition` 描述行为，`GraphDefinition` 描述组织，具体的 `ReactAgent`／`PlanAgent` 把两者和依赖关联起来，并实现公共 `Agent` 接口。`Workflow` 是独立的已编译程序，`StateGraph` 是其构建器。`RuntimeEngine`（运行时引擎）是 SDK 的执行宿主，管理运行服务和执行生命周期。普通开发者构建 Agent 时无需手动创建 EventBus、HookManager、NodeTask 或检查点。
 
 下面以 PlanAgent 展开配置引用；ReactAgent 使用相同构造依赖，但不配置 Executor。Agent 接口只定义使用合同，不拥有这些对象。
 
@@ -29,38 +29,57 @@ classDiagram
     }
     class ReactAgent
     class PlanAgent
-    class Runtime
+    class RuntimeEngine
     class RunHandle {
       +run_id
       +wait(timeout_s) RunResult
       +events(after_seq) RunEvents
       +stop(command_id, reason) StopReceipt
     }
-    class RunRuntime
-    class Run
+    class ExecutionRunner
+    class ExecutionRecord
     Agent <|.. ReactAgent
     Agent <|.. PlanAgent
     PlanAgent --> AgentDefinition : 固定行为
     PlanAgent --> WorkspaceBinding : 固定环境配置
     PlanAgent --> CapabilityRegistry : 固定资源视图
     PlanAgent --> HookSet : 固定挂点和处理器
-    PlanAgent --> Runtime : 借用宿主服务
-    ReactAgent --> Runtime : 借用宿主服务
-    Runtime ..> RunRuntime : 获得执行权后创建
-    Runtime ..> RunHandle : 返回观察和控制句柄
-    RunRuntime --> Run : 推进同一个持久身份
-    RunHandle --> Runtime : 通过公共门面查询和控制
-    RunHandle --> Run : 持有身份引用
+    PlanAgent --> RuntimeEngine : 借用宿主服务
+    ReactAgent --> RuntimeEngine : 借用宿主服务
+    RuntimeEngine ..> ExecutionRunner : 获得执行权后创建
+    RuntimeEngine ..> RunHandle : 返回观察和控制句柄
+    ExecutionRunner --> ExecutionRecord : 推进同一个持久身份
+    RunHandle --> RuntimeEngine : 通过公共门面查询和控制
+    RunHandle --> ExecutionRecord : 持有身份引用
 ```
 
-虚线空心三角表示实现接口，普通虚线箭头表示创建依赖。RunHandle 不拥有 RunRuntime；一个运行可有多个本机／跨进程观察者。观察者关闭不会级联停止执行。
+虚线空心三角表示实现接口，普通虚线箭头表示创建依赖。RunHandle 不拥有 ExecutionRunner；一个运行可有多个本机／跨进程观察者。观察者关闭不会级联停止执行。
+
+### 1.1 RuntimeEngine 管理的范围
+
+“运行环境”指 **SDK 进程内的共享服务和活动执行**。RuntimeEngine 可以托管多个 Agent／Workflow 的多次执行，统一承担以下职责：
+
+| 职责 | RuntimeEngine 组织什么 | 具体工作由谁完成 |
+| --- | --- | --- |
+| 共享基础设施 | 接入执行存储、内容存储和环境适配器 | RuntimeStore、ContentStore、EnvironmentProvider |
+| 执行托管 | 接收启动／接续请求，持有后台任务，提供查询和停止入口 | RunService、输入服务、本机 supervisor 与执行权协议 |
+| 单次现场装配 | 获得执行权后，为该 ExecutionRecord 创建 ExecutionRunner，按需装配调用服务与图引擎 | ExecutionRunner 内的 EventBus、HookManager、调用管道及引擎服务 |
+| 结束与宿主关闭 | 协调本次执行收尾、本机退出和资源释放 | 单次执行控制、提交协调器和环境适配器 |
+
+每个 ExecutionRecord 的 EventBus、HookManager、上下文、预算和执行进度独立；同一 ExecutionRecord 内的外层图与内层 Agent 按既有 scope 规则共享服务。Agent 自己的模型、Prompt、能力选择、Hook 绑定和 WorkspaceBinding 仍由该程序配置，不因共用 RuntimeEngine 合并成全局配置。
+
+节点路由由 AgentGraphEngine／WorkflowEngine 决定，模型请求由 ModelAdapter 执行，文件和沙箱操作由 EnvironmentProvider 执行。RuntimeEngine 组织这些模块，不新增第三套节点调度队列。服务器部署、Worker 分派及平台用户／应用管理由调用方负责。
+
+例如同一宿主同时处理“生成报告”和“检查 SQL”：可以共用一个 RuntimeEngine，分别创建两个 ExecutionRecord 和两个活动 ExecutionRunner。报告中的 Planner 委派多个 Executor，仍属于同一次执行，不为每个 Executor 创建 RuntimeEngine。A 机器失效后，B 机器新建 RuntimeEngine 和 ExecutionRunner，使用共享存储接回原 ExecutionRecord；它们的 Python 对象不进入检查点。
+
+ExecutionRecord 在执行结束后继续保存；ExecutionRunner 只在本机持有执行权期间有效，完成必要收尾、关闭或失去租约后释放。接管重建 Runner，沿用原执行记录。一个 RuntimeEngine 可同时持有多个 Runner，每个 Runner 只对应一个 `run_id`；仅观察已结束或被其他进程执行的记录时，不创建 Runner。完整作用域清单见[对象 UML](object-collaboration.md#11-作用域与生命周期的读法)。
 
 ## 2. Python 构造合同
 
 以下是目标签名，引用的协议分别在模块设计中定义；不是已发布的包用法。ReactAgent／PlanAgent 此处只列构造函数；两者都必须实现[公共 Agent 接口](public-api.md#21-正式签名)中的执行方法。
 
 ```python
-class Runtime:
+class RuntimeEngine:
     runs: RunService
     inputs: InputCommands
 
@@ -70,7 +89,7 @@ class Runtime:
         environment: EnvironmentProvider,
     ) -> None: ...
 
-    async def __aenter__(self) -> "Runtime": ...
+    async def __aenter__(self) -> "RuntimeEngine": ...
     async def __aexit__(self, exc_type, exc, traceback) -> None: ...
     async def aclose(self) -> None: ...
 
@@ -79,7 +98,7 @@ class ReactAgent(Agent):
     def __init__(
         self, *, definition: AgentDefinition, model: ModelAdapter,
         capabilities: CapabilityRegistry, hooks: HookSet,
-        workspace: WorkspaceBinding, runtime: Runtime,
+        workspace: WorkspaceBinding, runtime_engine: RuntimeEngine,
     ) -> None: ...
 
 
@@ -87,11 +106,11 @@ class PlanAgent(Agent):
     def __init__(
         self, *, definition: AgentDefinition, model: ModelAdapter,
         capabilities: CapabilityRegistry, hooks: HookSet,
-        workspace: WorkspaceBinding, runtime: Runtime,
+        workspace: WorkspaceBinding, runtime_engine: RuntimeEngine,
     ) -> None: ...
 ```
 
-所有依赖通过关键字传入。暂不叠加 Builder、全局默认 Runtime、自动平台查询三套装配入口；便利工厂可以后续包装相同构造合同。空能力和空 Hook 分别使用 `CapabilityRegistry(tools=(), skills=())`、`HookSet(bindings=(), handlers={})`。内存适配器可以独立运行，持久恢复则注入满足合同的后端。
+所有依赖通过关键字传入。暂不叠加 Builder、全局默认 RuntimeEngine、自动平台查询三套装配入口；便利工厂可以后续包装相同构造合同。空能力和空 Hook 分别使用 `CapabilityRegistry(tools=(), skills=())`、`HookSet(bindings=(), handlers={})`。内存适配器可以独立运行，持久恢复则注入满足合同的后端。
 
 ### 2.1 参数的唯一责任
 
@@ -102,13 +121,13 @@ class PlanAgent(Agent):
 | capabilities | 已解析工具描述、原始适配器、Skill 包与 Loader | 运行中扩大角色能力的目录搜索 |
 | hooks | 本程序的不可变绑定和已解析处理器 | 全局可变 Hook 列表、可改写身份／额度的处理器权限 |
 | workspace | 稳定根句柄、内容范围、环境策略、资源挂载 | 本次 run_id、lease 或事先构造的 WorkspaceScope |
-| runtime | 存储、内容、环境及宿主生命周期 | 平台用户、应用、发布服务 |
+| runtime_engine | SDK 运行服务、执行托管及宿主生命周期 | 平台用户、应用、发布服务 |
 
 Executor 和压缩调用使用 `model` 的同一连接，按所属 Agent 的固定策略生成请求。不同完整 Agent 可以注入不同模型；将它们放入同一 Workflow 不合并模型配置。
 
 ### 2.2 构造校验与副作用
 
-按以下顺序执行；任何失败均抛 `ConfigurationError(code, field_path, message)`，不创建 Run：
+按以下顺序执行；任何失败均抛 `ConfigurationError(code, field_path, message)`，不创建 ExecutionRecord：
 
 1. 校验 Definition 字段、角色 key 唯一性和模式：ReactAgent 只接受 react／无 Executor，PlanAgent 只接受 plan_executor／Planner 主角色。
 2. 检查 Prompt 变量、角色输入输出 Schema 和静态策略；只使用调用者给出的本地 Schema，不读取远程 `$ref`。
@@ -166,11 +185,11 @@ Skill 绑定的 member_key 对应包内唯一 entry_name；只有一个入口时
 
 CapabilitySpec.model_name 是资源提供的建议名称，RoleDefinition 的 visible_name 是最终模型可见名称；编译器生成角色专属副本，不回写共享描述。kind 的映射为 builtin_tool→builtin、tool→hosted／script、mcp→mcp；skill 走 SkillRegistration。角色 binding.config 只能满足注册的 config_schema，冻结后通过 ToolInvocationContext.binding_config 传入；没有配置项的适配器使用只允许空对象的 Schema。它不属于模型 arguments，不能包含新的凭据、路径授权或替代连接。
 
-Registry 的 `for_role / for_node_binding` 面向**已绑定视图**：Agent 构造时把角色选择解析好；组装根执行程序时关联 program_key。注册表本体不因开始某个 Run 而原地修改。查询返回只读 ResolvedCatalog，不产生 I/O。
+Registry 的 `for_role / for_node_binding` 面向**已绑定视图**：Agent 构造时把角色选择解析好；组装根执行程序时关联 program_key。注册表本体不因开始某个 ExecutionRecord 而原地修改。查询返回只读 ResolvedCatalog，不产生 I/O。
 
 ## 5. HookSet 与 HookBinding
 
-这里只冻结已设计的 **Operation 请求／响应挂点**。Run／节点生命周期 Hook 需要另一种输入和控制合同，尚未开放；不能拿 operation_id=null 冒充调用型 Hook。
+这里只冻结已设计的 **Operation 请求／响应挂点**。ExecutionRecord／节点生命周期 Hook 需要另一种输入和控制合同，尚未开放；不能拿 operation_id=null 冒充调用型 Hook。
 
 ```python
 class Hook(Protocol):
@@ -220,7 +239,7 @@ program_key 是**一次根程序装配内的本地地址**，不是平台应用 
 
 | 位置 | 本地地址 | 运行身份 |
 | --- | --- | --- |
-| 直接 ReactAgent／PlanAgent | root | 每次执行新 Run／Invocation |
+| 直接 ReactAgent／PlanAgent | root | 每次执行新 ExecutionRecord／Invocation |
 | 根 Workflow | root | 每次执行新根 Workflow 图 |
 | Workflow 注册的完整 Agent | `agents/{agent_key}` | 每次 AgentNode 业务调用产生新 Invocation／内层图 |
 | Planner 的 Executor 角色 | 沿用所属 Agent 的 program_key，加 role_key 定位 | 每次委派产生 NodeTask，不新增程序或完整 Invocation |
@@ -229,32 +248,32 @@ program_key 是**一次根程序装配内的本地地址**，不是平台应用 
 
 同一个完整 Agent 被调用两次，program_key 相同而 invocation_id 不同；Hook 集合可复用，匹配 scope、上下文和处理游标各自独立。两个不同 Agent 即使 role_key、Hook binding_key 相同，也由 program_key 区分。
 
-Workflow 编译接收的 Agent 必须绑定同一个 Runtime 实例；否则报 `RUNTIME_BINDING_MISMATCH`。运行时根控制、存储 namespace 和环境服务由根 Runtime 统一提供，各程序仍保留模型、角色资源、WorkspaceBinding 和局部策略。不能在 AgentNode 内调用 child.ainvoke 创建另一个根 Run。
+Workflow 编译接收的 Agent 必须绑定同一个 RuntimeEngine 实例；否则报 `RUNTIME_BINDING_MISMATCH`。RuntimeEngine 提供共同的存储 namespace 和环境服务，根控制在该次 ExecutionRecord 的现场内独立建立；各程序仍保留模型、角色资源、WorkspaceBinding 和局部策略。不能在 AgentNode 内调用 child.ainvoke 创建另一个根 ExecutionRecord。
 
 Workflow 的图构建／compile 精确签名、映射 DSL 和原生类型还待专篇完成。本节只固定预装配程序的身份和依赖规则，不宣称 LangGraph 编译器接口已经逐参数兼容。
 
 ## 7. 生命周期与资源所有权
 
-### 7.1 Runtime
+### 7.1 RuntimeEngine
 
-Runtime 状态为 created → open → closing → closed。进入异步上下文开启本机 supervisor；只允许 open 状态创建／接续执行和控制请求。已注入适配器必须由调用方准备为可用状态；SDK 不通过 `__aenter__` 隐式登录模型、发现 MCP 工具或启动 Agent。
+RuntimeEngine 状态为 created → open → closing → closed。进入异步上下文开启本机 supervisor；只允许 open 状态创建／接续执行和控制请求。已注入适配器必须由调用方准备为可用状态；SDK 不通过 `__aenter__` 隐式登录模型、发现 MCP 工具或启动 Agent。
 
-同一 Runtime 绑定一个 asyncio event loop，可并发服务多个 Run；不得跨线程／跨 loop 共用活动对象。不同 Runtime 可以使用相同持久后端与 namespace，执行权由存储租约协调。内存后端只支持持有同一存储对象的本进程范围，不能据此证明多进程恢复。
+同一 RuntimeEngine 绑定一个 asyncio event loop，可并发服务多个 ExecutionRecord；不得跨线程／跨 loop 共用活动对象。不同 RuntimeEngine 可以使用相同持久后端与 namespace，执行权由存储租约协调。内存后端只支持持有同一存储对象的本进程范围，不能据此证明多进程恢复。
 
-Runtime 持有本机执行任务的强引用。取消 ainvoke 的等待协程、关闭 RunHandle.events 或断开 SSE，仅取消观察，不向执行任务传播 CancelledError。用户终止必须调用 stop。
+RuntimeEngine 持有本机执行任务的强引用。取消 ainvoke 的等待协程、关闭 RunHandle.events 或断开 SSE，仅取消观察，不向执行任务传播 CancelledError。用户终止必须调用 stop。
 
 ### 7.2 关闭与主动停止不是同一件事
 
 | 动作 | 执行如何处理 | 持久事实与文件 |
 | --- | --- | --- |
-| RunHandle 的等待／订阅关闭 | 本地解除观察 | 不改 Run，不删文件 |
-| Run 正常或异常终结 | 等全部写入者收束，提交真实终态 | 临时文件清理独立登记；保留记录，持久工作区不删除 |
-| runtime.aclose／退出 async with | 关闭本机准入，停止本机调度，按 shutdown 撤销／收束已拥有执行域后释放租约；挂起本机等待者 | 不伪造 cancelled，不清除未完成的工作区和检查点；新进程重建依赖后接续 |
-| runtime.runs.stop | 保存永久关闭该 run_id 准入的控制命令，全体收束 | 按用户停止规则形成终态，然后清理临时文件 |
+| RunHandle 的等待／订阅关闭 | 本地解除观察 | 不改 ExecutionRecord，不删文件 |
+| ExecutionRecord 正常或异常终结 | 等全部写入者收束，提交真实终态 | 临时文件清理独立登记；保留记录，持久工作区不删除 |
+| runtime_engine.aclose／退出 async with | 关闭本机准入，停止本机调度，按 shutdown 撤销／收束已拥有执行域后释放租约；挂起本机等待者 | 不伪造 cancelled，不清除未完成的工作区和检查点；新进程重建依赖后接续 |
+| runtime_engine.runs.stop | 保存永久关闭该 run_id 准入的控制命令，全体收束 | 按用户停止规则形成终态，然后清理临时文件 |
 
-aclose 幂等，关闭后不能 reopen；需要新建 Runtime。关闭过程不保证任何第三方业务副作用被撤销。无法证明旧写入者已停止时保留恢复屏障，不把“关闭方法返回”解释成允许新写入者访问共享卷。关闭流程沿用[总线 shutdown](event-bus.md#11-生命周期)和[检查点接管](checkpoints.md)约束。
+aclose 幂等，关闭后不能 reopen；需要新建 RuntimeEngine。关闭过程不保证任何第三方业务副作用被撤销。无法证明旧写入者已停止时保留恢复屏障，不把“关闭方法返回”解释成允许新写入者访问共享卷。关闭流程沿用[总线 shutdown](event-bus.md#11-生命周期)和[检查点接管](checkpoints.md)约束。
 
-注入的 RuntimeStore、ContentStore、EnvironmentProvider、模型客户端和共享 Adapter **由调用方拥有**；Runtime 只关闭自己创建的任务、句柄、观察者和受限执行连接，不关闭别的 Runtime 还在使用的客户端池。调用者应在 Runtime 退出后再退出这些依赖的资源上下文。
+注入的 RuntimeStore、ContentStore、EnvironmentProvider、模型客户端和共享 Adapter **由调用方拥有**；RuntimeEngine 只关闭自己创建的任务、句柄、观察者和受限执行连接，不关闭别的 RuntimeEngine 还在使用的客户端池。调用者应在 RuntimeEngine 退出后再退出这些依赖的资源上下文。
 
 ## 8. 装配流程与实现位置
 
@@ -262,21 +281,21 @@ aclose 幂等，关闭后不能 reopen；需要新建 Runtime。关闭过程不�
 sequenceDiagram
     participant C as 高代码调用者或AssemblyService
     participant A as ReactAgent或PlanAgent
-    participant R as Runtime
+    participant R as RuntimeEngine
     participant S as RuntimeStore
-    participant X as RunRuntime
+    participant X as ExecutionRunner
     C->>A: 构造：定义和已解析依赖
     A->>A: 校验、冻结、生成图和绑定
     A-->>C: 可复用程序，不开始执行
     C->>A: start(input, run_id, input_id)
     A->>R: open_run(program, request)
-    R->>S: 原子初始化或读取原Run及接收事实
-    S-->>R: Run引用、输入回执和已有执行权
+    R->>S: 原子初始化或读取原ExecutionRecord及接收事实
+    S-->>R: ExecutionRecord引用、输入回执和已有执行权
     R->>R: 登记本机推进意图或只附着观察
     R-->>C: RunHandle：稳定ID和公共查询入口
     alt 需要本机执行或接管
         R->>S: claim并验证恢复屏障，随后activate租约
-        R->>X: 组装本Run总线、Manager和引擎
+        R->>X: 按run_id组装本次总线、Manager和引擎
         X->>S: 从原现场推进，一致提交结果
     else 原owner有效或已经终态
         R->>R: 附着观察，不创建第二个执行者
@@ -292,19 +311,19 @@ sequenceDiagram
 | sdk/public/agents.py | ReactAgent、PlanAgent 门面及模式校验 |
 | sdk/public/inputs.py、results.py | 输入规范化、RunHandle 和公开只读 DTO |
 | sdk/assembly/ | Definition 校验、角色目录、HookSet、程序绑定及构造报告 |
-| sdk/runtime/host.py | Runtime 生命周期、本机 supervisor、open_run |
-| sdk/runtime/ | RunRuntime、执行控制、已定义的管道／检查点服务 |
+| sdk/runtime/host.py | RuntimeEngine 生命周期、本机 supervisor、open_run |
+| sdk/runtime/ | ExecutionRunner、执行控制、已定义的管道／检查点服务 |
 
 这里的 sdk 表示后续 Python 包根，实际分发名仍为 agentloom-sdk；不要求为每一行再拆独立服务。
 
 ## 9. 本项设计的验收边界
 
-1. 构造期间拦截所有外部 I/O：不得调用模型、MCP、Hook，也没有 Run／沙箱创建。
+1. 构造期间拦截所有外部 I/O：不得调用模型、MCP、Hook，也没有 ExecutionRecord／沙箱创建。
 2. 修改调用者原始配置 dict；已构造对象行为不变。
 3. 注册三个工具但只绑定一个；模型目录、文件与脚本视图均不扩大授权。
-4. 两个程序存在同名 Hook；同 Run 内各自只运行自己的固定链。
+4. 两个程序存在同名 Hook；同 ExecutionRecord 内各自只运行自己的固定链。
 5. 同一个 Agent 并发处理不同 Session；消息、Task、EventBus 和 RunHandle 不串用。
 6. 取消等待后任务仍执行；显式 stop 后不能再启动新动作。
-7. 关闭 Runtime 后，用新对象和原 ID 接续；不生成新的问题、Executor 或程序地址。
+7. 关闭 RuntimeEngine 后，用新对象和原 ID 接续；不生成新的问题、Executor 或程序地址。
 
 这些是待实现测试。本文不补造尚未完成的 Workflow compile、生命周期 Hook、机器 Schema 和存储适配器代码。

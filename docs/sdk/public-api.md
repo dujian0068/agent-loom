@@ -7,19 +7,19 @@
 ```python
 # store、content_store、environment、model 等均由宿主预先准备。
 # 本例展示目标接口，不是当前可安装包的运行代码。
-async with Runtime(
+async with RuntimeEngine(
     namespace=namespace,
     store=store,
     content_store=content_store,
     environment=environment,
-) as runtime:
+) as runtime_engine:
     agent = PlanAgent(
         definition=definition,
         model=model,
         capabilities=capabilities,
         hooks=hooks,
         workspace=workspace,
-        runtime=runtime,
+        runtime_engine=runtime_engine,
     )
     handle = await agent.start(
         input=AgentInput(content="检索资料并整理报告"),
@@ -31,6 +31,10 @@ async with Runtime(
 ```
 
 构造 ReactAgent／PlanAgent 只校验与冻结配置，不开始任务。start 返回运行句柄；需要直接等结果时使用 ainvoke，需要持续观察时使用 astream。三者使用同一条准入／恢复路径，不实现三套执行逻辑。
+
+`RuntimeEngine` 是调用方装配的 SDK 运行时引擎，参数统一命名为 `runtime_engine`。同一实例可以托管多次 Agent／Workflow 执行；每次执行的上下文、预算和活动现场独立。进入 `async with` 开启托管服务，调用 `agent.start(...)` 才接收具体任务。Node.activate 的 `runtime: NodeRuntime` 是任务受限视图，与这里的构造参数不同，签名保持不变。
+
+SDK 将该次执行的持久记录称为 `ExecutionRecord`，由取得执行权的 `ExecutionRunner` 在本机推进。公开 `run_id` 标识这条记录；`RunHandle` 是它的观察／控制句柄，`RunResult` 是结果投影。调用者不直接 new ExecutionRunner，也不通过修改 ExecutionRecord 推进执行，恢复仍使用原 `run_id` 调用同一入口。
 
 ### 1.1 公共 Agent 接口与图内 Node 接口
 
@@ -125,36 +129,36 @@ class Agent(Protocol):
 
 Python 的 str 是 `AgentInput(content=该文本)` 的便利写法；业务 JSON 必须显式放入 AgentInput.content，避免与 SDK 的输入信封字段混淆。JsonValue 仅允许 JSON 值，不接受任意 Python 对象。Mapping、数组和内容在入口深度冻结；frozen dataclass 本身不能代替深度不可变。
 
-content 按主角色 input_schema 校验；variables 按主角色变量声明校验；artifacts 必须是当前 Runtime 获准读取且仍有效的引用，不接受裸宿主路径。三部分一起保存为原始输入，参与重复请求比较。没有输入 Schema 时 content 为非空文本。空输入与恢复时省略 input 的含义不同。
+content 按主角色 input_schema 校验；variables 按主角色变量声明校验；artifacts 必须是当前 RuntimeEngine 获准读取且仍有效的引用，不接受裸宿主路径。三部分一起保存为原始输入，参与重复请求比较。没有输入 Schema 时 content 为非空文本。空输入与恢复时省略 input 的含义不同。
 
 ### 2.2 新执行与恢复参数矩阵
 
-| Run 是否存在 | input | 其他规则 | 结果 |
+| ExecutionRecord 是否存在 | input | 其他规则 | 结果 |
 | --- | --- | --- | --- |
-| 新执行 | 必须提供 | 可省略全部 ID，由 SDK 分配；未传 session_id 创建一次性 Session | 原子登记 Run、正式问题、接收回执及启动意图，返回 RunHandle |
+| 新执行 | 必须提供 | 可省略全部 ID，由 SDK 分配；未传 session_id 创建一次性 Session | 原子登记 ExecutionRecord、正式问题、接收回执及启动意图，返回 RunHandle |
 | 指定 run_id，但存储中不存在 | 未提供 | 不得以空问题初始化 | RUN_NOT_FOUND |
 | 已存在 | 未提供 | 必须传 run_id；可附 session_id 作一致性断言，不传 input_id | 接续／附着原执行，或读原终态 |
-| 已存在 | 提供 | input_id 若省略则取该 Run 原始问题 ID；若提供必须相同；内容规范化后必须相同 | 重复提交原问题，不创建新输入 |
+| 已存在 | 提供 | input_id 若省略则取该 ExecutionRecord 原始问题 ID；若提供必须相同；内容规范化后必须相同 | 重复提交原问题，不创建新输入 |
 
 `input=None` 表示无新输入；若业务 Schema 允许 JSON null，应显式使用 `AgentInput(content=None)`。显式 input_id 必须同时提供 run_id，不提供“只凭一个输入 ID 猜测运行”的恢复入口；否则报 INVALID_ID_COMBINATION。未给 run_id 时新建执行并生成配套 input_id。已删除记录的处理不得把最小关闭标记绕过而重建同 ID。
 
-接收幂等按 `(namespace,input_id)` 唯一，并验证原 run_id／Session 关联；显式 session_id／run_id 与原接收事实冲突时报 INPUT_CONFLICT。输入比较采用冻结后规范 JSON 摘要，不比较 Python 地址。并发初次提交同 run_id 由 RuntimeStore 唯一键／事务决定唯一 Run，失败方回读原接收事实。已存在 Run 的重投先核对原接收记录；不因原 Artifact 后来过期就拒绝附着，但后续读取仍遵守来源生命周期。
+接收幂等按 `(namespace,input_id)` 唯一，并验证原 run_id／Session 关联；显式 session_id／run_id 与原接收事实冲突时报 INPUT_CONFLICT。输入比较采用冻结后规范 JSON 摘要，不比较 Python 地址。并发初次提交同 run_id 由 RuntimeStore 唯一键／事务决定唯一 ExecutionRecord，失败方回读原接收事实。已存在 ExecutionRecord 的重投先核对原接收记录；不因原 Artifact 后来过期就拒绝附着，但后续读取仍遵守来源生命周期。
 
-一个 Session 同时只允许一个活动 Run；新问题占用失败返回 SESSION_BUSY，不偷偷把问题变成补充。同 Run 重投是附着，不属于这个冲突。SDK Session 不含平台应用权限，调用方负责保持 Session 的应用归属。
+一个 Session 同时只允许一个活动 ExecutionRecord；新问题占用失败返回 SESSION_BUSY，不偷偷把问题变成补充。同 ExecutionRecord 重投是附着，不属于这个冲突。SDK Session 不含平台应用权限，调用方负责保持 Session 的应用归属。
 
 需要可靠恢复的宿主应在调用前持久保存 run_id 和 input_id。一次性示例可让 SDK 分配；start 返回的句柄暴露生成 ID，但在回执丢失且调用者未保存任何稳定键时，不能承诺调用者可以定位原任务。
 
-### 2.3 同一 Run 的处理顺序
+### 2.3 同一 ExecutionRecord 的处理顺序
 
-1. 校验 Runtime 处于 open、身份参数与权限范围；检查已接收输入和停止准入标记。
-2. 对不存在的 Run 原子初始化；已存在则验证原 Session／初始问题，不能把重投内容追加为补充。
-3. Run 已终态：返回只读句柄，wait 立即读取原结果，不触发模型、Hook 或沙箱准备。
+1. 校验 RuntimeEngine 处于 open、身份参数与权限范围；检查已接收输入和停止准入标记。
+2. 对不存在的 ExecutionRecord 原子初始化；已存在则验证原 Session／初始问题，不能把重投内容追加为补充。
+3. ExecutionRecord 已终态：返回只读句柄，wait 立即读取原结果，不触发模型、Hook 或沙箱准备。
 4. 原 owner 仍有效：默认附着，不报模糊的“可能 busy”，也不抢执行权。
 5. 无有效 owner：登记本机推进意图，由 SDK 领取执行权、验证旧环境撤权屏障、加载检查点并接续。start 不等待整个恢复或任务完成。
 
-admission_closed 禁止初始化被关闭的 ID 及启动新业务，不妨碍附着读取已有 Run。已有 stopping Run 没有 owner 时，可取得执行权继续必要收束；不能重新开启业务调用。
+admission_closed 禁止初始化被关闭的 ID 及启动新业务，不妨碍附着读取已有 ExecutionRecord。已有 stopping ExecutionRecord 没有 owner 时，可取得执行权继续必要收束；不能重新开启业务调用。
 
-调用方必须提供该 Run 的原配置和资源。SDK 不选择平台版本、不比较发布指纹；缺少保存的绑定、协议不支持或内容无法读取时明确失败，不能退回 Planner 重新规划来掩盖恢复错误。Runtime 宿主退出后不会凭空产生另一个 Worker，跨机重新投递仍由宿主完成。
+调用方必须提供该 ExecutionRecord 的原配置和资源。SDK 不选择平台版本、不比较发布指纹；缺少保存的绑定、协议不支持或内容无法读取时明确失败，不能退回 Planner 重新规划来掩盖恢复错误。RuntimeEngine 宿主退出后不会凭空产生另一个 Worker，跨机重新投递仍由宿主完成。
 
 ## 3. RunHandle 只持有运行引用
 
@@ -170,7 +174,7 @@ class RunHandle(Protocol):
     async def stop(self, *, command_id: UUID, reason: str = "user") -> StopReceipt: ...
 ```
 
-RunHandle 是本机门面，不能序列化连接供另一进程接着用；跨进程传 run_id，然后新建句柄。它引用 Runtime 公共查询与控制服务，不持有角色 Context，也没有自己的调度器。
+RunHandle 是本机门面，不能序列化连接供另一进程接着用；跨进程传 run_id，然后新建句柄。它引用 RuntimeEngine 公共查询与控制服务，不持有角色 Context，也没有自己的调度器。
 
 | 方法 | 确定行为 |
 | --- | --- |
@@ -179,10 +183,10 @@ RunHandle 是本机门面，不能序列化连接供另一进程接着用；跨�
 | handle.wait | 等待业务终态并返回 RunResult；可调用多次，不消费结果、不追加模型总结 |
 | handle.events | 从公开序号 after_seq 之后回放，再观察新事件；不是模型逐 token 流 |
 | handle.snapshot | 读取最新已提交快照，不根据内存 Future 推测完成 |
-| handle.stop | 等价于 runtime.runs.stop；返回停止接收回执，不等于全部执行已停止 |
-| runtime.runs.attach | 仅获得原 Run 的观察／控制句柄，不提供程序，不启动或接管执行 |
+| handle.stop | 等价于 runtime_engine.runs.stop；返回停止接收回执，不等于全部执行已停止 |
+| runtime_engine.runs.attach | 仅获得原 ExecutionRecord 的观察／控制句柄，不提供程序，不启动或接管执行 |
 
-wait 的 timeout_s 只限制本次等待，正数或 null；超时抛 WaitTimeout，不改变 Run deadline。取消等待、关闭事件迭代器或 HTTP 断开都不停止后台执行；后台任务由 Runtime supervisor 持有。Runtime 关闭后本机未完成等待收到 RUNTIME_CLOSED，持久事实保留；用户主动结束使用 stop。
+wait 的 timeout_s 只限制本次等待，正数或 null；超时抛 WaitTimeout，不改变 ExecutionRecord deadline。取消等待、关闭事件迭代器或 HTTP 断开都不停止后台执行；后台任务由 RuntimeEngine supervisor 持有。RuntimeEngine 关闭后本机未完成等待收到 RUNTIME_CLOSED，持久事实保留；用户主动结束使用 stop。
 
 ## 4. 结果、事件与错误
 
@@ -196,31 +200,31 @@ wait 的 timeout_s 只限制本次等待，正数或 null；超时抛 WaitTimeou
 
 status 仅允许 succeeded／failed／cancelled／timed_out／budget_exhausted。succeeded 必须有 FinalOutput 且 error=null；JSON null 也装在 FinalOutput.value 中，不与“无输出”混淆。其他状态 output=null，必须有 RuntimeErrorRecord，可含已提交且获准展示的 partial_results；未完成内容不能冒充最终答案。
 
-usage 在根 Run 内按持久身份去重汇总，压缩不计 loops_consumed。没有供应商 token 统计时不能伪造为 0：对应字段为 null，token_counts_complete=false；部分已知时可返回已知合计但仍标 false。预算释放完毕的终态 loops_reserved=0。
+usage 在根 ExecutionRecord 内按持久身份去重汇总，压缩不计 loops_consumed。没有供应商 token 统计时不能伪造为 0：对应字段为 null，token_counts_complete=false；部分已知时可返回已知合计但仍标 false。预算释放完毕的终态 loops_reserved=0。
 
 started_at 在执行前即被停止时可以为 null。cleanup_state 使用 pending／running／succeeded／failed；无需删除持久工作区的清理是成功的空操作。RunResult 的业务结果和用量固定，后续重复读取可看到更新的清理进度；清理失败不重新启动业务。RunSnapshot 的全部查询字段另行按查询 Schema 冻结。
 
 ### 4.2 公开事件
 
-`RunEvent` 固定字段：`schema_version=1,event_id,run_id,seq,type,payload:JsonObject,committed_at`。它是已提交事件的授权公开投影，seq 使用本 Run 的 public_seq，从 1 开始单调增长，不是图内 checkpoint 序号。大正文使用受限引用；不能向平台终端输出内部凭据、原始宿主路径或 Executor 私有上下文。
+`RunEvent` 固定字段：`schema_version=1,event_id,run_id,seq,type,payload:JsonObject,committed_at`。它是已提交事件的授权公开投影，seq 使用本 ExecutionRecord 的 public_seq，从 1 开始单调增长，不是图内 checkpoint 序号。大正文使用受限引用；不能向平台终端输出内部凭据、原始宿主路径或 Executor 私有上下文。
 
 - after_seq 是最后已处理的序号，0 表示从头；返回的每项必须 seq > after_seq，按 seq 升序。
 - 同一迭代器不重复发同序号；跨连接重放允许客户端按 event_id／seq 去重。
 - 游标超过最新公开序号时，报 EVENT_CURSOR_AHEAD，不永久空等；负值也拒绝。
-- Run 的业务终态提交包含公开终态事件和 terminal_seq。观察补齐至 terminal_seq 后结束；游标已到达／超过该终态边界且不超过最新公开序号的合法重连立即结束。清理进度再通过 snapshot 查询，不为文件删除无限延长答案流。
-- 事件丢提示时从持久 outbox 补读，不根据事件重放工具。关闭迭代器释放本机观察，不向 Run 传播取消。
+- ExecutionRecord 的业务终态提交包含公开终态事件和 terminal_seq。观察补齐至 terminal_seq 后结束；游标已到达／超过该终态边界且不超过最新公开序号的合法重连立即结束。清理进度再通过 snapshot 查询，不为文件删除无限延长答案流。
+- 事件丢提示时从持久 outbox 补读，不根据事件重放工具。关闭迭代器释放本机观察，不向 ExecutionRecord 传播取消。
 
-模型适配器内部仍流式接收和检测首输出；完整响应才提交模型响应事实，不逐 token 发总线事件。完整模型响应可能包含工具调用，所以它不等于 Run 成功。
+模型适配器内部仍流式接收和检测首输出；完整响应才提交模型响应事实，不逐 token 发总线事件。完整模型响应可能包含工具调用，所以它不等于 ExecutionRecord 成功。
 
 ### 4.3 何时抛异常
 
-| 情况 | API 行为 | 是否可以推断 Run 失败 |
+| 情况 | API 行为 | 是否可以推断 ExecutionRecord 失败 |
 | --- | --- | --- |
-| 构造引用缺失／模式冲突 | ConfigurationError | 没有创建 Run |
-| 新输入不合法、INPUT_CONFLICT、SESSION_BUSY、RUN_ADMISSION_CLOSED | RequestError，含稳定 code 和字段定位 | 本请求未成功接收，既有 Run 不受影响 |
+| 构造引用缺失／模式冲突 | ConfigurationError | 没有创建 ExecutionRecord |
+| 新输入不合法、INPUT_CONFLICT、SESSION_BUSY、RUN_ADMISSION_CLOSED | RequestError，含稳定 code 和字段定位 | 本请求未成功接收，既有 ExecutionRecord 不受影响 |
 | 接收或查询时存储失联 | InfrastructureError，注明接收结果可能未知 | 不可以；用相同 ID 查询／重投 |
 | 已持久结束：模型失败、预算耗尽、用户停止等 | wait／ainvoke 返回非成功 RunResult | 可以，以保存的终态为准 |
-| 观察等待超时、调用者取消、Runtime 关闭 | WaitTimeout／CancelledError／RUNTIME_CLOSED | 不可以；执行与观察分开 |
+| 观察等待超时、调用者取消、RuntimeEngine 关闭 | WaitTimeout／CancelledError／RUNTIME_CLOSED | 不可以；执行与观察分开 |
 | 读取正文时授权撤销／源删除 | 明确读取错误 | 不得绕过撤销从旧缓存返回正文 |
 
 Hook 普通执行失败继续执行的规则不适用于必要存储故障。未形成可靠终态时不能为凑一个 RunResult 在本机虚构 failed。
@@ -242,19 +246,19 @@ class InputCommands(Protocol):
     ) -> InputReceipt: ...
 ```
 
-InputReceipt 字段为 `input_id,session_id,run_id,acceptance:accepted,delivery_state,session_seq,commit_ref`。run_id 固定为原接收 Run；delivery_state 为 pending／claimed／delivered／pending_next_run，是 UserInputDelivery 的查询投影，commit_ref 指向该投影所依据的提交。重复接收返回相同接收身份，并可以返回已经推进的当前投递状态；不创建第二条用户输入。未接收则抛明确错误，不返回 acceptance=accepted 的失败回执。
+InputReceipt 字段为 `input_id,session_id,run_id,acceptance:accepted,delivery_state,session_seq,commit_ref`。run_id 固定为原接收 ExecutionRecord；delivery_state 为 pending／claimed／delivered／pending_next_run，是 UserInputDelivery 的查询投影，commit_ref 指向该投影所依据的提交。重复接收返回相同接收身份，并可以返回已经推进的当前投递状态；不创建第二条用户输入。未接收则抛明确错误，不返回 acceptance=accepted 的失败回执。
 
-本节只适用于直接 ReAct／Plan Run：
+本节只适用于直接 ReAct／Plan ExecutionRecord：
 
-1. input_id 重复且内容、来源 Run 相同，返回原接收事实；冲突报 INPUT_CONFLICT。
+1. input_id 重复且内容、来源 ExecutionRecord 相同，返回原接收事实；冲突报 INPUT_CONFLICT。
 2. SDK 固定正式输入及顺序，Plan 只交给 Planner，ReAct 只交给入口角色的下一 Loop。
-3. 已接收但未送达模型的补充在结束时转 pending_next_run，下一次主动提问接回；不自动开 Run。
-4. Run 已结束且此前未接收该 input_id，返回 RUN_ENDED。平台可将它作为下一提问，但回执未知时须先查原接收事实，不能双重入库。
+3. 已接收但未送达模型的补充在结束时转 pending_next_run，下一次主动提问接回；不自动开 ExecutionRecord。
+4. ExecutionRecord 已结束且此前未接收该 input_id，返回 RUN_ENDED。平台可将它作为下一提问，但回执未知时须先查原接收事实，不能双重入库。
 5. 输入领取、送达和转交由 SDK 原子提交；实现算法见[上下文输入协议](context.md#32-正式输入与保护清单)。
 
-StopReceipt 字段为 `run_id,command_id,admission_closed:true,status_at_commit:RunStatus|null,commit_ref`。没有 Run 时 status_at_commit=null；已经终态返回真实终态；仍在执行返回 stopping。只证明停止命令已保存，确认结束需 wait 或读取 snapshot。
+StopReceipt 字段为 `run_id,command_id,admission_closed:true,status_at_commit:RunStatus|null,commit_ref`。没有 ExecutionRecord 时 status_at_commit=null；已经终态返回真实终态；仍在执行返回 stopping。只证明停止命令已保存，确认结束需 wait 或读取 snapshot。
 
-stop 与初次 start 争用同一 admission key：stop 先提交则迟到 start 返回 RUN_ADMISSION_CLOSED；start 先提交则按原 Run 收束。终态不重开，command_id 重投幂等，相同 command_id 不同参数报 IDEMPOTENCY_CONFLICT。停止采用独立受信控制入口，不经过用户 Hook。
+stop 与初次 start 争用同一 admission key：stop 先提交则迟到 start 返回 RUN_ADMISSION_CLOSED；start 先提交则按原 ExecutionRecord 收束。终态不重开，command_id 重投幂等，相同 command_id 不同参数报 IDEMPOTENCY_CONFLICT。停止采用独立受信控制入口，不经过用户 Hook。
 
 删除正文后仍保留最小准入关闭标记，直到调用方确认对应旧分派已撤销；records.delete 不能使旧 run_id 复活。具体锁和事务见[检查点](checkpoints.md)。
 
@@ -262,9 +266,9 @@ stop 与初次 start 争用同一 admission key：stop 先提交则迟到 start 
 
 StateGraph.compile 返回公开类型 Workflow。Workflow 不实现 Agent；其 start／ainvoke／astream 与 RunHandle 复用相同根执行控制和结果语义，但输入是 Workflow 自身的结构化状态，不能直接把 AgentInput 的聊天补充协议套上去。Workflow 初始输入回执、完整编译签名和映射 DSL 仍在[Workflow 合同](workflow.md)中待细化。
 
-编译时传入已构造的 ReactAgent／PlanAgent 或指向它们的 PreparedAgentRef。AgentNode 使用内部调用桥保存父 Operation 与子 Invocation 引用，共享根 Run 和预算。不能在普通节点里无关联地调用 child.ainvoke，再声称获得了嵌套恢复。
+编译时传入已构造的 ReactAgent／PlanAgent 或指向它们的 PreparedAgentRef。AgentNode 使用内部调用桥保存父 Operation 与子 Invocation 引用，共享根 ExecutionRecord 和预算。不能在普通节点里无关联地调用 child.ainvoke，再声称获得了嵌套恢复。
 
-公共 Agent 接口保证完整程序可独立执行，不保证任意第三方实现都支持图内接续。首版编译器只接受带 SDK 内部执行绑定的两种内置实现，并校验 Runtime 一致；仅提供 start／ainvoke／astream 的对象须报 ConfigurationError，不退化为新建子 Run。将来开放第三方 Agent 嵌入时，需要单独定义执行绑定与恢复协议，不能偷偷把它加入 Agent 的公共使用接口。
+公共 Agent 接口保证完整程序可独立执行，不保证任意第三方实现都支持图内接续。首版编译器只接受带 SDK 内部执行绑定的两种内置实现，并校验 RuntimeEngine 一致；仅提供 start／ainvoke／astream 的对象须报 ConfigurationError，不退化为新建子 ExecutionRecord。将来开放第三方 Agent 嵌入时，需要单独定义执行绑定与恢复协议，不能偷偷把它加入 Agent 的公共使用接口。
 
 Workflow 活动输入必须有显式接收点和状态映射。当前未定义的接收模式返回 WORKFLOW_INPUT_UNSUPPORTED，不自动广播或交给任意 AgentNode，更不能先 accepted 再丢弃。初始 Workflow 输入不受此限制。
 
@@ -284,9 +288,9 @@ Workflow 活动输入必须有显式接收点和状态映射。当前未定义�
 
 | 门面 | 内容 | 边界 |
 | --- | --- | --- |
-| runtime.sessions.history / inputs | 历史、正式输入及投递状态 | 授权分页，不暴露可变消息表 |
-| runtime.tasks.list / operations.get | 任务及逻辑调用视图 | 不允许修改 continuation 或强制完成 |
-| runtime.events.read | 已提交公开事件分页 | 与 RunHandle.events 使用相同序号和授权投影 |
-| runtime.records.delete | 指定已收束记录的删除命令及回执 | 拒绝活动执行，不负责平台应用删除决策 |
+| runtime_engine.sessions.history / inputs | 历史、正式输入及投递状态 | 授权分页，不暴露可变消息表 |
+| runtime_engine.tasks.list / operations.get | 任务及逻辑调用视图 | 不允许修改 continuation 或强制完成 |
+| runtime_engine.events.read | 已提交公开事件分页 | 与 RunHandle.events 使用相同序号和授权投影 |
+| runtime_engine.records.delete | 指定已收束记录的删除命令及回执 | 拒绝活动执行，不负责平台应用删除决策 |
 
-这些查询的分页 DTO、删除任务 DTO、各端口机器 Schema 仍需单独完成，不能把本页签名冻结理解成整个 SDK 的所有接口已经定稿。Runtime 的线程／loop 约束、共享依赖关闭责任与 shutdown 行为见[对象生命周期](assembly.md#7-生命周期与资源所有权)。
+这些查询的分页 DTO、删除任务 DTO、各端口机器 Schema 仍需单独完成，不能把本页签名冻结理解成整个 SDK 的所有接口已经定稿。RuntimeEngine 的线程／loop 约束、共享依赖关闭责任与 shutdown 行为见[对象生命周期](assembly.md#7-生命周期与资源所有权)。

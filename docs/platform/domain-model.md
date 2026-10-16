@@ -1,6 +1,6 @@
 # 平台领域对象与归属
 
-本页描述管理实体。SDK 的 AgentDefinition、GraphDefinition、Run 和 NodeTask 是执行领域，见[SDK 对象关系](../sdk/definitions.md)。
+本页描述管理实体。SDK 的 AgentDefinition、GraphDefinition、ExecutionRecord 和 NodeTask 是执行领域，见[SDK 对象关系](../sdk/definitions.md)。
 
 ## 1. 实体
 
@@ -66,6 +66,6 @@ RunBinding 固定 execution_snapshot_ref、release_id、sdk_run_id、sdk_session
 
 ## 5. 删除与保留
 
-应用存续期间记录暂不过期；无持久沙箱的 Run 工作文件仍在整次 Run 收束后删除。删除应用先关闭接入、停止关联执行，再通过 SDK 清理已收束的执行／会话记录，最后删除专属文件与平台配置。
+应用存续期间记录暂不过期；无持久沙箱的 ExecutionRecord 工作文件仍在整次 ExecutionRecord 收束后删除。删除应用先关闭接入、停止关联执行，再通过 SDK 清理已收束的执行／会话记录，最后删除专属文件与平台配置。
 
 清理需根据 RunBinding、资源依赖和文件根清单确定范围。引用该应用的 Workflow 不得绕过删除屏障新建执行；现有依赖的处置见[生命周期](storage-lifecycle.md)。SDK 不根据某个 agent_id 自行推断要删除哪些数据。

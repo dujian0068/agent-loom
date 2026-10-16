@@ -53,7 +53,7 @@ export default defineConfig({
           { text: "对象协作 UML 与时序", link: "/sdk/object-collaboration" },
           { text: "构造、资源绑定与生命周期", link: "/sdk/assembly" },
           { text: "公共 API 与依赖注入", link: "/sdk/public-api" },
-          { text: "Runtime 与 Agent Loop", link: "/sdk/runtime" },
+          { text: "Agent Loop 与轻量图调度", link: "/sdk/runtime" },
           { text: "EventBus、Handler 与 Hook", link: "/sdk/event-bus" },
           { text: "上下文、历史与压缩", link: "/sdk/context" },
           { text: "模型、能力与环境", link: "/sdk/capabilities" },

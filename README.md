@@ -17,7 +17,7 @@ AgentLoom 重新划分为两个独立交付物，暂时保留在同一个 Git �
 
 ## 从这里继续
 
-1. [SDK / Platform 职责边界](docs/sdk-platform-boundary.md)：构造注入、领域归属、Run 恢复及三种独立示例的验收要求。
+1. [SDK / Platform 职责边界](docs/sdk-platform-boundary.md)：构造注入、领域归属、ExecutionRecord 恢复及三种独立示例的验收要求。
 2. [Agent 设计约定](docs/agent-design-decisions.md)：已确认的产品行为。
 3. [目录规划](docs/directory-plan.md)：本次实际建立的目录。
 4. [文档目录](docs/README.md)：领域、双引擎、事件总线、上下文和检查点设计。

@@ -21,7 +21,7 @@ class ModelManager:
     async def execute_once(self, operation_ref, attempt_ref, execution_permit) -> RawResultRef: ...
 ```
 
-`ModelManager` 在执行前核对 execution_permit 与冻结 request_hash；业务模型没有同事务预占的 LoopTicket 不出网。压缩调用无需业务票据，但仍验证 Run／Invocation 控制、lease、授权和有效截止。Gateway／Adapter 的 `once` 禁用 SDK 内部重试；多次 Attempt 仅由调用管道驱动。
+`ModelManager` 在执行前核对 execution_permit 与冻结 request_hash；业务模型没有同事务预占的 LoopTicket 不出网。压缩调用无需业务票据，但仍验证 ExecutionRecord／Invocation 控制、lease、授权和有效截止。Gateway／Adapter 的 `once` 禁用 SDK 内部重试；多次 Attempt 仅由调用管道驱动。
 
 | DTO | 字段与约束 |
 | --- | --- |
@@ -128,7 +128,7 @@ SDK 在使用边界验证包内路径、manifest 完整性、SKILL.md 元数据�
 
 资源挂载为 `/skills/<name>` 只读，references／assets 按需读取。执行脚本必须单独调用 exec，例如 `argv=["python3","/skills/report/scripts/build.py","--output","/work/report.md"]`；skill.read 不执行脚本、不建业务 NodeTask。
 
-解释器和依赖来自冻结 image_digest；不存在时返回 `EXEC_DEPENDENCY_MISSING`，不得在 SDK 宿主 Runtime 进程 pip install。普通脚本文件访问不逐次发 Hook，外层 exec 负责唯一 Operation 和输出审计。
+解释器和依赖来自冻结 image_digest；不存在时返回 `EXEC_DEPENDENCY_MISSING`，不得在 SDK 宿主进程 pip install。普通脚本文件访问不逐次发 Hook，外层 exec 负责唯一 Operation 和输出审计。
 
 ## 4. MCP 连接、调用与错误归一
 
@@ -154,7 +154,7 @@ resources/list、templates/list、resources/read 仅在授权后包装普通读�
 
 ### 4.2 凭据、分区与失败
 
-stdio 进程由 SandboxGateway 在该(scope,execution_view_key,epoch)专用执行域启动，与普通 exec 进程分离；凭据仅注入该 MCP 服务声明变量。HTTP pool 按 McpConnectionKey 分区，活动句柄再绑定 run_id／epoch；远端 MCP-Session-Id 不作为 SDK scope 授权。connect与每次call都核验当前角色的execution_view_key/资源挂载digest，不能让同/work的另一角色复用该stdio进程；HTTP会话也按此键隔离roots/授权视图。恢复重建句柄，不能把旧 epoch 连接移交新 Runtime。
+stdio 进程由 SandboxGateway 在该(scope,execution_view_key,epoch)专用执行域启动，与普通 exec 进程分离；凭据仅注入该 MCP 服务声明变量。HTTP pool 按 McpConnectionKey 分区，活动句柄再绑定 run_id／epoch；远端 MCP-Session-Id 不作为 SDK scope 授权。connect与每次call都核验当前角色的execution_view_key/资源挂载digest，不能让同/work的另一角色复用该stdio进程；HTTP会话也按此键隔离roots/授权视图。恢复重建句柄，不能把旧 epoch 连接移交接管后的运行现场。
 
 OAuth 在配置阶段完成授权码＋PKCE、metadata、audience 和刷新策略；执行期不能交互补权。API Key／Header 使用独立凭据绑定，不传平台登录 token。过期／撤销无法刷新返回 `MCP_AUTH_REQUIRED`，不换账号。
 
@@ -189,7 +189,7 @@ EnvironmentProvider 接收绑定中的稳定 root_handle 和目录解析策略�
 | --- | --- | --- | --- |
 | 直接 Agent | sessions/<session_key> | work/ | runs/<run_id>/work/ |
 | 有 Session 的 Workflow 外层能力 | sessions/<session_key> | work/ | runs/<run_id>/work/ |
-| 无 Session 的 Workflow 外层能力 | runs/<run_id> | work/，Run 后保留 | work/，Run 收束后删除 |
+| 无 Session 的 Workflow 外层能力 | runs/<run_id> | work/，ExecutionRecord 后保留 | work/，ExecutionRecord 收束后删除 |
 | 完整子 Agent 调用 | invocations/<invocation_id> | work/ | runs/<run_id>/work/ |
 
 表中后两列拼在分区路径之后；run 分区不再重复嵌套 runs/<run_id>。直接 Agent 未传 session_id 时创建一次性 Session；无 Session／AgentInvocation 的纯能力 Workflow 使用 run 分区；Workflow 中完整 Agent 调用使用 invocation 分区。session_key 是 SDK 派生的稳定路径键。调用方可将 Agent 的 root_handle 映射到创建时固定的应用目录；SDK 不负责创建应用。模型／Hook 不提交宿主路径或 partition_key。Planner／Executor 复用所属 Invocation 的工作分区，跨完整 Agent 调用只能显式授权文件。
@@ -202,7 +202,7 @@ EnvironmentProvider 接收绑定中的稳定 root_handle 和目录解析策略�
 
 Planner／Executor 使用同 Invocation `/work`，各自只读资源目录按角色授权装配。ExecutionDomain以(scope,execution_view_key,epoch)区分受限执行视图；不同角色的只读挂载不同，禁止用资源并集扩大授权。多个视图可以位于同一Agent沙箱设施内，共用同一/work路径，不为每个Executor复制文件或另造应用沙箱身份；不支持隔离挂载视图的driver必须报ENVIRONMENT_VIEW_UNSUPPORTED。外层节点无 invocation_id 合法，使用 Workflow scope；不同 invocation 即使同一个 Agent 也不能共享可写根。恢复沿用 registration／路径及各execution_view_key，撤权枚举scope下全部角色视图，再重建当前 epoch 的句柄。
 
-同一持久会话目录在新 Run 重新登记 scope、重新授权句柄；上一 Run 的句柄一律失效。单活动 Run 的会话占用协议继续适用。持久保存的是文件，不是容器进程、内存或后来安装的软件。
+同一持久会话目录在新 ExecutionRecord 重新登记 scope、重新授权句柄；上一 ExecutionRecord 的句柄一律失效。单活动 ExecutionRecord 的会话占用协议继续适用。持久保存的是文件，不是容器进程、内存或后来安装的软件。
 
 ### 5.2 Artifact 授权和来源
 
@@ -220,9 +220,9 @@ Planner／Executor 使用同 Invocation `/work`，各自只读资源目录按角
 
 顺序固定：关闭新业务准入 → 收束全部写任务 → 取得每个 scope 的撤销证据 → 删除登记的全部非持久目录 → 提交 cleanup receipt。某个子 Invocation 完成不得提前清理。run.ending 是待细化的生命周期扩展，不直接复用 Operation HookContext，也不承担必要清理；未来接入仍不得延长根截止或阻止收束，见[挂点覆盖](event-bus.md#12-挂点覆盖与尚未细化的生命周期扩展)。
 
-物理删除仅操作登记的精确 work 目录，拒绝 owner 根、系统 blob、共享资源；重复删除不存在目录视为已完成。中途失败登记 cleanup_pending 继续重试，Run 的终态与 cleanup_state 分开。持久 scope 标 retained，无 TTL。页面关闭、SSE 断开、机器故障不触发临时目录清理。
+物理删除仅操作登记的精确 work 目录，拒绝 owner 根、系统 blob、共享资源；重复删除不存在目录视为已完成。中途失败登记 cleanup_pending 继续重试，ExecutionRecord 的终态与 cleanup_state 分开。持久 scope 标 retained，无 TTL。页面关闭、SSE 断开、机器故障不触发临时目录清理。
 
-应用删除时机由平台或高代码调用方决定，通过 SDK 删除指定记录与 scope；不向模型开放同等权限。先撤销源和派生可读投影，再清理正文；共享资源包不是 Run 清理对象。
+应用删除时机由平台或高代码调用方决定，通过 SDK 删除指定记录与 scope；不向模型开放同等权限。先撤销源和派生可读投影，再清理正文；共享资源包不是 ExecutionRecord 清理对象。
 
 ## 6. 基础文件工具的完整行为
 
@@ -298,15 +298,15 @@ class SandboxGateway:
 | `RevocationReceipt` | `receipt_id,run_id,lease_epoch,domain_results[],state:revoked\|unconfirmed,checked_at,evidence_ref` |
 | `DomainRevocationResult` | `execution_domain_id,workspace_scope_id,all_processes_exited,write_handles_closed,mount_access_revoked,token_epoch_revoked,error?` |
 
-Exec 的请求级 deadline=`min(开始时间+timeout_ms,根截止,Invocation截止)`；默认10秒可由冻结用户配置调整。没有返回码但因超时被杀不是 exit_code=0；返回 `EXEC_TIMEOUT`。stdout/stderr全量存blob，模型用各自预览和截断标记。空 env_patch 默认不继承 Runtime 环境，仅服务固定 PATH/LANG；受保护变量和凭据名不能被覆盖。
+Exec 的请求级 deadline=`min(开始时间+timeout_ms,根截止,Invocation截止)`；默认10秒可由冻结用户配置调整。没有返回码但因超时被杀不是 exit_code=0；返回 `EXEC_TIMEOUT`。stdout/stderr全量存blob，模型用各自预览和截断标记。空 env_patch 默认不继承 SDK 宿主进程环境，仅服务固定 PATH/LANG；受保护变量和凭据名不能被覆盖。
 
 ### 7.2 可实现的驱动命令
 
-生产执行服务实现独立 `agentloom-execd`，通过 mTLS 的控制 API 接收结构化命令；Runtime 不在自己的进程执行用户脚本，也不给容器数据库连接。
+生产执行服务实现独立 `agentloom-execd`，通过 mTLS 的控制 API 接收结构化命令；SDK 宿主不在自己的进程执行用户脚本，也不给容器数据库连接。
 
 | 驱动命令 | 输入 | 输出和失效规则 |
 | --- | --- | --- |
-| `PUT /v1/domains/{scope_id}/{execution_view_key}/{epoch}` | scope_ref、ExecutionViewSpec、Run授权证明、mount_manifest、expiry | 同(scope,execution_view_key,epoch)幂等返回domain；不同配置hash拒绝；旧epoch不能ensure复活 |
+| `PUT /v1/domains/{scope_id}/{execution_view_key}/{epoch}` | scope_ref、ExecutionViewSpec、ExecutionRecord授权证明、mount_manifest、expiry | 同(scope,execution_view_key,epoch)幂等返回domain；不同配置hash拒绝；旧epoch不能ensure复活 |
 | `POST /v1/domains/{domain_id}/executions` | owner、command、deadline、command_hash | 唯一键`(domain_id,owner)`；相同命令返回原execution；必须先持久accepted意图再启动 |
 | `GET /v1/executions/{id}` | 授权的run／scope查询 | 返回持久ExecutionStatus；不重启进程、不把未知当退出 |
 | `POST /v1/executions/{id}/terminate` | reason、当前控制授权 | 先阻止后续输入，SIGTERM进程组，最长2秒后SIGKILL，确认整个cgroup空；不能只杀父PID |
@@ -316,18 +316,18 @@ driver 将 ExecCommand 编译为固定 OCI process spec：argv 直接数组传�
 
 `cwd` 必须解析为授权挂载内目录；exec 授权只允许此受限域。默认 network namespace 无外网，冻结 egress allowlist 由执行服务防火墙／出口代理强制；域名规则通过代理在请求和重定向时重新校验解析目标，不只在启动时解析一次。
 
-服务持久保存 domain／execution 映射和租约到期时间，心跳续期由可信 Runtime 提交；本地到期自动停止接受调用并撤销域。数据库 lease 失效后的旧网关token、文件句柄和MCP连接全部失效，不能仅停止调度线程而保留可写子进程。
+服务持久保存 domain／execution 映射和租约到期时间，心跳续期由可信 SDK 执行现场提交；本地到期自动停止接受调用并撤销域。数据库 lease 失效后的旧网关token、文件句柄和MCP连接全部失效，不能仅停止调度线程而保留可写子进程。
 
-生产写进程必须处于可由执行服务独立控制的 cgroup／挂载域；Runtime Worker 失联时执行服务仍能终止该域。若执行宿主也失联、无法证明NFS挂载已失去写能力，返回 unconfirmed，阻止同可写卷新epoch的ensure；不能用网络超时或epoch数字宣称撤销成功。
+生产写进程必须处于可由执行服务独立控制的 cgroup／挂载域；SDK Worker 失联时执行服务仍能终止该域。若沙箱执行服务所在宿主也失联、无法证明NFS挂载已失去写能力，返回 unconfirmed，阻止同可写卷新epoch的ensure；不能用网络超时或epoch数字宣称撤销成功。
 
 新执行权领取与旧域撤销按 checkpoints.md 接管事务执行；只有 `state=revoked` 且每个domain四项撤销事实为true，才允许新epoch获得写句柄。revoke完成后旧请求即使网络恢复也返回 `ENVIRONMENT_REVOKED`，不会恢复被撤销mount。
 
 ### 7.3 环境失败与收束
 
-- accepted 意图已保存但进程未启动：inspect返回accepted；原执行服务按同 execution_id 启动一次，不能由Runtime生成新ID重开。
+- accepted 意图已保存但进程未启动：inspect返回accepted；原执行服务按同 execution_id 启动一次，不能由 SDK 生成新 ID 重开。
 - 进程已结束但结果未交付：inspect取回原输出；SDK 保存 raw 后继续后置链，不再次exec。
 - 进程存在但不可查询：记unknown，先收束原域；调用管道根据已识别错误和重试策略处理，不能把unknown当作已停止。
-- revoke unconfirmed：Run接管保留阻塞诊断，不发新写句柄；停止／清理可继续重试撤销，但不能先删除仍可被写入的目录。
+- revoke unconfirmed：ExecutionRecord接管保留阻塞诊断，不发新写句柄；停止／清理可继续重试撤销，但不能先删除仍可被写入的目录。
 - 只读查看也需要授权；同路径不意味着不同epoch可以复用旧handle。成功 revoke 不承诺撤销已经完成的远端业务副作用。
 
 ## 8. 跨模块提交目录
@@ -340,7 +340,7 @@ driver 将 ExecCommand 编译为固定 OCI process spec：argv 直接数组传�
 | `prepare_batch_delivery` 生成写集 | batch全部结算、ordinal不变、父context／task revision | 原反馈槽、完整tool组、batch consumed、phase；`batch:<batch>:deliver` |
 | 输出修正 | 候选关联原model operation、validation hash | 格式反馈和下一阶段；`format:<operation>:feedback`；不发新的隐式Attempt |
 | 模型raw/effective | Attempt／Operation revision、原request hash、当前执行许可 | raw／effective引用、Hook状态、最终响应；模型assistant追加留给接受决策提交 |
-| workspace登记 | 可信owner固定根、partition／Run关系、调用方固定的环境配置 | registration、mount_intent；`workspace:<owner>:<partition>:<run>` |
+| workspace登记 | 可信owner固定根、partition／ExecutionRecord关系、调用方固定的环境配置 | registration、mount_intent；`workspace:<owner>:<partition>:<run>` |
 | 文件结果 | 原Operation／Attempt及gateway receipt关联、版本 | raw FileVersion／错误引用；`raw:<attempt>`；不在事务里做rename |
 | artifact发布 | 源etag、grant及source_scope仍有效、目标scope归属 | ArtifactRef、grant、来源依赖、可读引用；`artifact:<operation>:<ordinal>` |
 | 环境撤销完成 | 根控制／接管身份、预期domain清单 | revocation receipt引用、接管屏障或清理许可；`revoke:<run>:<epoch>` |
@@ -354,7 +354,7 @@ driver 将 ExecCommand 编译为固定 OCI process spec：argv 直接数组传�
 
 Planner／Executor E1、E2共享/work。E1和E2都读取report.md的etag=e0；E1 fs.edit提交e1，E2带e0写入得到FILE_VERSION_CONFLICT，文件保持e1，模型收到冲突后重新读取。两个调用各自有Operation，不按参数相同合并。
 
-Worker A epoch7写进程失联，Worker B准备epoch8。执行服务若不能确认epoch7挂载撤销，revoke返回unconfirmed，B没有写句柄；确认全部进程空、挂载失效、token撤销后才准许epoch8。最后整个Run收束，非持久scope的全部产物删除，系统历史／blob仍保留。
+Worker A epoch7写进程失联，Worker B准备epoch8。执行服务若不能确认epoch7挂载撤销，revoke返回unconfirmed，B没有写句柄；确认全部进程空、挂载失效、token撤销后才准许epoch8。最后整个ExecutionRecord收束，非持久scope的全部产物删除，系统历史／blob仍保留。
 
 ### 9.2 必测断言
 
@@ -377,7 +377,7 @@ Worker A epoch7写进程失联，Worker B准备epoch8。执行服务若不能确
 | C25 并发edit | 两请求同etag至多一个写成功，另一conflict；结果不由完成速度选择 |
 | C26 文件崩溃窗口 | fsync后rename前／rename后receipt前均恢复原mutation；证据不足unknown，不假成功 |
 | C27 NFS失联 | 不能降为无锁写；无撤销证据不发新epoch写句柄；旧句柄恢复联网仍被拒绝 |
-| C28 子任务完成 | 临时产物仍可被授权父读取；根Run收束前不清理 |
+| C28 子任务完成 | 临时产物仍可被授权父读取；根ExecutionRecord收束前不清理 |
 | C29 临时卷清理 |全部登记非持久scope删除，持久scope保留，系统上下文不受影响 |
 | C31 同scope不同角色Skill | /work读写共享；execution_view_key不同，各自只能读获授权资源；revoke枚举所有视图 |
 
