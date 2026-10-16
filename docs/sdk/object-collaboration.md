@@ -8,20 +8,21 @@
 
 | 类别 | 对象 | 有什么状态 | 何时创建／释放 |
 | --- | --- | --- | --- |
-| 执行配置 | AgentDefinition、RoleDefinition、GraphDefinition、NodeBinding、HookBinding、SkillPackage | 不可变配置与资源描述 | 构造 Agent／编译 Workflow 时固定 |
+| 执行配置 | AgentDefinition、RoleDefinition、GraphDefinition、NodeBinding、HookSet、HookBinding、SkillPackage | 不可变配置与资源描述 | 构造 Agent／编译 Workflow 时固定 |
 | 可复用服务 | Runtime、NodeRegistry、ModelAdapter、CapabilityAdapter、SkillLoader、RuntimeStore | 连接、不可变注册和工厂；不存某次角色消息 | 调用方装配，通常跨 Run 复用 |
 | 本次进程对象 | RunRuntime、EventBusImpl、InvocationPipeline、HookManager、NodeDriver、ResultWaitRegistry | 本机任务、等待者、当前 lease 与运行 scope | 每次执行或故障接管重新创建 |
 | 持久执行实体 | Run、GraphExecution、NodeTask、RoleContext、Operation、Attempt、HookInvocation、Checkpoint | 可恢复进度、结果、身份与版本 | 原子提交后保存；进程销毁不删除 |
 
-Agent 对象是可执行程序入口，不等于数据库中的 Agent 应用，也不等于 Run。new PlanAgent 只装配依赖；ainvoke 才开始、附着或恢复一次执行。Node 实现不保存 messages 等可变任务状态，NodeTask 与 RoleContext 才保存这些内容。
+Agent 对象是可执行程序入口，不等于数据库中的 Agent 应用，也不等于 Run。new PlanAgent 只装配依赖；start 开始、附着或恢复一次执行，ainvoke／astream 复用 start。Node 实现不保存 messages 等可变任务状态，NodeTask 与 RoleContext 才保存这些内容。构造合同与资源所有权见[装配设计](assembly.md)。
 
 ## 2. Agent 与 Runtime 的装配关系
 
 ```mermaid
 classDiagram
     class ExecutableAgent {
-      +ainvoke(input, options) RunResult
-      +astream(input, options) RunEvents
+      +start(input, ids) RunHandle
+      +ainvoke(input, ids) RunResult
+      +astream(input, ids, after_seq) RunEvents
     }
     class ReactAgent
     class PlanAgent
@@ -33,8 +34,13 @@ classDiagram
       +open_run(program, request) RunHandle
     }
     class RunRuntime {
-      +start_or_attach() RunHandle
+      +start_or_resume(claim)
       +close(reason)
+    }
+    class RunHandle {
+      +run_id
+      +wait(timeout_s) RunResult
+      +events(after_seq) RunEvents
     }
     class AgentGraphEngine
     class WorkflowEngine
@@ -50,7 +56,9 @@ classDiagram
     ExecutableAgent --> GraphDefinition : 生成的内层图
     ExecutableAgent --> WorkspaceBinding : 固定环境配置
     ExecutableAgent --> Runtime : 注入运行依赖
-    Runtime ..> RunRuntime : 为本次执行创建
+    Runtime ..> RunRuntime : 获得本机执行权后创建
+    Runtime ..> RunHandle : 返回运行引用
+    RunHandle --> Runtime : 只通过公共门面观察和控制
     Runtime --> RuntimeStore : 注入
     Runtime --> ContentStore : 注入
     Runtime --> EnvironmentProvider : 注入环境服务
@@ -255,7 +263,7 @@ classDiagram
     }
     class Hook {
       <<interface>>
-      +evaluate(input, context) HookDecision
+      +evaluate(input, context, reader) HookDecision
     }
     class FunctionHook
     class ScriptHook
@@ -276,7 +284,7 @@ classDiagram
     InvocationPipeline --> CommitCoordinator : 决定及修改同提交
 ```
 
-Hook 是用户处理器，HookBinding 描述何时运行，HookManager 负责筛选、顺序、超时、校验与恢复链游标。它不是全局事件观察者；需要修改或阻止调用时必须在 Pipeline 中被有序 await。
+Hook 是用户处理器，HookBinding 描述何时运行，HookManager 负责筛选、顺序、超时、校验与恢复链游标。它不是全局事件观察者；需要修改或阻止调用时必须在 Pipeline 中被有序 await。HookSet 的精确绑定字段、受限读取端口及 matcher 规则见[Hook 装配](assembly.md#5-hookset-与-hookbinding)。
 
 同一 Run 可能包含多个可执行 Agent 的配置。HookManager 按可信 ExecutionBindingRef 选择该程序的绑定，再用 stage／matcher 筛选角色；不会将外层 Workflow、Planner 和所有子 Agent 的 Hook 合成全局链。绑定 key 在 program_key 内唯一，固定链及已选绑定保存到 Operation，恢复不跨程序重新选取。
 

@@ -13,7 +13,7 @@
 | 应用模式、主角色和 Executor 配置 | AgentDefinition、已解析 Prompt／角色能力 |
 | 模型连接与凭据引用 | ModelAdapter／CredentialResolver、模型参数 |
 | 工具／MCP／Skill 资源版本 | 已解析 Registry、MCP 连接配置、只读 Skill 目录／Loader |
-| Hook 配置 | 有序 HookBinding 和受限处理器 |
+| Hook 配置 | HookSet：有序 HookBinding 和已解析受限处理器 |
 | 上下文、执行、并行策略 | SDK Policy 值对象 |
 | 应用文件根、持久策略及授权挂载 | WorkspaceBinding；另注入 EnvironmentProvider，运行期 WorkspaceScope 由 SDK 创建／恢复 |
 | 部署的执行存储 | RuntimeStore、ContentStore、StorageNamespace |
@@ -21,12 +21,14 @@
 
 装配所有 Workflow Agent 依赖时固定所引用配置并保存依赖清单。SDK 运行中不调用平台发布查询接口，AgentNode 通过已装配程序注册表启动内层执行。
 
+SDK 构造字段和所有权遵循[装配合同](../sdk/assembly.md)。同一 Workflow 的 Agent 使用同一个 Runtime，平台注册本地 agent_key，SDK 派生 program_key；平台发布号不进入该地址。公开 Agent 格式取主角色 Schema，不维护另一份顶层格式。
+
 ## 2. 新请求接入
 
 1. HTTP 层认证，校验空间与应用访问权、发布状态、输入格式和幂等键。
 2. 平台事务锁应用接入 gate 和 SessionBinding；生成稳定 sdk_run_id、input_id，保存原发布配置引用、RunBinding、DispatchIntent。先提交，再通知 Worker。
 3. Worker 重新检查该分派未被平台屏障取消，按保存配置调用 AssemblyService。
-4. 调用 SDK 执行入口。SDK 在自己的存储中幂等初始化 Run、输入和执行现场，取得执行权，再运行。
+4. 调用 SDK start 并取得 RunHandle。SDK 在自己的存储中幂等初始化 Run、输入及执行意图，由本机 supervisor 取得执行权后运行；start 不等待答案。HTTP 需要直接等待时可用 ainvoke，底层复用同一路径。
 5. SDK 回执返回后平台更新分派投影；如果回执丢失，重投同 run_id/input_id，SDK 返回原运行／原结果。
 6. 平台通过 SDK 事件／查询展示结果，HTTP 连接断开不撤销 Run。
 
@@ -44,18 +46,22 @@ sequenceDiagram
     participant E as SDK图与节点
     H->>A: 原配置快照与同一个run_id
     A-->>H: 新构造的Agent及依赖
-    H->>S: invoke(input, session_id, run_id, input_id)
+    H->>S: start(run_id)，接续已接收Run
+    S->>C: 核对原Run、输入身份和当前控制状态
+    C-->>S: 已接收Run引用
+    S-->>H: RunHandle，尚不代表恢复或执行完成
     S->>C: 查原Run并申请有效执行权
     C-->>S: 检查点、增量、已保存结果
     S->>E: 恢复原Planner/Executor及等待关系
     E->>K: 提交原位置的状态推进
     K->>C: 执行权校验与原子写入
-    S-->>H: 已提交进度和终态
+    H->>S: handle.events或wait
+    S-->>H: 已提交进度和终态结果
 ```
 
 平台只处理“让哪台机器再调用 SDK”，不处理“恢复哪个 Executor”。失效判断、epoch、旧环境写权限撤销、已有结果复用和下一节点激活均由 SDK／其注入适配器完成。
 
-有效 owner 尚在执行时，平台重复投递不能强行夺权；SDK 拒绝或附着观察。已终态的 Run 不重新开始，原输入不重复追加，额度和截止时间不重置。
+有效 owner 尚在执行时，平台重复投递不能强行夺权；SDK 默认附着观察。已终态的 Run 不重新开始，原输入不重复追加，额度和截止时间不重置。仅查询使用 runtime.runs.attach；需要在 owner 失效后接续执行，仍须按原配置构造程序并调用 start。
 
 ## 4. 执行中补充
 

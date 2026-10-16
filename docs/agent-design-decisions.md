@@ -19,6 +19,7 @@ Agent 应用、可执行 Agent 对象、角色定义、NodeTask 和 GraphExecuti
 | --- | --- |
 | 模式、默认值、Loop、重试、停止、历史范围 | [SDK 行为约定](sdk/requirements.md) |
 | Agent、EventBus、Node、Hook、Skill 等对象协作 | [SDK 对象级 UML](sdk/object-collaboration.md) |
+| 构造参数、角色绑定、资源注册及对象生命周期 | [SDK 装配设计](sdk/assembly.md) |
 | 公共构造、运行、补充、停止和恢复接口 | [SDK 公共接口](sdk/public-api.md) |
 | 两套引擎、父子执行和原生 pending writes | [Workflow 与双引擎](sdk/workflow.md) |
 | Hook修改／拒绝及失败放行 | [事件总线与调用](sdk/event-bus.md) |
@@ -40,7 +41,9 @@ Platform → SDK 单向依赖。SDK 不要求平台数据库、应用和发布�
 
 2026-10-16 对重组版本逐项复核发现了跨层环境绑定、图与正文的执行职责、DTO 和计票不一致，并已修正；有效 Workflow 约定也已补回。详见[整理复核记录](reorganization-review.md)。这表示职责拆分得到校正，不表示详细设计已全部闭合。
 
-仍需补齐的是工程合同：SDK 机器可验证 Schema／样例、公共端口完整签名与注册 DTO、Workflow 原生 Saver 的逐方法／存储映射、Workflow 输入状态协议及生命周期 Hook。这里不撤回已确认的产品规则；Workflow 的追加输入接收点也不能靠直接 Agent 的补充协议代替。
+直接 Agent 的构造、能力注册、HookSet、start／ainvoke／astream、RunHandle 和重入行为已有细化方案，见[装配设计](sdk/assembly.md)与[公共接口](sdk/public-api.md)。这些是工程接口方案，不改变已确认的产品规则，也不表示功能已实现。
+
+仍需补齐的是工程合同：SDK 机器可验证 Schema／样例、公共查询／删除 DTO 和扩展端口机器合同、Workflow compile 与输入映射、原生 Saver 的逐方法／存储映射以及生命周期 Hook。Workflow 的追加输入接收点不能靠直接 Agent 的补充协议代替。
 
 完成合同后还需要以下实施验收：
 

@@ -9,7 +9,7 @@
 1. [行为约定](sdk/requirements.md)：执行模式和已经确认的规则。
 2. [定义与实例](sdk/definitions.md)：AgentDefinition、GraphDefinition、NodeTask、Operation 分别是什么。
 3. [对象协作 UML](sdk/object-collaboration.md)：Agent、Node、EventBus、Handler、Hook、Skill 的类关系和时序。
-4. [公共接口](sdk/public-api.md)：独立开发者如何构造、执行、停止和恢复。
+4. [构造与资源绑定](sdk/assembly.md)、[公共接口](sdk/public-api.md)：独立开发者传什么、SDK 创建什么，以及如何执行、停止和恢复。
 5. [Runtime](sdk/runtime.md)、[调用总线](sdk/event-bus.md)、[上下文](sdk/context.md)、[能力环境](sdk/capabilities.md)：进入模块算法和数据字段。
 6. [检查点](sdk/checkpoints.md)、[Workflow](sdk/workflow.md)：持久化、两套引擎与故障交接。
 7. [验收](sdk/verification.md)：实现顺序和需要证明的不变量。

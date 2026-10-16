@@ -35,6 +35,16 @@
 | SDK15 | 纯工具 Workflow 未传 session_id | 无 AgentInvocation 仍有合法 run 文件分区；不伪造会话或重复嵌套 runs 目录 |
 | SDK16 | Workflow 两次调用同一 Agent，随后其中一次故障重入 | 两个独立 Invocation、input_only 上下文；恢复复用原实例，不读取既有聊天 Session |
 | SDK17 | 同一 Run 两个 Agent 使用同名 Hook binding_key | 按各自 program_key／ExecutionBindingRef 选链；外层和内层绑定不混用 |
+| SDK18 | 构造时禁止所有外部 I/O，再修改原配置 dict | 无模型／MCP／Hook／沙箱调用；已构造程序的深冻结配置不变 |
+| SDK19 | 两个调用者重投同 run_id／初始输入 | 默认附着同 Run，仅一个 owner；不同初始内容明确冲突，不追加补充 |
+| SDK20 | 新对象 start(run_id)，不传 input | 接回原检查点；不存在则 RUN_NOT_FOUND，不凭空创建问题 |
+| SDK21 | 取消 ainvoke／关闭 events，再另行 wait | 只解除观察，执行继续；Runtime supervisor 保持任务引用 |
+| SDK22 | stop 先于 start；已有 stopping Run 再次 start | 前者阻止初始化，后者允许观察／恢复收束，均不能启动新业务 |
+| SDK23 | Runtime shutdown，再由新对象恢复 | 不伪造用户停止、不删除现场；注入的共享客户端不被错误关闭 |
+| SDK24 | MCP 注册多工具但省略 member_key；Skill 含脚本但未绑定 exec | 构造明确拒绝歧义，脚本能力不因读 Skill 自动授权 |
+| SDK25 | HookReadPort 读其他 Context 或最新版本、Hook 结束后继续读 | 拒绝越权／版本漂移／过期端口；原始元数据中没有存储客户端 |
+| SDK26 | 终态事件后清理缓慢；从 terminal_seq 重连 | 答案流在固定终态序号结束；清理状态单独查询，不重发最终结果 |
+| SDK27 | 相同 command_id 不同 stop 参数；接收回执未知重投 | 冲突明确，重投不双重接收，不把未知提交解释为 Run 失败 |
 
 ## 3. Hook 与 EventBus 测试
 
@@ -70,4 +80,4 @@
 
 ## 6. 文档合同门槛
 
-进入实现前仍须补齐 [整理复核记录](../reorganization-review.md#3-仍未完成的详细设计)列出的合同：SDK Schema、公共接口和注册 DTO、Workflow Saver／初始及追加输入、生命周期 Hook。上述测试是待执行验收，不表示这些接口已有可运行代码。实现文档检查至少覆盖 Node 激活签名、OperationError 枚举、PreparedModelRequest 字段、序号初值和修正计票的一致性。
+进入实现前仍须补齐 [整理复核记录](../reorganization-review.md#3-仍未完成的详细设计)列出的合同：SDK Schema、公开查询／删除及扩展端口机器合同、Workflow compile／Saver／初始及追加输入、生命周期 Hook。直接 Agent 的构造／调用和注册 DTO 已在[装配](assembly.md)与[公共接口](public-api.md)细化。上述测试是待执行验收，不表示这些接口已有可运行代码。实现文档检查至少覆盖 Node 激活签名、OperationError 枚举、PreparedModelRequest 字段、序号初值、修正计票和公开重入语义的一致性。

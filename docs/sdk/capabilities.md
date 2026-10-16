@@ -84,11 +84,13 @@ NodeDriver 在同一提交中保存反馈及下一 prepare_context 阶段；该�
 | `CapabilitySpec` | `resource_key, capability_key, kind:builtin\|hosted\|mcp\|script, model_name, description, input_schema, output_schema?, handler_ref, credential_binding_ref?` |
 | `ResolvedCatalog` | `program_key, binding_key, capabilities[], model_name_to_key, skill_entries[], access_scope, environment_policy`；调用方已解析的不可变目录 |
 | `CapabilityRequest` | `operation_id, resource_key, capability_key, arguments` |
-| `ToolInvocationContext` | `content_scope_ref, run_id, graph_execution_id, node_task_id?, invocation_id?, session_id?, role_key?, execution_binding_ref, workspace_scope_ref?, operation_id, attempt_id, attempt_no, lease_epoch, deadline_at, authorization_ref, cancellation` |
+| `ToolInvocationContext` | `content_scope_ref, run_id, graph_execution_id, node_task_id?, invocation_id?, session_id?, role_key?, execution_binding_ref, binding_config, workspace_scope_ref?, operation_id, attempt_id, attempt_no, lease_epoch, deadline_at, authorization_ref, cancellation` |
 | `ToolResult` | `status:succeeded\|failed\|unknown, content:ContentBlock[], error?, artifacts:ArtifactRef[], metadata` |
 | `ContentBlock` | `type:text\|json\|artifact_ref`，分别含 `text`、`json_ref`、`artifact_ref`；不能内嵌任意系统路径 |
 
 `CapabilityRegistry.for_role(program_key,role_key)`、`for_node_binding(program_key,binding_key)` 返回已注入目录；`resolve(catalog,model_name)` 只查本目录。构造时拒绝 model_name 冲突，运行时缺名返回 CAPABILITY_NOT_FOUND；不搜索平台目录，也不比较平台发布版本指纹。
+
+注册描述、角色选择、绑定配置和不可变视图的装配过程见[能力注册](assembly.md#4-能力如何注册和绑定)。binding_config 是通过注册 Schema 校验的固定配置，由可信 ExecutionBindingRef 解析，不从 LLM 参数中接收；同一适配器服务多个角色时不得把它缓存成全局可变状态。
 
 `CapabilityAdapter.invoke_once(request,context)->ToolResult` 只执行一次；Manager 校验调用可信范围、最终 schema、凭据撤销及执行许可，再调用原 Adapter 并规范化为管道 RawResult。它不同于总线的 EventHandler：后者由 Manager 实现，前者只实现一次具体能力调用。Hook allow 不扩大目录。普通工具不创建新 NodeTask；Planner 委派 action 由图运行负责，不能交给普通 handler_ref。
 

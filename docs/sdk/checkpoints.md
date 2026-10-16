@@ -102,7 +102,7 @@ SDK 保证同一 Session 的顺序与活动 Run 约束。平台保证同一 Sess
 
 | 表 | 必须保存的列 | 约束和查询索引 |
 | --- | --- | --- |
-| runs | run_id,session_id?,session_run_seq?,status,deadline_at,loop_limit,loops_reserved,loops_consumed,root_graph_id?,control_reason?,public_seq,cleanup_state | CHECK两计数>=0且和<=limit；UNIQUE(session_id,session_run_seq) WHERE session_id 非空 |
+| runs | run_id,session_id?,session_run_seq?,status,deadline_at,loop_limit,loops_reserved,loops_consumed,root_graph_id?,control_reason?,public_seq,terminal_seq?,cleanup_state | CHECK两计数>=0且和<=limit；UNIQUE(session_id,session_run_seq) WHERE session_id 非空；终态必须有terminal_seq，对应同提交公开终态事件 |
 | execution_leases | run_id,epoch,worker_id,phase,expires_at,revocation_ref? | PK(run_id); phase=recovering/active/released；epoch只递增 |
 | agent_invocations | invocation_id,run_id,program_key,graph_id,parent_node_task_id?,budget_scope,local_limit?,local_reserved,local_consumed,local_deadline?,control_state,terminal_reason?,workspace_scope_id,result_ref? | UNIQUE(graph_id); UNIQUE(parent_node_task_id) WHERE非空；直接调用local限制为null |
 | graph_executions | graph_id,run_id,engine_kind,engine_protocol_version,invocation_id?,parent_node_task_id?,program_key,status,state_revision,scope_commit_seq,head_checkpoint_id?,task_creation_count | UNIQUE(run_id,graph_id)供复合FK；index(run_id,status)；引擎类型固定 |
@@ -260,7 +260,7 @@ commit(command, lease):
 | settle_member | BatchMember结果、WaitMember settled、settled_count | 已有Operation须最终EventResponse；local_outcome仅未begin |
 | consume_batch | 按ordinal追加tool结果、补齐反馈槽、WaitGroup consumed、Continuation.prepare_context | settled_count=member_count，消费标记CAS |
 | stop_run（T_STOP／ControlCommand） | admission closed、StopReceipt；Run已存在时另写stopping/control_reason、取消未准入意图、stop intent、outbox | 独立控制身份，无需Worker活跃lease；Run不存在也阻止迟到初始化；不伪造活跃工具终态 |
-| finalize_run | Run终态、根输出、Session输入转交、Session.active清空、cleanup意图 | Session先锁，全部写任务已收束；终态不可复活 |
+| finalize_run | Run终态、根输出、Session输入转交、Session.active清空、cleanup意图、公开终态事件及terminal_seq | Session先锁，全部写任务已收束；终态不可复活；terminal_seq是该公开事件序号，恢复不能分配第二个结束事件 |
 
 表中命令是允许的语义提交，不要求每个命令独立公开HTTP。Driver可以一次Progress调用其中一个typed命令；命令可以拥有多个内部handler，但最终只能提交一个事务。
 

@@ -24,7 +24,7 @@ SDK 接收构造参数和运行依赖，自行执行、管理上下文、保存�
 
 1. [行为约定](requirements.md)：默认值和已确认规则。
 2. [定义与对象关系](definitions.md)、[对象协作 UML](object-collaboration.md)：配置、节点、实例、类关系和调用时序。
-3. [公共接口与装配](public-api.md)：构造、执行、输入、停止、查询和依赖注入。
+3. [构造、绑定与生命周期](assembly.md)、[公共接口](public-api.md)：精确构造字段、资源注册、RunHandle、输入、停止和重入。
 4. [Agent 执行](runtime.md)：Loop、安全点、并行、预算和恢复。
 5. [事件总线与 Hook](event-bus.md)：状态机、DTO、调用与一致提交。
 6. [上下文与模型](context.md)、[能力与环境](capabilities.md)：模型实际看到什么、文件如何隔离。
@@ -41,4 +41,4 @@ SDK 接收构造参数和运行依赖，自行执行、管理上下文、保存�
 
 ## 4. 尚需实施验证的边界
 
-具体 Python 签名、装配 DTO、机器 Schema、Workflow 原生存储映射及生命周期 Hook 还需补齐详细合同，再进入实现验证，见[整理复核记录](../reorganization-review.md)。这里确定的是职责、行为、数据关系及恢复协议；不承诺任意 LangGraph 程序或历史检查点原样兼容。
+直接 Agent 的构造、调用／重入、RunHandle、HookSet 和能力注册已补充详细合同；仍需补齐机器 Schema、查询及删除 DTO、扩展端口的机器合同、Workflow compile／输入／原生存储映射及生命周期 Hook，再进入实现验证，见[整理复核记录](../reorganization-review.md)。不承诺任意 LangGraph 程序或历史检查点原样兼容。

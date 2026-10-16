@@ -49,7 +49,6 @@ AgentDefinition
   execution: ExecutionPolicy
   context: ContextPolicy
   model_options: ModelOptions
-  input_schema?, output_schema?
 
 RoleDefinition
   role_key: string
@@ -72,6 +71,8 @@ CapabilityBinding
 模型连接由 Agent 构造依赖提供。Executor 和压缩角色继承所属 Agent 的模型，不能借 role 配置替换连接。Executor 的 Prompt 不拼接 Planner Prompt；其能力集合独立，文件授权可以共享。
 
 输入输出 Schema 不执行远程引用。Prompt 变量按声明类型检查，纯文本替换，不执行模板代码。构造校验不调用模型或执行工具；资源准备、导入和授权在 SDK 外完成。
+
+直接 Agent 的输入输出格式取 main_role 的 Schema，Executor 使用自己的 Schema；AgentDefinition 不再重复设置顶层格式。精确装配参数、CapabilityRegistration、HookSet、program_key 派生及资源所有权见[构造与绑定](assembly.md)。
 
 ## 3. Node 类与 NodeTask
 

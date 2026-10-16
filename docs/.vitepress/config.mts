@@ -51,6 +51,7 @@ export default defineConfig({
           { text: "行为约定与默认值", link: "/sdk/requirements" },
           { text: "定义、节点与运行实体", link: "/sdk/definitions" },
           { text: "对象协作 UML 与时序", link: "/sdk/object-collaboration" },
+          { text: "构造、资源绑定与生命周期", link: "/sdk/assembly" },
           { text: "公共 API 与依赖注入", link: "/sdk/public-api" },
           { text: "Runtime 与 Agent Loop", link: "/sdk/runtime" },
           { text: "EventBus、Handler 与 Hook", link: "/sdk/event-bus" },

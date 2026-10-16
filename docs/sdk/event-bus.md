@@ -19,6 +19,8 @@
 
 HookManager 的固定绑定按 program_key 分组。每次从可信 ExecutionBindingRef 选择所属程序，再按 event_type／stage／matcher 选择链；相同 Run 内不同 AgentInvocation 不共享一条混合 Hook 链。Operation 固定选中的链及处理游标，恢复复用原链。共享一个 EventBus 只共享调用设施，不合并资源授权、Hook 或私有上下文。
 
+调用者通过 [HookSet／HookBinding](assembly.md#5-hookset-与-hookbinding)装配处理器。matcher 首版只匹配绑定身份、角色及 purpose；业务 payload 条件在 Hook.evaluate 中校验。HookContext 保存持久元数据，读取有效 payload／上下文使用独立的本机 HookReadPort，不将数据库对象或读取函数序列化入 HookInvocation。
+
 请求键只匹配一个 Manager。绑定清单为 `model.generate/model.embed → ModelManager`，`capability.invoke/result.read → ToolManager`，`context.materialize/context.mutate/context.compact → ContextManager`，`environment.prepare/environment.read/environment.write → EnvironmentManager`，`executor.delegate/agent.invoke → GraphExecutionManager`。一个 Manager 可绑定多个键；不通过继承、多播或“第一个返回成功”选择 Manager。
 
 ContextManager 的内部 mutation、额度事务、检查点 writer、HookAdapter、outbox ACK 不再次进入业务代理。GraphExecutionManager 返回图计划，由对应引擎决定启动；普通工具没有第二个 Executor 调度器。RunControl 有独立任务和持久控制记录，不等待业务队列或 Hook 执行，也不接受 Hook deny。
