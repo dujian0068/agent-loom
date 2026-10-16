@@ -1,5 +1,5 @@
 import { defineConfig } from "vitepress";
-import { existsSync, statSync } from "node:fs";
+import { existsSync, statSync, readFileSync, writeFileSync, mkdirSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -26,10 +26,12 @@ export default defineConfig({
   },
   themeConfig: {
     siteTitle: "AgentLoom 文档",
+
     nav: [
-      { text: "阅读指南", link: "/reading-guide" },
-      { text: "系统设计", link: "/design/overview" },
-      { text: "SDK / Platform", link: "/design/sdk-platform-boundary" },
+      { text: "职责边界", link: "/sdk-platform-boundary" },
+      { text: "SDK", link: "/sdk/" },
+      { text: "Platform", link: "/platform/" },
+      { text: "对象 UML", link: "/sdk/object-collaboration" },
     ],
     socialLinks: [{ icon: "github", link: repository }],
     sidebar: [
@@ -37,47 +39,46 @@ export default defineConfig({
         text: "开始阅读",
         items: [
           { text: "文档首页", link: "/" },
-          { text: "SDK / Platform 重建边界", link: "/design/sdk-platform-boundary" },
-          { text: "重建目录", link: "/directory-plan" },
-          { text: "阅读指南", link: "/reading-guide" },
+          { text: "职责边界", link: "/sdk-platform-boundary" },
           { text: "Agent 设计约定", link: "/agent-design-decisions" },
+          { text: "阅读指南", link: "/reading-guide" },
         ],
       },
       {
-        text: "系统设计草案 · 待按交付边界调整",
+        text: "SDK · 执行底座",
         items: [
-          { text: "系统设计总览", link: "/design/overview" },
-          { text: "领域实体与 UML", link: "/design/domain-model" },
-          { text: "Definition、Node 与图引擎", link: "/design/graph-node-engine" },
-          { text: "双引擎与检查点适配", link: "/design/dual-engine-integration" },
-          { text: "数据结构与契约", link: "/design/data-contracts" },
-          { text: "检查点结构与父子恢复", link: "/design/checkpoint-protocol" },
-          { text: "领域接口与交互", link: "/design/domain-interfaces" },
-          { text: "Agent Loop 与委派", link: "/design/agent-execution" },
-          { text: "上下文与生命周期", link: "/design/context-lifecycle" },
-          { text: "能力、Hook 与环境", link: "/design/capabilities-hooks" },
-          { text: "事件总线 EventBus", link: "/design/runtime-messaging-checkpoints" },
-          { text: "存储、恢复与 API", link: "/design/storage-recovery-api" },
-          { text: "实现与验收", link: "/design/verification-roadmap" },
-          { text: "架构决策与后续事项", link: "/design/architecture-discussion" },
+          { text: "SDK 总览", link: "/sdk/" },
+          { text: "行为约定与默认值", link: "/sdk/requirements" },
+          { text: "定义、节点与运行实体", link: "/sdk/definitions" },
+          { text: "对象协作 UML 与时序", link: "/sdk/object-collaboration" },
+          { text: "公共 API 与依赖注入", link: "/sdk/public-api" },
+          { text: "Runtime 与 Agent Loop", link: "/sdk/runtime" },
+          { text: "EventBus、Handler 与 Hook", link: "/sdk/event-bus" },
+          { text: "上下文、历史与压缩", link: "/sdk/context" },
+          { text: "模型、能力与环境", link: "/sdk/capabilities" },
+          { text: "检查点与故障接管", link: "/sdk/checkpoints" },
+          { text: "Workflow 与双引擎适配", link: "/sdk/workflow" },
+          { text: "实施与验收", link: "/sdk/verification" },
         ],
       },
       {
-        text: "实施草案 · 待按交付边界调整",
+        text: "Platform · 配置平台",
         items: [
-          { text: "实施入口与开发顺序", link: "/design/implementation/" },
-          { text: "配置、发布与应用 API", link: "/design/implementation/catalog-api" },
-          { text: "持久结构、事务与恢复", link: "/design/implementation/persistence" },
-          { text: "Runtime、Loop 与图执行", link: "/design/implementation/runtime-graph" },
-          { text: "事件总线、调用与 Hook", link: "/design/implementation/invocation" },
-          { text: "上下文、能力与执行环境", link: "/design/implementation/context-capabilities" },
+          { text: "Platform 总览", link: "/platform/" },
+          { text: "管理领域与实体", link: "/platform/domain-model" },
+          { text: "配置、资源与发布", link: "/platform/configuration" },
+          { text: "SDK 装配与恢复接入", link: "/platform/sdk-integration" },
+          { text: "HTTP API 与输入协议", link: "/platform/api" },
+          { text: "存储与生命周期", link: "/platform/storage-lifecycle" },
+          { text: "API 集成验收", link: "/platform/verification" },
         ],
       },
       {
         text: "文档维护",
         collapsed: true,
         items: [
-          { text: "完整文档索引", link: "/README" },
+          { text: "目录规划", link: "/directory-plan" },
+          { text: "完整索引", link: "/README" },
           { text: "维护文档站", link: "/documentation-site" },
         ],
       },
@@ -127,7 +128,7 @@ export default defineConfig({
             fuzzy: 0.1,
             boost: { title: 5, titles: 2, text: 1 },
             boostDocument: (id: string) => {
-              if (/\/design\//.test(id)) return 3;
+              if (/\/(sdk|platform)\//.test(id)) return 3;
               if (/agent-design-decisions/.test(id)) return 3;
               return /README/.test(id) ? 0.5 : 1;
             },
@@ -153,6 +154,31 @@ export default defineConfig({
         },
       },
     },
+  },
+  async buildEnd(site) {
+    const redirects: Record<string, string> = JSON.parse(
+      readFileSync(path.join(docsRoot, ".vitepress/redirects.json"), "utf8"),
+    );
+    for (const [from, to] of Object.entries(redirects)) {
+      if (![from, to].every((value) =>
+        /^[a-z0-9/-]+\.html$/.test(value) &&
+        !value.startsWith("/") && !value.split("/").includes("..")
+      )) throw new Error("Invalid documentation redirect");
+      const output = path.join(site.outDir, from);
+      const destination = base + to;
+      if (!existsSync(path.join(site.outDir, to))) {
+        throw new Error("Missing redirect target: " + to);
+      }
+      mkdirSync(path.dirname(output), { recursive: true });
+      writeFileSync(output,
+        '<!doctype html><html lang="zh-CN"><head><meta charset="utf-8">' +
+        '<meta name="robots" content="noindex"><title>文档已迁移</title>' +
+        '<meta http-equiv="refresh" content="0;url=' + destination + '">' +
+        '<link rel="canonical" href="' + destination + '">' +
+        '</head><body><p>文档已整理到 <a href="' + destination + '">新章节</a>。</p>' +
+        '<script>location.replace(' + JSON.stringify(destination) + ')</script></body></html>'
+      );
+    }
   },
   markdown: {
     anchor: {

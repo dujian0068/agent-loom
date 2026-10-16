@@ -10,7 +10,7 @@
 - SDK 根据稳定 Run 标识和检查点恢复执行现场；重新构造对象不等于新建 Run。
 - 已完成的 Executor 结果保留，未完成的 Executor 从可靠保存点继续；不把全部历史交给 Planner 重新规划。
 
-详细约定见 [SDK / Platform 边界](../docs/design/sdk-platform-boundary.md)。
+详细约定见 [SDK / Platform 边界](../docs/sdk-platform-boundary.md)。
 
 ## 目录
 

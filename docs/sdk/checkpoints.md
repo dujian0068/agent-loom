@@ -1,10 +1,8 @@
-# ID-2 持久结构、事务与故障接管实施规格
+# SDK 检查点、持久化与故障接管
 
-> **重建边界（2026-10-15）**：旧业务实现已移除。本页保留为待调整的设计草案；用户、应用、发布与配置版本属于平台，SDK 只接收已解析配置并负责执行与恢复。涉及平台身份、发布绑定及表结构的内容需按 [SDK / Platform 边界](../sdk-platform-boundary.md)重新划分，不直接作为 SDK 的必填契约或已实现功能。
+状态：详细设计，尚未实现。SDK 不要求 Platform 数据库。RuntimeStore 默认可用内存实现；持久部署可选 PostgreSQL／文件等适配器，但必须通过本页原子性、CAS、执行权和恢复测试。以下 SQL 与表结构是 **PostgreSQL 参考适配器** 的设计，不是高代码用户必须部署的管理端。
 
-2026-10-15。**目标实现规格；未在业务数据库执行。** 本文指定 PostgreSQL + 共享不可变内容存储的第一版实现。对旧原型不提供迁移兼容；新实现自己的格式、身份和事务必须一致。对象语义见[数据契约](../data-contracts.md)，调用/节点提交见[ID-3](runtime-graph.md)、[ID-4](invocation.md)。
-
-**双引擎范围：** 内部 Agent 和平台调用／控制事实沿用本文提交协议；WorkflowEngine 将外层相关源码迁入本包，通过 WorkflowCheckpointAdapter 接入同一 Coordinator／Store。检查点采用公共信封＋引擎专属载荷，新增原生快照／writes 提交命令及稳定任务映射，见[完整适配协议](../dual-engine-integration.md#6-统一检查点管理保留两种现场)。branch_scope、分支视图等旧自研字段不能直接替代 channel versions／pending writes，不能允许原生 Saver 独立写另一套数据库。
+平台记录用户、应用、发布和资源版本，见[平台存储](../platform/storage-lifecycle.md)。本文事务全部属于 SDK 执行存储；即使两层共用一个 PostgreSQL，也不能依赖跨层表事务。
 
 ## 1. 持久化包与公开端口
 
@@ -19,7 +17,7 @@ persistence/
   adapters/workflow.py  # 外层原生Saver接口与公共事务适配；待迁移实现
   content_store.py     # put/read/verify/delete不可变内容
   outbox.py            # 提交事实、游标投递
-  cleanup.py           # Owner删除、Run文件清理、无引用暂存回收
+  cleanup.py           # 指定scope删除、Run文件清理、无引用暂存回收
   schema/              # SQL schema及显式format_version
 ```
 
@@ -37,8 +35,8 @@ class CheckpointStore(Protocol):
                          at_commit_seq: int | None) -> GraphProjection: ...
 
 class ContentStore(Protocol):
-    async def put(self, owner: OwnerRef, data: bytes,
-                  source_owners: frozenset[OwnerRef]) -> BlobCandidate: ...
+    async def put(self, scope: ContentScopeRef, data: bytes,
+                  source_scopes: frozenset[ContentScopeRef]) -> BlobCandidate: ...
     async def read(self, ref: PayloadRef, auth: ReadScope) -> bytes: ...
     async def verify(self, ref: PayloadRef) -> None: ...
 
@@ -60,15 +58,15 @@ class LeaseService(Protocol):
 - 金额/比例如需要用 numeric；token/seq/计数用 bigint；配置比例限制在 JSON DTO 校验中，不存 NaN。
 - 下表 `?` 表示 nullable，未标记则 NOT NULL；`id` 是主键；所有可变投影表含 `revision bigint >=1, updated_at`（Context effective_revision 另从0起）；不可变记录含 `created_at`，无可变业务字段。
 - 枚举使用 text + CHECK，避免客户端把任意字符串当合法状态；JSONB 只存有 schema_version 的 DTO，不把所有事实塞进一个 state 大对象。
-- 表含 space_id 或经受信外键唯一推导；应用读查询必须有 Space/Owner 权限过滤。Repository 不提供“先按ID读取、稍后有空再校验”的接口。
-- 外键默认 RESTRICT；业务删除走 DeletionJob。运行结果、外部事实不能由一次意外 ORM cascade 无审计地清空。
+- SDK 主键在 namespace 内解析；Repository 必须绑定注入的分区和 scope，不能靠任意字符串越界。平台空间权限在调用前检查。
+- 外键默认 RESTRICT；删除走 SDK records.delete 和内容清理协议，时机由调用方决定。运行结果、外部事实不能由一次意外 ORM cascade 无审计地清空。
 
 ### 2.2 锁序
 
 使用 READ COMMITTED + 显式行锁 + revision CAS。不可用“一个 Python asyncio.Lock”替代数据库边界。
 
 ```text
-目录入口：Owner发布/删除gate（需要时） → Conversation → Run
+初始化与停止：RunAdmissionControl → Conversation → Run
 运行推进：                          [Conversation] → Run
                                     → Invocation（UUID排序）
                                     → GraphExecution（UUID排序）
@@ -78,7 +76,7 @@ class LeaseService(Protocol):
                                     → 各子记录（表名、主键排序）
 ```
 
-普通 RuntimeCommit 从 Run 开始，不再回头拿 Conversation；终态和补充转交命令先取 Conversation，再 Run。更新目录 gate 与请求 Run 停止分事务，不拿 Agent 锁等待 Run。未来AgentNode创建Invocation还须在Run前取目标Agent gate共享锁；发布gate排他提交后禁止新增。普通Executor不取Agent gate，因为不新建完整Agent调用。跨图提交先收集完整锁集合排序；若计算期间发现还需要更早的锁，回滚重新读取，禁止途中逆序补锁。
+只有初始化／停止入口取得 admission 行锁；普通推进不需要该锁，也不得逆序追加。普通 RuntimeCommit 从 Run 开始，不再回头拿 Conversation；终态和补充转交命令先取 Conversation，再 Run。跨图提交先收集完整锁集合排序；若计算期间发现还需要更早的锁，回滚重新读取，禁止途中逆序补锁。平台发布与删除 gate 不在此锁序内。
 
 数据库事务内不调用模型、MCP、Hook、脚本、共享盘写入、DNS 或沙箱停止。commit 超时不意味着外部能力失败；先按 command_id 查询回执，不直接重复业务调用。
 
@@ -86,46 +84,35 @@ class LeaseService(Protocol):
 
 以下是目标物理表，不要求名称与原型一致。公共 ID 使用 DTO 名称的 `_id`，例如 runs.run_id。JSON列对应的完整字段在关联实施规格中定义，未知版本必须拒绝装载。
 
-### 3.1 目录与接入
+### 3.1 会话与正式输入
 
-| 表 | 必须保存的列 | 唯一／索引与引用 |
+以下记录由 SDK 保存；平台 SessionBinding 只保存归属和 SDK Session ID，不复制输入消费状态。
+
+| 表 | 必须保存的列 | 约束 |
 | --- | --- | --- |
-| agents | agent_id,space_id,name,description,mode,file_root_id,draft_revision,published_release_id?,lifecycle,barrier,barrier_job_id? | UNIQUE(file_root_id); index(space_id,lifecycle); mode创建后不可变 |
-| agent_drafts | agent_id,revision,config_json,config_hash | PK(agent_id,revision)，不可变；agents指向当前revision |
-| definition_versions | definition_id,version,kind,owner_kind,owner_id,content_ref,content_hash,format_version | PK(definition_id,version); UNIQUE(owner_kind,owner_id,kind,version) |
-| releases | release_id,owner_kind,owner_id,release_no,definition_ref,graph_ref,binding_ref,manifest_ref,compiled_descriptor_ref,compiled_hash,compiler_version,abi_ref,status | UNIQUE(owner_kind,owner_id,release_no)；status=available/revoked/deleted |
-| release_jobs | job_id,owner_ref,candidate_release_id,source_draft_revision,state,target_watermark,error_ref? | 一个Owner至多一个非终态Job；state=stopping/switching/succeeded/failed |
-| resources | resource_id,space_id,kind,name,lifecycle,current_version | shared资源独立Owner；index(space_id,kind) |
-| resource_versions | resource_id,version,content_ref,content_hash,manifest_ref,status | PK(resource_id,version)；immutable载荷；撤销状态单独更新 |
-| credential_slots | slot_id,space_id,connection_id,secret_version,encrypted_secret_ref,status | 普通API只返回slot和状态；明文不入任何运行表 |
-| sessions | session_id,agent_id,owner_actor_id,input_seq,run_seq,active_run_id? | index(agent_id,owner_actor_id); agent_id不可变 |
-| workflow_sessions | session_id,workflow_id,owner_actor_id,input_seq,run_seq,active_run_id? | 未来外层，同样并发边界，不伪造Agent会话 |
-| user_inputs | input_id,conversation_kind,conversation_id,input_seq,client_message_id,origin_run_id?,kind,body_ref,received_at | UNIQUE(conversation_kind,conversation_id,input_seq); UNIQUE(conversation_kind,conversation_id,client_message_id)；不可变 |
-| user_input_deliveries | delivery_id,input_id,target_run_id?,operation_id?,previous_delivery_id?,state,context_seq?,first_output_receipt_ref?,delivered_at? | UNIQUE(input_id,previous_delivery_id) WHERE非空；每input仅一条非carried当前记录；state=pending/claimed/delivered/carried |
-| first_output_receipts | attempt_id,operation_id,kind,has_display_content,received_at | PK(attempt_id)；kind=text/reasoning/tool_name/tool_arguments/complete_frame；heartbeat不算 |
-| api_receipts | actor_id,operation_kind,target_key,idempotency_key,request_hash,response_ref,http_status | 联合PK；相同key不同hash拒绝 |
-| import_jobs | job_id,space_id,kind,source_ref,resolved_commit?,state,result_version_ref?,error_ref? | job_id幂等；source临时包不是可用资源 |
-| deletion_jobs | job_id,owner_ref,phase,state,cursor_ref?,error_ref?,requested_by | 同Owner唯一未完成；删除内容后仅保留不含载荷的审计 |
+| run_admission_controls | run_id,closed,reason?,command_id?,revision | namespace内run_id唯一；T_INIT与T_STOP先锁此行，关闭后不可重开 |
+| sessions | session_id,input_seq,run_seq,active_run_id? | namespace 内 session_id 唯一；高代码调用可不使用会话 |
+| user_inputs | input_id,session_id,input_seq,origin_run_id?,kind,body_ref,received_at | UNIQUE(session_id,input_seq)、UNIQUE(session_id,input_id)；同 ID 不同正文冲突 |
+| user_input_deliveries | delivery_id,input_id,target_run_id?,operation_id?,previous_delivery_id?,state,context_seq?,first_output_receipt_ref?,delivered_at? | 当前投递唯一；state=pending/claimed/delivered/carried；旧投递不可覆盖 |
+| first_output_receipts | attempt_id,operation_id,kind,has_display_content,received_at | PK(attempt_id)；heartbeat 不算首输出 |
 
-Definition 的 version 通过目录Owner行锁下分配，禁止 `SELECT max(version)+1` 无锁插入。Agent/Graph版本不是同一个编号空间，Release通过引用对应。
+SDK 保证同一 Session 的顺序与活动 Run 约束。平台保证同一 Session 绑定同一应用；独立 SDK 调用者负责为同一 Session 提供正确的可执行配置。
 
 ### 3.2 根执行、图与任务
 
 | 表 | 必须保存的列 | 约束和查询索引 |
 | --- | --- | --- |
-| runs | run_id,space_id,conversation_kind,conversation_id,conversation_run_seq,release_id,status,deadline_at,loop_limit,loops_reserved,loops_consumed,root_graph_id?,control_reason?,public_seq,cleanup_state | CHECK两计数>=0且和<=limit；UNIQUE(conversation_kind,conversation_id,conversation_run_seq) |
+| runs | run_id,session_id?,session_run_seq?,status,deadline_at,loop_limit,loops_reserved,loops_consumed,root_graph_id?,control_reason?,public_seq,cleanup_state | CHECK两计数>=0且和<=limit；UNIQUE(session_id,session_run_seq) WHERE session_id 非空 |
 | execution_leases | run_id,epoch,worker_id,phase,expires_at,revocation_ref? | PK(run_id); phase=recovering/active/released；epoch只递增 |
-| agent_invocations | invocation_id,run_id,agent_id,release_id,graph_id,parent_node_task_id?,budget_scope,local_limit?,local_reserved,local_consumed,local_deadline?,control_state,terminal_reason?,workspace_scope_id,result_ref? | UNIQUE(graph_id); UNIQUE(parent_node_task_id) WHERE非空；直接调用local限制为null |
-| graph_executions | graph_id,run_id,engine_kind,engine_protocol_version,invocation_id?,parent_node_task_id?,definition_ref,compiled_hash,status,state_revision,scope_commit_seq,head_checkpoint_id?,task_creation_count | UNIQUE(run_id,graph_id)供复合FK；index(run_id,status)；引擎类型固定；fork_generations等旧外层字段不作共同必需列 |
-| node_tasks | task_id,run_id,graph_id,node_key,binding_ref,parent_task_id?,dispatch_id?,dispatch_member_id?,branch_ref?,loop_path,input_ref,input_state_view,status,current_activation_id?,activation_no,ready_seq,resume_input_ref?,continuation_ref?,result_id? | UNIQUE(graph_id,dispatch_id,dispatch_member_id) WHERE dispatch_id非空；branch唯一见下 |
+| agent_invocations | invocation_id,run_id,program_key,graph_id,parent_node_task_id?,budget_scope,local_limit?,local_reserved,local_consumed,local_deadline?,control_state,terminal_reason?,workspace_scope_id,result_ref? | UNIQUE(graph_id); UNIQUE(parent_node_task_id) WHERE非空；直接调用local限制为null |
+| graph_executions | graph_id,run_id,engine_kind,engine_protocol_version,invocation_id?,parent_node_task_id?,program_key,status,state_revision,scope_commit_seq,head_checkpoint_id?,task_creation_count | UNIQUE(run_id,graph_id)供复合FK；index(run_id,status)；引擎类型固定 |
+| node_tasks | task_id,run_id,graph_id,node_key,binding_ref,parent_task_id?,dispatch_id?,dispatch_member_id?,input_ref,status,current_activation_id?,activation_no,ready_seq,resume_input_ref?,continuation_ref?,result_id? | UNIQUE(graph_id,dispatch_id,dispatch_member_id) WHERE dispatch_id非空 |
 | node_activations | activation_id,task_id,activation_no,lease_epoch,start_revision,started_at,ended_at?,outcome? | UNIQUE(task_id,activation_no)；task至多一条未结束同epoch激活 |
 | task_results | result_id,task_id,outcome,effective_output_ref?,error_ref?,completed_revision | UNIQUE(task_id)；不可变 |
-| task_writes | write_id,result_id,task_id,state_key,value_ref,reducer_ref?,write_ordinal,source_owners | UNIQUE(result_id,write_ordinal)；不可变；merge消费另存 |
-| graph_state_versions | graph_id,state_revision,values_ref,source_owners,caused_by_commit | 联合PK；不可变；graph指向当前版本 |
 | ready_intents | intent_id,run_id,graph_id,task_id,cause_key,status | UNIQUE(task_id,cause_key)；status=pending/claimed/done；本地通知仅加速 |
 | loop_tickets | ticket_id,run_id,invocation_id,task_id,model_operation_id,role_loop_index,state,consumption_kind?,business_loop_no?,feedback_ref? | UNIQUE(model_operation_id); UNIQUE(task_id,role_loop_index); state=reserved/consumed/released；consumed时kind=decision/error_feedback |
 
-`node_tasks` 将 branch_ref 的 wait_id/member_id/task_sequence 投影成三个列并加 UNIQUE；三个值要么全部null要么全部非空。复合FK保证 task.graph_id 和 task.run_id 一致，不能只分别检查两个ID存在。图、任务、Operation之间同样使用 `(run_id,id)` 或 `(graph_id,id)` FK；其他跨图关联由命令handler校验显式父子关系。
+复合FK保证 task.graph_id 和 task.run_id 一致，不能只分别检查两个ID存在。图、任务、Operation之间同样使用 `(run_id,id)` 或 `(graph_id,id)` FK；其他跨图关联由命令handler校验显式父子关系。
 
 Root Run 和 Invocation 计数是 loop_tickets 的受事务维护投影。恢复时校验流水，不在发现不一致后静默“修成看起来合理”，应报 `PERSISTENCE_INVARIANT_BROKEN` 并停止推进。
 
@@ -135,15 +122,15 @@ Root Run 和 Invocation 计数是 loop_tickets 的受事务维护投影。恢复
 | --- | --- | --- |
 | call_batches | batch_id,owner_task_id,model_operation_id,ticket_id,parallel_enabled,executor_max_parallel,delivery_state,member_count | UNIQUE(model_operation_id)；成员集创建后不可增加 |
 | batch_members | batch_id,member_id,call_id,ordinal,action_kind,target_key,input_ref,operation_id?,child_task_id?,status,result_ref? | PK(batch_id,member_id); UNIQUE(batch_id,ordinal); UNIQUE(batch_id,call_id) |
-| wait_groups | wait_id,run_id,graph_id,owner_task_id?,batch_id?,member_scope,join_key?,generation,base_state_revision?,loop_path,delivery_state,settled_count | scope=dispatch_batch/branch_scope；dispatch_batch唯一batch |
-| wait_members | wait_id,member_id,ordinal,state,target_ref?,result_operation_id?,local_outcome?,branch_data? | PK(wait_id,member_id); UNIQUE(wait_id,ordinal)；变体互斥 |
+| wait_groups | wait_id,run_id,graph_id,owner_task_id,batch_id,generation,delivery_state,settled_count | UNIQUE(batch_id)；仅内层 dispatch_batch 汇合 |
+| wait_members | wait_id,member_id,ordinal,state,target_ref?,result_operation_id?,local_outcome? | PK(wait_id,member_id); UNIQUE(wait_id,ordinal) |
 | executor_admissions | admission_id,batch_id,member_id,lease_epoch,state,child_task_id? | UNIQUE(batch_id,member_id); state=reserved/converted/released |
-| join_consumptions | wait_id,member_id,write_id | 联合PK，保证写只归并一次；不可变 |
+| join_consumptions | wait_id,member_id,result_operation_id | 联合PK，保证成员结果只消费一次；不可变 |
 | pending_feedback_slots | slot_id,owner_task_id,batch_id,member_id,source_task_id,error_ref?,effective_result_ref?,state | UNIQUE(batch_id,member_id); state=pending/finalized；消费由所属WaitGroup.delivery_state判定 |
 
 admission 是准备Hook期间防并发越界的短暂占位，不是活跃Executor计数：`活跃任务数 + reserved admission数 <= executor_max_parallel`。准入到child Task时原子转移；deny/停止释放。队列里尚未获准的成员没有admission。需要恢复旧admission时先按Operation阶段查询，不能释放后又重复创建child。
 
-`local_outcome` 只允许调用begin以前的校验拒绝/取消；已经有Operation必须通过它完成。`branch_data` 只属于branch_scope；等待分支出口而非入口Task终结。
+`local_outcome` 只允许调用begin以前的校验拒绝/取消；已经有Operation必须通过它完成。外层分支等待由 Workflow 原生状态保存，不写入内层 WaitGroup。
 
 ### 3.4 Operation 与 Hook
 
@@ -152,7 +139,7 @@ admission 是准备Hook期间防并发越界的短暂占位，不是活跃Execut
 | operations | operation_id,run_id,graph_id?,task_id?,trusted_subject,purpose_key,request_event_ref,request_fingerprint,kind,purpose,processing_phase,status,candidate_request_ref?,effective_request_ref?,effective_request_hash?,execution_permit_ref?,raw_result_ref?,effective_result_ref?,final_response_ref?,retry_policy,next_attempt_at?,target_ref?,batch_member_ref?,context_revision_refs[] | UNIQUE(run_id,trusted_subject,purpose_key)；completed要求response；前置deny允许无Attempt |
 | attempts | attempt_id,operation_id,attempt_no,lease_epoch,status,effective_request_hash,started_at?,first_output_at?,first_output_kind?,ended_at?,provider_request_id?,raw_ref?,incomplete_ref?,error_ref?,retry_after_at?,dispatch_evidence_ref? | UNIQUE(operation_id,attempt_no)；operation至多一个活跃attempt |
 | model_call_slots | operation_id,call_id,ordinal,provider_call_id?,raw_call_ref | PK(operation_id,call_id); UNIQUE(operation_id,ordinal)；完整raw响应保存时分配，Hook和接受决策复用 |
-| hook_invocations | hook_invocation_id,operation_id,stage,hook_binding_version,ordinal,input_revision,input_payload_ref,input_context_refs[],mapping_version,schema_version,status,execution_status?,result_ref?,decision_ref?,normalized_patch_ref?,normalized_patch_hash?,context_change_refs[],patch_status,diagnostic_ref?,before_payload_ref,after_payload_ref? | UNIQUE(operation_id,stage,hook_binding_version,ordinal)；status=prepared/started/result_saved/applied/indeterminate |
+| hook_invocations | hook_invocation_id,operation_id,stage,hook_binding_key,ordinal,input_revision,input_payload_ref,input_context_refs[],mapping_version,schema_version,status,execution_status?,result_ref?,decision_ref?,normalized_patch_ref?,normalized_patch_hash?,context_change_refs[],patch_status,diagnostic_ref?,before_payload_ref,after_payload_ref? | UNIQUE(operation_id,stage,hook_binding_key,ordinal)；status=prepared/started/result_saved/applied/indeterminate |
 | hook_processing | operation_id,phase,chain_ref,next_index,effective_payload_ref,context_revision_ref?,committed_decisions_ref | PK(operation_id,phase)；游标只能和决定/修改同事务推进 |
 | execution_permits | permit_id,operation_id,run_id,invocation_id?,request_hash,context_revision_refs[],ticket_id?,lease_epoch,kind,created_by_command | UNIQUE(operation_id)；kind=business/nonbusiness/delegation；无permit不得外发，接管验证后续epoch授权 |
 | operation_notifications | operation_id,notification_kind,generation | 可选投影去重；不得替代Operation已完成查询 |
@@ -166,19 +153,19 @@ Operation.status固定为pending/succeeded/failed/blocked，处理阶段另存pr
 | 表 | 必须保存的列 | 约束 |
 | --- | --- | --- |
 | role_contexts | context_id,invocation_id,owner_task_id,role_key,record_head,effective_revision,active_snapshot_id?,last_model_operation_id? | UNIQUE(owner_task_id) |
-| raw_records | record_id,context_id,context_seq,run_id,role,message_kind,operation_id?,call_id?,origin_input_id?,payload_ref,source_owners | UNIQUE(context_id,context_seq)；不可改原始事实 |
-| effective_context_revisions | context_id,revision,parent_revision?,record_watermark,mutation_ids[],effective_manifest_ref,commit_ref | PK(context_id,revision)；manifest包含ID-5完整EffectiveRecordEntry；不可变 |
+| raw_records | record_id,context_id,context_seq,run_id,role,message_kind,operation_id?,call_id?,origin_input_id?,payload_ref,source_scopes | UNIQUE(context_id,context_seq)；不可改原始事实 |
+| effective_context_revisions | context_id,revision,parent_revision?,record_watermark,mutation_ids[],effective_manifest_ref,commit_ref | PK(context_id,revision)；manifest包含上下文设计的完整EffectiveRecordEntry；不可变 |
 | context_append_keys | context_id,source_kind,source_id,message_kind,logical_result_key,record_id | 联合唯一前五列；消息append和key登记同事务 |
 | context_mutations | mutation_id,context_id,base_revision,committed_revision,source_kind,source_ref,cause_operation_id?,patch_ref,mutation_key | UNIQUE(context_id,committed_revision); UNIQUE(context_id,source_ref,mutation_key) |
-| context_snapshots | snapshot_id,context_id,revision,covered_seq,summary_ref,protected_input_refs,source_owners,episode_id | 不可变；与GraphCheckpoint不是同类 |
+| context_snapshots | snapshot_id,context_id,revision,covered_seq,summary_ref,protected_input_refs,source_scopes,episode_id | 不可变；与GraphCheckpoint不是同类 |
 | compaction_episodes | episode_id,context_id,source_revision,input_watermark,block_plan_ref,cursor,intermediate_refs,result_snapshot_id?,stage,status,error_ref? | 同一context至多一活跃episode；模型操作按episode/block生成purpose_key |
-| blobs | blob_id,owner_kind,owner_id,sha256,size_bytes,media_type,relative_storage_key,status | UNIQUE(owner_kind,owner_id,sha256)；禁止客户端自选storage key |
-| content_dependencies | consumer_kind,consumer_id,source_owner_kind,source_owner_id | 联合PK；输入来源保守并集，不靠LLM报告 |
-| workspace_scopes | scope_id,owner_ref,file_root_id,partition_kind,partition_id,run_id,invocation_id?,persistent,view_ref,status | UNIQUE(owner_ref,partition_kind,partition_id,run_id)；scope不保存可恢复权限 |
+| blobs | blob_id,scope_key,sha256,size_bytes,media_type,relative_storage_key,status | UNIQUE(namespace,scope_key,sha256)；禁止客户端自选storage key |
+| content_dependencies | consumer_kind,consumer_id,source_scope_key | 联合PK；输入来源保守并集，不靠LLM报告 |
+| workspace_scopes | scope_id,content_scope_ref,root_handle,partition_kind,partition_key,run_id,invocation_id?,persistent,view_ref,status | UNIQUE(content_scope_ref,partition_kind,partition_key,run_id)；scope不保存可恢复权限 |
 | execution_domains | domain_id,run_id,scope_id,execution_view_key,role_binding_ref?,resource_mount_digest,lease_epoch,driver_handle_ref,status,revocation_ref? | UNIQUE(scope_id,execution_view_key,lease_epoch); index(run_id,lease_epoch,status)；仅运行设施可读handle |
 | file_operations | operation_id,scope_id,path_key,expected_version?,result_version?,phase,result_ref? | Operation.id为PK；用于文件实际动作结果查询 |
 
-SQL列名需具体展开复合Owner字段，例如 owner_kind/owner_id/owner_space_id；不把本页 `owner_ref` 文字直接当SQL语法。JSON结构和变体校验由命令 DTO 完成，数据库额外保持会影响唯一性/索引的投影列与JSON一致。
+SQL 列展开 namespace 和 scope_key；DTO 仅表达逻辑引用。影响唯一性／索引的投影列必须与 JSON 一致。没有 SDK → 平台用户、应用、发布表的外键。
 
 ### 3.6 提交、快照和通知
 
@@ -206,7 +193,7 @@ RuntimeCommit
   subject_ref: trusted scope
   expected: [{kind,id,revision}]
   body: typed command payload
-  blob_candidates: [{blob_id,sha256,size_bytes,source_owners}]
+  blob_candidates: [{blob_id,sha256,size_bytes,source_scopes}]
   requires_conversation_lock: bool # 由command registry决定，调用方不能任意覆盖
 
 CommitReceipt
@@ -250,6 +237,7 @@ commit(command, lease):
 
 | 命令 | 原子写集合 | 幂等／关键前置 |
 | --- | --- | --- |
+| initialize_run（T_INIT） | Run、Session轮次与活动引用、初始输入、初始化回执 | admission 行未关闭；同 run_id/input_id 重入复用，内容不同报冲突；公开入口使用受限初始化权限 |
 | create_root_execution | Invocation、Graph、入口Task、Context、WorkspaceScope引用、ready intent | Run queued且root未建；UNIQUE Run根引用 |
 | activate_task | Task running、Activation、intent claimed | Task ready、无活跃同epochActivation |
 | commit_progress | Continuation、NodeCheckpoint、相关wait/op引用 | task revision CAS；Progress receipt后才asend继续 |
@@ -258,22 +246,20 @@ commit(command, lease):
 | save_hook_result | 原始HookDecision、result_saved | 不能在此独立修改有效上下文 |
 | apply_hook_decision | ContextMutation/Revision、effective payload、decision、cursor | 语义patch归一/CAS一致；合法deny独立保留 |
 | commit_model_ready | 冻结请求/hash、LoopTicket reserved、root/local计数、execution permit、Continuation.call_model | 尚无Attempt；Hook完成、压缩/硬预算通过；原子检查额度 |
-| start_attempt | Attempt running、Operation executing、physical调用意图 | 有有效permit；无活跃Attempt；自动重试上限/等待/控制检查 |
+| start_attempt | Attempt started、Operation executing、physical调用意图 | 有有效permit；无活跃Attempt；自动重试上限/等待/控制检查 |
 | save_attempt_raw | Attempt终态/原始分片引用、Operation raw_saved | 不触发下一Loop；raw已存不得重跑能力 |
-| control_finalize_operation | 保留raw/已应用修改、未启动Hook的skipped_control记录、最终failed响应、Operation.completed | scope已关闭且in-flight收束/撤权证据有效；不可新发Hook，见ID-4 |
+| control_finalize_operation | 保留raw/已应用修改、未启动Hook的skipped_control记录、最终failed响应、Operation.completed | scope已关闭且in-flight收束/撤权证据有效；不可新发Hook，见调用总线设计 |
 | complete_operation | response Hooks完成、effective result、EventResponse、Operation completed | 终态响应恰一次；用于唤醒不等于已被节点消费 |
 | accept_model_decision | 有效assistant记录、Ticket consumed、root/local计数、Continuation、CallBatch/WaitGroup成员 | 模型回应尚未消费；同message不得被Pipeline重复append |
 | settle_model_failure | 有效反馈槽/错误、ticket consumed或released、Continuation/Task状态 | 是否进入下一模型上下文决定扣额；和反馈事实同事务 |
 | reserve_executor | admission reserved、批次成员准入状态 | 活跃+reserved低于上限；串行member顺序检查 |
 | spawn_executor | admission converted、子Task/Context/ready intent、父Operation pending引用 | 固定dispatch/member身份，parent仍允许新工作 |
-| complete_task | Task终态、TaskResult/TaskWrite、后继intent或父raw结果槽 | TaskResult唯一；活跃Executor名额同时释放 |
+| complete_task | Task终态、TaskResult、后继intent或父raw结果槽 | TaskResult唯一；活跃Executor名额同时释放 |
 | CommitWorkflowTaskWrites | 原生任务有序writes、适用的父Operation消费、外层NodeTask终态投影 | task_result才消费effective结果；ERROR／INTERRUPT不消费；重复包取原回执，迟到错误不得覆盖已完成交付 |
 | CommitWorkflowCheckpoint | 原生快照、原生ID映射、parent chain、已确认writes水位、公共检查点信封 | 所属step写入已确认；验证原生版本／执行权；不得先开始下一step再等待回执 |
 | settle_member | BatchMember结果、WaitMember settled、settled_count | 已有Operation须最终EventResponse；local_outcome仅未begin |
 | consume_batch | 按ordinal追加tool结果、补齐反馈槽、WaitGroup consumed、Continuation.prepare_context | settled_count=member_count，消费标记CAS |
-| advance_branch | 当前TaskResult/Write、branch视图、cursor后继Task/intent | 固定branch/task_sequence；入口完成不能关闭整分支 |
-| close_join | 确定归并、join_consumptions、state_revision、成功/错误后继intent | all_settled，写入只消费一次；固定ordinal排序 |
-| stop_run（ControlCommand） | stopping/control_reason、取消未准入意图、stop intent、outbox | 独立控制身份，无需Worker活跃lease；不伪造活跃工具终态 |
+| stop_run（T_STOP／ControlCommand） | admission closed、StopReceipt；Run已存在时另写stopping/control_reason、取消未准入意图、stop intent、outbox | 独立控制身份，无需Worker活跃lease；Run不存在也阻止迟到初始化；不伪造活跃工具终态 |
 | finalize_run | Run终态、根输出、Session输入转交、Session.active清空、cleanup意图 | Conversation先锁，全部写任务已收束；终态不可复活 |
 
 表中命令是允许的语义提交，不要求每个命令独立公开HTTP。Driver可以一次Progress调用其中一个typed命令；命令可以拥有多个内部handler，但最终只能提交一个事务。
@@ -302,9 +288,9 @@ Executor前置deny没有票据但需向父反馈时，使用相同额度准入�
 
 ### 5.3 无Worker时也能停止：ControlCommand
 
-用户API、发布/删除Worker和deadline扫描器调用 `RunControl.request_stop(run_id, reason, ControlIdentity, idempotency_key)`。它使用Coordinator的**受限控制命令入口**，不是拿一个伪造ExecutionLease调用普通RuntimeCommit。
+公共 SDK 控制门面、调用方管理任务和 SDK deadline 扫描器调用 `RunControl.request_stop(run_id, reason, ControlIdentity, idempotency_key)`。它使用Coordinator的**受限控制命令入口**，不是拿一个伪造ExecutionLease调用普通RuntimeCommit。
 
-事务先锁Conversation（若修改输入交接）再Run，校验用户/系统控制权限及幂等键；终态则返回原结果，否则固定第一个终结原因、设置stopping、关闭新工作、保存stop intent/outbox。允许Run尚queued无lease、lease过期或phase=recovering；只能写这些控制事实，不能写TaskResult、有效Context、模型response或绕过writer barrier直接宣称已收束。
+Run 尚不存在时先关闭 run_admission_controls，保存 StopReceipt；Run 初始化必须在相同 admission 行锁内验证未关闭。已存在 Run 的控制事务先锁 admission、Conversation（若修改输入交接）再Run，校验调用方持有的 Runtime scope/control capability及幂等键；终态则返回原结果，否则固定第一个终结原因、设置stopping、关闭新工作、保存stop intent/outbox。允许Run尚queued无lease、lease过期或phase=recovering；只能写这些控制事实，不能写TaskResult、有效Context、模型response或绕过writer barrier直接宣称已收束。
 
 Worker每次准入读取当前控制，不靠旧快照授权。接管中的Worker看到stopping只执行撤权/收束，不能激活正常Loop。queued且从未有execution_domain的Run，控制服务可用empty-writer-set证明完成终态；已有writer时须由有效恢复/清理执行权持有者完成barrier后再finalize。deadline扫描器使用DB时间，按同一入口请求停止，不能因无active租约使超时永远失效。
 
@@ -314,8 +300,8 @@ Worker每次准入读取当前控制，不靠旧快照授权。接管中的Worke
 
 ### 6.1 Blob 提交
 
-1. 按Owner隔离目录，在暂存区写随机文件；写完校验sha256/size并fsync。
-2. 以`owner/hash`为目标做原子安装（临时与目标同一文件系统），fsync父目录；目标已存在验证hash一致后复用。
+1. 按注入的 ContentScopeRef 隔离目录，在暂存区写随机文件；写完校验sha256/size并fsync。
+2. 以`namespace/scope_key/hash`为目标做原子安装（临时与目标同一文件系统），fsync父目录；目标已存在验证hash一致后复用。
 3. 生成BlobCandidate。RuntimeCommit在同一事务登记blob行、引用和来源依赖；数据库提交以前文件不会进入读目录列表。
 4. DB失败产生未引用blob，由独立GC按暂存登记和引用检查清理；使用至少24小时安全窗。业务已引用内容不按这个窗口过期。
 
@@ -323,7 +309,7 @@ Worker每次准入读取当前控制，不靠旧快照授权。接管中的Worke
 
 ### 6.2 GraphCheckpoint 何时生成
 
-以下异步汇总只适用于 **AgentGraphEngine**：每张内层图累计16个ScopeCommit、进入稳定等待、图结束时请求快照；并发请求合并到最新水位。关键正确性来自已提交增量，内层汇总快照失败不倒退运行也不重新执行已成功任务。WorkflowEngine 的原生保存点由其内核确定，任务writes与下一快照均须等待持久回执，不能套用16次聚合或“快照失败仍推进”的优化；完整顺序见[外层提交屏障](../dual-engine-integration.md#63-任务写入的持久提交屏障)。
+以下异步汇总只适用于 **AgentGraphEngine**：每张内层图累计16个ScopeCommit、进入稳定等待、图结束时请求快照；并发请求合并到最新水位。关键正确性来自已提交增量，内层汇总快照失败不倒退运行也不重新执行已成功任务。WorkflowEngine 的原生保存点由其内核确定，任务writes与下一快照均须等待持久回执，不能套用16次聚合或“快照失败仍推进”的优化；完整顺序见[外层提交屏障](workflow.md)。
 
 - 在短REPEATABLE READ读事务里读取graph水位S及相应不可变版本引用、task/checkpoint、wait、fork generation、父子引用；只构建引用清单，提交读事务。
 - 在事务外序列化并写不可变blob；内容不得包含协程、Future、连接或可继续使用的旧lease。
@@ -338,12 +324,12 @@ AgentCheckpointPayload（位于公共 GraphCheckpoint.engine_state_ref 中）
   tasks[{task_id,node_revision,node_checkpoint_id,status}]
   waits[{wait_id,revision,members_ref,delivery_state}]
   ready_intent_refs[], operation_refs[]
-  context_revision_refs[], source_owners[]
+  context_revision_refs[], source_scopes[]
 ```
 
 Run／图身份、定义／编译版本和覆盖水位保存在公共信封，内层载荷不维护另一份可变副本。外层通过WorkflowCheckpointAdapter保存专属载荷及原生writes，不能使用此角色任务清单替代原生快照。
 
-恢复先从Release.compiled_descriptor_ref加载原编译描述，校验blob sha256、语义descriptor_hash、bindings与ABI；禁止调用当前编译器重新编译来替代缺失产物。内层恢复从最近校验通过快照S装载，按ScopeCommit顺序应用S+1..head的不可变after引用；发现缺号/hash错误先尝试更早完整快照，仍缺失则 `CHECKPOINT_CORRUPT` 停止。不得“跳过一条看起来不重要的增量”。`read latest RoleContext`不是读取指定历史快照的实现。
+恢复使用调用方重新构造的执行程序及原绑定，校验 SDK 协议版本、节点 key、状态载荷格式与内容完整性；不读取平台 Release、不比较配置版本指纹。调用方必须保证本次提供原配置。内层恢复从最近校验通过快照S装载，按ScopeCommit顺序应用S+1..head的不可变after引用；发现缺号/hash错误先尝试更早完整快照，仍缺失则 `CHECKPOINT_CORRUPT` 停止。不得“跳过一条看起来不重要的增量”。`read latest RoleContext`不是读取指定历史快照的实现。
 
 ## 7. 执行权接管与恢复算法
 
@@ -355,17 +341,17 @@ Run／图身份、定义／编译版本和覆盖水位保存在公共信封，�
 2. 新Worker取得原execution_domains清单，请SandboxGateway撤销旧进程/挂载写权限，等待RevocationReceipt。**DB epoch不能阻止旧进程继续写NFS文件。**
 3. 无法证明旧writer已停止时保持recovering并告警，不启动新的写任务。Run总deadline仍继续流逝。
 4. 已撤权后验证快照与增量、定义/ABI/blob完整性；绑定新scope handle，activate lease为active；重建bus/Manager/Driver。
-5. 扫描原图/task/op IDs继续，不按最新发布重新创建Run。续租失败立即关闭新工作，撤销本地能力句柄，不提交伪造完成。
+5. 扫描原图/task/op IDs继续，不重新创建Run或替换业务配置。续租失败立即关闭新工作，撤销本地能力句柄，不提交伪造完成。
 
 启动queued Run没有旧writer时，revocation receipt明确为empty-domain-set。正常停止/终态释放lease前也要完成或撤销旧writer；不能把“本地Future取消了”当远端脚本已经停下。
 
 ### 7.2 恢复包与恢复分派
 
-RecoveryBundle包含固定Release/图描述、Run控制、全部Invocation、按engine_kind分类的图恢复载荷、Task/Continuation、OperationJournal、未消费结果、未完成压缩episode、WorkspaceScope和当前lease。内层Adapter折叠ScopeCommit和角色现场；外层Adapter读取原生checkpoint、任务映射及pending writes，保留其同步语义，不将全部外层任务标ready后塞入内层队列。实际payload按需加载，不能装载后自动执行Hook或工具。
+RecoveryBundle包含执行位置 key 与引擎协议、Run控制、全部Invocation、按engine_kind分类的图恢复载荷、Task/Continuation、OperationJournal、未消费结果、未完成压缩episode、WorkspaceScope和当前lease。内层Adapter折叠ScopeCommit和角色现场；外层Adapter读取原生checkpoint、任务映射及pending writes，保留其同步语义，不将全部外层任务标ready后塞入内层队列。实际payload按需加载，不能装载后自动执行Hook或工具。
 
-外层原生 writes 的持久键、保留channel更新规则及修订表须随导入版本逐项定义，不能复用本篇 task_writes 表冒充。新增 `CommitWorkflowCheckpoint / CommitWorkflowTaskWrites` 经相同锁序／lease／receipt路径提交；其中完成AgentNode的任务writes与父Operation结果消费、NodeTask终态投影同事务。随后由外层内核应用状态和安排后继，不能由Coordinator再执行一次外层reducer。具体步骤见[父子交接](../dual-engine-integration.md#5-父子调用交接协议)。
+外层原生 writes 的持久键、保留channel更新规则及修订表须随导入版本逐项定义，不能复用内层 TaskResult 表冒充。新增 `CommitWorkflowCheckpoint / CommitWorkflowTaskWrites` 经相同锁序／lease／receipt路径提交；其中完成AgentNode的任务writes与父Operation结果消费、NodeTask终态投影同事务。随后由外层内核应用状态和安排后继，不能由Coordinator再执行一次外层reducer。具体步骤见[父子交接](workflow.md)。
 
-CommitWorkflowTaskWrites 区分 task_result、task_error、task_interruption、system_writes。只有 task_result 允许携带结果消费，业务 failed／blocked 也以已交付的 task_result 保存；原生故障／取消写入不能冒充完成或覆盖已消费结果。所有 channel 的必要写入都纳入 WorkflowEngine 提交确认集合；Coordinator 的原子事务和内核等待回执是两项都必须满足的条件。恢复 ERROR／INTERRUPT 时重新检查根控制和平台 Operation，不因原生节点重入创建新的调用身份。
+CommitWorkflowTaskWrites 区分 task_result、task_error、task_interruption、system_writes。只有 task_result 允许携带结果消费，业务 failed／blocked 也以已交付的 task_result 保存；原生故障／取消写入不能冒充完成或覆盖已消费结果。所有 channel 的必要写入都纳入 WorkflowEngine 提交确认集合；Coordinator 的原子事务和内核等待回执是两项都必须满足的条件。恢复 ERROR／INTERRUPT 时重新检查根控制和SDK Operation，不因原生节点重入创建新的调用身份。
 
 | 现场 | 接管动作 |
 | --- | --- |
@@ -374,7 +360,7 @@ CommitWorkflowTaskWrites 区分 task_result、task_error、task_interruption、s
 | wait_batch | 查WaitGroup/成员最终响应，全部结算才唤醒原Task |
 | model_ready有permit但无Attempt | 控制检查后开始第一个Attempt，票据不重复reserve |
 | Attempt有provider handle且可查询 | 查询原执行，保存结果；不先重试 |
-| Attempt执行结果未知 | Manager先reconcile；无结果按调用策略转unknown/错误，是否自动重试见ID-4，不宣称无副作用 |
+| Attempt执行结果未知 | Manager先reconcile；无结果按调用策略转unknown/错误，是否自动重试见调用总线设计，不宣称无副作用 |
 | raw_saved/response_hooks | 仅接续后置Hook，不重复模型/工具 |
 | completed Operation尚未消费 | 返回原response，节点消费事务幂等 |
 | Hook started但无结果 | 尝试取回；不可取回记indeterminate并fail-open，不盲目重放 |
@@ -417,3 +403,64 @@ Outbox与事实同事务写。dispatcher至少一次投递；订阅者以event_i
 | DB-13 | 删除owner中断 | Job继续原phase，不能先删定位信息造成文件残留 |
 
 每个故障测试结束断言无重复逻辑Operation、无重复TaskResult、计数等于票据账本、无未归属Blob、无已撤权scope仍能写。外部工具重复副作用需提供方幂等测试单独证明，本表不声称自动保证。
+
+## 10. 快照共同信封与引擎载荷
+
+GraphCheckpoint 保存以下完整结构；ID 示例只为说明关联，不使用平台应用或发布标识。
+
+```text
+GraphCheckpoint
+  format_version: 1
+  namespace: string
+  run_id, graph_execution_id, checkpoint_id: UUID
+  engine_kind: agent | workflow
+  engine_protocol_version: positive int
+  checkpoint_seq, covered_commit_seq: int
+  previous_checkpoint_id: UUID | null
+  parent_execution_ref: {parent_graph_id,parent_node_task_id,parent_operation_id} | null
+  engine_state_ref: PayloadRef
+  run_control_ref: {run_id,revision}
+  created_at: UTC
+
+NodeCheckpoint
+  node_checkpoint_id, node_task_id, activation_id: UUID
+  node_revision, node_protocol_version, scope_commit_seq: int
+  continuation_ref, input_ref: PayloadRef
+  consumed_result_ids: UUID[]
+  waiting_refs: WaitCondition[]
+```
+
+共同信封描述“哪个执行范围、哪个保存水位”，不塞入平台 Release。parent_execution_ref 是完整子 Agent 图的关系，Executor 的父子关系在同图 NodeTask 内保存。
+
+AgentCheckpointPayload 至少含图阶段、ready task IDs、任务及 NodeCheckpoint 引用、已结算结果、CallBatch／WaitGroup 成员与 ordinal、未消费结果、Operation 引用和当前控制引用。私有消息通过 ContextRevisionRef 定位，不复制任意最新 messages。这里只需要角色调度，不引入 Workflow channels／reducer 的第二套实现。
+
+WorkflowCheckpointPayload 保留迁入内核的 checkpoint、metadata、parent chain、channel versions／versions_seen、pending writes 及 WorkflowTaskBinding。原生 writes 必须先收到持久提交回执，才能跨过 reducer／后继屏障，见[Workflow](workflow.md)。
+
+最新恢复在一致读水位 read_upper_seq 下取快照以及 (covered_commit_seq, read_upper_seq] 内增量；历史查询默认不混入后续变化。run_control_ref 只表示快照当时状态，实际恢复必须读取最新停止、截止、额度和 lease，不用旧快照重新放行。
+
+```mermaid
+classDiagram
+    class Run
+    class GraphExecution
+    class GraphCheckpoint
+    class AgentCheckpointPayload
+    class WorkflowCheckpointPayload
+    class NodeCheckpoint
+    class ReactContinuation
+    class ContextRevisionRef
+    class Operation
+    class ScopeCommit
+    Run "1" *-- "1..*" GraphExecution
+    GraphExecution "1" *-- "0..*" GraphCheckpoint
+    GraphExecution "1" *-- "0..*" ScopeCommit
+    GraphCheckpoint --> AgentCheckpointPayload : engine_kind为agent
+    GraphCheckpoint --> WorkflowCheckpointPayload : engine_kind为workflow
+    AgentCheckpointPayload --> NodeCheckpoint : 不可变引用
+    NodeCheckpoint --> ReactContinuation
+    ReactContinuation --> ContextRevisionRef
+    ReactContinuation --> Operation : 当前或等待调用
+    ScopeCommit --> NodeCheckpoint : 变更引用
+    ScopeCommit --> Operation : 调用修订引用
+```
+
+此图表示持久载荷的引用；一个 GraphCheckpoint 只选一种引擎载荷。ContextSnapshot 是摘要，GraphCheckpoint 是执行现场，两者不能相互替代。Snapshot 可以延后物化，但已经提交的结果、消费与后继意图不能延后到一起“补存”。

@@ -20,4 +20,4 @@
 | `tests/` | 平台 API 与 SDK 集成验收 |
 | `deploy/` | 新实现具备可运行闭环后再提供部署入口 |
 
-平台只依赖 SDK 公开接口。删除 Platform 目录后，SDK 自身及三个示例仍须能独立运行。详细约定见 [SDK / Platform 边界](../docs/design/sdk-platform-boundary.md)。
+平台只依赖 SDK 公开接口。删除 Platform 目录后，SDK 自身及三个示例仍须能独立运行。详细约定见 [SDK / Platform 边界](../docs/sdk-platform-boundary.md)。

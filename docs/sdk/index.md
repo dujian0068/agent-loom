@@ -1,0 +1,44 @@
+# agentloom-sdk
+
+SDK 是可独立引入的 Python 执行底座，提供 ReAct、Plan–Executor 和 Workflow。本文及本目录是 **2026-10-16 目标设计**，当前尚无可运行实现。公共入口名称是接口草案，不表示已经发布 Python 包。
+
+## 1. 职责与依赖
+
+SDK 接收构造参数和运行依赖，自行执行、管理上下文、保存检查点并恢复现场。SDK 不查询平台用户、空间、应用、发布记录，也不需要平台业务库。
+
+| 模块 | 负责 | 不负责 |
+| --- | --- | --- |
+| Definition / Builder | 行为、角色、图结构、构造校验 | 平台草稿与发布版本 |
+| Runtime / RunControl | 一次执行、预算、截止、停止、执行权 | 用户身份与机器调度策略 |
+| AgentGraphEngine | 轻量角色调度、批次、等待与汇合 | Workflow 的 channels / super-step |
+| WorkflowEngine | 通用图编排、状态合并、原生恢复 | Planner 的业务决策与 Agent Loop |
+| ReactNode / PlannerNode / ExecutorNode | 共用可恢复 Loop，各自维护 continuation | 独立用户／应用生命周期 |
+| EventBus / Pipeline / HookManager | 调用关联、有序拦截、结果与通知 | 把观察订阅当作可靠执行者 |
+| ContextManager | 连续记录、有效上下文、历史投影、压缩 | 判断用户输入“有没有用” |
+| 能力与环境适配器 | 模型、Tool、MCP、Skill、文件和脚本访问 | 资源商城、上传 UI、平台权限目录 |
+| RuntimeStore / CommitCoordinator | 执行事实的一致提交、检查点、接管 | 平台发布与应用删除策略 |
+
+依赖只指向 SDK 内的协议和调用方注入的适配器。内存后端支持演示；需要进程故障恢复时必须配置具备相应一致性保证的持久后端。PostgreSQL 是可选的参考适配，不是导入 SDK 的前提。
+
+## 2. 阅读顺序
+
+1. [行为约定](requirements.md)：默认值和已确认规则。
+2. [定义与对象关系](definitions.md)、[对象协作 UML](object-collaboration.md)：配置、节点、实例、类关系和调用时序。
+3. [公共接口与装配](public-api.md)：构造、执行、输入、停止、查询和依赖注入。
+4. [Agent 执行](runtime.md)：Loop、安全点、并行、预算和恢复。
+5. [事件总线与 Hook](event-bus.md)：状态机、DTO、调用与一致提交。
+6. [上下文与模型](context.md)、[能力与环境](capabilities.md)：模型实际看到什么、文件如何隔离。
+7. [检查点与存储](checkpoints.md)、[Workflow 与双引擎](workflow.md)：分别保存现场和可靠衔接。
+8. [SDK 验收](verification.md)：独立运行及故障注入。
+
+## 3. 对平台的保证
+
+调用者负责提供正确配置，SDK 负责执行该配置。平台重新构造 Agent 并交回原 Run 标识即可恢复，不需要知道 Executor 执行到哪一轮。
+
+构造的程序可以复用，运行状态不能保存在共享程序对象上。每次执行／接管创建独立的 RunRuntime；同一 Run 在有效租约下只有一个执行者。
+
+平台删除整个目录后，SDK 的三个示例仍须能运行。平台 API 只能调用 SDK 公共门面，不能通过直接改 SDK 存储表来“帮助恢复”。
+
+## 4. 尚需实施验证的边界
+
+具体 Python 签名、存储适配和 LangGraph 兼容清单需要通过实现验证。这里确定的是职责、行为、数据关系及恢复协议；不承诺任意 LangGraph 程序或历史检查点原样兼容。

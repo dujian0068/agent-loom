@@ -1,6 +1,6 @@
 # AgentLoom 重建目录
 
-更新：2026-10-15。旧业务代码已移除，两份交付物先在同一仓库维护；是否拆成两个 Git 仓库尚未决定。边界见 [SDK / Platform](design/sdk-platform-boundary.md)。
+更新：2026-10-16。旧业务代码已移除，两份交付物先在同一仓库维护；是否拆成两个 Git 仓库尚未决定。边界见 [SDK / Platform](sdk-platform-boundary.md)。
 
 ```text
 agent-loom/
@@ -15,7 +15,10 @@ agent-loom/
 │   ├── web/            待实现的 Vue 工作台
 │   ├── tests/          待实现的平台 API 集成测试
 │   └── deploy/         新实现的部署入口预留
-├── docs/               需求、设计草案及文档站
+├── docs/
+│   ├── sdk/            SDK 行为、对象 UML、算法、接口和恢复
+│   ├── platform/       平台领域、配置、装配、API和生命周期
+│   └── .vitepress/     文档站、导航和旧地址跳转
 ├── .github/workflows/  GitHub Pages 文档构建与发布
 ├── package.json        仅文档站脚本与依赖
 └── package-lock.json   文档依赖锁定

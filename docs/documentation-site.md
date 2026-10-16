@@ -67,7 +67,7 @@ AGENTLOOM_DOCS_BASE=/agent-loom/ npm run docs:preview
 ## 维护规则
 
 - 新增文档后在 `docs/.vitepress/config.mts` 中添加侧栏，并更新文档索引。
-- 正文继续写相对 Markdown 链接，例如 `design/overview.md`；构建时自动转换成站内地址。
+- 正文继续写相对 Markdown 链接，例如 `sdk/object-collaboration.md`；构建时自动转换成站内地址。
 - 指向仓库中实际存在文件的相对链接由文档插件转到 GitHub `master` 的 blob/tree 地址，不会把源码复制进站点；不要继续链接已删除的旧业务代码。
 - 原有显式 `<a id="...">` 锚点保留；更名标题前检查入站章节链接。
 - 搜索在浏览器本地运行，支持中文分词；不把搜索词发送到外部搜索服务。旧使用说明已删除；保留的在审设计需标明 SDK / Platform 边界调整状态，不能当成已实现接口。
@@ -75,3 +75,7 @@ AGENTLOOM_DOCS_BASE=/agent-loom/ npm run docs:preview
 - VitePress 的生产构建会检查页面链接，不要用忽略所有死链的选项掩盖错误。
 
 框架参考：[VitePress](https://vitepress.dev/guide/getting-started)、[本地搜索](https://vitepress.dev/reference/default-theme-search)、[Mermaid](https://mermaid.js.org/config/usage.html)、[GitHub Pages 工作流](https://docs.github.com/en/pages/getting-started-with-github-pages/using-custom-workflows-with-github-pages)。
+
+## SDK／Platform 文档组织与旧地址
+
+正文放在 sdk/ 与 platform/，顶层保留跨层边界、设计约定和阅读入口。旧 design/ 正文已移除；.vitepress/redirects.json 记录旧路径到新篇目的映射，构建结束生成仅用于跳转的 HTML，不把旧正文或跳转页加入搜索。旧锚点不再沿用，以目标页面目录定位章节。

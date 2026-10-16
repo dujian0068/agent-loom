@@ -1,0 +1,64 @@
+# SDK 实施顺序与验收
+
+状态：待实施测试计划。文档构建、UML 校验不等于运行测试通过。SDK 测试不得依赖平台用户、应用、发布表或 HTTP 服务。
+
+## 1. 实施顺序
+
+| 阶段 | 交付 | 门槛 |
+| --- | --- | --- |
+| S1 对象与公共端口 | Definition、Node、作用域、事件、RuntimeStore 协议与内存适配 | 不导入 Platform；DTO、身份和唯一写入者明确 |
+| S2 调用基础 | EventBus、Pipeline、Manager、Hook、Attempt | 请求恰好路由一个 Handler；拒绝、失败放行、结果等待通过 |
+| S3 Agent 执行 | ReactNode／PlannerNode／ExecutorNode、批次、LoopTicket | 三种确定性场景、额度与串并行边界通过 |
+| S4 上下文和文件 | 历史、补充、压缩、SDK 工具、受限执行环境 | 不丢用户输入，Hook 修改持续可见，主子共享且跨 Session 隔离 |
+| S5 持久恢复 | 原子存储、执行权、快照增量、父子交接 | 独立进程故障注入，旧 writer 撤权，终态与后继一致 |
+| S6 Workflow | 源码迁入、编译／状态／reducer、AgentNode、Saver adapter | 原生语义与 SDK 原子提交适配测试通过 |
+| S7 独立交付 | 安装包、三个示例、可用适配器清单 | 安装 SDK 即可执行；持久恢复须用明确支持的后端验证 |
+
+## 2. 对象与执行关系测试
+
+| 编号 | 场景 | 必须断言 |
+| --- | --- | --- |
+| SDK01 | ReAct 直接回答／多轮工具 | 一 Graph、一 React Task、同 Context；工具只有 Operation |
+| SDK02 | Planner 同类型两次委派 | 同图三个 Task、三个私有 Context；不是三个图 |
+| SDK03 | 无 Executor | Planner 可调用授权工具；不出现虚构默认执行器 |
+| SDK04 | parallel=false，混合工具与委派 | 按原 ordinal 逐项完成；慢后置 Hook 也不能越过串行顺序 |
+| SDK05 | parallel=true，max=2，三个 Executor | 最多两个活跃子任务；已结束子任务释放槽位，未完成结果 Hook 仍须等待后再结算 |
+| SDK06 | 同批单项失败 | 其他继续；全批结算一次反馈，不按完成先后逐项 ReAct |
+| SDK07 | 重入 begin、模型重新提出相同参数 | 前者复用 Operation；后者新 Operation；不同语义不合并 |
+| SDK08 | 第 100 张票据仍 reserved | 等待结算，不误报耗尽；第 100 次可成功，第 101 次不能出网 |
+| SDK09 | Runtime 重试、格式纠正、压缩 | 尝试不重复计票；模型纠正正常计票；压缩不计业务票 |
+| SDK10 | 外层 AgentNode 调 Plan | 一个根 Run、外图与内图分离；Executor 仍在内图；私有 Context 不进入 GraphState |
+| SDK11 | 纯能力 Workflow | 可以没有 AgentInvocation／RoleContext；不造假上下文 |
+| SDK12 | 同一绑定在不同 Run 并行 | Node 对象不保存可变消息；RunRuntime、总线、Task scope 不串用 |
+
+## 3. Hook 与 EventBus 测试
+
+请求只有一个 Manager，观察者不得响应请求；空 Hook 链也保存 Operation 事实。前置 deny 不创建 Attempt；后置 deny 保留执行事实。Hook 异常 fail-open 与必要存储失败严格分开。
+
+覆盖合法 patch、越权 patch、保护输入删除、稳定 record ID、双 patch 冲突、CAS 重定位、matcher 恢复、已经 applied 不再调用、结果已保存只续提交流程。后续 Loop、历史、压缩和恢复读取同一有效修订。
+
+快速完成先于 waiter 登记仍能读结果；重复通知不重执行；取消一个 waiter 不取消 Operation；outbox 丢通知可从游标补读，不能通过事件重放执行工具。
+
+详细逐项断言见[调用设计](event-bus.md)和[上下文](context.md)。
+
+## 4. 故障切点矩阵
+
+| 宕机位置 | 恢复必须做什么 | 不得做什么 |
+| --- | --- | --- |
+| Operation 已登记，尚未外发 | 继续前置处理、冻结和许可 | 新增第二逻辑调用 |
+| 外发已开始，无可靠结果 | 查询可用外部证据或记录 unknown，按错误策略处理 | 把超时当未执行证明 |
+| raw 已保存，Hook 未完成 | 续后置链及有效提交 | 重发工具／模型请求 |
+| Hook result 已保存未 applied | 校验并提交原结果 | 再跑同一 Hook |
+| Task 已完成，通知未发送 | 扫描同事务后继意图 | 重跑已完成 Task |
+| Executor 部分完成 | 保留完成结果，恢复未完成成员 | 把全部历史交 Planner 重新规划取代恢复 |
+| parent Operation 完成未消费 | 续消费和 pending writes 屏障 | 再创建 child Invocation |
+| Workflow task writes 未完整提交 | 阻止 reducer／后继推进 | 仅等后台 Future 就宣称可靠 |
+| 新 owner 接管 | 递增 epoch、撤销旧 writer、再激活 | 仅靠本机锁或租约超时推断文件已安全 |
+| stop 时两个子任务仍写文件 | 关闭新准入，全部收束再清理 | 第一个完成时删除共享工作目录 |
+| 终态时补充未消费 | 转 carried，下一次主动提问接回 | 默默丢弃、后台自行创建新 Run |
+
+## 5. 交付示例及实际验证
+
+三个示例均须只安装 SDK：ReAct 调工具、Plan 两个隔离 Executor、Workflow 组合 Agent 与能力。先用确定模型适配器断言状态与调用次数，再以真实模型检查协议链路。故障恢复采用共享持久后端和两个独立进程；内存演示不能作为跨机恢复证据。
+
+报告必须写明 commit、运行环境、适配器、输入、关键 ID、故障位置、断言和真实结果。未运行项标记未执行。平台权限、发布及 HTTP 路由测试在[平台验收](../platform/verification.md)，不塞入 SDK 单元测试。

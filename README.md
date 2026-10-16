@@ -17,12 +17,12 @@ AgentLoom 重新划分为两个独立交付物，暂时保留在同一个 Git �
 
 ## 从这里继续
 
-1. [SDK / Platform 边界与重建基线](docs/design/sdk-platform-boundary.md)：构造注入、领域归属、Run 恢复及三种独立示例的验收要求。
+1. [SDK / Platform 职责边界](docs/sdk-platform-boundary.md)：构造注入、领域归属、Run 恢复及三种独立示例的验收要求。
 2. [Agent 设计约定](docs/agent-design-decisions.md)：已确认的产品行为。
 3. [目录规划](docs/directory-plan.md)：本次实际建立的目录。
 4. [文档目录](docs/README.md)：领域、双引擎、事件总线、上下文和检查点设计。
 
-保留的 SD-3 / ID-1 设计需要按新边界继续调整。尤其不能把旧草案的用户、空间、发布引用或平台表结构直接作为 SDK 的必填契约。LangGraph 源码适配尚未实施，兼容范围也需要逐项验证。
+设计文档已按两份交付物整理：[SDK 设计](docs/sdk/index.md)、[Platform 设计](docs/platform/index.md)。SDK 的 [对象协作 UML](docs/sdk/object-collaboration.md) 细化了 Agent、Node、EventBus、EventHandler、HookManager、Hook 和 Skill 的关系与交互。LangGraph 源码适配尚未实施。
 
 ## 文档站
 
