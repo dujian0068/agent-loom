@@ -61,12 +61,14 @@ class ReactContinuationV1:
 
 ## 2. Agent 图构造与校验
 
-构造输入为 AgentDefinition、已解析 RoleDefinition、CapabilityRegistry 和 HookBinding；生成 GraphDefinition 与 NodeBinding。无需平台发布记录或发布 hash。SDK 只校验自己的节点接口、恢复格式与静态配置，调用方负责恢复时提供原配置。
+构造输入为当前 AgentDefinition，Plan 另接收 Executor key → AgentDefinition 映射，以及已注入策略、模型、CapabilityRegistry 和 HookSet；生成 GraphDefinition 与 NodeBinding。Plan 的入口 ReactAgent 使用 PlanAgent.definition，Executor ReactAgent 使用 executors[key]。无需平台发布记录或发布 hash。SDK 只校验自己的节点接口、恢复格式与静态配置，调用方负责恢复时提供原配置。
 
 - ReAct：恰好一个 react 入口，无 Executor；普通工具在入口的批次中调用。
 - Plan：恰好一个 planner 入口，零到多个 executor 类型；只有 Planner 可委派；同类型多次委派产生不同 NodeTask。
-- role_key、node_key、模型可见能力名分别在所属范围内唯一；Executor 的模型从所属 Agent 注入。
-- 绑定的角色类型与节点类型一致；输入输出 Schema 自包含，无远程引用；Prompt 变量声明完整。
+- mode 由 ReactAgent／PlanAgent 构造类型确定；定义内部没有模式开关或角色列表。
+- role_key 从 NodeBinding 派生：直接 ReAct 为 react，Planner 为 planner，Executor 为定义表的 key；key 规则见[最小配置](definitions.md#2-最小配置结构)。node_key、模型可见能力名分别在所属范围内唯一。
+- Planner／Executor 节点均绑定 ReactAgent；具体职责由节点位置和委派权限确定。所有行为配置都用 AgentDefinition；模型、执行与上下文策略由所属完整 Agent 注入，不为 Executor 创建另一份额度。
+- 输入输出 Schema 自包含，无远程引用；Prompt 变量声明完整。
 - 运行策略和上下文预算在构造时验证，不能在第一个模型请求才发现缺模型窗口。
 - 不将 plan_steps 编译为节点或依赖边。计划内容可更新，已登记 CallBatch 的成员集不可更新。
 - GraphExecution 保存 engine_kind、engine_protocol_version 和结构位置 key；恢复时重新构造程序，未知协议或缺少必需节点时返回明确错误，不猜测替代实现。
@@ -187,11 +189,11 @@ async def activate(task_ref, lease):
 ### 4.1 prepare_context 与 prepare_model
 
 1. 检查根控制，再检查 Invocation 控制；返回控制错误时走第 8 节。对新 Loop，任何层 consumed==limit 就持久关闭对应 scope。reserved 暂满仍可读取已有上下文，但不得运行压缩，先登记 budget_available 等待。
-2. 直接 Agent ExecutionRecord 的根 ReAct/Planner 领取顺序水位以内的 pending UserInputDelivery；Executor 和 Workflow 内 AgentInvocation 不领取根补充。后者只使用 input_only 输入和本次私有过程。直接 Agent 此时只是选入 projection，冻结请求时才 claimed；ContextManager 按构造策略 recent_runs=2、角色私有范围、已提交 effective revision 生成 projection，同 input_id 去重。已发生的上下文 Hook 修改通过重新读取 authoritative revision 生效。
+2. 直接 Agent ExecutionRecord 的根 ReAct/Planner 领取顺序水位以内的 pending UserInputDelivery；Executor 和 Workflow 内 AgentInvocation 不领取根补充。后者只使用 input_only 输入和本次私有过程。直接 Agent 此时只是选入 projection，冻结请求时才 claimed；ContextHandler 按构造策略 recent_runs=2、角色私有范围、已提交 effective revision 生成 projection，同 input_id 去重。已发生的上下文 Hook 修改通过重新读取 authoritative revision 生效。
 3. 以 `(task_id,"context-prepare",role_loop_index+1,source_revision,input_watermark)` 形成准备键，提交 projection_ref/context revision/水位和 phase=prepare_model。准备期间新到补充留下一轮；不能补写到已经冻结请求。
 4. 新模型 Operation 的 purpose_key 固定 `business-model:{role_loop_index+1}`。不存在时在 Progress 同事务保存 prepared Operation 意图、递增角色序号、写 model_operation_id；存在则复用，不递增。压缩 Operation 使用不同 purpose，不增加此序号。
 5. 调用 `NodeDriver.prepare_business_model(op_ref, scope) -> PreparedModelRequest | FinalResponseRef`，由 Loop 显式发 model.generate.before 并等待已提交 StageResult；Operation 仍保持 before_call，等待模型执行许可。该方法是 NodeDriver 内部方法，不是总线隐藏调用 Hook。前置 deny 作为模型失败按角色范围处理；Hook 自身错误按调用规范 fail-open。请求与 context 的有效 revision 必须一致，不允许 Driver 从原 projection 覆盖 Hook 结果。
-6. ContextManager 用 Hook 后有效请求计算软阈值和硬窗口。触发压缩则创建/复用 `compaction:{model_operation_id}` 的 CompactionEpisode，保存 compaction_ref，Progress 到 compact_context；不触发则到 call_model。没有工具调用、网络等待或 Hook 在数据库锁内发生。
+6. ContextHandler 用 Hook 后有效请求计算软阈值和硬窗口。触发压缩则创建/复用 `compaction:{model_operation_id}` 的 CompactionEpisode，保存 compaction_ref，Progress 到 compact_context；不触发则到 call_model。没有工具调用、网络等待或 Hook 在数据库锁内发生。
 
 ### 4.2 compact_context 与 call_model
 
@@ -248,10 +250,10 @@ async def call_model(c, node_context):  # 阶段伪代码：yield用于commit-ac
 1. 读取 EventResponse，先检查是否已经接受该 operation；已接受就读取其下一 phase，不再次 append、consume 或分派。failed/blocked 不构造空 ModelDecision，按第 7 节角色失败会计处理。
 2. normalizer 必须得到合法完成证据及完整消息结构；重复 provider_call_id、无法定位参数片段为 `MODEL_PROTOCOL_ERROR`。该检查在 ModelGateway completed 前已执行，响应 Hook 修改后的有效结果还须再次验证；已有 completed 结果不退回新 Attempt。合法终帧但正文和 actions 皆空属于完整的空候选，交 validate_output 处理，不能与传输协议损坏混为一谈。
 3. 仅按当前角色冻结目录解释动作名称。每项复用raw结果提交时固定的 ordinal 和服务端 call_id；未知名称、未授权、单项参数 JSON/schema 错误成为 rejected 成员，其错误含原 provider_call_id/ordinal，不影响其他合法项。文本与动作共存时文本只是过程消息。
-4. 调用 `ContextManager.prepare_accept_model(context_ref, operation_response, mutation_key="model:{operation_id}:accept") -> ContextDelta`，它不独立提交；同 RuntimeCommit 保存消息引用、accepted_decision_ref、ticket consumed、business_loop_no、phase。有动作同时创建 CallBatch/WaitGroup，全部成员及本地 rejected 结果一次冻结；此事务不调用 begin。无动作固定 final_output_ref 并进入 validate_output。
+4. 调用 `ContextHandler.prepare_accept_model(context_ref, operation_response, mutation_key="model:{operation_id}:accept") -> ContextDelta`，它不独立提交；同 RuntimeCommit 保存消息引用、accepted_decision_ref、ticket consumed、business_loop_no、phase。有动作同时创建 CallBatch/WaitGroup，全部成员及本地 rejected 结果一次冻结；此事务不调用 begin。无动作固定 final_output_ref 并进入 validate_output。
 5. 有 batch 则 yield Wait，条件为 `(batch_settled,wait_id,generation)`；冻结 batch 时已提交父等待事实/准入意图，故响应恰好先结算也不会丢唤醒。GraphEngine 在同一事实上执行第 5 节准入。
 6. 恢复 wait_batch 时，依据所有成员是否 settled 计算，不能根据最后一条通知推断；全部 settled 就 Progress 到 consume_results，否则再次 Wait 原 wait_id，不建立新 batch。
-7. consume_results 按 ordinal 读取唯一 effective EventResponse 或 local_outcome。`ContextManager.prepare_batch_delivery(context_ref, batch_id, ordinal_results) -> ContextDelta` 生成 mutation_id=`batch:{batch_id}:deliver`：填充原模型消息的结果槽，读取实际有效参数/结果，替换同一 pending feedback 槽。提交 ContextDelta、batch consumed、task 的消费键/水位及 prepare_context phase；同事务不得留下“上下文追加了但 consumed 未写”。
+7. consume_results 按 ordinal 读取唯一 effective EventResponse 或 local_outcome。`ContextHandler.prepare_batch_delivery(context_ref, batch_id, ordinal_results) -> ContextDelta` 生成 mutation_id=`batch:{batch_id}:deliver`：填充原模型消息的结果槽，读取实际有效参数/结果，替换同一 pending feedback 槽。提交 ContextDelta、batch consumed、task 的消费键/水位及 prepare_context phase；同事务不得留下“上下文追加了但 consumed 未写”。
 8. 清空 current_loop_ticket_id/model_operation_id/pending_batch_id/accepted_decision_ref/compaction_ref/final_output_ref，保留 role_loop_index、context revision 与补充水位。旧引用仍在不可变历史；无新模型调用前不产生新票据。
 
 ### 4.4 validate_output
@@ -284,8 +286,6 @@ class PreparedBatch:
 class CallBatchCoordinator(Protocol):
     async def freeze(self, owner: TaskRef, decision: AcceptedModelDecision,
                      policy: BatchPolicy) -> PreparedBatch: ...
-    async def freeze_requests(self, owner: TaskRef, events: tuple[EventRequest, ...],
-                              policy: BatchPolicy) -> PreparedBatch: ...
     async def plan_settlement(self, batch: CallBatchRef, member_id: Id,
                               response: FinalResponseRef) -> PreparedMemberSettlement: ...
     async def plan_delivery(self, batch: CallBatchRef,
@@ -293,11 +293,15 @@ class CallBatchCoordinator(Protocol):
 class GraphEngineBatchPort(Protocol):
     async def advance_batch(self, batch: CallBatchRef,
                             claim: ExecutionLease) -> AdmissionReceipt: ...
+    async def commit_start(self, request: PreparedDelegate,
+                           claim: ExecutionLease) -> DispatchReceipt: ...
     async def register_executor(self, request: PreparedDelegate,
                                 claim: ExecutionLease) -> DispatchReceipt: ...
 ```
 
-freeze 前置为同一未接受决策，后置仅准备全部成员与 WaitGroup；同 model_operation_id 只能一批。plan_settlement 只接受该成员原 Operation 的最终响应或经校验的 local_outcome，后置包含成员结果、settled 与可能的父唤醒。plan_delivery 前置全体 settled，后置带 ordinal 排序的结果与一次性 ContextDelta。`freeze_requests` 是 `EventBus.request_many` 的纯准备入口，复用相同冻结内核；要求可信 scope 含 node_task_id，缺少则拒绝。所有准备方法均不建协程、不提交状态；调用门面把 prepared effects 交统一 Coordinator，随后只由 GraphEngine 准入。
+freeze 前置为同一未接受且有动作的模型决策，后置仅准备全部成员与 WaitGroup；同 model_operation_id 只能一批，接受决策、消费票据与批次创建同事务提交。plan_settlement 只接受该成员原 Operation 的最终响应或经校验的 local_outcome，后置包含成员结果、settled 与可能的父唤醒。plan_delivery 前置全体 settled，后置带 ordinal 排序的结果与一次性 ContextDelta。CallBatchCoordinator 不提供任意事件的 freeze_requests；EventBusImpl.request_many(batch_ref,scope) 仅推进／等待已有模型批次，必须核对 owner、已消费的 decision 票据和保存策略。普通函数／Workflow 不伪造模型来源，使用其所属引擎的调度和单项请求。
+
+上述 Coordinator 准备方法均不建协程、不提交状态。GraphEngine 的 advance_batch／commit_start／register_executor 则是受信命令门面，经统一 CommitCoordinator 提交后返回回执；不是第二个 writer。commit_start 按 PreparedDelegate.target 判别调用 StartExecutor 或 StartChild；register_executor 是 executor 分支的专用入口，两者复用同一提交实现，不各提交一次。
 
 Executor **活跃数**严格等于此 batch 下已经创建并准入、尚无终态 TaskResult 的 Executor NodeTask 数；waiting 子任务仍活跃。单独的 admission token 是防止并发前置 Hook 越过上限的内部预留，不记为活跃实例；queued 成员没有 token。开启并行时保持 `active_executor_count + reserved_admission_tokens <= executor_max_parallel`。token 不按 TTL 自动释放：结果未知时恢复原准入流程，不能因为进程死了便再放另一项。
 
@@ -334,13 +338,15 @@ def plan_admissions(batch, root, invocation, active_tasks, tokens):
 
 提交后才由调用设施 begin，返回 PendingOperationRef；重复投递意图复用同 Operation。begin 从可信主体+purpose_key 取准入意图，在同一 CommitOperation 中创建 `processing_phase=prepared,status=pending` 的 Operation，并写 BatchMember.operation_id、WaitMember.result_operation_id 和 operation target；之后由原 Loop 的动作成员阶段发 before；总线不自动发此事件，begin 也不授权创建 Executor。T_MEMBER_ADMIT 已提交而 T_BEGIN 未提交时，BatchMember／WaitMember 都为 admitting，调用和目标引用均为空；此现场合法，恢复只能补投原 begin 意图，不能退回 queued 或另建令牌。T_BEGIN 提交后、子任务创建前仍为 admitting，target_ref 指向原 Operation。快速完成也已有父成员关联；begin 回执丢失按原 key 取回同关联。串行有任意 admitting/admitted 成员时禁止 begin 后续成员，普通工具与 Executor 共用此闸门。
 
-委派前置链完成后，`register_executor` 必须读 batch/member/admission token/control；验证目标是本图允许 executor binding、最终输入已通过授权/schema，再在一笔提交中创建 child Task/context、保存父 Operation 和 WaitMember 的 child 引用、将 token reserved→converted、登记 ready 意图。此时 active+1/token−1；child 的 graph_execution_id/invocation_id 与 Planner 相同。不能为 Executor 调 AgentInvocationService.start。
+委派前置链完成后，Loop 经总线 prepare_graph 调用 GraphExecutionHandler 纯准备 PreparedDelegate；此时 Operation 仍为 before_call，无 permit、无 child。`register_executor` 读取 batch/member/admission token/control、StageResult 与提案引用的版本；验证目标是本图允许 executor binding、最终输入已通过授权/schema，再在 StartExecutor 一笔提交中冻结请求、保存 permit 与 executing、创建 child Task/context、保存父 Operation 和 WaitMember 的 child 引用、将 token reserved→converted、登记 ready 意图。此时 active+1/token−1；child 的 graph_execution_id/invocation_id 与 Planner 相同。不能为 Executor 调 AgentInvocationService.start，也不能先独立冻结许可再创建目标。
+
+StartExecutor 未提交时可按原 Operation 重做纯准备；已提交时按 target_ref 接回原任务，不能重建。graph Operation 的 executing 必须已有唯一 target 和 permit；缺任一项报 GRAPH_TARGET_MISSING／PERSISTENCE_INVARIANT_BROKEN，不让恢复器猜测并补建目标。前置后停止或版本冲突发生在提交前时，原子启动被拒绝，仍无 child 和 permit。
 
 前置 deny 不创建 child；已有 Operation 形成 blocked 响应后，target_ref 指向 Operation，提交 member settled 和 token released。参数在 begin 前拒绝则保存 local_outcome、无 Operation/token/child。停止时尚未 begin 的成员同样 local_outcome cancelled；已经 begin 必须沿原 Operation 结算，不能删除引用改为本地取消。admitting 但 begin 未落盘时，停止事务先关闭 begin 意图并释放 token，迟到 begin 必须重新检查 scope。
 
 子任务终态事务同时保存 TaskResult 和父 delegate Operation 的 raw-result 关联，token 已 converted，不另扣减 token；active 投影自然减一。并行立即可补位，串行仍等本成员最终 effective 响应完成。后置 Hook 慢、拒绝、失败处理与原 Operation 关联；member 仅在最终响应提交后 settled。最后一个成员结算事务登记原 owner ready；owner 不因单项失败提前恢复模型。
 
-空 actions 走最终输出路径，不创建批次；供其他调用方使用的显式空 request_many 则冻结空批次并立即 settled，返回空列表。每个成员只有一个响应槽；批次输入顺序不依赖调用完成顺序。批次 consumed 仅一次，重复通知返回原 delivery receipt。
+空 actions 走最终输出路径，不创建批次；request_many 不接受原始事件列表或显式空列表，也不创建无模型来源的批次。每个成员只有一个响应槽；批次输入顺序不依赖调用完成顺序。批次 consumed 仅一次，重复通知返回原 delivery receipt。
 
 ## 6. 就绪队列与公平推进
 
@@ -489,12 +495,12 @@ async def recover_run(run_id, new_lease):
 | AcceptModelDecision | task/op/ticket/context | 模型接受ContextDelta、ticket consume、batch+WaitGroup或final候选、continuation | `accept-model:{operation}` |
 | Freeze/准入批次成员 | graph/owner/batch/成员/active任务/token | admitting、token、begin意图 | `admit:{batch}:{member}` |
 | BatchBegin（CommitOperation） | graph/owner/admit intent/member | prepared Operation、batch operation_id、wait result_operation_id/operation target | `begin:{trusted_owner}:{purpose_key}` |
-| StartExecutor | graph/owner/delegate op/member/token | child task+context、关联、token converted、ready意图 | `executor:{batch}:{member}` |
+| StartExecutor | graph/owner/delegate op/member/token、允许的StageResult、纯启动提案、上下文版本及控制 | 最终请求/hash、permit/executing、唯一child task+context、父关联、token converted、ready意图 | `executor:{batch}:{member}` |
 | CompleteExecutor | graph/child/parent op/member、父context若模型失败 | child终态/结果/写、delegate raw关联、必要反馈槽/票据结算、补位意图 | `task-result:{child}` |
 | SettleMember（CommitOperation 子效果） | op/batch/member/owner/context | 最终EventResponse、member settled/结果、释放token、父ready意图 | `member-result:{batch}:{member}` |
 | ConsumeBatch | owner/batch/all结果/context | ContextDelta、consumed、消费水位、phase | `consume-batch:{batch}` |
 | CompleteTask | graph/task/parent operation | 终态/TaskResult、父结果或根完成意图 | `task-result:{task}` |
-| StartChild | 父/子graph、父task/op、子invocation | 父wait、子invocation/graph/root task、关联和启动意图 | `agent-child:{parent_task}:{logical_call_key}` |
+| StartChild | 父graph/task/op、允许的StageResult、纯启动提案、上下文版本及控制 | 最终请求/hash、permit/executing、父wait、唯一子invocation/graph/root task、关联和启动意图 | `agent-child:{parent_task}:{logical_call_key}` |
 | CompleteChild | 两图/child invocation/parent op | 子终态、父op raw关联、后处理意图 | `invocation-result:{child_invocation}` |
 | 控制收束/根终态 | Session如需要、run/调用树/writer barrier | control、取消/票据、终态、补充交接、cleanup intent | `close:{scope}:{control_revision}` / `terminal:{run}` |
 
@@ -541,7 +547,7 @@ async def recover_run(run_id, new_lease):
 
 | 编号／输入与故障切点 | 必须断言 |
 | --- | --- |
-| C01：重复 role_key、能力名冲突、ReAct 绑定 executor | 构造返回可定位诊断，不生成可执行程序；外部调用数=0 |
+| C01：非法／保留 Executor key、能力名冲突、ReAct 传 Executor 表或 Plan 传活动实例 | 构造返回可定位诊断，不生成可执行程序；外部调用数=0 |
 | N01：Progress 提交前注入 DB failure | generator 的下一行计数=0，外部 begin_count 不增加；接管从原 phase |
 | N02：Progress commit成功、receipt返回前宕机 | 恢复任务revision只增加一次，ContextMutation/Operation唯一；原 receipt 可查 |
 | N03：Wait提交前结果已完成／Wait提交后结果才完成 | 两种顺序均最终 ready，同 task ID，两次重复通知不多建 activation |
@@ -564,7 +570,7 @@ async def recover_run(run_id, new_lease):
 | F01：E1完成E2执行中宕机；raw存而Hook未完成再宕机 | E1执行数不增加，E2复用身份；raw已存工具invoke_once不增加，只补原Hook链 |
 | F02：旧epoch迟到commit、旧checkpoint含running | LEASE_LOST，当前context/revision/额度不变；新机器不重置deadline |
 | W01：外层AgentNode子图终态后父未消费宕机 | child invocation/graph数各1；父等effective Hook，不能从raw直接完成 |
-| W02：基线x=0，A1写x=1→A2读x，B1读x | A2读1、B1读0；A1终态不能关闭A分支；A2完成后才Join |
+| W02：外层同一step中A、B，A成功writes已提交、B未完成时故障 | 原生checkpoint＋pending writes恢复A，不重跑其能力；B接回原Operation；后继在原生step提交屏障后推进，不要求自研branch cursor |
 
 阶段参数化故障注入覆盖每个 RuntimeCommit 的“前、事务中、成功后通知前”三点：统一断言 `(TaskResult唯一、Operation身份唯一、ticket无重复consume、batch交付唯一、后继不丢失、终态不重开)`。外层测试先作为规格测试数据及纯编译/规划器验收保存，运行器实现前不得把其列为已通过产品能力。
 

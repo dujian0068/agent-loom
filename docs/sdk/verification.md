@@ -48,13 +48,32 @@
 | SDK28 | ReactAgent／PlanAgent 赋给 Agent 类型，再使用统一入口 | 类型检查与调用合同一致；构造不执行，接口不暴露 Node.activate 或平台 CRUD |
 | SDK29 | StateGraph 编译纯工具图 | 返回 Workflow；不要求模型、AgentDefinition 或 AgentContext，不因复用 RunHandle 继承 Agent |
 | SDK30 | AgentNode 绑定内置 Agent／只实现公共方法的第三方 Agent | 前者走内部调用桥、同根 ExecutionRecord；后者编译时报 ConfigurationError，不偷偷调用 start 新建根 ExecutionRecord |
-| SDK31 | 同一 RuntimeEngine 并发执行两个不同 run_id，其中一个关闭观察或终结 | 两个 ExecutionRecord、两个有效 ExecutionRunner；总线、Manager 活动索引、预算和上下文隔离，共享客户端不被其中一次收尾关闭 |
+| SDK31 | 同一 RuntimeEngine 并发执行两个不同 run_id，其中一个关闭观察或终结 | 两个 ExecutionRecord、两个有效 ExecutionRunner；总线、Handler 活动索引、预算和上下文隔离，共享客户端不被其中一次收尾关闭 |
 | SDK32 | 旧 Runner 失权后重建并接管原 run_id | ExecutionRecord 与已提交 Task／Operation 身份不变，新建 ExecutionRunner／总线／激活端口；旧句柄或代理不能继续以旧 epoch 写入，终态记录只读附着不创建 Runner |
 | SDK33 | AgentNode 作为 Agent 调用，再作为 Node 在图内激活 | 公共入口只转发一次；图内入口继续原任务，不新增根记录、不重复模型／工具 Hook |
 | SDK34 | 同一 Agent 实例绑定另一 run_id，另案同 ID 重投 | 前者返回 AGENT_INSTANCE_BOUND；后者附着原执行。省略 ID 不得意外重用旧结果或开启新执行 |
 | SDK35 | 任务等待后重激活，或迁移到另一机器 | 重建 NodeContext 和当前有效的服务代理，沿用原 task/context/continuation；不恢复旧 lease、锁、客户端或协程 |
 | SDK36 | Hook 修改已提交，Agent 持有旧消息缓存 | 下一次模型物化读到有效新修订；节点／Agent 缓存不能覆盖已提交修改；检查点不含 NodeContext |
 | SDK37 | Workflow 同一 PreparedAgentRef 并发调用两次 | 共用冻结配置与服务，创建两个独立活动 Agent 及上下文；节点绑定不能捕获编译时活动状态 |
+| SDK38 | 同一份 AgentDefinition 独立构造 ReactAgent，再绑定为 Plan 的 Executor | 无须转换另一种角色配置；Prompt、格式和能力选择一致，策略来自各自完整 Agent 装配；两个执行的实例及上下文独立 |
+| SDK39 | Plan 的同一个 Executor key 被委派两次 | 两个 ReactAgent 读取同一份冻结 AgentDefinition，各有 Context；共用原模型、根 Loop 额度、总截止与上下文策略，不新增根执行或图 |
+| SDK40 | PlanAgent.definition 与 Executor 定义配置不同 Prompt、格式和能力 | Planner 使用 definition，Executor 使用 executors[key]；公开输入输出使用 Planner 格式，能力不合并，不拼接 Planner Prompt |
+| SDK41 | Plan 传入活动 Agent／嵌套 Plan，或无效、保留 Executor key | 构造阶段拒绝，未创建执行身份；AgentDefinition 不接受 mode、角色列表、模型或策略覆盖字段 |
+| SDK42 | 同一定义用于两个不同 Executor key，Hook 仅匹配其中一个 | NodeBinding 分别生成可信 role_key 与授权视图；只命中对应位置，显示名与定义复用不混淆 Hook、调用和恢复身份 |
+| SDK43 | 同批调用 Skill 正文读取、Skill 脚本和 MCP | Skill 读取只路由 SkillHandler；脚本及 MCP 路由 ToolHandler；每个模型 call_id 仅对应一个业务 Operation，不因子调用重复登记 |
+| SDK44 | 配置 Skill 包，尝试读取未授权包或在未配置 exec 时执行其脚本 | 目录和入口仅含当前角色授权资源；越界读取和 exec 拒绝；读取 SKILL.md 不启动脚本、Hook 或新 NodeTask |
+| SDK45 | skill.read 的 before 被拒绝，或 after 修改已提交 | 拒绝前 Loader 读取次数为零；有效文本修改进入原 Agent 后续上下文与恢复视图，原包和 raw 不变 |
+| SDK46 | Skill 原始结果保存后崩溃，再恢复；或保存前资源被替换 | 已保存结果不重读、不重复注入；尚未保存只能读原 manifest，资源缺失／不匹配明确失败，不回查平台最新包 |
+| SDK47 | 两个 Executor 共用 SkillPackage 和工作文件，能力选择不同 | SkillLoader 可复用但每次校验独立 scope；只读 Skill 不可写，脚本产物进入获准 /work，结果和消息不串入其他 Executor |
+| SDK48 | Executor／完整Agent前置放行后，在纯准备、原子启动前后分别故障 | 提交前target/permit均无，可重做纯准备；提交后target/permit/父关联/ready同时存在，只激活原目标；不得先T_FREEZE |
+| SDK49 | grant前停止、StageResult或上下文版本冲突 | StartExecutor／StartChild拒绝提交，无子任务和许可；恢复不靠缺target补建 |
+| SDK50 | 终态提交后清理前宕机，另案清理租约过期时双worker争抢 | CleanupService接管原Job，不建Runner／不调用模型；只当前清理epoch可提交，不改变terminal_seq和业务结果 |
+| SDK51 | 目录已删除但清理回执未知；另有持久scope和新Run目录 | 重查同job/scope精确目录并完成；持久scope retained、新Run目录不变；无假成功或扩大删除 |
+| SDK52 | request_many重读已提交模型批次；另案无模型来源节点／原始空列表 | 前者复用原Batch/Operation/decision票据，顺序不变；后者明确拒绝，不造模型票据或空批次；Workflow用原生分派 |
+| SDK53 | Skill声明allowed-tools或disallowed-tools；另案读取两个普通Skill | 前者构造报SKILL_PROFILE_UNSUPPORTED且平台不删字段假兼容；后者不更改角色工具目录 |
+| SDK54 | Skill原串含连续空格/引号，与等价参数数组分别读取；重入和Hook改参 | 原串精确保留、数组规范渲染、位置参数确定；两输入hash不同；双字段非null拒绝；已存raw恢复不重新渲染 |
+| SDK55 | start时故意阻塞claim／恢复屏障；另案已有有效owner | start在接收和推进意图已保存后先返回句柄；已有owner只附着，不报busy、不等待恢复 |
+| SDK56 | 按UML关联纯工具Workflow及Workflow调用Plan | 外图invocation_id为空；内图恰一Invocation；不能为满足错误基数创建虚构Invocation |
 
 ## 3. Hook 与 EventBus 测试
 
@@ -73,7 +92,7 @@
 
 | 场景 | 必须断言 |
 | --- | --- |
-| 发出者 | model.generate.before／after 的 source 是原 Loop；ModelManager／ToolManager 不调用 Hook、不发本次外围阶段事件；总线不能自行补发 |
+| 发出者 | model.generate.before／after 的 source 是原 Loop；ModelHandler／ToolHandler 不调用 Hook、不发本次外围阶段事件；总线不能自行补发 |
 | 阶段屏障 | 阻塞 before 处理器，Adapter 调用次数保持 0；允许后才执行，拒绝后仍为 0 |
 | 无用户 Hook | 空链返回已提交原视图，正常继续；Loop 代码没有 has_hooks 或 HookHandler 分支 |
 | 有效修改 | before 修改进入实际请求；after 修改进入本次交付、后续上下文及恢复读取；raw 保持原样 |
@@ -81,7 +100,7 @@
 | 恢复 | raw_saved 后崩溃，恢复由原发起方续 after；StageResult 已提交但回执丢失时查回原结果，Adapter 不再调用 |
 | 并行成员 | 每个成员独立 before／after；其中一个完成不触发下一模型 Loop，全批 settled 才交付 |
 
-请求只有一个 Manager，观察者不得响应请求；空 Hook 链也保存 Operation 事实。前置 deny 不创建 Attempt；后置 deny 保留执行事实。Hook 异常 fail-open 与必要存储失败严格分开。
+请求只有一个 Handler，观察者不得响应请求；空 Hook 链也保存 Operation 事实。前置 deny 不创建 Attempt；后置 deny 保留执行事实。Hook 异常 fail-open 与必要存储失败严格分开。
 
 覆盖合法 patch、越权 patch、保护输入删除、稳定 record ID、双 patch 冲突、CAS 重定位、matcher 恢复、已经 applied 不再调用、结果已保存只续提交流程。后续 Loop、历史、压缩和恢复读取同一有效修订。
 
@@ -104,6 +123,8 @@
 | 新 owner 接管 | 递增 epoch、撤销旧 writer、再激活 | 仅靠本机锁或租约超时推断文件已安全 |
 | stop 时两个子任务仍写文件 | 关闭新准入，全部收束再清理 | 第一个完成时删除共享工作目录 |
 | 终态时补充未消费 | 转 carried，下一次主动提问接回 | 默默丢弃、后台自行创建新 ExecutionRecord |
+| graph调用纯准备后、StartExecutor／StartChild前后 | 提交前重做纯准备，提交后续原target；permit与目标不可分离 | 为取得启动计划先提交无目标permit |
+| 业务终态后清理未完成 | 用CleanupLease继续原Job，按清理白名单提交 | 重新领取业务lease、激活Agent、改写原答案或重复终态事件 |
 
 ## 5. 交付示例及实际验证
 

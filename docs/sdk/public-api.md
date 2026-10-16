@@ -14,7 +14,8 @@ async with RuntimeEngine(
     environment=environment,
 ) as runtime_engine:
     agent = PlanAgent(
-        definition=definition,
+        definition=planner_definition,
+        executors={"research": research_definition},
         model=model,
         capabilities=capabilities,
         hooks=hooks,
@@ -31,6 +32,8 @@ async with RuntimeEngine(
 ```
 
 构造 ReactAgent／PlanAgent 只校验与冻结配置，不开始任务。实例在首次成功接收调用时绑定执行身份，同身份可重入；新提问用同配置创建新实例。具体约束见[实例生命周期](assembly.md#12-agent-实例与配置复用)。start 返回运行句柄；需要直接等结果时使用 ainvoke，需要持续观察时使用 astream。三者使用同一条准入／恢复路径，不实现三套执行逻辑。
+
+planner_definition 与 research_definition 都是 AgentDefinition，分别配置 Prompt、能力选择和输入输出格式。executors 保存定义，SDK 在每次委派时创建独立 ReactAgent。execution_policy、context_policy、model_options 可在构造时显式传入；省略时解析固定默认值，Executor 沿用 PlanAgent 的策略与模型。ReactAgent 使用同样的 definition 结构，不接收 executors。
 
 `RuntimeEngine` 是调用方装配的 SDK 运行时引擎，参数统一命名为 `runtime_engine`。同一实例可以托管多次 Agent／Workflow 执行；每次执行的上下文、预算和活动现场独立。进入 `async with` 开启托管服务，调用 `agent.start(...)` 才接收具体任务。Node.activate 的 `node_context: NodeContext` 是任务身份、控制和受限服务引用；AgentContext 则由执行中的 ReactAgent 持有。两者均不等于共享宿主 RuntimeEngine。
 
@@ -125,7 +128,7 @@ class Agent(Protocol):
 
 Python 的 str 是 `AgentInput(content=该文本)` 的便利写法；业务 JSON 必须显式放入 AgentInput.content，避免与 SDK 的输入信封字段混淆。JsonValue 仅允许 JSON 值，不接受任意 Python 对象。Mapping、数组和内容在入口深度冻结；frozen dataclass 本身不能代替深度不可变。
 
-content 按主角色 input_schema 校验；variables 按主角色变量声明校验；artifacts 必须是当前 RuntimeEngine 获准读取且仍有效的引用，不接受裸宿主路径。三部分一起保存为原始输入，参与重复请求比较。没有输入 Schema 时 content 为非空文本。空输入与恢复时省略 input 的含义不同。
+content 按 definition.input_schema 校验；variables 按 definition.variables 声明校验；Plan 入口的 definition 就是 Planner 使用的定义。artifacts 必须是当前 RuntimeEngine 获准读取且仍有效的引用，不接受裸宿主路径。三部分一起保存为原始输入，参与重复请求比较。没有输入 Schema 时 content 为非空文本。空输入与恢复时省略 input 的含义不同。
 
 ### 2.2 新执行与恢复参数矩阵
 
@@ -198,7 +201,7 @@ status 仅允许 succeeded／failed／cancelled／timed_out／budget_exhausted�
 
 usage 在根 ExecutionRecord 内按持久身份去重汇总，压缩不计 loops_consumed。没有供应商 token 统计时不能伪造为 0：对应字段为 null，token_counts_complete=false；部分已知时可返回已知合计但仍标 false。预算释放完毕的终态 loops_reserved=0。
 
-started_at 在执行前即被停止时可以为 null。cleanup_state 使用 pending／running／succeeded／failed；无需删除持久工作区的清理是成功的空操作。RunResult 的业务结果和用量固定，后续重复读取可看到更新的清理进度；清理失败不重新启动业务。RunSnapshot 的全部查询字段另行按查询 Schema 冻结。
+started_at 在执行前即被停止时可以为 null。cleanup_state 使用 pending／running／succeeded／failed；无需删除持久工作区的清理是成功的空操作。RunResult 的业务结果和用量固定，后续重复读取可看到更新的清理进度；清理失败不重新启动业务。清理重试由RuntimeEngine托管的CleanupService通过独立CleanupLease完成，终态start仍只附着读取，不创建Runner，也无需用户再次提问触发清理。领取及允许写集见[终态清理执行权](checkpoints.md#81-终态清理执行权与重试)。RunSnapshot 的全部查询字段另行按查询 Schema 冻结。
 
 ### 4.2 公开事件
 
@@ -275,13 +278,13 @@ Workflow 活动输入必须有显式接收点和状态映射。当前未定义�
 | --- | --- | --- |
 | ModelAdapter | 单次流式请求、完整决策、结构化异常 | 不拼接不同 Attempt 的半截结果 |
 | CapabilityAdapter | 单次工具调用、结果归一、外部关联 | 已保存原始结果不重发 |
-| SkillLoader | 列目录、读 SKILL.md 和包内资源 | 稳定只读包，不回查平台资源目录 |
+| SkillLoader | 供 SkillHandler 使用的底层接口：列目录、读 SKILL.md 和包内资源 | 固定只读包，不回查平台；不自行处理事件、Hook 或上下文写入 |
 | HookAdapter | 受限执行 Hook，返回决定／patch | 已应用修改与链游标复用 |
 | RuntimeStore | 原子命令、CAS、执行权、快照增量和事件 | 不能退化成各表单独 save |
 | ContentStore | 大内容存取、完整性与授权 | 引用发布前内容持久，孤儿可清理 |
 | EnvironmentProvider | 受限文件／脚本、撤权和清理 | 活动现场保留，旧 owner 不能继续写 |
 
-端口实现是高代码扩展；EventHandler／Manager／CommitCoordinator 属于 SDK 执行设施，不需要每个用户注册一遍。应用和平台只通过以下公共查询门面读取权威进度：
+端口实现是高代码扩展；SkillHandler、ToolHandler 等 EventHandler 实现及 CommitCoordinator 由 SDK 装配，不需要每个用户注册一遍。调用方提供 SkillRegistration／CapabilityRegistration 和授权选择即可。应用和平台只通过以下公共查询门面读取权威进度：
 
 | 门面 | 内容 | 边界 |
 | --- | --- | --- |

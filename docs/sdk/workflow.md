@@ -37,7 +37,7 @@ flowchart LR
 ```
 
 - **Planner** 由 AgentNode（或其 PlannerNode 子类）接入图，内部运行规划角色的 ReactAgent。它可以调用授权 Tool／MCP，也可以委派 Executor；没有执行器时仍可完成自己的模型—工具循环。
-- **Tool／MCP** 是统一总线调用流程中的 Operation，由相应 Manager 执行；内层图不为每项能力注册一个节点。Skill 阅读、脚本执行遵循相同能力边界。
+- **Tool／MCP** 是统一总线调用流程中的 Operation，由相应 Handler 执行；内层图不为每项能力注册一个节点。Skill 阅读、脚本执行遵循相同能力边界。
 - **Executor** 委派在同一内层图中创建 NodeTask；每次任务有自己的 AgentNode／ReactAgent 和 AgentContext。同一角色配置委派两次产生两个任务与两个执行实例，不增加两个图实例。
 - **Join** 是固定批次的结算条件，属于引擎与批次协调器；不调用模型。关闭并行时逐项执行，开启后按配置准入；单项业务错误不取消其他成员，全批 settled 后一次交回原 Planner。
 - **Replan** 表示 Planner 调整任务方案并继续原任务。它不是默认新增的 Agent、必经图节点或额外模型请求。收到工具结果后的下一次决策本身就可以重新规划；不能因为“尚无最终答案”再插入一次强制模型调用。
@@ -71,7 +71,7 @@ flowchart TB
     C -->|验证 lease 与版本后持久提交| S
 ```
 
-图表达运行时装配和两套图引擎对共同服务的依赖，不表示完整执行先后。RuntimeEngine 可同时托管多次执行，图中的 ExecutionRunner 及其调用服务是其中一次执行的现场。外层经 AgentNode／总线调用流程请求内层，内层结果经原父调用返回；详细顺序见第 5 节。`ExecutionRunner` 只控制整次执行和分派恢复，不判断下一节点，也不维护第三份 ready 队列。`GraphExecutionManager` 在调用桥内准备关联命令，不启动角色协程；所属引擎在提交成功后读取持久启动意图并调度。
+图表达运行时装配和两套图引擎对共同服务的依赖，不表示完整执行先后。RuntimeEngine 可同时托管多次执行，图中的 ExecutionRunner 及其调用服务是其中一次执行的现场。外层经 AgentNode／总线调用流程请求内层，内层结果经原父调用返回；详细顺序见第 5 节。`ExecutionRunner` 只控制整次执行和分派恢复，不判断下一节点，也不维护第三份 ready 队列。`GraphExecutionHandler` 在调用桥内准备关联命令，不启动角色协程；所属引擎在提交成功后读取持久启动意图并调度。
 
 外层自己的 CapabilityNode 也通过同一 EventBus 调用工具和 MCP，但不产生 AgentInvocation。Hook、上下文、权限、Operation／Attempt 不在两套引擎内各实现一份。节点及工具不能直接写检查点表。
 
@@ -112,10 +112,12 @@ AgentNode 的输入成为受保护任务原文；后续压缩不得省略。它�
 
 1. WorkflowEngine 在调用步骤出网／启动子图前，先持久保存该步原生任务的恢复依据及 WorkflowTaskBinding。
 2. AgentNode 以 `(parent_node_task_id, logical_call_key)` 调用 `begin agent.invoke`；首次创建 Operation，重入返回原引用。该次调用固定 PreparedAgentRef、输入和授权文件引用。
-3. 前置 Hook 通过后，StartChild 在同一 SDK 执行存储事务保存父调用等待关联、唯一 AgentInvocation、内层 GraphExecution 和启动意图。拒绝时只交付 blocked，不创建子图。
+3. 前置 Hook 通过后，调用节点经 EventBusImpl.prepare_graph 路由 GraphExecutionHandler，纯准备 target.kind=agent 的 PreparedDelegate；Operation 此时仍为 before_call，不要求先有许可。StartChild 在同一 SDK 执行存储事务冻结最终请求，保存执行许可和 executing、父调用等待关联、唯一 AgentInvocation、内层 GraphExecution 和启动意图。拒绝时只交付 blocked，不创建子图；不允许先 T_FREEZE 再创建子图。
 4. AgentGraphEngine 读取已提交启动意图推进内层图。外层异步等待结果，释放数据库锁；其线程／本机 Future 不是恢复依据。
 
 外层可以保持一个异步节点调用等待，也可以由适配层释放本次激活；这不暴露用户暂停动作。原生图重新进入该任务时，适配器先按固定映射接回原 Operation 和子图，不能直接重新 invoke Agent。
+
+纯准备没有副作用，提交前故障可以按原绑定重算；StartChild 提交后以原 Operation.target_ref 续作。executing 的 graph Operation 若缺目标或许可，按持久不变量损坏报错，不创建一个替代子图。外层不使用内层的 request_many 创建任意事件批次；并行与汇合由 WorkflowEngine 自身的任务和 pending writes 表达。
 
 ### 5.2 完成与消费
 

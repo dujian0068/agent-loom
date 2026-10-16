@@ -6,11 +6,10 @@
 
 | 对象 | 身份与生命周期 | 内容 |
 | --- | --- | --- |
-| AgentDefinition | 调用方提供的行为定义；无平台发布生命周期 | mode、主角色、Executor 角色、模型与策略 |
-| RoleDefinition | 属于一份 AgentDefinition，role_key 在其中唯一 | Prompt、变量、输入输出、能力绑定 |
+| AgentDefinition | 一份可复用的 Agent 行为配置；无平台发布生命周期 | 名称、职责说明、Prompt、变量、输入输出、能力绑定 |
 | GraphDefinition | 独立描述组织关系 | 节点位置、边、条件、入口、汇合 |
 | NodeDefinition | 属于一份 GraphDefinition，node_key 在图中唯一 | node_type、输入输出及路由配置 |
-| NodeBinding | 一次装配的值对象 | node_key 与已解析角色／能力／可执行 Agent 的绑定 |
+| NodeBinding | 一次装配的值对象 | node_key 与 Agent 定义及创建依赖／能力的绑定；执行时创建任务专属对象 |
 | WorkspaceBinding | 调用方提供的环境配置值；没有 ExecutionRecord 身份 | 稳定文件根句柄、内容范围、环境策略及授权资源挂载 |
 | Agent | SDK 公共执行接口；接口本身没有实体身份 | start、ainvoke、astream 的调用合同，不负责构造其他对象 |
 | ReactAgent / PlanAgent | 实现 Agent 的具体对象，运行时按任务／完整调用绑定 | 固定定义与依赖；ReactAgent 持有私有 AgentContext，PlanAgent 关联本次角色图 |
@@ -26,7 +25,6 @@ AgentDefinition 与 GraphDefinition 没有继承或业务上的包含关系。�
 ```mermaid
 classDiagram
     class AgentDefinition
-    class RoleDefinition
     class GraphDefinition
     class NodeDefinition
     class NodeBinding
@@ -37,14 +35,14 @@ classDiagram
     class PlanAgent
     class Workflow
     class StateGraph
-    AgentDefinition "1" *-- "1..*" RoleDefinition : 包含角色配置
     GraphDefinition "1" *-- "1..*" NodeDefinition : 包含执行位置
     Agent <|.. ReactAgent : 实现
     Agent <|.. PlanAgent : 实现
-    ReactAgent --> AgentDefinition : 行为
-    ReactAgent --> GraphDefinition : 单角色内层图
+    ReactAgent "0..*" --> "1" AgentDefinition : definition
+    ReactAgent --> GraphDefinition : 独立调用时的单节点图
     ReactAgent "1" *-- "1..*" NodeBinding : 装配绑定
-    PlanAgent --> AgentDefinition : 行为
+    PlanAgent "0..*" --> "1" AgentDefinition : definition供Planner使用
+    PlanAgent "0..*" --> "0..*" AgentDefinition : executors按key绑定
     PlanAgent --> GraphDefinition : Planner与Executor内层图
     PlanAgent "1" *-- "1..*" NodeBinding : 装配绑定
     StateGraph ..> Workflow : compile创建
@@ -54,6 +52,8 @@ classDiagram
 
 图中的菱形表示组成，普通箭头表示引用，虚线空心三角表示实现接口，都不表示调度顺序。模型客户端、数据库连接和可执行函数属于进程内依赖，不直接序列化进定义或检查点。恢复时由调用方重建这些依赖。
 
+AgentDefinition 可以被多个 Agent 引用；同一个 Plan 中也可将同一定义绑定到多个 Executor key。图的引用描述完整调用的装配：独立 ReactAgent 有单节点内层图，Plan 内的 ReactAgent 使用所属 Plan 的既有图和任务绑定，不各自创建一张图。
+
 统一公开名称为 `Agent`、`ReactAgent`、`PlanAgent`、`Workflow`。Workflow 可以只编排函数和工具，所以不继承 Agent。两者可以复用 RuntimeEngine 和 RunHandle，复用执行设施不构成业务上的继承关系。
 
 SDK 不维护应用发布版本或配置兼容指纹。Definition 可以使用本地 key 定位绑定，key 不承担平台版本解析；相同 ExecutionRecord 的恢复配置由调用方保证。
@@ -62,20 +62,25 @@ SDK 不维护应用发布版本或配置兼容指纹。Definition 可以使用�
 
 ```text
 AgentDefinition
-  mode: react | plan_executor
-  main_role: RoleDefinition
-  executors: RoleDefinition[]       # ReAct 必须为空
-  execution: ExecutionPolicy
-  context: ContextPolicy
-  model_options: ModelOptions
-
-RoleDefinition
-  role_key: string
-  kind: react | planner | executor
+  name: string
+  description: string              # 职责说明；作为 Executor 时供 Planner 选择
   prompt: PromptTemplate
   variables: VariableSpec[]
   capabilities: CapabilityBinding[]
   input_schema?, output_schema?
+
+ReactAgent 构造
+  definition: AgentDefinition
+
+PlanAgent 构造
+  definition: AgentDefinition       # Planner 的行为，也定义公开输入输出
+  executors: Mapping[string, AgentDefinition]  # Executor key → 行为；默认空表
+
+两种构造共同接收
+  execution_policy: ExecutionPolicy # 完整调用的额度、截止、并行和重试
+  context_policy: ContextPolicy     # 历史选择、压缩与上下文预算
+  model_options: ModelOptions      # 模型请求参数；与注入的 model 配套
+  model, capabilities, hooks, workspace, runtime_engine
 
 CapabilityBinding
   binding_key: string
@@ -87,11 +92,17 @@ CapabilityBinding
   access_scope: CapabilityAccessScope
 ```
 
-模型连接由 Agent 构造依赖提供。Executor 和压缩角色继承所属 Agent 的模型，不能借 role 配置替换连接。Executor 的 Prompt 不拼接 Planner Prompt；其能力集合独立，文件授权可以共享。
+`AgentDefinition` 只描述一个 Agent 的行为，不再包含角色列表、执行模式或其他 AgentDefinition。模式由选择 `ReactAgent`／`PlanAgent` 构造函数确定；Plan 的组合关系由 PlanAgent 的 `definition`、`executors` 和生成的 NodeBinding 表达。Planner 任务直接使用 PlanAgent.definition，不再包装一份主角色配置。Executor 表保存定义，不保存可被多次委派共用的活动 Agent。
+
+执行、上下文和模型策略是完整 Agent 构造参数，默认值见[行为约定](requirements.md)。同一 Plan 中 Planner 与各 Executor 使用这套固定策略和模型连接；Executor 的定义没有独立模型、额度或策略覆盖字段。预算仍按同一 ExecutionRecord 共同计数，不为每个 ReactAgent 复制额度；压缩继承模型且不占业务 Loop。Executor 的 Prompt 不拼接 Planner Prompt，其能力集合独立，文件授权可以共享。
+
+`name` 是显示名，`description` 是职责说明，二者不作身份。用于 Plan 的 Executor 必须有非空职责说明。一个定义可以独立构造 ReactAgent，也可以作为某个 Plan 的 Executor；两种用法采用同一配置结构。每次委派创建任务专属 ReactAgent 和 AgentContext，复用定义不等于复用活动实例。
+
+运行 DTO 中的 `role_key` 仅表示装配位置：直接 ReAct 为 `react`，Planner 为 `planner`，Executor 为 executors 映射的 key。Executor key 采用 `[A-Za-z_][A-Za-z0-9_-]{0,63}`，保留 `react`、`planner`，在所属 Plan 内唯一；它由 NodeBinding 提供，不是 AgentDefinition 的字段，也没有独立实体或 CRUD。一个定义绑定到不同位置时拥有不同 key，修改显示名不改变恢复定位。Hook matcher 和能力目录按这些固定位置筛选。
 
 输入输出 Schema 不执行远程引用。Prompt 变量按声明类型检查，纯文本替换，不执行模板代码。构造校验不调用模型或执行工具；资源准备、导入和授权在 SDK 外完成。
 
-直接 Agent 的输入输出格式取 main_role 的 Schema，Executor 使用自己的 Schema；AgentDefinition 不再重复设置顶层格式。精确装配参数、CapabilityRegistration、HookSet、program_key 派生及资源所有权见[构造与绑定](assembly.md)。
+直接 Agent 的公开输入输出格式取 `definition.input_schema / output_schema`；Plan 的 Planner 使用同一份定义，Executor 取 `executors[key]` 的 Schema。精确装配参数、CapabilityRegistration、HookSet、program_key 派生及资源所有权见[构造与绑定](assembly.md)。
 
 ## 3. Node 类与 NodeTask
 
@@ -129,7 +140,7 @@ classDiagram
     ReactAgent ..> NodeContext : 借用受限服务
 ```
 
-PlannerNode／ExecutorNode 是可选的角色特化类，均绑定角色配置的 ReactAgent；不另建 ReactNode Loop 实现。每个角色任务的实际对象独立；GraphDefinition 中的节点位置、绑定配置和工厂可复用。NodeTask 是持久调度记录，不是 Python 节点类。
+PlannerNode／ExecutorNode 是可选的节点特化类，均持有使用 AgentDefinition 的 ReactAgent；Planner／Executor 职责由节点位置与绑定约束确定，不是定义中的另一种类型。不另建 ReactNode Loop 实现。每个任务的实际对象独立；GraphDefinition 中的节点位置、绑定配置和工厂可复用。NodeTask 是持久调度记录，不是 Python 节点类。
 
 NodeContext 是每次激活的身份、控制及受限服务引用，不存消息和进度，也不保存到检查点。AgentContext 属于执行中的 ReactAgent，包括消息有效视图、压缩关联与 ReactContinuation。存储由统一提交设施完成；其消息头 AgentContextHead 和不可变进度是存储组成，不是额外引擎。
 
@@ -155,7 +166,7 @@ classDiagram
     class Attempt
     ExecutionRecord "1" *-- "0..*" AgentInvocation : 完整Agent调用
     ExecutionRecord "1" *-- "0..*" GraphExecution : 执行范围
-    AgentInvocation "1" --> "1" GraphExecution : 内层根图
+    AgentInvocation "0..1" --> "1" GraphExecution : 对应一张内层根图
     GraphExecution "1" *-- "0..*" NodeTask : 逻辑任务
     NodeTask "1" *-- "0..*" NodeActivation : 物理激活
     NodeTask "1" --> "0..1" AgentContextHead : 消息存储头
@@ -176,6 +187,8 @@ classDiagram
 上图描述持久记录：NodeTask 引用的 AgentContextHead 是消息头，进度由 NodeCheckpoint 引用；本机 ReactAgent.context 将它们装配为同一任务的 AgentContext，不另建第二份消息权威。
 
 图的数量表描述已初始化的执行。queued ExecutionRecord 在完成初始化前可没有图；开始执行时恰好有一个根图，之后可以创建子图。一个纯工具 Workflow 可以没有 AgentInvocation 和 AgentContext。Operation 也可由 SDK 系统组件发起，因此不能强制每个 Operation 都有 node_task_id。
+
+上图中每个 AgentInvocation 恰好对应一张内层 GraphExecution；每张 GraphExecution 可关联零或一个 Invocation。engine_kind=agent 时必须有一个，engine_kind=workflow 时没有；外层调用完整 Agent 后，新增 Invocation 只关联新建的内层图。
 
 ## 5. SDK 身份与作用域
 
@@ -212,6 +225,6 @@ ExecutionRecord 终态不再被迟到结果覆盖；cleanup_state 与业务终�
 
 DTO 使用 schema_version／protocol_version 声明自身格式，不对应平台发布号；ID 为 SDK 生成或调用方稳定传入的 UUID。状态序号、revision 为整数，时间为 UTC；对外超时换算使用单调计时。未知字段默认拒绝，明确声明的业务 JSON 除外。
 
-ExecutionBindingRef 为 program_key、node_binding_key、role_key?；它定位调用方已经装配的程序，不查询平台版本。SDK 中 resource_key／credential_generation 也是适配器键，不内置平台资源库管理。
+ExecutionBindingRef 为 program_key、node_binding_key、role_key?；role_key 从节点绑定派生，含义见第 2 节。它定位调用方已经装配的程序，不查询平台版本。SDK 中 resource_key／credential_generation 也是适配器键，不内置平台资源库管理。
 
 GraphCheckpoint 的共同信封及各引擎载荷见[检查点](checkpoints.md)。原混合平台身份的 JSON Schema 与样例已撤下；后续 SDK Schema 必须从本组 DTO 单独实现和验证，不能继续使用原版要求 space_id／release_id 的结构。

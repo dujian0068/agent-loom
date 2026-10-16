@@ -1,6 +1,6 @@
 # SDK 行为约定与默认值
 
-状态：已确认行为与工程设计分列，待实现。每份 AgentDefinition 独立配置；一次 ExecutionRecord 使用构造时固定的配置。平台如何编辑、发布和选择配置见[平台配置](../platform/configuration.md)。
+状态：已确认行为与工程设计分列，待实现。每个完整 Agent 可独立配置行为与执行策略；一次 ExecutionRecord 使用构造时固定的配置。AgentDefinition 统一描述单个 Agent 的行为，策略由构造参数注入；Plan 的 Planner／Executor 各有定义，共用所属完整 Agent 的模型和策略。平台如何编辑、发布和选择配置见[平台配置](../platform/configuration.md)。
 
 ## 1. 产品能力与运行模式
 
@@ -36,7 +36,7 @@ LLM 计划内容不直接变成任务依赖图。LLM 通过完整响应明确调
 
 已确认的默认行为包括 Loop 100、ExecutionRecord 3600 秒、并行关闭、Executor 并发 2、首输出 60 秒、工具 10 秒、SDK 自动重试关闭及已约定尝试上限／间隔、历史 2 轮和压缩阈值 80%。表中的数值校验上界、idle=null、输出预留／安全边距／摘要目标推导及默认非持久环境属于工程默认方案，不是新增的用户确认记录；其中各上界只作输入校验，不是吞吐保证。
 
-Executor 不单独覆盖模型、Loop、上下文和运行策略；角色独立配置 Prompt、变量、输入输出 Schema 与能力目录。Hook 按时机及 matcher 选择适用角色。压缩模型继承当前模型，无独立选择入口。
+Executor 不单独覆盖模型、Loop、上下文和运行策略；每个 AgentDefinition 独立配置 Prompt、变量、输入输出 Schema 与能力目录。表中的 execution、context 分别对应完整 Agent 的 execution_policy、context_policy 构造参数，不是每份 Executor 定义中的额度或消息。Hook 按时机及 matcher 选择适用节点绑定。压缩模型继承当前模型，无独立选择入口。
 
 ## 3. Loop、并行与重试
 
@@ -61,7 +61,7 @@ Loop 中达到阈值即压缩，不等模型报超窗。压缩使用独立摘要
 
 Hook 按时机执行，可在白名单内修改输入输出或拒绝执行。合法修改提交为权威有效上下文，后续消费者、压缩和恢复可见；私有上下文仍按 scope 隔离。Hook 自身失败、超时或非法 patch 不影响主流程继续；合法 deny 生效。必要持久化失败不能当 Hook fail-open 忽略。
 
-Skill 使用 SKILL.md、目录元数据、按需阅读和受限脚本；MCP／Tool 使用标准输入输出及同一总线调用流程。具体兼容清单见[能力设计](capabilities.md)，不把“参考 Claude Code”理解为已实现全部功能。
+Skill 使用 SKILL.md、目录元数据、按需阅读和受限脚本。目录与正文读取经事件总线交给 SkillHandler，包与 SkillLoader 作为注入资源；脚本、MCP 和普通工具经 ToolHandler 执行。二者沿用相同的调用阶段、Hook、记录与结果交付规则，Skill 不自动授予脚本执行权。具体兼容清单见[能力设计](capabilities.md)，不把“参考 Claude Code”理解为已实现全部功能。
 
 模型连接内部流式接收；完整响应后才发布一次调用结果，不逐 token 发 EventBus 事件。单次模型完成不代表 Agent 完成；ExecutionRecord 最终收束后才交付最终答案。结构化输出不合规交模型修正，仍共享总 Loop，无额外修正额度。
 

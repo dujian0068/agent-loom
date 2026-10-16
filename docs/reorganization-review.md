@@ -23,7 +23,7 @@
 | --- | --- |
 | 平台装配表要求传入运行期 WorkspaceScope，但此时尚无 ExecutionRecord／Invocation | 新增构造值 WorkspaceBinding；SDK 初始化后登记运行 scope。见[构造接口](sdk/public-api.md)、[环境](sdk/capabilities.md)、[平台装配](platform/sdk-integration.md) |
 | UML 的 NodeDriver.advance／NodeServices 与实际 activate／NodeContext 协议不符；外层和内层接口继承混淆 | 统一内层签名及 SkillLoader／CapabilityAdapter 的方法；外层明确实现 WorkflowNodeAdapter，节点定义可共用，激活接口不混用。见[定义](sdk/definitions.md)、[对象 UML](sdk/object-collaboration.md) |
-| 时序图让批次准备器准入、Manager 直接启动子任务、数据库负责环境撤权 | 准备、提交、调度、撤权分别回到对应责任对象；图按持久意图再执行。见[能力交互和恢复时序](sdk/object-collaboration.md) |
+| 时序图让批次准备器准入、Handler 直接启动子任务、数据库负责环境撤权 | 准备、提交、调度、撤权分别回到对应责任对象；图按持久意图再执行。见[能力交互和恢复时序](sdk/object-collaboration.md) |
 | 实体引用方向和数量不准确 | RunBinding 指向所用 Release；queued ExecutionRecord 可尚无图；纯工具 Workflow 可不创建 AgentGraphEngine 服务。见[平台实体](platform/domain-model.md)、[SDK 实例](sdk/definitions.md) |
 | OperationError、PreparedModelRequest、revision 初值及 Session 名称跨篇不一致 | 使用唯一 DTO、统一序号规则，清除未定义的 Conversation 别名。见[调用合同](sdk/event-bus.md)、[上下文](sdk/context.md)、[检查点](sdk/checkpoints.md) |
 | 格式纠正曾要求第二次消费同一 LoopTicket；反馈幂等键不同；空完成帧含义冲突 | 接受完整决策消费一次，修正另领票据；统一 format 键与 ValidationIssue。合法空候选交输出校验，不假装传输失败。见[Loop](sdk/runtime.md)、[模型适配](sdk/capabilities.md) |
@@ -61,7 +61,7 @@
 
 - 区分 Definition、固定程序配置、Runtime 宿主、ExecutionRunner 和 RunHandle 的身份与生命周期；构造不出网，start 才准入执行。后续补充：活动 Agent 对象按任务隔离，复用的是配置和服务。
 - 固定能力注册、角色授权、HookSet／HookBinding／matcher，以及不携带存储客户端的 Hook 读取视图。
-- 消除顶层与主角色的双份输入输出 Schema；直接 Agent 取主角色格式。
+- 输入输出 Schema 统一放在 AgentDefinition；直接 Agent 读取 definition 的格式，Plan 的 Planner 使用同一份定义，Executor 使用自己的定义。
 - 明确同 ExecutionRecord 重入默认附着、无输入恢复、稳定 ID 冲突、后台任务与观察取消，以及 Runtime shutdown 的所有权。
 - 定义公开结果／异常分类、输入和停止回执、事件终态序号；同提交保存 terminal_seq，观察终结不等待无限文件清理。
 
@@ -93,13 +93,38 @@ NodeContext、RuntimeStore、RuntimeCommit 等是不同职责的类型，Node.ac
 
 协议中的 `run_id` 仍标识同一次执行，RunHandle／RunResult／RunControl、存储表和 API 路径未另行改名；它们各自是句柄、结果、控制或访问入口，不表示另一个执行实体。NodeContext 仍是任务激活期间的受限服务视图。
 
-[对象关系与交互 UML](sdk/object-collaboration.md#11-作用域与生命周期的读法)增加作用域总表，并在对象图下逐项标明所属范围、生命周期及共享规则。明确同一 RuntimeEngine 可托管多次执行；每次 ExecutionRunner 独立装配总线、Manager 与引擎服务；同一执行内共享服务，但角色上下文、任务进度、调用参数与 Hook 决定各自隔离。接管重建本机对象，沿用持久身份；共享目录或适配器不扩大授权。
+[对象关系与交互 UML](sdk/object-collaboration.md#11-作用域与生命周期的读法)增加作用域总表，并在对象图下逐项标明所属范围、生命周期及共享规则。明确同一 RuntimeEngine 可托管多次执行；每次 ExecutionRunner 独立装配总线、Handler 与引擎服务；同一执行内共享服务，但角色上下文、任务进度、调用参数与 Hook 决定各自隔离。接管重建本机对象，沿用持久身份；共享目录或适配器不扩大授权。
 
 
 ## 9. 事件接口与组合处理器复核（2026-10-16）
 
 通信层按最新讨论拆为 HandlerRegistry、EventBus、EventHandler 三个接口。EventBusImpl 实现注册和发送，HookHandler 同时实现三个接口；注册表是各实现内部的状态，不再画成独立的管理中心。HookHandler 通过本地表组织末端处理器，根业务路由保持单一主处理器。
 
-对象 UML、装配、调用状态机与时序、上下文提交职责和验收计划已同步。业务 before／after 改由原 Loop／NodeDriver 发出，总线仅路由、管理实际 Attempt 和等待；ModelManager／ToolManager 不发外围阶段事件。保留 Operation／Attempt／HookInvocation、模型门禁及恢复边界，增加中立 StageResult 供发送方读取，不要求发送方了解 Hook 游标。HookHandler 逐项通过统一 CommitCoordinator 提交修改，子级转发不创建业务 Operation 或递归触发 Hook。
+对象 UML、装配、调用状态机与时序、上下文提交职责和验收计划已同步。业务 before／after 改由原 Loop／NodeDriver 发出，总线仅路由、管理实际 Attempt 和等待；ModelHandler／ToolHandler 不发外围阶段事件。保留 Operation／Attempt／HookInvocation、模型门禁及恢复边界，增加中立 StageResult 供发送方读取，不要求发送方了解 Hook 游标。HookHandler 逐项通过统一 CommitCoordinator 提交修改，子级转发不创建业务 Operation 或递归触发 Hook。
+
+模型、工具、上下文、环境和图调用处理器统一命名为 ModelHandler、ToolHandler、ContextHandler、EnvironmentHandler、GraphExecutionHandler；接口示例、时序图与职责表采用同一名称。[通信对象一节](sdk/object-collaboration.md#4-eventbushandlerregistry-与-eventhandler)合并说明三个接口、根总线、HookHandler 和子处理器，并分别展示接口实现与注册关系，避免读者跨章节拼接两层注册结构。
 
 本项仍是设计修改；没有新增可运行的 SDK 实现。接口类型、子注册表隔离、累计 patch、无递归、阶段重入和恢复均已列入待实施验收。
+
+## 10. Skill 与事件处理设计同步（2026-10-17）
+
+[Skill 与能力对象](sdk/object-collaboration.md#6-skill-与能力对象)按运行调用、资源绑定及执行环境重新绘图。补入 SkillHandler 的 EventHandler 入口，并区分 CapabilityRegistry 的资源目录与 HandlerRegistry 的事件路由。SkillLoader 保留为注入的底层只读接口，不承担 Loop、Hook 或上下文提交。
+
+Skill 目录／入口／资源读取直接交 SkillHandler，脚本、文件工具与 MCP 交 ToolHandler；每项显式调用沿用原 Operation，不因内部读取重复登记。事件合同、Hook 可修改字段、构造绑定、上下文归属与 SDK43–SDK47 验收用例已同步。本项仍为设计文档，相关运行能力待实现。
+
+## 11. SDK 独立审查修订（2026-10-17）
+
+针对当前工作区的独立审查发现5处不一致／旧方案残留及3处必要合同缺口。本次修改正文、DTO、时序和UML；没有实现SDK，也不将文档构建视为运行验收。
+
+| 审查项 | 本次确定的处理 | 权威位置 |
+| --- | --- | --- |
+| 委派许可与目标创建顺序 | graph Handler先纯准备；StartExecutor／StartChild原子提交请求、许可、目标、父关联和ready；执行期只接回原target | [调用阶段](sdk/event-bus.md#6-loop-发出阶段事件总线执行主请求)、[运行提交](sdk/runtime.md#9-runtimecommit-的读写集合锁序与幂等) |
+| 终态清理无法接管 | CleanupJob随终态登记；CleanupService用独立CleanupLease接管，只允许清理记录写集，不建业务Runner | [清理执行权](sdk/checkpoints.md#81-终态清理执行权与重试) |
+| 旧分支状态残留 | 内层只保存角色Task／CallBatch／WaitGroup；外层使用原生checkpoint和pending writes，不要求旧fork generation/cursor/own writes | [检查点恢复](sdk/checkpoints.md#72-恢复包与恢复分派) |
+| request_many无合法非模型来源 | 接口收窄为已提交模型批次的推进／等待；删除任意events及freeze_requests入口；Workflow用原生编排 | [批次合同](sdk/event-bus.md#42-request_many-推进已提交的模型批次) |
+| Skill工具限制没有范围 | 首版拒绝allowed-tools／disallowed-tools，不隐式改变角色权限；后续支持需另定使用范围与恢复合同 | [Skill范围](sdk/capabilities.md#32-支持与读取) |
+| Skill原参数串丢失 | raw_arguments与arguments互斥；原串保留，数组规范化；校验、Hook与恢复使用同一渲染规则 | [Skill输入](sdk/capabilities.md#33-skillhandler-的事件入口) |
+| 启动／重入图与API不同 | 先接收并返回RunHandle，后台claim／恢复；有效owner统一附着，不报busy | [启动图](sdk/object-collaboration.md#22-开始执行后sdk-创建本次-executionrunner) |
+| Invocation／Graph基数错误 | 每个Invocation对应一张内层图；通用Graph可有0或1个Invocation，外层图不虚构Invocation | [运行身份](sdk/definitions.md#4-运行身份与数量) |
+
+SDK48–SDK56及新增清理故障切点列入[待实施验收](sdk/verification.md)。已有机器Schema、Workflow compile／Saver映射、公共查询／删除DTO、生命周期Hook等待细化项仍保留，不能据此次修订称全部设计已完成。

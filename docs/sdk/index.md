@@ -19,7 +19,8 @@ SDK 接收构造参数和运行依赖，自行执行、管理上下文、保存�
 | ReactAgent / AgentNode | Agent 执行 Loop 并持有 AgentContext；节点代理和适配图内调用 | 跨任务共享可变消息、另一套角色 Loop |
 | NodeContext | 本次激活的身份、控制与受限服务引用 | 消息保存、资源生命周期、另一套 RuntimeEngine |
 | EventBus / HandlerRegistry / EventHandler / HookHandler | 调用关联、有序拦截、结果与通知 | 把观察订阅当作可靠执行者 |
-| ContextManager | 连续记录、有效上下文、历史投影、压缩 | 判断用户输入“有没有用” |
+| ContextHandler | 连续记录、有效上下文、历史投影、压缩 | 判断用户输入“有没有用” |
+| SkillHandler / ToolHandler | 经总线分别处理 Skill 读取与工具／MCP／脚本调用 | 直接修改 Agent 消息、替代图引擎或自动授予 exec 权限 |
 | 能力与环境适配器 | 模型、Tool、MCP、Skill、文件和脚本访问 | 资源商城、上传 UI、平台权限目录 |
 | RuntimeStore / CommitCoordinator | 执行事实的一致提交、检查点、接管 | 平台发布与应用删除策略 |
 

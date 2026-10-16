@@ -22,7 +22,7 @@ AgentLoom 重新划分为两个独立交付物，暂时保留在同一个 Git �
 3. [目录规划](docs/directory-plan.md)：本次实际建立的目录。
 4. [文档目录](docs/README.md)：领域、双引擎、事件总线、上下文和检查点设计。
 
-设计文档已按两份交付物整理：[SDK 设计](docs/sdk/index.md)、[Platform 设计](docs/platform/index.md)。SDK 的 [对象协作 UML](docs/sdk/object-collaboration.md) 细化了 Agent、Node、EventBus、EventHandler、HookManager、Hook 和 Skill 的关系与交互。LangGraph 源码适配尚未实施。
+设计文档已按两份交付物整理：[SDK 设计](docs/sdk/index.md)、[Platform 设计](docs/platform/index.md)。SDK 的 [对象协作 UML](docs/sdk/object-collaboration.md) 细化了 Agent、Node、EventBus、EventHandler、HookHandler、SkillHandler 与工具、资源的关系和交互。LangGraph 源码适配尚未实施。
 
 ## 文档站
 

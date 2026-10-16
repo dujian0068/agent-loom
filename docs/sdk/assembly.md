@@ -6,7 +6,7 @@
 
 | 层次 | 对象 | 谁创建 | 可以跨 ExecutionRecord 复用吗 | 是否进入检查点 |
 | --- | --- | --- | --- | --- |
-| 配置 | AgentDefinition、RoleDefinition、WorkspaceBinding、HookBinding | 调用者 | 可以，构造后不可变 | 保存执行所需的值或引用；不保存平台发布关系 |
+| 配置 | AgentDefinition、ExecutionPolicy、ContextPolicy、ModelOptions、WorkspaceBinding、HookBinding | 调用者 | 可以，构造后不可变 | 保存执行所需的值或引用；不保存平台发布关系 |
 | Agent 对象 | ReactAgent、PlanAgent | SDK 构造；图中按绑定创建 | 活动实例不跨任务复用，固定配置与依赖可以复用 | 保存上下文与进度的持久投影，不序列化对象或服务引用 |
 | 工作流程序 | Workflow | SDK 编译 | 编译结构可以复用，节点执行实例按任务创建 | 保存绑定 key 与各次执行现场，不序列化编译对象 |
 | 宿主服务 | RuntimeEngine、ModelAdapter、CapabilityRegistry、存储和环境适配器 | 调用者装配 | 可以，必须遵守并发契约 | 连接、函数、锁、协程不保存 |
@@ -41,7 +41,8 @@ classDiagram
     class ExecutionRecord
     Agent <|.. ReactAgent
     Agent <|.. PlanAgent
-    PlanAgent --> AgentDefinition : 固定行为
+    PlanAgent "0..*" --> "1" AgentDefinition : definition供Planner使用
+    PlanAgent "0..*" --> "0..*" AgentDefinition : executors按key绑定
     PlanAgent --> WorkspaceBinding : 固定环境配置
     PlanAgent --> CapabilityRegistry : 固定资源视图
     PlanAgent --> HookSet : 固定挂点和处理器
@@ -66,6 +67,7 @@ classDiagram
 | 执行托管 | 接收启动／接续请求，持有后台任务，提供查询和停止入口 | RunService、输入服务、本机 supervisor 与执行权协议 |
 | 单次现场装配 | 获得执行权后，为该 ExecutionRecord 创建 ExecutionRunner，按需装配调用服务与图引擎 | ExecutionRunner 内的根 EventBusImpl、已注册 HookHandler 及引擎服务 |
 | 结束与宿主关闭 | 协调本次执行收尾、本机退出和资源释放 | 单次执行控制、提交协调器和环境适配器 |
+| 终态后的清理 | 扫描已登记CleanupJob，领取独立清理租约并重试临时目录删除 | CleanupService、受限清理提交入口和EnvironmentProvider；不创建业务Runner |
 
 每个 ExecutionRecord 的 EventBus、HookHandler、上下文、预算和执行进度独立；同一 ExecutionRecord 内的外层图与内层 Agent 按既有 scope 规则共享服务。Agent 自己的模型、Prompt、能力选择、Hook 绑定和 WorkspaceBinding 仍由该程序配置，不因共用 RuntimeEngine 合并成全局配置。
 
@@ -75,6 +77,8 @@ classDiagram
 
 ExecutionRecord 在执行结束后继续保存；ExecutionRunner 只在本机持有执行权期间有效，完成必要收尾、关闭或失去租约后释放。接管重建 Runner，沿用原执行记录。一个 RuntimeEngine 可同时持有多个 Runner，每个 Runner 只对应一个 `run_id`；仅观察已结束或被其他进程执行的记录时，不创建 Runner。完整作用域清单见[对象 UML](object-collaboration.md#11-作用域与生命周期的读法)。
 
+CleanupService 在 RuntimeEngine.open 后独立扫描，所需依赖只是注入的执行存储和环境适配器；不通过原Agent重入获取执行权。CleanupLease只准删除既定临时目录并提交清理进度，不能运行图。宿主关闭或清理进程故障后，下一宿主领取原Job继续，业务终态不变。见[清理接管合同](checkpoints.md#81-终态清理执行权与重试)。
+
 ### 1.2 Agent 实例与配置复用
 
 构造 ReactAgent／PlanAgent 得到待绑定对象，不创建消息记录。首次成功接收 `start` 后绑定一个执行身份；同实例再次使用原 `run_id` 只附着／恢复原执行，已终态也只返回原结果。若已绑定却省略 run_id 或传入另一 run_id，返回 `AGENT_INSTANCE_BOUND`，调用方应复用原配置创建新 Agent。首次接收与本机绑定要串行化；并发初始化不得让同一实例绑定两次。接收结果未知时保留已分配身份供同 ID 重试，不把它当成新问题。
@@ -83,7 +87,7 @@ ExecutionRecord 在执行结束后继续保存；ExecutionRunner 只在本机持
 
 节点注册表保存固定装配配置和工厂；NodeDriver 的内部 `bind_task(binding, task_state)` 从这些工厂创建该任务专属的 AgentNode／Agent。若复用同一 task 的本机对象，缓存也只归当前 ExecutionRunner，不放进共享注册表；任务进入等待可以释放物理对象，后续从原进度重建。**两个不同 task 绝不能返回同一个活动 Agent 或 AgentContext。** NodeContext 每次激活重建，不能沿用旧 lease 或过期服务代理。
 
-角色实例由 SDK 内部按 RoleDefinition、所属 Agent 的固定策略和已注入服务装配，复用 ReactAgent 的 Loop 实现。它不再次调用独立 Agent 的公开构造／start 流程来生成一张包住自身的图；公开构造的 mode 校验仍适用于完整 Agent。调用方不需要为每次 Planner／Executor 激活手工创建一个 AgentDefinition。
+直接 ReAct、Planner 和 Executor 的 ReactAgent 均读取同一种 AgentDefinition。PlanAgent.definition 供 Planner 使用，executors[key] 供对应 Executor 使用；运行策略与模型依赖由所属 PlanAgent 统一注入。构造绑定时固定配置，执行时按任务创建 ReactAgent，经 Node.activate 接续已有图；不通过公共 start 再创建根执行。调用方只准备一次 Executor 定义，同类型多次委派由 SDK 创建独立实例。
 
 Workflow 编译从预装配 Agent 提取冻结定义、资源绑定和创建方式，PreparedAgentRef 定位这份固定绑定；不捕获其当前上下文。每次图内完整调用据绑定创建独立 Agent，恢复时接回原 Invocation。开发者不需要另外编写工厂；这由 SDK 装配层完成。图中构造新 Agent 对象并不等于调用公共 start 或建立新根 ExecutionRecord。
 
@@ -114,6 +118,9 @@ class ReactAgent(Agent):
         self, *, definition: AgentDefinition, model: ModelAdapter,
         capabilities: CapabilityRegistry, hooks: HookSet,
         workspace: WorkspaceBinding, runtime_engine: RuntimeEngine,
+        execution_policy: ExecutionPolicy | None = None,
+        context_policy: ContextPolicy | None = None,
+        model_options: ModelOptions | None = None,
     ) -> None: ...
 
 
@@ -122,16 +129,26 @@ class PlanAgent(Agent):
         self, *, definition: AgentDefinition, model: ModelAdapter,
         capabilities: CapabilityRegistry, hooks: HookSet,
         workspace: WorkspaceBinding, runtime_engine: RuntimeEngine,
+        executors: Mapping[str, AgentDefinition] | None = None,
+        execution_policy: ExecutionPolicy | None = None,
+        context_policy: ContextPolicy | None = None,
+        model_options: ModelOptions | None = None,
     ) -> None: ...
 ```
 
 所有依赖通过关键字传入。暂不叠加 Builder、全局默认 RuntimeEngine、自动平台查询三套装配入口；便利工厂可以后续包装相同构造合同。空能力和空 Hook 分别使用 `CapabilityRegistry(tools=(), skills=())`、`HookSet(bindings=(), handlers={})`。内存适配器可以独立运行，持久恢复则注入满足合同的后端。
 
+execution_policy／context_policy／model_options 省略时，构造阶段按[默认值](requirements.md)及已提供的模型元信息解析为固定策略；缺必需模型窗口仍须报错，不能猜测。context_policy 是处理规则，运行中的 agent.context 才是私有 AgentContext。executors=None 等同空映射，不创建默认执行器。ReactAgent 没有 executors 参数；执行模式由具体构造类型确定，AgentDefinition 不再声明 mode。
+
 ### 2.1 参数的唯一责任
 
 | 参数 | 包含什么 | 不能包含什么 |
 | --- | --- | --- |
-| definition | 角色、Prompt、变量、能力选择、策略与格式 | API Key、活动消息、平台资源查询回调 |
+| definition | 当前 Agent 的名称、职责、Prompt、变量、能力选择与格式；Plan 时供 Planner 使用 | 角色列表、执行模式、模型连接、活动消息、平台资源查询回调 |
+| executors | 仅 PlanAgent 接收：Executor key → AgentDefinition 的固定映射 | 活动 Agent／上下文、子 Plan、另一个模型或预算 |
+| execution_policy | 本完整调用的 Loop、截止、并行与自动重试策略；Executor 共用 | 每个子任务重新分配的独立总额度 |
+| context_policy | 本完整调用的历史、压缩及上下文预算策略；Executor 共用策略、私有消息 | 跨任务共享的可写 messages |
+| model_options | 与 model 适配的 Think、输出等请求参数；Planner／Executor 继承同一配置 | 模型连接、API Key、通过 Executor 覆盖模型 |
 | model | 一个已配置的 ModelAdapter；内部可持有连接和凭据获取端口 | 通过 role_key 再选择另一模型 |
 | capabilities | 已解析工具描述、原始适配器、Skill 包与 Loader | 运行中扩大角色能力的目录搜索 |
 | hooks | 本程序的不可变绑定和已解析处理器 | 全局可变 Hook 列表、可改写身份／额度的处理器权限 |
@@ -142,11 +159,11 @@ Executor 和压缩调用使用 `model` 的同一连接，按所属 Agent 的固�
 
 ### 2.2 构造校验与副作用
 
-按以下顺序执行；任何失败均抛 `ConfigurationError(code, field_path, message)`，不创建 ExecutionRecord：
+参数符合构造签名后，按以下顺序校验；失败均抛 `ConfigurationError(code, field_path, message)`，不创建 ExecutionRecord。传入签名不支持的参数（如 ReactAgent 的 executors）由 Python 入口直接拒绝：
 
-1. 校验 Definition 字段、角色 key 唯一性和模式：ReactAgent 只接受 react／无 Executor，PlanAgent 只接受 plan_executor／Planner 主角色。
-2. 检查 Prompt 变量、角色输入输出 Schema 和静态策略；只使用调用者给出的本地 Schema，不读取远程 `$ref`。
-3. 逐角色解析 CapabilityBinding，固定模型可见名称、输入 Schema、实际适配器与访问范围；拒绝重名和悬空引用。
+1. 校验每份 AgentDefinition 字段及 Plan 的 Executor 映射。key 规则见[最小配置](definitions.md#2-最小配置结构)；重复、保留 key、错误目标类型或 Executor 缺少职责说明均拒绝。ReactAgent 不接受 Executor 表。
+2. 检查各定义的 Prompt 变量、输入输出 Schema 和装配策略；只使用调用者给出的本地 Schema，不读取远程 `$ref`。
+3. 按节点绑定逐份解析 AgentDefinition.capabilities，固定模型可见名称、输入 Schema、实际适配器与访问范围；拒绝重名和悬空引用。同一份定义用于多个位置时，分别生成只读绑定视图。
 4. 检查 HookSet 的 key、阶段、匹配条件及处理器，生成不可变绑定表。
 5. 校验 WorkspaceBinding 的资源挂载与角色授权对应关系；不创建运行目录、容器或脚本进程。
 6. 生成内部 GraphDefinition、NodeBinding 和编译描述，深度复制／冻结所有 JSON、列表及映射。
@@ -157,22 +174,22 @@ Executor 和压缩调用使用 `model` 的同一连接，按所属 Agent 的固�
 
 ## 3. 角色、公开输入和格式的归属
 
-输入输出格式统一由 **RoleDefinition** 声明：直接 Agent 的公开格式取 `main_role.input_schema / output_schema`，Executor 的格式取该 Executor 的声明。AgentDefinition 不再重复维护第二份顶层 input_schema／output_schema。
+输入输出格式统一由 **AgentDefinition** 声明：ReactAgent 与 PlanAgent 的公开格式取 `definition.input_schema / output_schema`；Plan 的 Planner 直接使用这份定义，Executor 取 `executors[key]` 的格式。没有额外的主角色配置层。
 
 | 内容 | 来源和规则 |
 | --- | --- |
-| 根问题 | AgentInput.content；按主角色 input_schema 校验。无 Schema 时接受非空文本 |
-| 根 Prompt 变量 | AgentInput.variables；只允许主角色声明的变量，校验后渲染。不给调用者覆盖系统身份、scope 和资源绑定 |
-| Executor 任务 | Planner 委派参数；按目标角色的输入声明校验，再作为该任务受保护输入 |
-| Executor Prompt | 目标角色自己的 Prompt 和变量，不拼接 Planner 的系统 Prompt |
-| 角色最终结果 | 按该角色 output_schema 校验；无 Schema 时为自由文本。格式纠正共享根 Loop 额度 |
-| Workflow 根输入输出 | Workflow 自身的 Schema；AgentNode 的映射再满足被调用 Agent 主角色的格式 |
+| 根问题 | AgentInput.content；按 definition.input_schema 校验。无 Schema 时接受非空文本 |
+| 根 Prompt 变量 | AgentInput.variables；只允许 definition.variables 声明的变量，校验后渲染。不给调用者覆盖系统身份、scope 和资源绑定 |
+| Executor 任务 | Planner 委派参数；按 executors[key].input_schema 校验，再作为该任务受保护输入 |
+| Executor Prompt | executors[key] 自己的 Prompt 和变量，不拼接 Planner 的系统 Prompt |
+| Agent 最终结果 | 按该实例 definition.output_schema 校验；无 Schema 时为自由文本。格式纠正共享根 Loop 额度 |
+| Workflow 根输入输出 | Workflow 自身的 Schema；AgentNode 的映射再满足被调用 Agent.definition 的格式 |
 
 Prompt 变量值属于本次输入的一部分，随请求固定并参与幂等比较。执行中补充说明是新增用户输入，不是修改变量或配置的暗门。变量类型、默认值与模板语法的机器合同仍归后续 Definition Schema 工作，不在此处另造模板语言。
 
 ## 4. 能力如何注册和绑定
 
-开发者提供资源目录，RoleDefinition 从目录中选择。**注册可用资源不等于授权所有角色使用。** 目录构造为纯本地操作，执行期间不可增删。
+开发者提供资源目录，每份 AgentDefinition 通过 capabilities 从目录中选择。**注册可用资源不等于授权所有 Agent 使用。** 同一 Plan 的 Planner 与 Executor 分别解析自己的选择，目录构造为纯本地操作，执行期间不可增删。
 
 ```python
 class CapabilityRegistry:
@@ -196,11 +213,15 @@ class CapabilityRegistry:
 
 工具绑定的 `member_key` 对应注册内的 capability_key。只有注册恰好一个成员时可以省略，否则构造报 `CAPABILITY_MEMBER_REQUIRED`；不把省略解释成“整个 MCP 服务全部授权”。一个 MCP 连接有多个工具时，角色需要逐项明确绑定。
 
-Skill 绑定的 member_key 对应包内唯一 entry_name；只有一个入口时可以省略。visible_name 是该角色看到的 Skill 名，不会自动注册同名可执行工具，也不会因为有 scripts 目录自动获得 exec 权限。Skill 的 binding.config 首版必须为空对象，其参数通过实际 SkillRead.arguments 传递。
+Skill 绑定的 member_key 对应包内唯一 entry_name；只有一个入口时可以省略。同一角色的 `(resource_key, entry_name)` 只能对应一个 Skill 绑定，重复时构造报 `SKILL_BINDING_AMBIGUOUS`，避免读取请求无法确定授权和 Hook matcher。visible_name 是该角色看到的 Skill 名，不会自动注册同名可执行工具，也不会因为有 scripts 目录自动获得 exec 权限。Skill 的 binding.config 首版必须为空对象；参数通过 SkillRead.raw_arguments 或 SkillRead.arguments 二选一传递，允许都为 null，渲染及互斥规则见[Skill 参数](capabilities.md#32-支持与读取)。
 
-CapabilitySpec.model_name 是资源提供的建议名称，RoleDefinition 的 visible_name 是最终模型可见名称；编译器生成角色专属副本，不回写共享描述。kind 的映射为 builtin_tool→builtin、tool→hosted／script、mcp→mcp；skill 走 SkillRegistration。角色 binding.config 只能满足注册的 config_schema，冻结后通过 ToolInvocationContext.binding_config 传入；没有配置项的适配器使用只允许空对象的 Schema。它不属于模型 arguments，不能包含新的凭据、路径授权或替代连接。
+固定 manifest 若声明 allowed-tools／disallowed-tools，返回 SKILL_PROFILE_UNSUPPORTED；不能构造成功后声称这些限制已经由 SDK 执行。角色权限仍来自 AgentDefinition 的能力绑定。构造只校验注入的元数据，使用边界再验证包内容与固定 manifest 一致。
 
-Registry 的 `for_role / for_node_binding` 面向**已绑定视图**：Agent 构造时把角色选择解析好；组装根执行程序时关联 program_key。注册表本体不因开始某个 ExecutionRecord 而原地修改。查询返回只读 ResolvedCatalog，不产生 I/O。
+装配为有 Skill 绑定的角色生成一组共用的 Skill 读取入口及固定事件路由，见[SkillHandler 合同](capabilities.md#33-skillhandler-的事件入口)；这些入口与普通工具在同一模型可见命名空间中检查冲突。它们直接路由 SkillHandler，不伪装为一个调用 ToolHandler 后再次发同义请求的 CapabilityAdapter。CapabilityRegistry 保存资源和读取实现；根 HandlerRegistry 注册 SkillHandler，两个注册对象的职责不同。
+
+CapabilitySpec.model_name 是资源提供的建议名称，AgentDefinition.capabilities 中各绑定的 visible_name 是最终模型可见名称；编译器生成节点绑定专属副本，不回写共享描述。kind 的映射为 builtin_tool→builtin、tool→hosted／script、mcp→mcp；skill 走 SkillRegistration。binding.config 只能满足注册的 config_schema，冻结后通过 ToolInvocationContext.binding_config 传入；没有配置项的适配器使用只允许空对象的 Schema。它不属于模型 arguments，不能包含新的凭据、路径授权或替代连接。
+
+Registry 的 `for_role / for_node_binding` 面向**已绑定视图**：Agent 构造时把每份定义的能力选择解析好；组装根执行程序时关联 program_key。role_key 只定位 react／planner／某个 Executor key 对应的节点绑定，不表示另一个配置实体。注册表本体不因开始某个 ExecutionRecord 而原地修改。查询返回只读 ResolvedCatalog，不产生 I/O。
 
 ## 5. HookSet 与 HookBinding
 
@@ -246,7 +267,7 @@ read_payload 读取固定 HookInput 的有效 payload；read_context 只接受 i
 
 读取过程复查授权及来源可用性，不能切到最新上下文或读取其他 Executor。返回值不可原地修改；变更只能通过 HookDecision 提案提交。端口随本次 Hook 结束而失效，不保存到检查点。脚本 Hook 通过受限适配器获得同样的输入和读取视图，不获得宿主 ContentStore 连接。
 
-`capability_binding_keys` 仅适用于 capability.invoke；role_keys 仅适用于具有角色的程序。不适用字段、未知事件／阶段或未注册挂点在构造时明确报错。某次调用没有 matcher 所要求的元数据则不匹配，不以空值通配。
+`capability_binding_keys` 适用于 capability.invoke、skill.read、skill.resource.read，使用 SDK 根据当前授权目录解析并冻结的资源绑定；不适用于一次列出多个入口的 skill.list。role_keys 匹配 react／planner／Executor key 这些固定装配位置，值来自 NodeBinding，不从 AgentDefinition.name 推导。没有 Agent 的纯能力节点不适用此字段。不适用字段、未知事件／阶段或未注册挂点在构造时明确报错。某次调用没有 matcher 所要求的元数据则不匹配，不以空值通配。
 
 FunctionHookHandler 实现可信异步函数，ScriptHookHandler 经受限 HookAdapter 执行；HookAdapter 是执行机制，不是第二套用户挂点。timeout、失败放行、合法 deny、补丁校验、持久游标全部复用[Hook 调用规则](event-bus.md#23-业务阶段事件与-hook-输入)。HookSet 不提供 fail_closed 开关，不允许修改停止／额度／必要清理控制。
 
@@ -254,7 +275,7 @@ FunctionHookHandler 实现可信异步函数，ScriptHookHandler 经受限 HookA
 
 执行装配时，SDK 将 HookSet 的绑定及末端处理器注册到 HookHandler 的本地表，再将同一个 HookHandler 注册到根 EventBusImpl 的 model.generate.before／after、capability.invoke.before／after 等业务阶段键。HandlerRegistry 是两者共同实现的注册接口，EventBus 是发送接口，HookHandler 额外实现 EventHandler；末端处理器只需实现 EventHandler。根表和子表分别保存绑定，并在开始执行前一并校验、冻结。普通 SDK 调用者仍只提供 HookSet，无需手工创建嵌套总线。阶段由 Loop／调用节点发出，总线不自动包一层 Hook；原 HookBinding.event_type 和 stage 继续按业务请求及阶段配置，由 HookHandler 映射。
 
-组合处理器的 handle 委托自己的 request，不能重新向根发送当前 CallStageEvent。每个子 Hook 的决定、修改和游标由 HookHandler 通过同一 CommitCoordinator 保存；只恢复原链，不生成额外根执行或业务调用。完整接口与类型映射见[三个接口与组合关系](event-bus.md#10-三个接口与组合关系)。
+组合处理器的 handle 委托自己的 request，不能重新向根发送当前 CallStageEvent。每个子 Hook 的决定、修改和游标由 HookHandler 通过同一 CommitCoordinator 保存；只恢复原链，不生成额外根执行或业务调用。根总线与子注册表放在同一张[处理器注册图](object-collaboration.md#42-根处理器与-hook-子处理器的注册关系)中；完整接口与类型映射见[三个接口与组合关系](event-bus.md#10-三个接口与组合关系)。
 
 ## 6. program_key 从哪里来
 
@@ -318,7 +339,7 @@ sequenceDiagram
     R-->>C: RunHandle：稳定ID和公共查询入口
     alt 需要本机执行或接管
         R->>S: claim并验证恢复屏障，随后activate租约
-        R->>X: 按run_id组装本次总线、Manager和引擎
+        R->>X: 按run_id组装本次总线、Handler和引擎
         X->>S: 从原现场推进，一致提交结果
     else 原owner有效或已经终态
         R->>R: 附着观察，不创建第二个执行者

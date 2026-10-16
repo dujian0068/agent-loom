@@ -1,6 +1,6 @@
 # Agent 设计约定
 
-更新：2026-10-16。已确认需求按 SDK 和 Platform 分开维护；本页负责导航和跨层约束，不再重复多份相互漂移的字段定义。当前为目标设计，新实现尚未完成。
+更新：2026-10-17。已确认需求按 SDK 和 Platform 分开维护；本页负责导航和跨层约束，不再重复多份相互漂移的字段定义。当前为目标设计，新实现尚未完成。
 
 ## 一、产品目标与基本概念
 
@@ -12,7 +12,9 @@ AgentLoom 交付高代码 SDK 与低代码 Platform。
 - Workflow 允许编排多个完整 Agent、Tool／MCP 和业务逻辑，支持映射、条件、循环、并行、汇合与状态更新。
 - 内层 AgentGraphEngine 负责有限角色调度；外层 WorkflowEngine 迁入并适配 LangGraph 的设计与源码；两者都属于 SDK，共用执行基础设施。
 
-Agent 应用、可执行 Agent 对象、角色定义、NodeTask 和 GraphExecution 不是同一对象。具体见 [SDK 定义](sdk/definitions.md)及[平台领域模型](platform/domain-model.md)。
+Agent 应用、AgentDefinition、可执行 Agent 对象、NodeTask 和 GraphExecution 不是同一对象。具体见 [SDK 定义](sdk/definitions.md)及[平台领域模型](platform/domain-model.md)。
+
+行为配置统一为 AgentDefinition：直接 ReAct、Planner 和 Executor 都用同一结构描述 Prompt、变量、输入输出和能力选择。Planner／Executor 是节点职责，由图位置与绑定确定。PlanAgent 接收 Planner 的 definition 和 Executor 定义表，按任务创建独立 ReactAgent；定义中不再嵌套角色配置。模型、执行与上下文策略由完整 Agent 构造时传入，内部 Executor 沿用；同类型委派复用定义，活动实例和上下文分别创建，整次执行额度仍共享。
 
 接口层区分两类职责：Agent 面向调用者，统一使用完整智能体；Node 面向图引擎，约定节点的激活和结果。具体 Agent 类负责构造，Agent 接口不负责创建其他 Agent。2026-10-16 确认 AgentNode 同时实现 Agent 和 Node，内部持有 `agent: Agent`：公共 Agent 方法代理内部程序，图内激活接续已有任务，不另起根执行。Loop 由内部 ReactAgent 实现；Planner／Executor 均复用它，若设专用节点子类则继承 AgentNode，只表达角色绑定与接入约束。
 
@@ -24,7 +26,11 @@ RuntimeEngine 组织共享基础设施、托管执行、装配本次现场并协
 
 事件协作采用三个接口：HandlerRegistry 负责注册／查询／冻结，EventBus 负责发送，EventHandler 负责处理。EventBusImpl 实现前两个；组合式 HookHandler 同时实现三个接口，能够注册 RecordHookHandler 等末端处理器。子处理器实现 EventHandler，按本地固定顺序处理；注册关系不自动向父级回退。
 
-模型／工具调用的前后阶段由 ReactAgent Loop 经 NodeDriver 发出业务事件，告知“准备调用什么／调用已结束”；发送方不调用 Hook 专用方法，也不判断是否配置 Hook。EventBus 只按注册表路由，ModelManager／ToolManager 只处理实际业务调用，不代发外围 before／after。需要修改或拒绝的阶段必须等待 StageResult，再继续执行或交付；普通观察订阅不改变执行。原始结果先保存，再由 Loop 发 after，且模型完整流式响应只发一次，不逐 token 发送。调用设施保留 Attempt 超时和配置允许的重试，阶段恢复由原 Loop／节点驱动器负责，不另设 InvocationPipeline。HookHandler 沿用原 Operation 保存决定、有效修改及游标，修改进入授权范围的有效上下文；不生成另一套执行、额度或检查点设施。接口关系与类型合同见[对象 UML](sdk/object-collaboration.md#4-eventbushandlerregistry-与-eventhandler)和[调用设计](sdk/event-bus.md#10-三个接口与组合关系)。
+Skill 的运行时入口按同一事件模型设计：SkillHandler 处理目录、入口与附属文件读取；ToolHandler 处理脚本、普通文件工具、MCP 和函数工具。SkillPackage 是只读资源，SkillLoader 是 SkillHandler 使用的读取接口，均不承担 Agent Loop 或上下文写入。能力由各自 AgentDefinition 选择；读取结果经后置阶段后才由原 Loop 接入其私有上下文，脚本使用获准的共享工作目录。对象与交互见[Skill 与能力对象](sdk/object-collaboration.md#6-skill-与能力对象)。
+
+2026-10-17 审查修订：Skill首版没有持续使用实例，allowed-tools／disallowed-tools明确拒绝，不能承诺未定义的动态工具限制；原始参数串与参数数组按固定规则区分。graph调用在前置允许后纯准备计划，目标、父关联和许可同事务提交；CallBatch仅来自模型决策。终态清理由独立CleanupLease推进，不重启Agent。完整修订及适用范围见[审查修订记录](reorganization-review.md#11-sdk-独立审查修订2026-10-17)。
+
+模型／工具调用的前后阶段由 ReactAgent Loop 经 NodeDriver 发出业务事件，告知“准备调用什么／调用已结束”；发送方不调用 Hook 专用方法，也不判断是否配置 Hook。EventBus 只按注册表路由，ModelHandler／ToolHandler 只处理实际业务调用，不代发外围 before／after。需要修改或拒绝的阶段必须等待 StageResult，再继续执行或交付；普通观察订阅不改变执行。原始结果先保存，再由 Loop 发 after，且模型完整流式响应只发一次，不逐 token 发送。调用设施保留 Attempt 超时和配置允许的重试，阶段恢复由原 Loop／节点驱动器负责，不另设 InvocationPipeline。HookHandler 沿用原 Operation 保存决定、有效修改及游标，修改进入授权范围的有效上下文；不生成另一套执行、额度或检查点设施。接口关系与类型合同见[对象 UML](sdk/object-collaboration.md#4-eventbushandlerregistry-与-eventhandler)和[调用设计](sdk/event-bus.md#10-三个接口与组合关系)。
 
 ## 二、已确认行为的权威位置
 

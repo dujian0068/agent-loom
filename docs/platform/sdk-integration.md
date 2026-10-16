@@ -10,7 +10,7 @@
 
 | 平台配置 | 传入 SDK |
 | --- | --- |
-| 应用模式、主角色和 Executor 配置 | AgentDefinition、已解析 Prompt／角色能力 |
+| 应用模式、入口和 Executor 配置 | 按模式选择构造函数；传入入口 AgentDefinition，Plan 另传 Executor key → AgentDefinition 映射 |
 | 模型连接与凭据引用 | ModelAdapter／CredentialResolver、模型参数 |
 | 工具／MCP／Skill 资源版本 | 已解析 Registry、MCP 连接配置、只读 Skill 目录／Loader |
 | Hook 配置 | HookSet：有序 HookBinding 和已解析受限处理器 |
@@ -21,7 +21,7 @@
 
 装配所有 Workflow Agent 依赖时固定所引用配置并保存依赖清单。SDK 运行中不调用平台发布查询接口，AgentNode 通过已装配程序注册表启动内层执行。
 
-SDK 构造字段和所有权遵循[装配合同](../sdk/assembly.md)。同一 Workflow 的 Agent 使用同一个 RuntimeEngine，平台注册本地 agent_key，SDK 派生 program_key；平台发布号不进入该地址。公开 Agent 格式取主角色 Schema，不维护另一份顶层格式。
+SDK 构造字段和所有权遵循[装配合同](../sdk/assembly.md)。同一 Workflow 的 Agent 使用同一个 RuntimeEngine，平台注册本地 agent_key，SDK 派生 program_key；平台发布号不进入该地址。公开 Agent 格式取 definition 的 Schema；Plan 的 Planner 使用同一份定义，Executor 使用各自定义的格式。草稿的 execution、context 分别转换为 execution_policy、context_policy，模型参数转换为 model_options；这些都是完整 Agent 的构造参数，不嵌入每份 Executor 定义。
 
 AssemblyService 根据固定 mode 选择 ReactAgent 或 PlanAgent 构造函数；两者返回值都可按 SDK 的 Agent 接口使用。Workflow 则通过 StateGraph.compile 构造。平台的 Agent 应用实体与 SDK 的 Agent 接口属于不同模块；不要让 SDK 接口兼任平台应用工厂或资源查询服务。
 

@@ -23,18 +23,26 @@ HTTP 使用 snake_case；结构拒绝未知字段，明确声明的任意业务 
 ```text
 AgentDraft
   model: ModelBindingDraft | null
-  roles: RoleDraft[]
+  definition: AgentDefinitionDraft
+  executors: Mapping[string, AgentDefinitionDraft]  # ReAct 必须为空
   execution: ExecutionPolicy
   context: ContextPolicy
   environment: EnvironmentBindingDraft
   hooks: HookBindingDraft[]
+
+AgentDefinitionDraft
+  name, description, prompt, variables
+  input_schema?, output_schema?
+  capabilities: CapabilityBindingDraft[]
 ```
 
 创建事务分配 application_id、稳定 file_root_id 及 revision=1 草稿。文件目录延迟准备；不因一次文件系统失败留下半个管理实体。name 去首尾空白后 1..100，description 0..2000；名称不作身份。mode 和 file_root_id 不出现在可编辑草稿体中。
 
-PUT draft 整体替换可编辑字段，If-Match 指定旧 revision。草稿允许尚未完整，但类型、范围及内部角色引用必须合法；缺模型等必需项在 validate 阶段报告。
+PUT draft 整体替换可编辑字段，If-Match 指定旧 revision。草稿允许尚未完整，但类型、范围及 Executor key 引用必须合法；缺模型等必需项在 validate 阶段报告。
 
-RoleDraft 包含 role_key、kind、name、description、prompt、variables、input_schema?、output_schema?、capabilities。ReAct 一主角色，无 Executor；Plan 一 Planner，可有多个专业 Executor。Executor 的职责说明供模型选择，Prompt 独立，不开放模型选择。
+AgentDefinitionDraft 是表单数据，解析 Prompt 和资源版本后得到 SDK 的 AgentDefinition；它没有独立应用或发布生命周期。ReAct 使用 definition，executors 为空；Plan 的 definition 供 Planner 使用，executors 按 key 保存专业 Executor 的定义。Executor 的职责说明供模型选择，Prompt 独立，不开放模型选择或独立执行策略。节点职责由固定应用模式和装配位置确定，不再在每份定义内保存 kind／role_key。
+
+Executor key 的格式与保留值遵循[SDK 最小配置](../sdk/definitions.md#2-最小配置结构)；定义的显示名不作 key。已有 Hook matcher 等引用必须随草稿一起通过校验，不能改名后留下悬空绑定。原始请求中的重复映射键必须拒绝，不能由 JSON 解析器静默保留最后一项。
 
 Prompt 支持 inline 或已固定资源版本；变量声明 name/type/required/default/source，支持 input 或 fixed。仅进行纯文本占位替换，不执行 Jinja/Python，不递归展开变量值。JSON Schema 采用自包含定义，禁止远程引用。
 
@@ -44,7 +52,7 @@ Prompt 支持 inline 或已固定资源版本；变量声明 name/type/required/
 
 ### 2.1 Workflow 草稿与节点绑定
 
-Workflow 使用独立草稿，不复用 AgentDraft.roles 或把 Workflow 放进 Agent 的 mode。下面是逻辑配置结构；机器可验证的完整 Schema 仍需补齐。
+Workflow 使用独立草稿，不复用 AgentDraft 的定义表或把 Workflow 放进 Agent 的 mode。下面是逻辑配置结构；机器可验证的完整 Schema 仍需补齐。
 
 ```text
 WorkflowDraft
@@ -89,7 +97,7 @@ CapabilityBindingDraft
 
 上传文件夹或 Git 导入先产生 ImportJob，实际获取和校验完成后才提交 ResourceVersion。Git 固定 commit SHA，不用运行中的分支名指代资源；失败暂存包不进入可选目录。
 
-- Skill：查找 SKILL.md，校验元数据及目录清单，拒绝越界软链接、设备文件、绝对路径；保存 scripts/references/assets，不在导入时运行脚本。SDK 再验证其支持的 profile。
+- Skill：查找 SKILL.md，校验元数据及目录清单，拒绝越界软链接、设备文件、绝对路径；保存 scripts/references/assets，不在导入时运行脚本。SDK 再验证其支持的 profile；首版 allowed-tools／disallowed-tools 没有使用范围协议，必须报告 SKILL_PROFILE_UNSUPPORTED，不能在导入时删字段后发布为“已兼容”。
 - Tool：保存输入输出 Schema 和受信执行配置；不允许 HTTP 用户随意指定服务器 Python import。平台托管函数和外部标准接口最终都装配为 CapabilityAdapter。
 - MCP：连接、认证、transport、发现的工具 Schema 独立保存；discovery 是管理操作，普通 ExecutionRecord 不自动查询最新工具再改变已发布目录。
 - Hook：保存时机、matcher、顺序、配置及处理器定位；可信函数／隔离脚本绑定到 SDK HookAdapter，不获得管理数据库写入权。
@@ -114,6 +122,6 @@ WorkflowRelease 固定节点绑定及被调用 Agent 的 Release。被调用 Age
 
 ## 5. 配置如何进入 SDK
 
-管理配置可以包含用户、空间、发布和资源版本；AssemblyService 必须先解析它们。转换结果是 AgentDefinition／GraphDefinition、角色绑定、model client、CapabilityRegistry、HookBinding、WorkspaceBinding 与 EnvironmentProvider、存储适配器和 RuntimeEngine。
+管理配置可以包含用户、空间、发布和资源版本；AssemblyService 必须先解析它们。转换结果是入口 AgentDefinition、Plan 的 Executor 定义表或 Workflow GraphDefinition，以及 model client、模型／执行／上下文策略、CapabilityRegistry、HookBinding、WorkspaceBinding 与 EnvironmentProvider、存储适配器和 RuntimeEngine。SDK 根据具体构造类型生成内层图和节点绑定。
 
 SDK 不接收一个 application_id 后自行查数据库，也不导入平台 ORM。具体映射、跨存储接入及故障恢复见[SDK 装配](sdk-integration.md)。

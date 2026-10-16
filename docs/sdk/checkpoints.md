@@ -25,6 +25,8 @@ persistence/
 class CommitCoordinator(Protocol):
     async def commit(self, command: RuntimeCommit,
                      lease: ExecutionLease) -> CommitReceipt: ...
+    async def commit_cleanup(self, command: CleanupCommit,
+                             lease: CleanupLease) -> CommitReceipt: ...
 
 class CheckpointStore(Protocol):
     async def load_recovery_bundle(self, run_id: UUID,
@@ -45,6 +47,11 @@ class LeaseService(Protocol):
     async def activate(self, claim: LeaseClaim,
                        revocation: RevocationReceipt) -> ExecutionLease: ...
     async def renew(self, lease: ExecutionLease) -> ExecutionLease: ...
+
+class CleanupService(Protocol):
+    async def claim(self, run_ref: RunRef, worker_id: str) -> CleanupLease | None: ...
+    async def renew(self, lease: CleanupLease) -> CleanupLease: ...
+    async def execute(self, lease: CleanupLease) -> CleanupReceipt: ...
 ```
 
 业务端不能拿 repository connection，不能分别调用 save_context/save_operation/save_node 组成“尽量一致”。它提交一种有名字的命令，协调器在同一事务更新关联记录。纯读查询可独立；原始大内容先落 blob，再以引用参加事务。
@@ -77,6 +84,8 @@ class LeaseService(Protocol):
 ```
 
 只有初始化／停止入口取得 admission 行锁；普通推进不需要该锁，也不得逆序追加。普通 RuntimeCommit 从 ExecutionRecord 开始，不再回头拿 Session；终态和补充转交命令先取 Session，再 ExecutionRecord。跨图提交先收集完整锁集合排序；若计算期间发现还需要更早的锁，回滚重新读取，禁止途中逆序补锁。平台发布与删除 gate 不在此锁序内。
+
+终态清理使用独立锁路径 `ExecutionRecord → CleanupJob → CleanupLease → WorkspaceScope（UUID排序）`，不获取图／任务／Operation 锁，也不回头获取 Session。它使用第 8.1 节的清理权限，不能拿清理租约进入普通 RuntimeCommit。
 
 数据库事务内不调用模型、MCP、Hook、脚本、共享盘写入、DNS 或沙箱停止。commit 超时不意味着外部能力失败；先按 command_id 查询回执，不直接重复业务调用。
 
@@ -120,7 +129,7 @@ Root ExecutionRecord 和 Invocation 计数是 loop_tickets 的受事务维护投
 
 | 表 | 必须保存的列 | 约束 |
 | --- | --- | --- |
-| call_batches | batch_id,owner_task_id,model_operation_id,ticket_id,parallel_enabled,executor_max_parallel,delivery_state,member_count | UNIQUE(model_operation_id)；成员集创建后不可增加 |
+| call_batches | batch_id,owner_task_id,model_operation_id,ticket_id,parallel_enabled,executor_max_parallel,delivery_state,member_count | UNIQUE(model_operation_id)；member_count>0；model_operation_id/ticket_id非空且属于owner；与接受决策/consume同事务创建，成员集不可增加 |
 | batch_members | batch_id,member_id,call_id,ordinal,action_kind,target_key,input_ref,operation_id?,child_task_id?,status,result_ref? | PK(batch_id,member_id); UNIQUE(batch_id,ordinal); UNIQUE(batch_id,call_id) |
 | wait_groups | wait_id,run_id,graph_id,owner_task_id,batch_id,generation,delivery_state,settled_count | UNIQUE(batch_id)；仅内层 dispatch_batch 汇合 |
 | wait_members | wait_id,member_id,ordinal,state,target_ref?,result_operation_id?,local_outcome? | PK(wait_id,member_id); UNIQUE(wait_id,ordinal) |
@@ -131,6 +140,8 @@ Root ExecutionRecord 和 Invocation 计数是 loop_tickets 的受事务维护投
 admission 是准备Hook期间防并发越界的短暂占位，不是活跃Executor计数：`活跃任务数 + reserved admission数 <= executor_max_parallel`。准入到child Task时原子转移；deny/停止释放。队列里尚未获准的成员没有admission。需要恢复旧admission时先按Operation阶段查询，不能释放后又重复创建child。
 
 `local_outcome` 只允许调用begin以前的校验拒绝/取消；已经有Operation必须通过它完成。外层分支等待由 Workflow 原生状态保存，不写入内层 WaitGroup。
+
+CallBatch 的来源限定为完整模型决策；ticket 必须已消费为 decision。request_many 只读取已有 batch，不另建显式事件批次。无模型来源的 Workflow／函数节点不使用该表，空模型动作直接验证最终输出。
 
 ### 3.4 Operation 与 Hook
 
@@ -165,6 +176,9 @@ Operation.status固定为pending/succeeded/failed/blocked，处理阶段另存pr
 | workspace_scopes | scope_id,content_scope_ref,root_handle,partition_kind,partition_key,run_id,invocation_id?,persistent,view_ref,status | UNIQUE(content_scope_ref,partition_kind,partition_key,run_id)；scope不保存可恢复权限 |
 | execution_domains | domain_id,run_id,scope_id,execution_view_key,role_binding_ref?,resource_mount_digest,lease_epoch,driver_handle_ref,status,revocation_ref? | UNIQUE(scope_id,execution_view_key,lease_epoch); index(run_id,lease_epoch,status)；仅运行设施可读handle |
 | file_operations | operation_id,scope_id,path_key,expected_version?,result_version?,phase,result_ref? | Operation.id为PK；用于文件实际动作结果查询 |
+| cleanup_jobs | job_id,run_id,scope_manifest_ref,barrier_receipt_refs[],state,attempt_count,next_retry_at?,last_error_ref?,receipt_ref? | UNIQUE(run_id)；state=pending/running/succeeded/failed；finalize_run同事务登记，manifest固定，不自动过期 |
+| cleanup_leases | job_id,worker_id,epoch,expires_at,state | PK(job_id)；state=active/released；独立清理epoch只递增，不替代execution_leases |
+| cleanup_scope_results | job_id,scope_id,state,receipt_ref?,error_ref? | PK(job_id,scope_id)；state=pending/retained/removed/retry_pending；只有固定manifest中的scope可更新 |
 
 SQL 列展开 namespace 和 scope_key；DTO 仅表达逻辑引用。影响唯一性／索引的投影列必须与 JSON 一致。没有 SDK → 平台用户、应用、发布表的外键。
 
@@ -172,7 +186,7 @@ SQL 列展开 namespace 和 scope_key；DTO 仅表达逻辑引用。影响唯一
 
 | 表 | 列 | 约束 |
 | --- | --- | --- |
-| runtime_commits | command_id,run_id,command_kind,fingerprint,lease_epoch,result_ref,committed_at | UNIQUE(run_id,command_id)；不可变 |
+| runtime_commits | command_id,run_id,command_kind,fingerprint,authority_kind,lease_epoch?,result_ref,committed_at | UNIQUE(run_id,command_id)；不可变；authority_kind=execution/control/cleanup，epoch按对应权限域解释，控制入口可为null |
 | scope_commits | graph_id,scope_seq,command_id,changes_ref | PK(graph_id,scope_seq)；同command跨图各记一条 |
 | node_checkpoints | node_checkpoint_id,task_id,node_revision,scope_seq,continuation_ref,status,result_ref? | UNIQUE(task_id,node_revision)；不可变 |
 | graph_checkpoints | checkpoint_id,graph_id,engine_kind,engine_protocol_version,checkpoint_seq,covered_scope_seq,previous_id?,payload_ref,content_hash,format_version | UNIQUE(graph_id,checkpoint_seq); UNIQUE(graph_id,covered_scope_seq)；payload保存公共信封及专属engine_state_ref |
@@ -205,7 +219,7 @@ CommitReceipt
   public_event_seqs: int[]
 ```
 
-Node/Manager不得传任意 `sql/update/delete` 指令。命令handler定义合法旧状态、新状态、锁集合和受影响记录；expected缺一项而handler需修改它时拒绝，不擅自读最新继续。指纹含命令语义body/subject/expected，不含本次传输时间、trace或lease epoch；同一命令接管后仍可查询已提交回执。
+Node/Handler不得传任意 `sql/update/delete` 指令。命令handler定义合法旧状态、新状态、锁集合和受影响记录；expected缺一项而handler需修改它时拒绝，不擅自读最新继续。指纹含命令语义body/subject/expected，不含本次传输时间、trace或lease epoch；同一命令接管后仍可查询已提交回执。
 
 ```text
 commit(command, lease):
@@ -234,6 +248,8 @@ commit(command, lease):
 
 同命令在旧lease下即使已提交也不允许继续执行业务；读回执可走只读查询，新lease验证后重投返回旧结果。CAS冲突属于内部竞争：重新装载并判断命令是否已成立；不能无脑用最新revision重复执行能力。需要重算且锁内已证明旧command未提交时，创建新的command_id承载新expected/写集，保留原领域幂等键（operation/member/task/feedback identity）；不能复用同command_id悄悄改fingerprint。回执不确定时先查旧命令，不能立刻换ID外发。不可恢复冲突抛内部一致性错误，既不伪装工具错误也不进入LLM重试。
 
+上面的 commit 算法仅接受业务 ExecutionLease。终态清理走独立 commit_cleanup，以 CleanupLease 校验和清理白名单代替业务租约校验；不是跳过授权。其允许写集和身份见第 8.1 节，不能把一个 RuntimeCommit 标成 cleanup 后执行任意命令。
+
 ## 5. 事务命令目录
 
 | 命令 | 原子写集合 | 幂等／关键前置 |
@@ -256,14 +272,16 @@ commit(command, lease):
 | accept_model_decision | 有效assistant记录、Ticket consumed、root/local计数、Continuation、CallBatch/WaitGroup成员 | 模型回应尚未消费；同message不得被EventBusImpl重复append |
 | settle_model_failure | 有效反馈槽/错误、ticket consumed或released、Continuation/Task状态 | 是否进入下一模型上下文决定扣额；和反馈事实同事务 |
 | reserve_executor | admission reserved、批次成员准入状态 | 活跃+reserved低于上限；串行member顺序检查 |
-| spawn_executor | admission converted、子Task/Context/ready intent、父Operation pending引用 | 固定dispatch/member身份，parent仍允许新工作 |
+| StartExecutor | 最终请求/hash、permit/executing、admission converted、唯一子Task/Context/ready intent、父Operation及Wait引用 | 允许的StageResult和纯PreparedDelegate、版本/授权/控制重验；固定dispatch/member身份；禁止先独立发permit |
+| StartChild | 最终请求/hash、permit/executing、父wait、唯一子Invocation/Graph/root Task及ready intent | 固定父task/logical_call_key；复用原Operation；提交后才能激活子图 |
 | complete_task | Task终态、TaskResult、后继intent或父raw结果槽 | TaskResult唯一；活跃Executor名额同时释放 |
 | CommitWorkflowTaskWrites | 原生任务有序writes、适用的父Operation消费、外层NodeTask终态投影 | task_result才消费effective结果；ERROR／INTERRUPT不消费；重复包取原回执，迟到错误不得覆盖已完成交付 |
 | CommitWorkflowCheckpoint | 原生快照、原生ID映射、parent chain、已确认writes水位、公共检查点信封 | 所属step写入已确认；验证原生版本／执行权；不得先开始下一step再等待回执 |
 | settle_member | BatchMember结果、WaitMember settled、settled_count | 已有Operation须最终EventResponse；local_outcome仅未begin |
 | consume_batch | 按ordinal追加tool结果、补齐反馈槽、WaitGroup consumed、Continuation.prepare_context | settled_count=member_count，消费标记CAS |
 | stop_run（T_STOP／ControlCommand） | admission closed、StopReceipt；ExecutionRecord已存在时另写stopping/control_reason、取消未准入意图、stop intent、outbox | 独立控制身份，无需Worker活跃lease；ExecutionRecord不存在也阻止迟到初始化；不伪造活跃工具终态 |
-| finalize_run | ExecutionRecord终态、根输出、Session输入转交、Session.active清空、cleanup意图、公开终态事件及terminal_seq | Session先锁，全部写任务已收束；终态不可复活；terminal_seq是该公开事件序号，恢复不能分配第二个结束事件 |
+| finalize_run | ExecutionRecord终态、根输出、Session输入转交、Session.active清空、唯一CleanupJob及scope清单/撤权证据、各scope初始清理记录、公开终态事件及terminal_seq | Session先锁，全部写任务已收束；终态不可复活；terminal_seq是该公开事件序号，恢复不能分配第二个结束事件 |
+| record_scope_cleanup／finish_cleanup／retry_cleanup | scope删除回执、CleanupJob进度/重试时间、runs.cleanup_state | 仅commit_cleanup入口；有效清理租约、终态和固定manifest；不修改业务结果或图状态 |
 
 表中命令是允许的语义提交，不要求每个命令独立公开HTTP。Driver可以一次Progress调用其中一个typed命令；命令可以拥有多个内部handler，但最终只能提交一个事务。
 
@@ -314,7 +332,7 @@ Worker每次准入读取当前控制，不靠旧快照授权。接管中的Worke
 
 以下异步汇总只适用于 **AgentGraphEngine**：每张内层图累计16个ScopeCommit、进入稳定等待、图结束时请求快照；并发请求合并到最新水位。关键正确性来自已提交增量，内层汇总快照失败不倒退运行也不重新执行已成功任务。WorkflowEngine 的原生保存点由其内核确定，任务writes与下一快照均须等待持久回执，不能套用16次聚合或“快照失败仍推进”的优化；完整顺序见[外层提交屏障](workflow.md)。
 
-- 在短REPEATABLE READ读事务里读取graph水位S及相应不可变版本引用、task/checkpoint、wait、fork generation、父子引用；只构建引用清单，提交读事务。
+- 在短REPEATABLE READ读事务里读取graph水位S及相应不可变版本引用、task/checkpoint、CallBatch／WaitGroup及其generation、父子引用；只构建内层任务与调用引用清单，提交读事务。这里不读取外层分支游标或channels。
 - 在事务外序列化并写不可变blob；内容不得包含协程、Future、连接或可继续使用的旧lease。
 - 短挂接事务验证当前lease，插入 `(graph,S)` 唯一快照；只在head覆盖水位更旧时推进head。过时的构建结果可保存历史，但不得覆盖较新head。
 - ScopeCommit和所引用不可变版本在Owner删除前保留；不以快照建立成功为由立即删除恢复需要的中间原始记录。
@@ -340,10 +358,10 @@ ExecutionRecord／图身份、定义／编译版本和覆盖水位保存在公�
 
 基础设施默认lease TTL=30s，每10s续期；这是Worker参数，不是Agent业务超时。工作节点不能因本机墙钟不同判断别人lease过期。claim/renew在DB端判断。
 
-1. 锁ExecutionRecord和execution_leases，ExecutionRecord非终态且现lease过期/明确释放才可claim。epoch加1，phase=recovering，记录新worker；原worker从此提交必然被fence拒绝。
+1. 锁ExecutionRecord和execution_leases，ExecutionRecord非终态且现lease过期/明确释放才可claim。epoch加1，phase=recovering，记录新worker；原worker从此提交必然被fence拒绝。已终态仍拒绝业务claim；若清理未完成，由第8.1节CleanupService领取独立清理租约，不创建ExecutionRunner。
 2. 新Worker取得原execution_domains清单，请SandboxGateway撤销旧进程/挂载写权限，等待RevocationReceipt。**DB epoch不能阻止旧进程继续写NFS文件。**
 3. 无法证明旧writer已停止时保持recovering并告警，不启动新的写任务。ExecutionRecord总deadline仍继续流逝。
-4. 已撤权后验证快照与增量、定义/ABI/blob完整性；绑定新scope handle，activate lease为active；重建bus/Manager/Driver。
+4. 已撤权后验证快照与增量、定义/ABI/blob完整性；绑定新scope handle，activate lease为active；重建bus/Handler/Driver。
 5. 扫描原图/task/op IDs继续，不重新创建ExecutionRecord或替换业务配置。续租失败立即关闭新工作，撤销本地能力句柄，不提交伪造完成。
 
 启动queued ExecutionRecord没有旧writer时，revocation receipt明确为empty-domain-set。正常停止/终态释放lease前也要完成或撤销旧writer；不能把“本地Future取消了”当远端脚本已经停下。
@@ -363,17 +381,17 @@ CommitWorkflowTaskWrites 区分 task_result、task_error、task_interruption、s
 | wait_batch | 查WaitGroup/成员最终响应，全部结算才唤醒原Task |
 | model_ready有permit但无Attempt | 控制检查后开始第一个Attempt，票据不重复reserve |
 | Attempt有provider handle且可查询 | 查询原执行，保存结果；不先重试 |
-| Attempt执行结果未知 | Manager先reconcile；无结果按调用策略转unknown/错误，是否自动重试见调用总线设计，不宣称无副作用 |
+| Attempt执行结果未知 | Handler先reconcile；无结果按调用策略转unknown/错误，是否自动重试见调用总线设计，不宣称无副作用 |
 | raw_saved/after_call | 原Loop／节点续发已保存的after事件；复用已提交StageResult，只补最终结算，不重复模型/工具 |
 | completed Operation尚未消费 | 返回原response，节点消费事务幂等 |
 | Hook started但无结果 | 尝试取回；不可取回记indeterminate并fail-open，不盲目重放 |
 | 子Task已终态、父成员未结算 | 用原TaskResult推进父委派Operation后处理，不新建Executor |
-| 分支A1已完、A2 ready | 使用已保存cursor和own writes启动A2，不重跑A1 |
-| Join已消费、后继未激活 | 扫描持久ready intent，不重新合并 |
+| 外层同一步A的writes已保存、B未完成 | WorkflowCheckpointAdapter按原生checkpoint/任务映射/pending writes恢复，复用A并接回B原Operation；不读自研branch cursor |
+| 内层WaitGroup已消费、父任务未激活 | 扫描持久ready intent，不重新消费结果；外层状态合并遵循原生step屏障 |
 | stopping | 只收束/补齐终态，不恢复正常下一Loop |
 | terminal | 只允许cleanup/查询；拒绝启动/late result复活 |
 
-异常分类由能力Manager给出规范错误；恢复层不通过字符串里有没有“timeout”判断幂等或业务失败。所有自动重试仍尊重ExecutionRecord控制和原始max_attempts/next_retry_at。
+异常分类由能力Handler给出规范错误；恢复层不通过字符串里有没有“timeout”判断幂等或业务失败。所有自动重试仍尊重ExecutionRecord控制和原始max_attempts/next_retry_at。
 
 ## 8. Outbox、停止、清理
 
@@ -384,6 +402,27 @@ Outbox与事实同事务写。dispatcher至少一次投递；订阅者以event_i
 用户停止、超时、额度耗尽进入相同ControlCoordinator：先close admission/关闭后续模型与重试，再收束在途任务。ExecutionRecord已经进入stopping后，允许raw/result/Task终态写入，拒绝新的模型permit、子任务和非收束工作。
 
 清理分两个事实：`ExecutionRecord.status`已经终态表示无活跃执行/写句柄；`cleanup_state=pending/running/succeeded/failed`表示临时文件删除进度。已撤权但文件删除失败时可以看到终态和cleanup_failed，不能谎称文件已销毁。新ExecutionRecord使用新临时目录，不复用清理失败目录。持久沙箱不执行普通ExecutionRecord结束删除，只释放本ExecutionRecord句柄。
+
+### 8.1 终态清理执行权与重试
+
+CleanupService 是 RuntimeEngine 托管的后台基础服务，绑定调用方注入的存储分区与环境适配器；不需要 AgentDefinition、模型、EventBus 或活动 ExecutionRunner。RuntimeEngine 打开后扫描本分区到期未完成清理任务；宿主停止只停止本机扫描，不删除任务。下一宿主使用同一存储和环境适配器即可继续；没有宿主运行时任务保持待处理，不声称后台服务会自行存在。
+
+| 类型 | 精确字段／允许用途 |
+| --- | --- |
+| CleanupJob | job_id、run_ref、scope_manifest_ref、barrier_receipt_refs、state、revision、attempt_count、next_retry_at?、last_error_ref?、receipt_ref?；每个终态Run一项 |
+| SystemCleanupScope | job_id、run_ref、workspace_scope_ids、scope_manifest_ref、barrier_receipt_refs；由服务从已提交Job生成，只准处理固定目录，不由LLM／Hook构造 |
+| CleanupLease | job_id、run_ref、worker_id、epoch、expires_at；只授权清理，不是ExecutionLease或业务permit |
+| CleanupCommit | command_id、job_id、run_ref、kind:record_scope_cleanup\|finish_cleanup\|retry_cleanup、expected_job_revision、expected_scope_revisions、body；body只含本Job的scope回执／错误引用及重试事实 |
+
+scope_manifest 在 finalize_run 锁内由已登记 WorkspaceScope 生成，保存 scope ID、不可变的准确目录定位和 persistent 标记；必须附全体旧业务 writer 已收束／撤权的证据。同事务为每个scope创建cleanup_scope_results初始记录：临时目录为pending，持久目录为retained。无任何目录的Run形成成功空清理；不能把应用根、共享资源或ContentStore加入待删集合。业务终态和Job登记不可拆成两笔，否则宕机可能漏清理。
+
+1. **领取。** claim 通过 Coordinator 的受限清理控制入口，在上述清理锁序内验证调用方存储分区、Run已终态、Job非成功且重试到期、旧CleanupLease已过期／释放；递增清理epoch和Job.attempt_count，保存active租约、Job/runs.cleanup_state=running及领取回执。无需业务lease。已有有效清理owner时返回None；旧业务lease仍存在不授权它执行清理。claim／renew是固定的清理控制命令，不接受任意RuntimeCommit。
+2. **续期与权限。** 清理lease默认TTL 30秒、每10秒续期，使用DB时间；每个文件动作和结果提交重新验证job/epoch/有效期。expire或释放后，新worker领取更大epoch。EnvironmentProvider的清理端口只接受这个scope和CleanupLease，不提供exec／写文件／准备新沙箱权限。
+3. **删除。** 仅对manifest内的非持久Run目录调用清理适配器，物理幂等键为`cleanup:<job_id>:<workspace_scope_id>`；事务外执行。原目录永不分配给新Run，不跟随越界软链接，不扩大为父目录删除。旧清理动作即使延迟完成也只能删除同一已封闭目录；旧epoch结果不可提交。若驱动不能保证上述固定目标及权限校验，拒绝接入为可恢复清理适配器。
+4. **提交。** commit_cleanup 按清理锁序验证active CleanupLease、终态、manifest、expected revisions及命令回执，只写 cleanup_scope_results、CleanupJob、runs.cleanup_state 和对应不可变清理回执。可变清理字段须增加其revision，但不改变业务status、output、usage、terminal_seq、Session、图、Task、Operation或执行准入；不生成第二个公开终态事件。无scope_commit或NodeCheckpoint。重复命令按command_id返回原回执。
+5. **失败与接管。** 删除失败保存retry_pending／Job failed及错误，next_retry_at默认DB now+30秒（基础设施参数），释放清理lease；到期或进程宕机lease过期后由扫描器继续同Job。已经removed/retained的scope跳过；文件已删而回执未存时重查同一固定目录，缺失可形成幂等removed回执，不能据此推断普通fs.delete已执行。未知DB回执先查原command_id，不把它当物理删除失败。全部scope removed/retained时finish_cleanup置succeeded并释放lease。
+
+aclose停止新清理领取，收束或放弃本机等待，由租约过期触发后续接管；不把失败改成成功。SDK公开start读取终态仍仅返回只读RunHandle；清理扫描与start无关，不调用模型、Loop、用户Hook。records.delete的记录／内容范围删除使用另外的删除合同，不得复用这份仅删除Run临时目录的权限扩大删除范围。
 
 ## 9. 故障注入矩阵
 
@@ -404,6 +443,9 @@ Outbox与事实同事务写。dispatcher至少一次投递；订阅者以event_i
 | DB-11 | 快照生成期间继续提交10步 | head不倒退，回放到最新scope_seq一致 |
 | DB-12 | root剩1额度、两个Executor抢票 | 一个reserve，另一个等待；不能超额或提前结束获准者 |
 | DB-13 | 删除owner中断 | Job继续原phase，不能先删定位信息造成文件残留 |
+| DB-14 | finalize_run提交后、任何文件删除前kill | 新RuntimeEngine扫描同CleanupJob，领取清理lease；业务claim仍拒绝，无Runner／模型调用，原终态不变 |
+| DB-15 | 目录已删、清理回执未提交时kill | 同job/scope重试确认removed；只清理原临时目录，持久目录和新Run目录不变 |
+| DB-16 | 两个清理Worker争抢，旧epoch迟到写receipt | 至多一个有效CleanupLease；迟到提交拒绝；cleanup_state可前进而terminal_seq/业务结果不变 |
 
 每个故障测试结束断言无重复逻辑Operation、无重复TaskResult、计数等于票据账本、无未归属Blob、无已撤权scope仍能写。外部工具重复副作用需提供方幂等测试单独证明，本表不声称自动保证。
 

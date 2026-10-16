@@ -17,11 +17,11 @@ class ModelGateway:
     async def generate_once(self, request_ref: FrozenModelRequestRef,
                             ctx: ModelAttemptContext) -> ModelAttemptResult: ...
 
-class ModelManager:
+class ModelHandler:
     async def execute_once(self, operation_ref, attempt_ref, execution_permit) -> RawResultRef: ...
 ```
 
-`ModelManager` 在执行前核对 execution_permit 与冻结 request_hash；业务模型没有同事务预占的 LoopTicket 不出网。压缩调用无需业务票据，但仍验证 ExecutionRecord／Invocation 控制、lease、授权和有效截止。Gateway／Adapter 的 `once` 禁用 SDK 内部重试；多次 Attempt 仅由总线的调用执行设施按固定策略驱动。ModelManager 不发外围 model.generate.before／after，不执行 Hook；这些事件由原 Loop 发出。
+`ModelHandler` 在执行前核对 execution_permit 与冻结 request_hash；业务模型没有同事务预占的 LoopTicket 不出网。压缩调用无需业务票据，但仍验证 ExecutionRecord／Invocation 控制、lease、授权和有效截止。Gateway／Adapter 的 `once` 禁用 SDK 内部重试；多次 Attempt 仅由总线的调用执行设施按固定策略驱动。ModelHandler 不发外围 model.generate.before／after，不执行 Hook；这些事件由原 Loop 发出。
 
 | DTO | 字段与约束 |
 | --- | --- |
@@ -71,7 +71,7 @@ class OutputValidation:
 
 `ValidationIssue` 字段为 `json_pointer, keyword, message, expected_ref?`，稳定按 pointer／keyword 排序；错误说明不带 system Prompt、凭据或其他角色上下文。没有标准格式要求时按角色候选规则验证，不额外要求模型发 finish 工具。
 
-`ContextManager.prepare_output_correction(context_ref,model_operation_id,validation_ref,output_schema_ref)` 返回 ContextDelta；只追加带来源的格式反馈与输出要求，不覆盖原候选答案。幂等键 `format:<model_operation_id>:feedback`。
+`ContextHandler.prepare_output_correction(context_ref,model_operation_id,validation_ref,output_schema_ref)` 返回 ContextDelta；只追加带来源的格式反馈与输出要求，不覆盖原候选答案。幂等键 `format:<model_operation_id>:feedback`。
 
 NodeDriver 在同一提交中保存反馈及下一 prepare_context 阶段；该决策的票据已在接受模型响应时 consumed，此处不得再次消费。下一次修正获得新的业务模型 Operation 和 LoopTicket，使用同一根额度／deadline。没有独立修正次数、重试开关或额外额度；已耗尽直接按图运行协议结束。合法完整终帧只是传输完成证据；无动作且正文为空／纯空白，或候选不符合输出 Schema，进入同一输出修正流程，不因此发起连接重试。
 
@@ -82,17 +82,17 @@ NodeDriver 在同一提交中保存反馈及下一 prepare_context 阶段；该�
 | DTO | 完整字段 |
 | --- | --- |
 | `CapabilitySpec` | `resource_key, capability_key, kind:builtin\|hosted\|mcp\|script, model_name, description, input_schema, output_schema?, handler_ref, credential_binding_ref?` |
-| `ResolvedCatalog` | `program_key, binding_key, capabilities[], model_name_to_key, skill_entries[], access_scope, environment_policy`；调用方已解析的不可变目录 |
+| `ResolvedCatalog` | `program_key, binding_key, capabilities[], model_name_to_key, skill_entries[], skill_calls[], access_scope, environment_policy`；调用方已解析的不可变目录 |
 | `CapabilityRequest` | `operation_id, resource_key, capability_key, arguments` |
 | `ToolInvocationContext` | `content_scope_ref, run_id, graph_execution_id, node_task_id?, invocation_id?, session_id?, role_key?, execution_binding_ref, binding_config, workspace_scope_ref?, operation_id, attempt_id, attempt_no, lease_epoch, deadline_at, authorization_ref, cancellation` |
 | `ToolResult` | `status:succeeded\|failed\|unknown, content:ContentBlock[], error?, artifacts:ArtifactRef[], metadata` |
 | `ContentBlock` | `type:text\|json\|artifact_ref`，分别含 `text`、`json_ref`、`artifact_ref`；不能内嵌任意系统路径 |
 
-`CapabilityRegistry.for_role(program_key,role_key)`、`for_node_binding(program_key,binding_key)` 返回已注入目录；`resolve(catalog,model_name)` 只查本目录。构造时拒绝 model_name 冲突，运行时缺名返回 CAPABILITY_NOT_FOUND；不搜索平台目录，也不比较平台发布版本指纹。
+`CapabilityRegistry.for_role(program_key,role_key)`、`for_node_binding(program_key,binding_key)` 返回已注入目录；`resolve(catalog,model_name)` 查本目录的普通工具 CapabilitySpec。skill_calls 是单独的固定入口描述，每项仅含 `model_name,event_type,input_schema`，路由到 SkillHandler，不假冒原始工具适配器。模型调用解析阶段从两类描述生成不可变路由；两类名称合并检查冲突，运行时缺名返回 CAPABILITY_NOT_FOUND，不搜索平台目录，也不比较平台发布版本指纹。
 
-注册描述、角色选择、绑定配置和不可变视图的装配过程见[能力注册](assembly.md#4-能力如何注册和绑定)。binding_config 是通过注册 Schema 校验的固定配置，由可信 ExecutionBindingRef 解析，不从 LLM 参数中接收；同一适配器服务多个角色时不得把它缓存成全局可变状态。
+每份 AgentDefinition 声明自己的能力选择，NodeBinding 将定义装配到 react／planner／Executor key 对应的位置。上述 for_role 的 role_key 仅定位这个绑定位置，不指向独立的角色配置实体。注册描述、绑定配置和不可变视图的装配过程见[能力注册](assembly.md#4-能力如何注册和绑定)。binding_config 是通过注册 Schema 校验的固定配置，由可信 ExecutionBindingRef 解析，不从 LLM 参数中接收；同一适配器服务多个角色时不得把它缓存成全局可变状态。
 
-`CapabilityAdapter.invoke_once(request,context)->ToolResult` 只执行一次；Manager 校验调用可信范围、最终 schema、凭据撤销及执行许可，再调用原 Adapter 并规范化为管道 RawResult。它不同于总线的 EventHandler：后者由 Manager 实现，前者只实现一次具体能力调用。Hook allow 不扩大目录。普通工具不创建新 NodeTask；Planner 委派 action 由图运行负责，不能交给普通 handler_ref。
+`CapabilityAdapter.invoke_once(request,context)->ToolResult` 只执行一次；ToolHandler 校验调用可信范围、最终 schema、凭据撤销及执行许可，再调用原 Adapter 并规范化为 RawResult。ToolHandler 实现总线的 EventHandler，CapabilityAdapter 只负责一次具体能力调用。Skill 的目录和资源读取由 SkillHandler 处理，入口见第 3 节。Hook allow 不扩大目录。普通工具不创建新 NodeTask；Planner 委派 action 由图运行负责，不能交给普通 handler_ref。
 
 SDK 生成的对象 input_schema 默认 additionalProperties=false；MCP schema 保留其声明扩展语义。导入收拢许可本地 `$ref`，拒绝外部网络 `$ref`；运行校验不得顺带出网取 schema。
 
@@ -112,21 +112,57 @@ result.read 根据 content scope、调用 NodeTask／角色或显式结果授权
 
 ### 3.1 接收已准备的资源包
 
-平台负责上传、Git 获取、版本管理与导入校验；高代码用户也可以直接传本地已准备目录。SDK 的 SkillLoader 接收 `SkillPackage{package_key, root_handle, entries, files_manifest}`，不能接到平台 resource_id 后回查应用数据库。
+平台负责上传、Git 获取、版本管理与导入校验；高代码用户也可以直接传本地已准备目录。调用方通过 SkillRegistration 将 `SkillPackage{package_key, root_handle, entries, files_manifest}` 与 SkillLoader 关联并放入 CapabilityRegistry。SkillHandler 是 SDK 的事件入口，按当前绑定选择注册项；SkillLoader 只实现底层读取，不能接到平台 resource_id 后回查应用数据库。
 
 SDK 在使用边界验证包内路径、manifest 完整性、SKILL.md 元数据、受支持字段和读取范围。发现不支持的执行语义时报 SKILL_PROFILE_UNSUPPORTED；不静默声称与 Claude Code 全兼容。资源包只读挂载，脚本产物写授权工作区。
 
 ### 3.2 支持与读取
 
-标准 name／description／license／compatibility／metadata 保存。`arguments,argument-hint,$ARGUMENTS,$N` 仅做文本模板替换：`$ARGUMENTS` 是原参数串，`$1..$N` 来自显式 `arguments[]`；未提供的位置渲染为空，不执行 shell、不二次解释模板。
+标准 name／description／license／compatibility／metadata 保存。argument-hint 只作说明；`$ARGUMENTS` 与 `$1..$N` 按以下 `skill-args-v1` 规则做一次纯文本替换，未提供的位置渲染为空，不执行 shell、不二次解释变量：
 
-`user-invocable` 决定显式用户使用入口，`disable-model-invocation` 从模型发现清单移除并禁止模型自主激活；显式用户授权的使用记录仍校验角色权限。allowed-tools 与角色目录取交集，disallowed-tools 再排除；Skill 不授予新工具。
+| SkillRead 参数形式 | `$ARGUMENTS` | `$1..$N` |
+| --- | --- | --- |
+| raw_arguments 非 null，arguments=null | 精确保留原字符串，包括空格、引号和转义 | 用 Python `shlex.split(raw_arguments, comments=False, posix=True)` 解析的位置参数；引号不闭合报 SKILL_ARGUMENTS_INVALID |
+| arguments 非 null，raw_arguments=null | 用 `shlex.join(arguments)` 生成固定参数串；这是规范化表示，不声称恢复原文 | 直接使用传入数组 |
+| 两者均 null | 空串 | 全部为空串 |
+
+两个字段都非 null 报 SKILL_ARGUMENTS_INVALID，不能猜测哪个优先。解析只分词，不展开环境变量、命令替换、通配符或执行重定向。显式用户入口把输入原文作为 raw_arguments 传入；模型／高代码调用可以选择其中一种形式。Hook 修改也要通过同一互斥校验，从数组改为原串时必须同时清空数组。
+
+`user-invocable` 决定显式用户使用入口，`disable-model-invocation` 从模型发现清单移除并拒绝模型来源的 skill.read；显式用户使用仍校验角色权限。它们约束本次入口读取，不建立持续的“激活 Skill”状态，不承诺按文件内容识别所有普通 read 的意图。
+
+首版**不支持 allowed-tools／disallowed-tools 的执行语义**：出现任一字段即报 SKILL_PROFILE_UNSUPPORTED，不静默忽略，也不仅交给 LLM 遵守。Skill 读取是只读 Operation，后续工具权限始终由当前 AgentDefinition 的冻结目录、绑定范围和 Hook 决定；读取多个 Skill 不叠加、不替换工具权限。以后若支持 Skill 专属限制，必须先定义使用范围、调用关联、退出及恢复协议，不能从“最近读过哪个文件”推断。
 
 `model,effort,context:fork,agent` 拒绝装配；动态 shell 注入和未支持的专属变量／设置拒绝。hooks 只产出待显式绑定资源，不能因读 SKILL.md 就激活 Hook。
 
-`SkillLoader.list_entries(scope)->SkillEntrySummary[]` 只返回名称、说明、固定入口和 resource_key；`read_entry(SkillRead{resource_key,entry_name,relative_path,arguments[]?},scope)->SkillReadResult` 返回 `text,result_ref,resource_key,path,rendered_arguments_hash?`。相对引用只能在该 Skill 根内解析。`read_resource(resource_key,path,scope)->SkillReadResult` 用同一校验读取 scripts/references/assets，非文本资源仅返回内容引用和元信息，text 为 null；list_entries 不执行脚本。
+SkillLoader 定义 `list_entries(scope)->SkillEntrySummary[]`、`read_entry(request,scope)->SkillReadResult` 和 `read_resource(resource_key,path,scope)->SkillReadResult` 三个读取方法，由 SkillHandler 在校验授权后调用。list_entries 只返回名称、说明、固定入口和 resource_key；read_entry 读取固定入口并进行受支持的参数替换；read_resource 读取 scripts/references/assets，非文本资源仅返回内容引用和元信息，text 为 null。它们均不执行脚本、不发送外围事件、不直接修改 AgentContext。
+
+### 3.3 SkillHandler 的事件入口
+
+SkillHandler 实现 EventHandler，装配在当前 ExecutionRunner 的根 EventBusImpl；它使用 CapabilityRegistry 的只读视图，不实现另一套事件注册／调度引擎。SkillLoader 是可替换的资源读取接口，不是 EventHandler。SkillPackage 是资源数据，也不接收事件。
+
+| 事件 | payload | 结果与读取规则 |
+| --- | --- | --- |
+| skill.list | `SkillList{}` | `SkillListResult{entries:SkillEntrySummary[]}`；只列当前角色获准且对本次调用来源可见的入口 |
+| skill.read | `SkillRead{resource_key,entry_name,relative_path,raw_arguments: string\|null,arguments: string[]\|null}` | SkillReadResult；参数形式按 skill-args-v1 校验；relative_path 必须与所选 manifest 入口一致，不能以任意文件冒充 SKILL.md |
+| skill.resource.read | `SkillResourceRead{resource_key,entry_name,path}` | SkillReadResult；按资源及入口固定唯一 Skill 绑定，path 只在该绑定授权根内解析，不能跳到其他包或宿主路径 |
+
+`SkillEntrySummary` 字段为 `resource_key,entry_name,name,description,entry_path`。`SkillReadResult` 字段为 `text:string|null,result_ref,resource_key,path,rendered_arguments_hash:string|null`；未渲染参数时 hash 为 null。所有包路径都是逻辑相对路径，不返回 root_handle 或宿主路径。请求／结果使用统一 DTO 校验和大内容引用规则。
+
+渲染时 rendered_arguments_hash 使用统一规范 JSON 摘要，覆盖 `{render_version:"skill-args-v1",raw_arguments,arguments}`，实际冻结请求保留这两个原字段；只有两者都 null 时 hash=null。两段不同原文即使解析为同一数组，也不能在同 Operation 重投时视为相同输入。恢复已保存 raw 结果时不重新分词／渲染，不因模板规则更新改变旧结果。
+
+每份已解析 Skill 绑定为所属角色提供三个 SDK 内置入口：`skill_list`、`skill_read`、`skill_read_resource`。多个 Skill 绑定共用这组入口，不按包名再创建工具；没有 Skill 绑定则不提供。它们在冻结目录中分别固定到 `skill.list`、`skill.read`、`skill.resource.read`，与普通工具的 `capability.invoke` 一起构成模型调用的受信路由。注册名冲突在构造阶段拒绝；LLM 只提交入口名称和参数，不能指定 event_type、Handler、scope 或调用来源。Skill 的 visible_name 仍是资源名称，不是可执行工具名。
+
+Loop／节点驱动器按冻结路由直接发出一个 Skill 请求，**不先进入 ToolHandler 再发第二次同义请求**。这三个事件均为 `Operation.kind=tool, execution_kind=internal` 的只读资源查询：SkillHandler 返回 `PreparedDomainEffect(effect_kind=read, result_ref=...)`，统一提交设施保存原始结果引用。读取 Loader 的资源 I/O 在事务外完成；不为包内读取创建外部 Attempt 或子 Agent。总截止和单次工具超时仍生效，读取超时或路径、授权、完整性错误形成相应失败结果，不因少一个外部 Attempt 而无限等待。
+
+每个显式请求沿用原 Operation 的 before／after 协议，由发起 Loop／节点驱动器发送 `skill.list.before/after`、`skill.read.before/after` 或 `skill.resource.read.before/after`；SkillHandler 和 SkillLoader 不代发。结果经后置阶段完成并结算后，调用方按原 call_id／批次位置交付有效内容到自己的上下文。已保存原始结果的恢复只继续后处理，不重新读取包或重复注入；没有已保存结果时只能读取同一冻结 manifest，资源缺失或内容不匹配必须报错，不能替换为平台最新版本。
+
+初始 Skill 目录元信息可直接来自构造时固定的 ResolvedCatalog，不为每条元信息生成 Operation。运行中显式查询目录则走 skill.list。显式用户使用和模型自主发现的来源由可信调用环境决定，不能通过请求字段伪造，以此执行 user-invocable／disable-model-invocation 规则。
+
+### 3.4 脚本与普通文件工具
 
 资源挂载为 `/skills/<name>` 只读，references／assets 按需读取。执行脚本必须单独调用 exec，例如 `argv=["python3","/skills/report/scripts/build.py","--output","/work/report.md"]`；skill.read 不执行脚本、不建业务 NodeTask。
+
+exec 走 `capability.invoke → ToolHandler → ScriptToolAdapter → SandboxGateway`，不交 SkillHandler。FileToolAdapter 则通过 WorkspaceService 读取授权文件视图；它与 SkillLoader 复用底层路径和只读挂载约束，不互相调用、也不复制 Skill 的模板处理。普通 read 读到 SKILL.md 只返回文件内容，不能隐式激活 Hook、扩大工具授权或运行脚本。
 
 解释器和依赖来自冻结 image_digest；不存在时返回 `EXEC_DEPENDENCY_MISSING`，不得在 SDK 宿主进程 pip install。普通脚本文件访问不逐次发 Hook，外层 exec 负责唯一 Operation 和输出审计。
 
@@ -194,7 +230,7 @@ EnvironmentProvider 接收绑定中的稳定 root_handle 和目录解析策略�
 
 表中后两列拼在分区路径之后；run 分区不再重复嵌套 runs/<run_id>。直接 Agent 未传 session_id 时创建一次性 Session；无 Session／AgentInvocation 的纯能力 Workflow 使用 run 分区；Workflow 中完整 Agent 调用使用 invocation 分区。session_key 是 SDK 派生的稳定路径键。调用方可将 Agent 的 root_handle 映射到创建时固定的应用目录；SDK 不负责创建应用。模型／Hook 不提交宿主路径或 partition_key。Planner／Executor 复用所属 Invocation 的工作分区，跨完整 Agent 调用只能显式授权文件。
 
-`EnvironmentManager.prepare(EnvironmentRequest,ExecutionScope)` 的 request 字段为 `workspace_scope_ref,environment_policy_ref,image_digest,resource_manifest_ref,expected_registration_revision`，返回 `EnvironmentHandle{workspace_handle,sandbox_handle,resource_mounts[],expires_at}`。先事务登记 scope 和 mount_intent，事务后幂等创建目录并验证根 manifest，再提交 ready；同 ID 重入不生成新目录。
+`EnvironmentHandler.prepare(EnvironmentRequest,ExecutionScope)` 的 request 字段为 `workspace_scope_ref,environment_policy_ref,image_digest,resource_manifest_ref,expected_registration_revision`，返回 `EnvironmentHandle{workspace_handle,sandbox_handle,resource_mounts[],expires_at}`。先事务登记 scope 和 mount_intent，事务后幂等创建目录并验证根 manifest，再提交 ready；同 ID 重入不生成新目录。
 
 `EnvironmentPolicy` 固定 `persistent,image_digest,exec_timeout_ms,egress_allowlist[],resource_mount_rules[]`；`EgressRule` 为 `kind:domain|cidr,value,ports[]`，空列表表示禁外网。`ResourceMountRule` 为 `resource_key,logical_path,read_only=true`，资源写权限不能由调用参数覆盖。执行服务部署配置额外固定 runner_limits_version、tmp_size_bytes 和 max_processes，写入policy_digest；它们属于需验收的基础设施参数，不增加Agent用户配置。
 
@@ -216,13 +252,17 @@ Planner／Executor 使用同 Invocation `/work`，各自只读资源目录按角
 
 ### 5.3 清理协议
 
-`CleanupRequest` 为 `run_id,workspace_scope_ids[],reason:run_terminal|scope_deleted,expected_cleanup_revision,idempotency_key`，由 SystemCleanupScope 调用。`CleanupReceipt` 为 `run_id,scope_results[{workspace_scope_id,status:retained|removed|retry_pending,error?}],revocation_receipt_refs[],completed_at?`。
+`CleanupRequest` 为 `job_id,run_id,workspace_scope_ids[],scope_manifest_ref,reason:run_terminal,expected_cleanup_revision,idempotency_key`；只能选择该Job已登记的scope。`CleanupReceipt` 为 `job_id,run_id,cleanup_epoch,scope_results[{workspace_scope_id,status:retained|removed|retry_pending,error?}],revocation_receipt_refs[],completed_at?`。expected_cleanup_revision 是 Job.revision；物理幂等键按 job/scope 固定，不含重试次数或epoch。
 
-顺序固定：关闭新业务准入 → 收束全部写任务 → 取得每个 scope 的撤销证据 → 删除登记的全部非持久目录 → 提交 cleanup receipt。某个子 Invocation 完成不得提前清理。run.ending 是待细化的生命周期扩展，不直接复用 Operation HookContext，也不承担必要清理；未来接入仍不得延长根截止或阻止收束，见[挂点覆盖](event-bus.md#12-挂点覆盖与尚未细化的生命周期扩展)。
+EnvironmentProvider 提供受限端口 `cleanup(request:CleanupRequest, scope:SystemCleanupScope, lease:CleanupLease)->CleanupReceipt`。CleanupService 生成可信scope并领取独立清理租约，环境端复核固定目录及当前清理epoch；物理I/O在事务外，回执由 CommitCoordinator.commit_cleanup 保存。完整DTO、领取、失败重试和宕机接管见[终态清理执行权](checkpoints.md#81-终态清理执行权与重试)。不能借业务ExecutionLease、重新start Agent或调用用户Hook绕过此合同。
+
+恢复可以读取原物理幂等键的删除回执作为证据，回执中的cleanup_epoch保留原动作来源；它不是提交权限。新提交必须持有当前CleanupLease，并重新验证固定scope和回执内容；旧worker不能靠迟到回执继续写入。
+
+顺序固定：关闭新业务准入 → 收束全部写任务 → 取得每个 scope 的撤销证据 → 同事务提交业务终态及CleanupJob → 领取清理租约 → 删除登记的全部非持久目录 → 提交cleanup receipt。某个子 Invocation 完成不得提前清理。run.ending 是待细化的生命周期扩展，不直接复用 Operation HookContext，也不承担必要清理；未来接入仍不得延长根截止或阻止收束，见[挂点覆盖](event-bus.md#12-挂点覆盖与尚未细化的生命周期扩展)。
 
 物理删除仅操作登记的精确 work 目录，拒绝 owner 根、系统 blob、共享资源；重复删除不存在目录视为已完成。中途失败登记 cleanup_pending 继续重试，ExecutionRecord 的终态与 cleanup_state 分开。持久 scope 标 retained，无 TTL。页面关闭、SSE 断开、机器故障不触发临时目录清理。
 
-应用删除时机由平台或高代码调用方决定，通过 SDK 删除指定记录与 scope；不向模型开放同等权限。先撤销源和派生可读投影，再清理正文；共享资源包不是 ExecutionRecord 清理对象。
+应用删除时机由平台或高代码调用方决定，通过 SDK 删除指定记录与 scope；不向模型开放同等权限。先撤销源和派生可读投影，再清理正文；共享资源包不是 ExecutionRecord 清理对象。该删除合同与run_terminal清理分开，不能通过给CleanupRequest更换reason来删除持久目录或记录；公开删除DTO仍按公共接口的待细化范围处理。
 
 ## 6. 基础文件工具的完整行为
 
@@ -251,7 +291,7 @@ Linux 文件 driver 以授权根 dirfd 使用 openat2 的 beneath/no-magic-links
 | `fs.move{source,destination,if_match}` | `FileVersion` | 只限当前/work分区，目标须不存在；源版本匹配；不覆盖目标、不跨挂载、不移动分区根 |
 | `fs.delete{path,if_match,recursive=false}` | `deleted_path,previous_etag` | 文件须匹配；非空目录recursive必须true并校验树manifest；根与只读资源禁止删除 |
 
-`WorkspaceService.read/write/apply_patch` 实现上述相同语义；ToolManager 只转译 schema，不另写一套文件行为。fs.write/edit/patch 的 content 限制为20MiB；更大材料通过脚本生成文件并返回 artifact，不把无限正文塞入工具 JSON。
+`WorkspaceService.read/write/apply_patch` 实现上述相同语义；ToolHandler 只转译 schema，不另写一套文件行为。fs.write/edit/patch 的 content 限制为20MiB；更大材料通过脚本生成文件并返回 artifact，不把无限正文塞入工具 JSON。
 
 每个调用输入先经 schema／scope 校验，再进入文件服务；路径不存在为 not_found，版本或匹配数量冲突为 conflict，越界／只读根为 permission，NFS错误保留发生阶段与外部结果。错误反馈含逻辑相对路径，不包含宿主路径。
 
@@ -332,7 +372,7 @@ driver 将 ExecCommand 编译为固定 OCI process spec：argv 直接数组传�
 
 ## 8. 跨模块提交目录
 
-所有 blob／文件／网络操作在事务外；以下“写”均指在 RuntimeCommit 内发布已验证引用和状态。
+所有 blob／文件／网络操作在事务外；以下业务“写”在 RuntimeCommit 内发布已验证引用和状态，终态scope清理使用受限 CleanupCommit。
 
 | 命令 | 事务读取与版本条件 | 一致写集与幂等键 |
 | --- | --- | --- |
@@ -344,7 +384,7 @@ driver 将 ExecCommand 编译为固定 OCI process spec：argv 直接数组传�
 | 文件结果 | 原Operation／Attempt及gateway receipt关联、版本 | raw FileVersion／错误引用；`raw:<attempt>`；不在事务里做rename |
 | artifact发布 | 源etag、grant及source_scope仍有效、目标scope归属 | ArtifactRef、grant、来源依赖、可读引用；`artifact:<operation>:<ordinal>` |
 | 环境撤销完成 | 根控制／接管身份、预期domain清单 | revocation receipt引用、接管屏障或清理许可；`revoke:<run>:<epoch>` |
-| scope清理 | 已有撤销证据、准确登记路径、cleanup revision | scope cleanup_state、重试任务或receipt；`cleanup:<run>:<scope>` |
+| scope清理（CleanupCommit） | 已终态Run、active CleanupLease、固定Job/scope manifest、撤销证据及cleanup revision | scope清理回执、Job/runs.cleanup_state；物理键`cleanup:<job>:<scope>`；不更改业务结果/terminal_seq |
 
 事务提交回执前不能唤醒成功等待者、执行工具或发下一个模型请求。必要写失败返回 `PERSISTENCE_UNAVAILABLE`；lease失效返回 `LEASE_LOST`，旧worker只能停止，不能自行把本地成功结果推成新head。
 
@@ -370,7 +410,7 @@ Worker A epoch7写进程失联，Worker B准备epoch8。执行服务若不能确
 | C18 最后一次格式修正 | 正常完成可成功；需要下一票据才耗尽；没有独立修正额度 |
 | C19 大结果 | raw全量hash一致，预览范围准确；result.read新Operation；未读正文不自动注入 |
 | C20 Skill包使用边界 | 拒绝包内越界路径、符号链接逃逸或manifest不符；SDK不执行包的导入／安装脚本；Git获取与导入校验由平台验收 |
-| C21 Skill权限 | allowed-tools不能扩大角色目录；model/context:fork拒绝；read不启动脚本 |
+| C21 Skill权限 | allowed-tools/disallowed-tools出现即SKILL_PROFILE_UNSUPPORTED；model/context:fork拒绝；多个Skill读取不修改角色工具目录；read不启动脚本 |
 | C22 MCP差错 | isError不是transport；unknown文字不重试；sampling返回不支持；目录变更不热切换 |
 | C23 外层文件工具 | 无AgentSession仍解析Workflow scope；输入伪造owner／宿主路径被拒绝 |
 | C24 工作区隔离 | read/glob/grep、符号链接、脚本、文件MCP均不能跨Session／Invocation |
