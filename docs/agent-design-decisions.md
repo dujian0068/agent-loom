@@ -6,12 +6,16 @@
 
 AgentLoom 交付高代码 SDK 与低代码 Platform。
 
-- SDK 提供 ReAct Agent、Plan–Executor Agent 和 Workflow API；拥有执行、上下文、Hook、能力及恢复。
+- SDK 提供 ReactAgent、PlanAgent 和 Workflow API；ReactAgent、PlanAgent 实现公共 Agent 接口。SDK 拥有执行、上下文、Hook、能力及恢复。
 - Platform 管理用户、空间、资源与应用，以配置构建并发布 SDK 程序，通过网页及 HTTP 使用。
 - Workflow 允许编排多个完整 Agent、Tool／MCP 和业务逻辑，支持映射、条件、循环、并行、汇合与状态更新。
 - 内层 AgentGraphEngine 负责有限角色调度；外层 WorkflowEngine 迁入并适配 LangGraph 的设计与源码；两者都属于 SDK，共用执行基础设施。
 
 Agent 应用、可执行 Agent 对象、角色定义、NodeTask 和 GraphExecution 不是同一对象。具体见 [SDK 定义](sdk/definitions.md)及[平台领域模型](platform/domain-model.md)。
+
+接口层区分两类职责：Agent 面向调用者，统一使用完整智能体；Node 面向图引擎，约定节点的激活和结果。具体 Agent 类负责构造，Agent 接口不负责创建其他 Agent。ReactNode 实现节点协议，PlannerNode、ExecutorNode 继承它的 Loop；ReactAgent／PlanAgent 装配这些节点，不继承节点类。
+
+工程设计将 Workflow 保持为独立可执行类型，由 StateGraph 构建并编译；它可以只编排工具和函数，不要求具备 Agent 的模型与聊天语义。AgentNode 通过组合把完整 Agent 接入 Workflow。内层 Node 与外层 WorkflowNodeAdapter 保留各自的调度合同，检查点仍通过 SDK 的统一设施衔接。精确 UML 见[公共类型关系](sdk/public-api.md#11-公共-agent-接口与图内-node-接口)。
 
 ## 二、已确认行为的权威位置
 

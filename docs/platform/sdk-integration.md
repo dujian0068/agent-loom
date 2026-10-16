@@ -17,11 +17,13 @@
 | 上下文、执行、并行策略 | SDK Policy 值对象 |
 | 应用文件根、持久策略及授权挂载 | WorkspaceBinding；另注入 EnvironmentProvider，运行期 WorkspaceScope 由 SDK 创建／恢复 |
 | 部署的执行存储 | RuntimeStore、ContentStore、StorageNamespace |
-| Workflow 中的 Agent 引用 | 预先装配的 ExecutableAgent 或 PreparedAgentRef |
+| Workflow 中的 Agent 引用 | 预先装配的 ReactAgent／PlanAgent（实现 SDK Agent 接口），或指向它们的 PreparedAgentRef |
 
 装配所有 Workflow Agent 依赖时固定所引用配置并保存依赖清单。SDK 运行中不调用平台发布查询接口，AgentNode 通过已装配程序注册表启动内层执行。
 
 SDK 构造字段和所有权遵循[装配合同](../sdk/assembly.md)。同一 Workflow 的 Agent 使用同一个 Runtime，平台注册本地 agent_key，SDK 派生 program_key；平台发布号不进入该地址。公开 Agent 格式取主角色 Schema，不维护另一份顶层格式。
+
+AssemblyService 根据固定 mode 选择 ReactAgent 或 PlanAgent 构造函数；两者返回值都可按 SDK 的 Agent 接口使用。Workflow 则通过 StateGraph.compile 构造。平台的 Agent 应用实体与 SDK 的 Agent 接口属于不同模块；不要让 SDK 接口兼任平台应用工厂或资源查询服务。
 
 ## 2. 新请求接入
 

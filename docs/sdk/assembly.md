@@ -7,11 +7,13 @@
 | 层次 | 对象 | 谁创建 | 可以跨 Run 复用吗 | 是否进入检查点 |
 | --- | --- | --- | --- | --- |
 | 配置 | AgentDefinition、RoleDefinition、WorkspaceBinding、HookBinding | 调用者 | 可以，构造后不可变 | 保存执行所需的值或引用；不保存平台发布关系 |
-| 可执行程序 | ReactAgent、PlanAgent、CompiledWorkflow | SDK 构造／编译 | 可以，不存消息和当前进度 | 保存本地绑定 key；不序列化 Python 对象 |
+| 可执行程序 | ReactAgent、PlanAgent、Workflow | SDK 构造／编译 | 可以，不存消息和当前进度 | 保存本地绑定 key；不序列化 Python 对象 |
 | 宿主服务 | Runtime、ModelAdapter、CapabilityRegistry、存储和环境适配器 | 调用者装配 | 可以，必须遵守并发契约 | 连接、函数、锁、协程不保存 |
 | 执行现场 | RunRuntime、EventBus、NodeDriver；Run、Task、Operation、Context | SDK 在执行时创建 | 不能把本次可变状态交给另一 Run | 前者是进程设施，后者是持久事实 |
 
-`AgentDefinition` 描述行为，`GraphDefinition` 描述组织，`ExecutableAgent` 把两者和依赖关联起来。`Runtime` 是服务宿主，不是 Agent 配置，也不是某一次 Run。普通开发者构建 Agent 时无需手动创建 EventBus、HookManager、NodeTask 或检查点。
+`AgentDefinition` 描述行为，`GraphDefinition` 描述组织，具体的 `ReactAgent`／`PlanAgent` 把两者和依赖关联起来，并实现公共 `Agent` 接口。`Workflow` 是独立的已编译程序，`StateGraph` 是其构建器。`Runtime` 是服务宿主，不是 Agent 配置，也不是某一次 Run。普通开发者构建 Agent 时无需手动创建 EventBus、HookManager、NodeTask 或检查点。
+
+下面以 PlanAgent 展开配置引用；ReactAgent 使用相同构造依赖，但不配置 Executor。Agent 接口只定义使用合同，不拥有这些对象。
 
 ```mermaid
 classDiagram
@@ -19,7 +21,8 @@ classDiagram
     class WorkspaceBinding
     class CapabilityRegistry
     class HookSet
-    class ExecutableAgent {
+    class Agent {
+      <<interface>>
       +start(input, ids) RunHandle
       +ainvoke(input, ids) RunResult
       +astream(input, ids, after_seq) RunEvents
@@ -35,13 +38,14 @@ classDiagram
     }
     class RunRuntime
     class Run
-    ExecutableAgent <|-- ReactAgent
-    ExecutableAgent <|-- PlanAgent
-    ExecutableAgent --> AgentDefinition : 固定行为
-    ExecutableAgent --> WorkspaceBinding : 固定环境配置
-    ExecutableAgent --> CapabilityRegistry : 固定资源视图
-    ExecutableAgent --> HookSet : 固定挂点和处理器
-    ExecutableAgent --> Runtime : 借用宿主服务
+    Agent <|.. ReactAgent
+    Agent <|.. PlanAgent
+    PlanAgent --> AgentDefinition : 固定行为
+    PlanAgent --> WorkspaceBinding : 固定环境配置
+    PlanAgent --> CapabilityRegistry : 固定资源视图
+    PlanAgent --> HookSet : 固定挂点和处理器
+    PlanAgent --> Runtime : 借用宿主服务
+    ReactAgent --> Runtime : 借用宿主服务
     Runtime ..> RunRuntime : 获得执行权后创建
     Runtime ..> RunHandle : 返回观察和控制句柄
     RunRuntime --> Run : 推进同一个持久身份
@@ -49,11 +53,11 @@ classDiagram
     RunHandle --> Run : 持有身份引用
 ```
 
-虚线表示创建依赖。RunHandle 不拥有 RunRuntime；一个运行可有多个本机／跨进程观察者。观察者关闭不会级联停止执行。
+虚线空心三角表示实现接口，普通虚线箭头表示创建依赖。RunHandle 不拥有 RunRuntime；一个运行可有多个本机／跨进程观察者。观察者关闭不会级联停止执行。
 
 ## 2. Python 构造合同
 
-以下是目标签名，引用的协议分别在模块设计中定义；不是已发布的包用法。
+以下是目标签名，引用的协议分别在模块设计中定义；不是已发布的包用法。ReactAgent／PlanAgent 此处只列构造函数；两者都必须实现[公共 Agent 接口](public-api.md#21-正式签名)中的执行方法。
 
 ```python
 class Runtime:
@@ -71,7 +75,7 @@ class Runtime:
     async def aclose(self) -> None: ...
 
 
-class ReactAgent:
+class ReactAgent(Agent):
     def __init__(
         self, *, definition: AgentDefinition, model: ModelAdapter,
         capabilities: CapabilityRegistry, hooks: HookSet,
@@ -79,7 +83,7 @@ class ReactAgent:
     ) -> None: ...
 
 
-class PlanAgent:
+class PlanAgent(Agent):
     def __init__(
         self, *, definition: AgentDefinition, model: ModelAdapter,
         capabilities: CapabilityRegistry, hooks: HookSet,
@@ -217,7 +221,7 @@ program_key 是**一次根程序装配内的本地地址**，不是平台应用 
 | 位置 | 本地地址 | 运行身份 |
 | --- | --- | --- |
 | 直接 ReactAgent／PlanAgent | root | 每次执行新 Run／Invocation |
-| 根 CompiledWorkflow | root | 每次执行新根 Workflow 图 |
+| 根 Workflow | root | 每次执行新根 Workflow 图 |
 | Workflow 注册的完整 Agent | `agents/{agent_key}` | 每次 AgentNode 业务调用产生新 Invocation／内层图 |
 | Planner 的 Executor 角色 | 沿用所属 Agent 的 program_key，加 role_key 定位 | 每次委派产生 NodeTask，不新增程序或完整 Invocation |
 

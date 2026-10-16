@@ -12,10 +12,12 @@
 | NodeDefinition | 属于一份 GraphDefinition，node_key 在图中唯一 | node_type、输入输出及路由配置 |
 | NodeBinding | 一次装配的值对象 | node_key 与已解析角色／能力／可执行 Agent 的绑定 |
 | WorkspaceBinding | 调用方提供的环境配置值；没有 Run 身份 | 稳定文件根句柄、内容范围、环境策略及授权资源挂载 |
-| ExecutableAgent | 已构造的可执行程序 | AgentDefinition、生成图及绑定、依赖工厂 |
-| CompiledWorkflow | 已编译的工作流 | GraphDefinition、状态 schema、reducer 与已解析节点绑定 |
+| Agent | SDK 公共执行接口；接口本身没有实体身份 | start、ainvoke、astream 的调用合同，不负责构造其他对象 |
+| ReactAgent / PlanAgent | 实现 Agent 的具体可执行程序 | AgentDefinition、生成图及绑定、已注入依赖 |
+| Workflow | 独立的可执行工作流类型，不实现 Agent | GraphDefinition、状态 schema、reducer 与已解析节点绑定 |
+| StateGraph | 工作流构建器 | 收集节点、边和状态定义；compile 后返回 Workflow |
 
-AgentDefinition 与 GraphDefinition 没有继承或业务上的包含关系。它们分别表达行为和结构，由构造出的可执行程序关联。ReAct／Plan 的内部图可以由 Builder 自动生成；高代码 Workflow 由开发者构建后编译。
+AgentDefinition 与 GraphDefinition 没有继承或业务上的包含关系。它们分别表达行为和结构，由具体可执行程序关联。ReactAgent／PlanAgent 的构造过程生成内部图；高代码 Workflow 由 StateGraph 构建后编译。Agent 是使用这些程序的接口，不能把接口画成持有配置和节点绑定的实体。
 
 ```mermaid
 classDiagram
@@ -24,18 +26,31 @@ classDiagram
     class GraphDefinition
     class NodeDefinition
     class NodeBinding
-    class ExecutableAgent
-    class CompiledWorkflow
+    class Agent {
+      <<interface>>
+    }
+    class ReactAgent
+    class PlanAgent
+    class Workflow
+    class StateGraph
     AgentDefinition "1" *-- "1..*" RoleDefinition : 包含角色配置
     GraphDefinition "1" *-- "1..*" NodeDefinition : 包含执行位置
-    ExecutableAgent --> AgentDefinition : 行为
-    ExecutableAgent --> GraphDefinition : 内部结构
-    ExecutableAgent "1" *-- "1..*" NodeBinding : 装配绑定
-    CompiledWorkflow --> GraphDefinition : 外层结构
-    CompiledWorkflow "1" *-- "1..*" NodeBinding : 装配绑定
+    Agent <|.. ReactAgent : 实现
+    Agent <|.. PlanAgent : 实现
+    ReactAgent --> AgentDefinition : 行为
+    ReactAgent --> GraphDefinition : 单角色内层图
+    ReactAgent "1" *-- "1..*" NodeBinding : 装配绑定
+    PlanAgent --> AgentDefinition : 行为
+    PlanAgent --> GraphDefinition : Planner与Executor内层图
+    PlanAgent "1" *-- "1..*" NodeBinding : 装配绑定
+    StateGraph ..> Workflow : compile创建
+    Workflow --> GraphDefinition : 外层结构
+    Workflow "1" *-- "1..*" NodeBinding : 装配绑定
 ```
 
-图中的菱形表示组成，普通箭头表示引用，不表示调度顺序。模型客户端、数据库连接和可执行函数属于进程内依赖，不直接序列化进定义或检查点。恢复时由调用方重建这些依赖。
+图中的菱形表示组成，普通箭头表示引用，虚线空心三角表示实现接口，都不表示调度顺序。模型客户端、数据库连接和可执行函数属于进程内依赖，不直接序列化进定义或检查点。恢复时由调用方重建这些依赖。
+
+统一公开名称为 `Agent`、`ReactAgent`、`PlanAgent`、`Workflow`。Workflow 可以只编排函数和工具，所以不继承 Agent。两者可以复用 Runtime 和 RunHandle，复用执行设施不构成业务上的继承关系。
 
 SDK 不维护应用发布版本或配置兼容指纹。Definition 可以使用本地 key 定位绑定，key 不承担平台版本解析；相同 Run 的恢复配置由调用方保证。
 
@@ -76,6 +91,8 @@ CapabilityBinding
 
 ## 3. Node 类与 NodeTask
 
+Agent 面向 SDK 调用者，描述完整智能体怎样使用；Node 面向图引擎，描述一个执行位置怎样被激活。Agent 不继承 Node，Node 也不要求实现 Agent。ReactAgent 是完整程序，ReactNode 是它内部承担角色 Loop 的节点；PlanAgent 则装配 PlannerNode 和所配置的 ExecutorNode。
+
 ```mermaid
 classDiagram
     class Node {
@@ -98,7 +115,9 @@ classDiagram
     WorkflowNodeAdapter <|.. CapabilityNode
 ```
 
-这是运行接口的实现关系。Node 是内层可恢复节点协议，由 NodeDriver 驱动；外层的 AgentNode／CapabilityNode 实现 WorkflowNodeAdapter，由迁移内核调用。它们都可绑定到图中的 NodeDefinition，但不因此实现同一个激活接口。TaskWriteProposal 表示外层输出及 SDK 结果消费提案；其原生写入类型与逐方法映射仍需在 Workflow 适配中定稿，不等同于已经提交的 pending writes。
+这是运行接口的实现关系。Node 是内层图的可恢复节点协议，由 NodeDriver 驱动；外层的 AgentNode／CapabilityNode 通过 WorkflowNodeAdapter 对接迁移内核。它们都可绑定到图中的 NodeDefinition，但不因此实现同一个激活接口。这里保留双引擎的适配边界，不给 Node 强塞两套 activate／invoke 方法，也不要求 Agent 暴露图内激活方法。TaskWriteProposal 表示外层输出及 SDK 结果消费提案；其原生写入类型与逐方法映射仍需在 Workflow 适配中定稿，不等同于已经提交的 pending writes。
+
+AgentNode **组合完整 Agent**，不继承 Agent，也不继承 ReactNode。它通过 SDK 的内部调用桥执行已装配程序，不在节点里另起一个根 Run。首版可嵌入的程序限定为 SDK 的 ReactAgent／PlanAgent；仅实现公共 Agent 接口不足以声明可恢复嵌入能力，编译器须拒绝不支持该协议的绑定。具体映射见[公共接口](public-api.md#6-workflow-与-agentnode-的边界)。
 
 ReactNode 一次激活可以推进到 Progress、Wait 或 Complete；运行位置保存在 ReactContinuation，恢复不依赖原协程。Planner 在 React 能力上增加委派；Executor 使用同一 Loop，但不能递归创建新 Executor。不是每一次模型调用都新建一个节点任务。
 

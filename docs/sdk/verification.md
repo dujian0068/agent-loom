@@ -6,7 +6,7 @@
 
 | 阶段 | 交付 | 门槛 |
 | --- | --- | --- |
-| S1 对象与公共端口 | Definition、Node、作用域、事件、RuntimeStore 协议与内存适配 | 不导入 Platform；DTO、身份和唯一写入者明确 |
+| S1 对象与公共端口 | Agent、Node、Definition、作用域、事件、RuntimeStore 协议与内存适配 | 不导入 Platform；接口实现、对象归属和唯一写入者明确 |
 | S2 调用基础 | EventBus、Pipeline、Manager、Hook、Attempt | 请求恰好路由一个 Handler；拒绝、失败放行、结果等待通过 |
 | S3 Agent 执行 | ReactNode／PlannerNode／ExecutorNode、批次、LoopTicket | 三种确定性场景、额度与串并行边界通过 |
 | S4 上下文和文件 | 历史、补充、压缩、SDK 工具、受限执行环境 | 不丢用户输入，Hook 修改持续可见，主子共享且跨 Session 隔离 |
@@ -45,6 +45,9 @@
 | SDK25 | HookReadPort 读其他 Context 或最新版本、Hook 结束后继续读 | 拒绝越权／版本漂移／过期端口；原始元数据中没有存储客户端 |
 | SDK26 | 终态事件后清理缓慢；从 terminal_seq 重连 | 答案流在固定终态序号结束；清理状态单独查询，不重发最终结果 |
 | SDK27 | 相同 command_id 不同 stop 参数；接收回执未知重投 | 冲突明确，重投不双重接收，不把未知提交解释为 Run 失败 |
+| SDK28 | ReactAgent／PlanAgent 赋给 Agent 类型，再使用统一入口 | 类型检查与调用合同一致；构造不执行，接口不暴露 Node.activate 或平台 CRUD |
+| SDK29 | StateGraph 编译纯工具图 | 返回 Workflow；不要求模型、AgentDefinition 或 RoleContext，不因复用 RunHandle 继承 Agent |
+| SDK30 | AgentNode 绑定内置 Agent／只实现公共方法的第三方 Agent | 前者走内部调用桥、同根 Run；后者编译时报 ConfigurationError，不偷偷调用 start 新建根 Run |
 
 ## 3. Hook 与 EventBus 测试
 

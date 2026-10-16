@@ -124,7 +124,7 @@ AgentNode 的输入成为受保护任务原文；后续压缩不得省略。它�
 
 如果在第 2、3 步之间宕机，外层任务可以重新进入适配器并取回已保存结果，**不会重跑 Agent 或后置 Hook**。如果第 3 步已完成，则使用保存的 pending writes；不能再次应用同一输出。通知由 outbox 补发，丢通知不丢完成事实。
 
-外层的“任务输出已保存”和“该步写入已应用到图状态”是两个阶段，不能把SDK 消费标记当成后者。有效失败结果也按一次交付处理，后续走 CompiledWorkflow 固定的错误策略；内层的 all-settled 规则不强制改变外层原生错误传播语义。
+外层的“任务输出已保存”和“该步写入已应用到图状态”是两个阶段，不能把SDK 消费标记当成后者。有效失败结果也按一次交付处理，后续走已编译 Workflow 固定的错误策略；内层的 all-settled 规则不强制改变外层原生错误传播语义。
 
 ### 5.3 失败、取消和重入的确定映射
 
@@ -250,8 +250,10 @@ engine_state_ref 指向一种受版本约束的载荷：
 
 ## 8. 对外 Workflow API 的兼容范围
 
-拟提供 StateGraph(schema)、add_node、add_edge、add_conditional_edges、set_entry_point、compile，以及已编译程序的 ainvoke／astream；支持状态字段 reducer、Send、Command 和条件循环。“兼容 LangGraph”指声明的图构建与状态语义 profile；不承诺任意 LangChain Runnable、第三方 saver、全部上游配置项或持久数据可以直接替换。
+拟提供 StateGraph(schema)、add_node、add_edge、add_conditional_edges、set_entry_point、compile。StateGraph 是构建器，compile 返回公开类型 Workflow；Workflow 提供 start／ainvoke／astream，复用 Runtime 和 RunHandle，但不实现面向智能体输入的 Agent 接口。支持状态字段 reducer、Send、Command 和条件循环。“兼容 LangGraph”指声明的图构建与状态语义 profile；不承诺任意 LangChain Runnable、第三方 saver、全部上游配置项或持久数据可以直接替换。
 
 AgentNode 绑定已构造 ReactAgent／PlanAgent；CapabilityNode 绑定已解析 Tool／MCP／函数适配器。输入映射从当前 Workflow 状态显式生成任务输入；输出映射只写声明状态字段；角色私有消息不自动写入 GraphState。高代码用户可以注册普通纯函数节点，外部副作用必须使用可恢复调用端口，不可藏在 reducer 或 predicate 中。
+
+AgentNode 与 Agent 是组合关系；与 ReactNode 没有继承关系。AgentNode 使用 WorkflowNodeAdapter 和 SDK 内部调用桥，不能通过公共 agent.start／ainvoke 创建另一个根 Run。首版只接受两种内置 Agent 的可恢复绑定；只有同名公共方法的第三方对象须在编译阶段拒绝，不能假定它支持嵌套恢复。
 
 首批迁移包含图编译、channels／reducers、调度、Send／Command、原生快照、pending writes、任务身份和本页适配；通用 UI、平台发布和用户服务不在 SDK。源码迁入必须保留原许可证与版权声明，固定基线并记录修改。业务发布版本由调用方处理，SDK 不为恢复反查发布目录。

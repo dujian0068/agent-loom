@@ -30,7 +30,62 @@ async with Runtime(
     result = await handle.wait()
 ```
 
-new Agent 只校验与冻结配置，不开始任务。start 返回运行句柄；需要直接等结果时使用 ainvoke，需要持续观察时使用 astream。三者使用同一条准入／恢复路径，不实现三套执行逻辑。
+构造 ReactAgent／PlanAgent 只校验与冻结配置，不开始任务。start 返回运行句柄；需要直接等结果时使用 ainvoke，需要持续观察时使用 astream。三者使用同一条准入／恢复路径，不实现三套执行逻辑。
+
+### 1.1 公共 Agent 接口与图内 Node 接口
+
+| 类型 | 面向谁 | 职责与关系 |
+| --- | --- | --- |
+| Agent | SDK 调用者和平台装配代码 | 完整智能体的执行接口；由 ReactAgent、PlanAgent 实现 |
+| ReactAgent | SDK 调用者 | 构造单角色程序，内部使用 ReactNode 与轻量 Agent 图 |
+| PlanAgent | SDK 调用者 | 构造 Planner／Executor 程序，内部使用同一轻量图引擎 |
+| Workflow | SDK 调用者 | 编译后的通用工作流；独立于 Agent，可以完全没有模型或 Agent 节点 |
+| StateGraph | 工作流作者 | 定义节点、边与状态，compile 返回 Workflow；构建器不直接执行任务 |
+| Node | 内层图引擎及节点扩展作者 | activate 合同；返回进度、等待、完成或失败，由 Driver 保存现场 |
+| AgentNode | 工作流作者与外层引擎适配层 | 将 SDK 的完整 Agent 绑定为一个工作流步骤，不与该 Agent 建立继承关系 |
+
+```mermaid
+classDiagram
+    class Agent {
+      <<interface>>
+      +start(input, ids) RunHandle
+      +ainvoke(input, ids) RunResult
+      +astream(input, ids, after_seq) RunEvents
+    }
+    class ReactAgent
+    class PlanAgent
+    class Workflow
+    class StateGraph {
+      +compile() Workflow
+    }
+    class AgentNode
+    class WorkflowNodeAdapter {
+      <<interface>>
+    }
+    class Node {
+      <<interface>>
+      +activate(input, continuation, runtime) ActivationStream
+    }
+    class ReactNode
+    class PlannerNode
+    class ExecutorNode
+    Agent <|.. ReactAgent : 实现
+    Agent <|.. PlanAgent : 实现
+    StateGraph ..> Workflow : 编译创建
+    Workflow ..> AgentNode : 可选节点实现
+    WorkflowNodeAdapter <|.. AgentNode
+    AgentNode --> Agent : 绑定SDK内置实现
+    Node <|.. ReactNode : 实现
+    ReactNode <|-- PlannerNode : 继承Loop
+    ReactNode <|-- ExecutorNode : 继承Loop
+    ReactAgent ..> ReactNode : 装配
+    PlanAgent ..> PlannerNode : 装配
+    PlanAgent ..> ExecutorNode : 按配置装配
+```
+
+`Agent` 用 Python Protocol 定义统一使用合同；`ReactAgent`、`PlanAgent` 是可构造的具体类。创建通过具体类的构造函数完成，接口不提供 `Agent.create()`，也不负责查找平台配置。平台可以在自己的 AssemblyService 中根据 mode 选择构造函数；未来便利工厂也只能包装同一合同。
+
+`Agent` 与 `Node` 是两类职责接口，并非整个 SDK 只有两个协议。Node 的激活方法服务内层调度，外层迁入内核通过 WorkflowNodeAdapter 适配自己的状态／写入合同，不能只因为都叫节点就交换使用。接口实现用虚线空心三角，具体类继承用实线空心三角；组合绑定使用普通引用箭头。
 
 ## 2. 输入与执行门面
 
@@ -44,7 +99,7 @@ class AgentInput:
     artifacts: tuple[ArtifactRef, ...] = ()
 
 
-class ExecutableAgent(Protocol):
+class Agent(Protocol):
     async def start(
         self, input: AgentInput | str | None = None, *,
         session_id: UUID | None = None,
@@ -205,9 +260,11 @@ stop 与初次 start 争用同一 admission key：stop 先提交则迟到 start 
 
 ## 6. Workflow 与 AgentNode 的边界
 
-StateGraph.compile 返回 CompiledWorkflow。其 start／ainvoke／astream 与 RunHandle 使用相同根执行控制和结果语义，但输入是 Workflow 自身的结构化状态，不能直接把 AgentInput 的聊天补充协议套上去。Workflow 初始输入回执、完整编译签名和映射 DSL 仍在[Workflow 合同](workflow.md)中待细化。
+StateGraph.compile 返回公开类型 Workflow。Workflow 不实现 Agent；其 start／ainvoke／astream 与 RunHandle 复用相同根执行控制和结果语义，但输入是 Workflow 自身的结构化状态，不能直接把 AgentInput 的聊天补充协议套上去。Workflow 初始输入回执、完整编译签名和映射 DSL 仍在[Workflow 合同](workflow.md)中待细化。
 
-编译时传入已构造的 Agent 或 PreparedAgentRef；AgentNode 使用内部调用桥保存父 Operation 与子 Invocation 引用，共享根 Run 和预算。不能在普通节点里无关联地调用 child.ainvoke，再声称获得了嵌套恢复。
+编译时传入已构造的 ReactAgent／PlanAgent 或指向它们的 PreparedAgentRef。AgentNode 使用内部调用桥保存父 Operation 与子 Invocation 引用，共享根 Run 和预算。不能在普通节点里无关联地调用 child.ainvoke，再声称获得了嵌套恢复。
+
+公共 Agent 接口保证完整程序可独立执行，不保证任意第三方实现都支持图内接续。首版编译器只接受带 SDK 内部执行绑定的两种内置实现，并校验 Runtime 一致；仅提供 start／ainvoke／astream 的对象须报 ConfigurationError，不退化为新建子 Run。将来开放第三方 Agent 嵌入时，需要单独定义执行绑定与恢复协议，不能偷偷把它加入 Agent 的公共使用接口。
 
 Workflow 活动输入必须有显式接收点和状态映射。当前未定义的接收模式返回 WORKFLOW_INPUT_UNSUPPORTED，不自动广播或交给任意 AgentNode，更不能先 accepted 再丢弃。初始 Workflow 输入不受此限制。
 

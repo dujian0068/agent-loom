@@ -16,13 +16,14 @@ flowchart TB
       HOST --> AS
     end
     subgraph SDK["agentloom-sdk"]
-      API["ReactAgent / PlanAgent / StateGraph"]
+      API["Agent 接口：ReactAgent / PlanAgent"]
+      WAPI["StateGraph 构建 → Workflow 执行"]
       AG["AgentGraphEngine"]
       WF["WorkflowEngine"]
       SV["EventBus · Hook · 能力 · 上下文"]
       CP["RuntimeStore · 检查点 · 恢复"]
       API --> AG
-      API --> WF
+      WAPI --> WF
       AG --> SV
       WF --> SV
       AG --> CP
@@ -30,10 +31,14 @@ flowchart TB
       SV --> CP
     end
     AS -->|已解析配置与依赖| API
+    AS -->|已解析图与节点绑定| WAPI
     HOST -->|新建执行对象·传入原run_id| API
+    HOST -->|重建工作流·传入原run_id| WAPI
 ```
 
 没有 SDK → 平台目录查询。两套图引擎都在 SDK 内；Platform 不实现另一套 Agent Loop、Workflow 调度或检查点恢复。
+
+Agent 是 SDK 的执行接口，ReactAgent 和 PlanAgent 是具体实现；Workflow 是另一个执行入口，不继承 Agent。图内 Node 协议服务调度，不承担平台创建应用的职责。Platform 的 AssemblyService 负责选择构造类型并注入依赖。
 
 ## 2. 责任与接口
 

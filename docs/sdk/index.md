@@ -6,9 +6,12 @@ SDK 是可独立引入的 Python 执行底座，提供 ReAct、Plan–Executor �
 
 SDK 接收构造参数和运行依赖，自行执行、管理上下文、保存检查点并恢复现场。SDK 不查询平台用户、空间、应用、发布记录，也不需要平台业务库。
 
+公开类型统一为 Agent 接口、它的 ReactAgent／PlanAgent 实现，以及独立的 Workflow。StateGraph 负责构建并编译 Workflow。Node 定义图内可调度单元，不是 Agent 的父类；完整 Agent 通过 AgentNode 适配进入外层图。详见[接口关系](public-api.md#11-公共-agent-接口与图内-node-接口)。
+
 | 模块 | 负责 | 不负责 |
 | --- | --- | --- |
-| Definition / Builder | 行为、角色、图结构、构造校验 | 平台草稿与发布版本 |
+| Agent / Workflow | 完整程序的公共执行入口 | 平台应用管理、节点内部激活 |
+| Definition / 构造与编译 | 行为、角色、图结构、构造校验 | 平台草稿与发布版本 |
 | Runtime / RunControl | 一次执行、预算、截止、停止、执行权 | 用户身份与机器调度策略 |
 | AgentGraphEngine | 轻量角色调度、批次、等待与汇合 | Workflow 的 channels / super-step |
 | WorkflowEngine | 通用图编排、状态合并、原生恢复 | Planner 的业务决策与 Agent Loop |

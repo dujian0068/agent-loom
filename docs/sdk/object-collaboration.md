@@ -2,7 +2,7 @@
 
 状态：详细设计，尚未实现。本页定义对象如何协作；[Definition 与运行实体](definitions.md)定义身份与归属，[调用总线](event-bus.md)和[检查点](checkpoints.md)定义状态机与提交算法。三者共同作为实现依据。
 
-图例：实线带菱形表示组成及生命周期管理，普通箭头表示引用／调用，虚线表示依赖，三角箭头表示继承或实现。时序图的箭头才表示执行先后。不能把“能访问某对象”理解为拥有它的生命周期。
+图例：实线带菱形表示组成及生命周期管理，普通箭头表示引用／调用，普通虚线箭头表示依赖；实线空心三角表示类继承，虚线空心三角表示接口实现。时序图的箭头才表示执行先后。不能把“能访问某对象”理解为拥有它的生命周期。
 
 ## 1. 对象分为四类
 
@@ -13,22 +13,23 @@
 | 本次进程对象 | RunRuntime、EventBusImpl、InvocationPipeline、HookManager、NodeDriver、ResultWaitRegistry | 本机任务、等待者、当前 lease 与运行 scope | 每次执行或故障接管重新创建 |
 | 持久执行实体 | Run、GraphExecution、NodeTask、RoleContext、Operation、Attempt、HookInvocation、Checkpoint | 可恢复进度、结果、身份与版本 | 原子提交后保存；进程销毁不删除 |
 
-Agent 对象是可执行程序入口，不等于数据库中的 Agent 应用，也不等于 Run。new PlanAgent 只装配依赖；start 开始、附着或恢复一次执行，ainvoke／astream 复用 start。Node 实现不保存 messages 等可变任务状态，NodeTask 与 RoleContext 才保存这些内容。构造合同与资源所有权见[装配设计](assembly.md)。
+ReactAgent、PlanAgent 是实现公共 Agent 接口的程序对象，不等于数据库中的 Agent 应用，也不等于 Run。Workflow 是另一种可执行程序，不继承 Agent。new PlanAgent 只装配依赖；start 开始、附着或恢复一次执行，ainvoke／astream 复用 start。Node 是图内调度接口，节点实现不保存 messages 等可变任务状态，NodeTask 与 RoleContext 才保存这些内容。构造合同与资源所有权见[装配设计](assembly.md)。
 
 ## 2. Agent 与 Runtime 的装配关系
 
+本图聚焦具体程序与宿主的关系；配置和节点绑定由具体程序持有，见[Definition 关系图](definitions.md#1-定义不是管理实体)。Agent 接口不作为配置容器。
+
 ```mermaid
 classDiagram
-    class ExecutableAgent {
+    class Agent {
+      <<interface>>
       +start(input, ids) RunHandle
       +ainvoke(input, ids) RunResult
       +astream(input, ids, after_seq) RunEvents
     }
     class ReactAgent
     class PlanAgent
-    class AgentDefinition
-    class GraphDefinition
-    class WorkspaceBinding
+    class Workflow
     class EnvironmentProvider
     class Runtime {
       +open_run(program, request) RunHandle
@@ -50,12 +51,11 @@ classDiagram
     class CommitCoordinator
     class RuntimeStore
     class ContentStore
-    ExecutableAgent <|-- ReactAgent
-    ExecutableAgent <|-- PlanAgent
-    ExecutableAgent --> AgentDefinition : 固定行为配置
-    ExecutableAgent --> GraphDefinition : 生成的内层图
-    ExecutableAgent --> WorkspaceBinding : 固定环境配置
-    ExecutableAgent --> Runtime : 注入运行依赖
+    Agent <|.. ReactAgent
+    Agent <|.. PlanAgent
+    ReactAgent --> Runtime : 注入运行依赖
+    PlanAgent --> Runtime : 注入运行依赖
+    Workflow --> Runtime : 注入运行依赖
     Runtime ..> RunRuntime : 获得本机执行权后创建
     Runtime ..> RunHandle : 返回运行引用
     RunHandle --> Runtime : 只通过公共门面观察和控制
@@ -116,6 +116,8 @@ classDiagram
 ```
 
 此图聚焦 React 类任务，普通 Workflow 节点可以没有 ReactContinuation 或 RoleContext。
+
+ReactAgent／PlanAgent 不继承这些节点类；它们装配包含节点的程序。外层 AgentNode 组合完整 Agent，通过调用桥形成子 Invocation，不继承 ReactNode。外层仍使用 WorkflowNodeAdapter 衔接迁入内核，不能把内层的 Node.activate 当作原生状态节点函数直接注册。
 
 - ReactNode 实现完整任务的决策规则，但可以在一次激活中返回 Progress、Wait、Complete、Fail；NodeDriver 保存 continuation 后再推进。
 - PlannerNode 复用 ReactNode，增加委派能力。它能调用自己的普通工具，不能直接改 Executor 的私有消息。

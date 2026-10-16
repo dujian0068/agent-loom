@@ -66,3 +66,15 @@
 - 定义公开结果／异常分类、输入和停止回执、事件终态序号；同提交保存 terminal_seq，观察终结不等待无限文件清理。
 
 本项仍是设计，没有新增 SDK 业务实现。第 3 节只缩小已经补齐的缺口，其余工作保留。本轮文档构建通过，站点检查覆盖 54 页、1,454 个内部链接、315 个锚点和 225 个资源引用；新增／关联的 3 页共 12 张 Mermaid 图渲染通过，8 段 Python 接口示例通过语法解析。未执行 SDK 业务测试。
+
+## 6. Agent 接口与 Node 接口的职责校正
+
+2026-10-16，按照公共 Agent 接口与图内 Node 接口分工更新设计：
+
+- ReactAgent、PlanAgent 实现 Agent；UML 使用接口实现箭头。具体程序持有 Definition、节点绑定和运行依赖，接口不再被画成实体容器。
+- 创建由具体类构造函数承担，平台 AssemblyService 选择类型；Agent 统一 start／ainvoke／astream 的使用合同。
+- Workflow 保持独立可执行类型，StateGraph.compile 返回 Workflow；函数／工具工作流不需要 Agent 的模型或聊天上下文。
+- ReactNode 实现内层 Node 协议，PlannerNode／ExecutorNode 继承其 Loop；完整 Agent 通过外层 AgentNode 组合接入。外层迁入内核继续由 WorkflowNodeAdapter 适配，不混用两种激活签名。
+- AgentNode 嵌入须具备 SDK 内部执行绑定；仅实现公共 Agent 方法不足以保证同根执行和恢复，编译时须明确校验。
+
+新增 SDK28—SDK30 验收项。本次文档构建及站点检查通过；5 页共 16 张 Mermaid 图渲染通过，8 段 Python 接口示例通过语法解析。以上仍为设计与文档验证，未新增或执行 SDK 业务代码。
