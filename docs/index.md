@@ -11,9 +11,6 @@ hero:
     - theme: alt
       text: Platform 设计
       link: /platform/
-    - theme: alt
-      text: SDK 对象 UML
-      link: /sdk/object-collaboration
 features:
   - title: SDK
     details: ReactAgent、PlanAgent、Workflow，包含执行、能力、上下文、Hook 和检查点恢复。
@@ -21,9 +18,6 @@ features:
   - title: Platform
     details: 用户与空间、资源与 Key、应用配置、发布、网页及 HTTP API，通过公共接口装配 SDK。
     link: /platform/
-  - title: 清楚的边界
-    details: SDK 无平台数据库依赖；平台负责版本和装配，SDK 负责执行与恢复。
-    link: /sdk-platform-boundary
 ---
 
 ## 当前状态

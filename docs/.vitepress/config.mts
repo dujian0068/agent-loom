@@ -27,64 +27,64 @@ export default defineConfig({
   themeConfig: {
     siteTitle: "AgentLoom 文档",
 
-    nav: [
-      { text: "职责边界", link: "/sdk-platform-boundary" },
-      { text: "SDK", link: "/sdk/" },
-      { text: "Platform", link: "/platform/" },
-      { text: "对象 UML", link: "/sdk/object-collaboration" },
-    ],
     socialLinks: [{ icon: "github", link: repository }],
-    sidebar: [
-      {
-        text: "开始阅读",
-        items: [
-          { text: "文档首页", link: "/" },
-          { text: "职责边界", link: "/sdk-platform-boundary" },
-          { text: "Agent 设计约定", link: "/agent-design-decisions" },
-          { text: "阅读指南", link: "/reading-guide" },
-        ],
-      },
-      {
-        text: "SDK · 执行底座",
-        items: [
-          { text: "SDK 总览", link: "/sdk/" },
-          { text: "行为约定与默认值", link: "/sdk/requirements" },
-          { text: "定义、节点与运行实体", link: "/sdk/definitions" },
-          { text: "对象协作 UML 与时序", link: "/sdk/object-collaboration" },
-          { text: "构造、资源绑定与生命周期", link: "/sdk/assembly" },
-          { text: "公共 API 与依赖注入", link: "/sdk/public-api" },
-          { text: "Agent Loop 与轻量图调度", link: "/sdk/runtime" },
-          { text: "EventBus、Handler 与 Hook", link: "/sdk/event-bus" },
-          { text: "上下文、历史与压缩", link: "/sdk/context" },
-          { text: "模型、能力与环境", link: "/sdk/capabilities" },
-          { text: "检查点与故障接管", link: "/sdk/checkpoints" },
-          { text: "Workflow 与双引擎适配", link: "/sdk/workflow" },
-          { text: "实施与验收", link: "/sdk/verification" },
-        ],
-      },
-      {
-        text: "Platform · 配置平台",
-        items: [
-          { text: "Platform 总览", link: "/platform/" },
-          { text: "管理领域与实体", link: "/platform/domain-model" },
-          { text: "配置、资源与发布", link: "/platform/configuration" },
-          { text: "SDK 装配与恢复接入", link: "/platform/sdk-integration" },
-          { text: "HTTP API 与输入协议", link: "/platform/api" },
-          { text: "存储与生命周期", link: "/platform/storage-lifecycle" },
-          { text: "API 集成验收", link: "/platform/verification" },
-        ],
-      },
-      {
-        text: "文档维护",
-        collapsed: true,
-        items: [
-          { text: "目录规划", link: "/directory-plan" },
-          { text: "完整索引", link: "/README" },
-          { text: "整理复核记录", link: "/reorganization-review" },
-          { text: "维护文档站", link: "/documentation-site" },
-        ],
-      },
-    ],
+    sidebar: {
+      "/sdk/": [
+        {
+          text: "SDK 设计",
+          items: [
+            { text: "SDK 总览", link: "/sdk/" },
+            { text: "行为约定与默认值", link: "/sdk/requirements" },
+            { text: "定义、节点与运行实体", link: "/sdk/definitions" },
+            { text: "对象协作 UML 与时序", link: "/sdk/object-collaboration" },
+            { text: "构造、资源绑定与生命周期", link: "/sdk/assembly" },
+            { text: "公共 API 与依赖注入", link: "/sdk/public-api" },
+            { text: "Agent Loop 与轻量图调度", link: "/sdk/runtime" },
+            { text: "EventBus、Handler 与 Hook", link: "/sdk/event-bus" },
+            { text: "上下文、历史与压缩", link: "/sdk/context" },
+            { text: "模型、能力与环境", link: "/sdk/capabilities" },
+            { text: "检查点与故障接管", link: "/sdk/checkpoints" },
+            { text: "Workflow 与双引擎适配", link: "/sdk/workflow" },
+            { text: "实施与验收", link: "/sdk/verification" },
+          ],
+        },
+      ],
+      "/platform/": [
+        {
+          text: "Platform 设计",
+          items: [
+            { text: "Platform 总览", link: "/platform/" },
+            { text: "管理领域与实体", link: "/platform/domain-model" },
+            { text: "配置、资源与发布", link: "/platform/configuration" },
+            { text: "SDK 装配与恢复接入", link: "/platform/sdk-integration" },
+            { text: "HTTP API 与输入协议", link: "/platform/api" },
+            { text: "存储与生命周期", link: "/platform/storage-lifecycle" },
+            { text: "API 集成验收", link: "/platform/verification" },
+          ],
+        },
+      ],
+      "/": [
+        {
+          text: "开始阅读",
+          items: [
+            { text: "文档首页", link: "/" },
+            { text: "职责边界", link: "/sdk-platform-boundary" },
+            { text: "Agent 设计约定", link: "/agent-design-decisions" },
+            { text: "阅读指南", link: "/reading-guide" },
+          ],
+        },
+        {
+          text: "文档维护",
+          collapsed: true,
+          items: [
+            { text: "目录规划", link: "/directory-plan" },
+            { text: "完整索引", link: "/README" },
+            { text: "整理复核记录", link: "/reorganization-review" },
+            { text: "维护文档站", link: "/documentation-site" },
+          ],
+        },
+      ],
+    },
     outline: { level: [2, 3], label: "本页目录" },
     docFooter: { prev: "上一篇", next: "下一篇" },
     returnToTopLabel: "返回顶部",
@@ -129,6 +129,12 @@ export default defineConfig({
             prefix: true,
             fuzzy: 0.1,
             boost: { title: 5, titles: 2, text: 1 },
+            filter: (result: { id: string }) => {
+              if (typeof window === "undefined") return true;
+              const section = window.location.pathname.match(/\/(sdk|platform)\//)?.[1];
+              return !section || new URL(result.id, window.location.origin)
+                .pathname.includes(`/${section}/`);
+            },
             boostDocument: (id: string) => {
               if (/\/(sdk|platform)\//.test(id)) return 3;
               if (/agent-design-decisions/.test(id)) return 3;
