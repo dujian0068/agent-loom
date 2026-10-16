@@ -13,7 +13,7 @@
 | NodeBinding | 一次装配的值对象 | node_key 与已解析角色／能力／可执行 Agent 的绑定 |
 | WorkspaceBinding | 调用方提供的环境配置值；没有 ExecutionRecord 身份 | 稳定文件根句柄、内容范围、环境策略及授权资源挂载 |
 | Agent | SDK 公共执行接口；接口本身没有实体身份 | start、ainvoke、astream 的调用合同，不负责构造其他对象 |
-| ReactAgent / PlanAgent | 实现 Agent 的具体可执行程序 | AgentDefinition、生成图及绑定、已注入依赖 |
+| ReactAgent / PlanAgent | 实现 Agent 的具体对象，运行时按任务／完整调用绑定 | 固定定义与依赖；ReactAgent 持有私有 AgentContext，PlanAgent 关联本次角色图 |
 | Workflow | 独立的可执行工作流类型，不实现 Agent | GraphDefinition、状态 schema、reducer 与已解析节点绑定 |
 | StateGraph | 工作流构建器 | 收集节点、边和状态定义；compile 后返回 Workflow |
 
@@ -95,37 +95,51 @@ CapabilityBinding
 
 ## 3. Node 类与 NodeTask
 
-Agent 面向 SDK 调用者，描述完整智能体怎样使用；Node 面向图引擎，描述一个执行位置怎样被激活。Agent 不继承 Node，Node 也不要求实现 Agent。ReactAgent 是完整程序，ReactNode 是它内部承担角色 Loop 的节点；PlanAgent 则装配 PlannerNode 和所配置的 ExecutorNode。
+Agent 面向 SDK 调用者，Node 面向图引擎。两种接口互不继承；AgentNode 同时实现它们，内部持有并代理 Agent。ReactAgent 执行角色 Loop 并持有 AgentContext；AgentNode 负责图接入，不复制 Loop 或消息。
 
 ```mermaid
 classDiagram
     class Node {
       <<interface>>
-      +activate(input, continuation, runtime) ActivationStream
+      +activate(input, continuation, node_context) ActivationStream
     }
-    class ReactNode
+    class Agent {
+      <<interface>>
+    }
+    class AgentNode {
+      +Agent agent
+    }
+    class ReactAgent {
+      +AgentContext context
+    }
+    class PlanAgent
     class PlannerNode
     class ExecutorNode
-    class WorkflowNodeAdapter {
-      <<interface>>
-      +invoke(state, context) TaskWriteProposal
-    }
-    class AgentNode
-    class CapabilityNode
-    Node <|.. ReactNode
-    ReactNode <|-- PlannerNode
-    ReactNode <|-- ExecutorNode
-    WorkflowNodeAdapter <|.. AgentNode
-    WorkflowNodeAdapter <|.. CapabilityNode
+    class AgentContext
+    class NodeContext
+    Node <|.. AgentNode
+    Agent <|.. AgentNode
+    Agent <|.. ReactAgent
+    Agent <|.. PlanAgent
+    AgentNode --> Agent : 组合及代理
+    AgentNode <|-- PlannerNode : 规划角色约束
+    AgentNode <|-- ExecutorNode : 执行角色约束
+    ReactAgent "1" *-- "0..1" AgentContext : 任务私有
+    AgentNode ..> NodeContext : 激活参数
+    ReactAgent ..> NodeContext : 借用受限服务
 ```
 
-这是运行接口的实现关系。Node 是内层图的可恢复节点协议，由 NodeDriver 驱动；外层的 AgentNode／CapabilityNode 通过 WorkflowNodeAdapter 对接迁移内核。它们都可绑定到图中的 NodeDefinition，但不因此实现同一个激活接口。这里保留双引擎的适配边界，不给 Node 强塞两套 activate／invoke 方法，也不要求 Agent 暴露图内激活方法。TaskWriteProposal 表示外层输出及 SDK 结果消费提案；其原生写入类型与逐方法映射仍需在 Workflow 适配中定稿，不等同于已经提交的 pending writes。
+PlannerNode／ExecutorNode 是可选的角色特化类，均绑定角色配置的 ReactAgent；不另建 ReactNode Loop 实现。每个角色任务的实际对象独立；GraphDefinition 中的节点位置、绑定配置和工厂可复用。NodeTask 是持久调度记录，不是 Python 节点类。
 
-AgentNode **组合完整 Agent**，不继承 Agent，也不继承 ReactNode。它通过 SDK 的内部调用桥执行已装配程序，不在节点里另起一个根 ExecutionRecord。首版可嵌入的程序限定为 SDK 的 ReactAgent／PlanAgent；仅实现公共 Agent 接口不足以声明可恢复嵌入能力，编译器须拒绝不支持该协议的绑定。具体映射见[公共接口](public-api.md#6-workflow-与-agentnode-的边界)。
+NodeContext 是每次激活的身份、控制及受限服务引用，不存消息和进度，也不保存到检查点。AgentContext 属于执行中的 ReactAgent，包括消息有效视图、压缩关联与 ReactContinuation。存储由统一提交设施完成；其消息头 AgentContextHead 和不可变进度是存储组成，不是额外引擎。
 
-ReactNode 一次激活可以推进到 Progress、Wait 或 Complete；运行位置保存在 ReactContinuation，恢复不依赖原协程。Planner 在 React 能力上增加委派；Executor 使用同一 Loop，但不能递归创建新 Executor。不是每一次模型调用都新建一个节点任务。
+AgentNode 的公共方法转发给内部 Agent；图内 activate 使用内部执行绑定接续已有任务，不调用公共 start 新建根执行。激活可以推进到 Progress、Wait 或 Complete／Fail，运行位置不依赖原协程。Planner 增加委派能力，Executor 使用同一 Loop 但不递归委派。一次模型调用不等于创建一次 NodeTask。
 
-普通 Tool、MCP、Skill 文件读取与脚本调用进入 Operation。只有工作流把一次能力配置为独立步骤时，才对应 CapabilityNode；能力调用本身不创建 GraphExecution。
+外层原生协议仍经 WorkflowNodeAdapter 衔接：完整 Agent 调用通过调用桥创建或恢复 AgentInvocation，CapabilityNode 调用能力管道。外层适配器组合执行绑定，不因名称中都有 Node 就直接调用内层 activate。TaskWriteProposal 表示外层输出及结果消费提案，不等于已经提交的 pending writes。首版只支持两种内置 Agent 的可恢复绑定；仅实现公共 Agent 接口不足以保证可恢复嵌入。
+
+普通 Tool、MCP、Skill 文件读取与脚本调用进入 Operation。只有工作流把能力配置为独立步骤时，才对应 CapabilityNode；能力调用本身不创建 GraphExecution。
+
+对象作用域和完整实例例子见[Node、角色与执行实例](object-collaboration.md#3-node角色与执行实例)。
 
 ## 4. 运行身份与数量
 
@@ -136,7 +150,7 @@ classDiagram
     class GraphExecution
     class NodeTask
     class NodeActivation
-    class RoleContext
+    class AgentContextHead
     class Operation
     class Attempt
     ExecutionRecord "1" *-- "0..*" AgentInvocation : 完整Agent调用
@@ -144,7 +158,7 @@ classDiagram
     AgentInvocation "1" --> "1" GraphExecution : 内层根图
     GraphExecution "1" *-- "0..*" NodeTask : 逻辑任务
     NodeTask "1" *-- "0..*" NodeActivation : 物理激活
-    NodeTask "1" --> "0..1" RoleContext : 角色上下文
+    NodeTask "1" --> "0..1" AgentContextHead : 消息存储头
     ExecutionRecord "1" *-- "0..*" Operation : 逻辑调用
     Operation --> NodeTask : 可选发起任务
     Operation "1" *-- "0..*" Attempt : 外部尝试
@@ -153,13 +167,15 @@ classDiagram
 | 场景 | 实例数量 |
 | --- | --- |
 | 直接 ReAct | 1 ExecutionRecord、1 AgentInvocation、1 内层 GraphExecution、1 React NodeTask |
-| Planner 同批两次委派同一种 Executor | 同一内层图，1 Planner + 2 Executor NodeTask，各有 RoleContext |
+| Planner 同批两次委派同一种 Executor | 同一内层图，1 Planner + 2 Executor NodeTask，各有一个 ReactAgent 与私有 AgentContext |
 | 两次不同提问 | 2 ExecutionRecord，可属于同一 Session；没有共享可变角色上下文 |
 | 外层 Workflow 调用完整 Plan Agent | 同一根 ExecutionRecord；1 外层图 + 1 内层图，增加 1 AgentInvocation |
 | 普通 MCP 调用 | 增加 Operation；实际请求可以增加 Attempt，不增加图 |
 | 接管未完成 ExecutionRecord | 保留原 ExecutionRecord／Invocation／Graph／Task／Operation；新进程创建新的物理对象和激活 |
 
-图的数量表描述已初始化的执行。queued ExecutionRecord 在完成初始化前可没有图；开始执行时恰好有一个根图，之后可以创建子图。一个纯工具 Workflow 可以没有 AgentInvocation 和 RoleContext。Operation 也可由 SDK 系统组件发起，因此不能强制每个 Operation 都有 node_task_id。
+上图描述持久记录：NodeTask 引用的 AgentContextHead 是消息头，进度由 NodeCheckpoint 引用；本机 ReactAgent.context 将它们装配为同一任务的 AgentContext，不另建第二份消息权威。
+
+图的数量表描述已初始化的执行。queued ExecutionRecord 在完成初始化前可没有图；开始执行时恰好有一个根图，之后可以创建子图。一个纯工具 Workflow 可以没有 AgentInvocation 和 AgentContext。Operation 也可由 SDK 系统组件发起，因此不能强制每个 Operation 都有 node_task_id。
 
 ## 5. SDK 身份与作用域
 
@@ -172,7 +188,7 @@ classDiagram
 | ExecutionLease | run_id、worker_id、epoch、expires_at；由共享执行存储验证 |
 | PayloadRef | inline JSON，或 SDK ContentStore 的不可变引用及长度／摘要 |
 | ContextRevisionRef | context_id + revision |
-| PreparedAgentRef | 已装配程序集合内的 agent_key；不解析平台发布 ID |
+| PreparedAgentRef | 已装配程序集合内的 agent_key，定位固定定义、依赖与创建绑定；不引用共享的活动上下文，也不解析平台发布 ID |
 
 namespace 不是授权凭据。公开接口接收调用方选定的 RuntimeEngine／分区，插件和 LLM 只能获得受限 scope，不能靠传入其他 ID 越界。
 
@@ -180,7 +196,7 @@ namespace 不是授权凭据。公开接口接收调用方选定的 RuntimeEngin
 
 ## 6. 两类状态不可混合
 
-GraphState 是 Workflow 的业务数据；RoleContext 是某个角色给模型的消息；ReactContinuation 是该任务下一步怎样执行；RunControl 是整次执行的额度、截止和停止。它们通过显式引用关联，不能塞进一个任意可写的 messages 字典。
+GraphState 是 Workflow 的业务数据；AgentContext 是角色 Agent 私有的消息与执行上下文，其中 AgentContextHead 是消息存储头，ReactContinuation 表示下一步执行位置；NodeContext 是本次激活的身份与服务视图；RunControl 是整次执行的额度、截止和停止。它们的作用域不同，不能塞进一个任意可写的 messages 字典。
 
 ## 7. 状态与序列化约定
 

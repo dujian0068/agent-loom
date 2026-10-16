@@ -72,7 +72,7 @@ class LeaseService(Protocol):
                                     → GraphExecution（UUID排序）
                                     → NodeTask（UUID排序）
                                     → Operation（UUID排序）
-                                    → RoleContext（UUID排序）
+                                    → AgentContextHead（UUID排序）
                                     → 各子记录（表名、主键排序）
 ```
 
@@ -136,7 +136,8 @@ admission 是准备Hook期间防并发越界的短暂占位，不是活跃Execut
 
 | 表 | 必须保存的列 | 约束 |
 | --- | --- | --- |
-| operations | operation_id,run_id,graph_id?,task_id?,trusted_subject,purpose_key,request_event_ref,request_fingerprint,kind,purpose,processing_phase,status,candidate_request_ref?,effective_request_ref?,effective_request_hash?,execution_permit_ref?,raw_result_ref?,effective_result_ref?,final_response_ref?,retry_policy,next_attempt_at?,target_ref?,batch_member_ref?,context_revision_refs[] | UNIQUE(run_id,trusted_subject,purpose_key)；completed要求response；前置deny允许无Attempt |
+| operations | operation_id,run_id,graph_id?,task_id?,trusted_subject,purpose_key,request_event_ref,request_fingerprint,kind,purpose,processing_phase,status,before_stage_result_ref?,after_stage_result_ref?,candidate_request_ref?,effective_request_ref?,effective_request_hash?,execution_permit_ref?,raw_result_ref?,effective_result_ref?,final_response_ref?,retry_policy,next_attempt_at?,target_ref?,batch_member_ref?,context_revision_refs[] | UNIQUE(run_id,trusted_subject,purpose_key)；completed要求response；前置deny允许无Attempt |
+| call_stages | operation_id,stage,event_ref,source,initial_operation_revision,result_ref?,revision | PK(operation_id,stage)；信封首次固定；StageResult与Operation对应引用同事务保存；处理器内部Hook游标单独保存 |
 | attempts | attempt_id,operation_id,attempt_no,lease_epoch,status,effective_request_hash,started_at?,first_output_at?,first_output_kind?,ended_at?,provider_request_id?,raw_ref?,incomplete_ref?,error_ref?,retry_after_at?,dispatch_evidence_ref? | UNIQUE(operation_id,attempt_no)；operation至多一个活跃attempt |
 | model_call_slots | operation_id,call_id,ordinal,provider_call_id?,raw_call_ref | PK(operation_id,call_id); UNIQUE(operation_id,ordinal)；完整raw响应保存时分配，Hook和接受决策复用 |
 | hook_invocations | hook_invocation_id,operation_id,stage,hook_binding_key,ordinal,input_revision,input_payload_ref,input_context_refs[],mapping_version,schema_version,status,execution_status?,result_ref?,decision_ref?,normalized_patch_ref?,normalized_patch_hash?,context_change_refs[],patch_status,diagnostic_ref?,before_payload_ref,after_payload_ref? | UNIQUE(operation_id,stage,hook_binding_key,ordinal)；status=prepared/started/result_saved/applied/indeterminate |
@@ -152,7 +153,7 @@ Operation.status固定为pending/succeeded/failed/blocked，处理阶段另存pr
 
 | 表 | 必须保存的列 | 约束 |
 | --- | --- | --- |
-| role_contexts | context_id,invocation_id,owner_task_id,role_key,record_head,effective_revision,active_snapshot_id?,last_model_operation_id? | UNIQUE(owner_task_id) |
+| agent_contexts | context_id,invocation_id,owner_task_id,role_key,record_head,effective_revision,active_snapshot_id?,last_model_operation_id? | UNIQUE(owner_task_id) |
 | raw_records | record_id,context_id,context_seq,run_id,role,message_kind,operation_id?,call_id?,origin_input_id?,payload_ref,source_scopes | UNIQUE(context_id,context_seq)；不可改原始事实 |
 | effective_context_revisions | context_id,revision,parent_revision?,record_watermark,mutation_ids[],effective_manifest_ref,commit_ref | PK(context_id,revision)；manifest包含上下文设计的完整EffectiveRecordEntry；不可变 |
 | context_append_keys | context_id,source_kind,source_id,message_kind,logical_result_key,record_id | 联合唯一前五列；消息append和key登记同事务 |
@@ -242,6 +243,8 @@ commit(command, lease):
 | activate_task | Task running、Activation、intent claimed | Task ready、无活跃同epochActivation |
 | commit_progress | Continuation、NodeCheckpoint、相关wait/op引用 | task revision CAS；Progress receipt后才asend继续 |
 | begin_operation | Operation prepared、权威EventRequest、调用关联 | trusted_subject+purpose_key唯一且fingerprint相同 |
+| save_call_stage | 原Loop／节点的阶段信封、operation_id/stage、初始revision | 首次发送前保存；恢复使用原event_id/source，不新增业务Operation |
+| complete_call_stage | StageResult及Operation对应stage_result_ref、有效引用 | 累计处理已完成或合法deny；空链也提交 |
 | save_hook_start | HookInvocation prepared→started、HookProcessing.pending | 唯一handler位置；不得重复启动已记录未知Hook |
 | save_hook_result | 原始HookDecision、result_saved | 不能在此独立修改有效上下文 |
 | apply_hook_decision | ContextMutation/Revision、effective payload、decision、cursor | 语义patch归一/CAS一致；合法deny独立保留 |
@@ -249,8 +252,8 @@ commit(command, lease):
 | start_attempt | Attempt started、Operation executing、physical调用意图 | 有有效permit；无活跃Attempt；自动重试上限/等待/控制检查 |
 | save_attempt_raw | Attempt终态/原始分片引用、Operation raw_saved | 不触发下一Loop；raw已存不得重跑能力 |
 | control_finalize_operation | 保留raw/已应用修改、未启动Hook的skipped_control记录、最终failed响应、Operation.completed | scope已关闭且in-flight收束/撤权证据有效；不可新发Hook，见调用总线设计 |
-| complete_operation | response Hooks完成、effective result、EventResponse、Operation completed | 终态响应恰一次；用于唤醒不等于已被节点消费 |
-| accept_model_decision | 有效assistant记录、Ticket consumed、root/local计数、Continuation、CallBatch/WaitGroup成员 | 模型回应尚未消费；同message不得被Pipeline重复append |
+| complete_operation | after StageResult已提交或before已拒绝、effective result、EventResponse、Operation completed | 终态响应恰一次；用于唤醒不等于已被节点消费 |
+| accept_model_decision | 有效assistant记录、Ticket consumed、root/local计数、Continuation、CallBatch/WaitGroup成员 | 模型回应尚未消费；同message不得被EventBusImpl重复append |
 | settle_model_failure | 有效反馈槽/错误、ticket consumed或released、Continuation/Task状态 | 是否进入下一模型上下文决定扣额；和反馈事实同事务 |
 | reserve_executor | admission reserved、批次成员准入状态 | 活跃+reserved低于上限；串行member顺序检查 |
 | spawn_executor | admission converted、子Task/Context/ready intent、父Operation pending引用 | 固定dispatch/member身份，parent仍允许新工作 |
@@ -329,7 +332,7 @@ AgentCheckpointPayload（位于公共 GraphCheckpoint.engine_state_ref 中）
 
 ExecutionRecord／图身份、定义／编译版本和覆盖水位保存在公共信封，内层载荷不维护另一份可变副本。外层通过WorkflowCheckpointAdapter保存专属载荷及原生writes，不能使用此角色任务清单替代原生快照。
 
-恢复使用调用方重新构造的执行程序及原绑定，校验 SDK 协议版本、节点 key、状态载荷格式与内容完整性；不读取平台 Release、不比较配置版本指纹。调用方必须保证本次提供原配置。内层恢复从最近校验通过快照S装载，按ScopeCommit顺序应用S+1..head的不可变after引用；发现缺号/hash错误先尝试更早完整快照，仍缺失则 `CHECKPOINT_CORRUPT` 停止。不得“跳过一条看起来不重要的增量”。`read latest RoleContext`不是读取指定历史快照的实现。
+恢复使用调用方重新构造的执行程序及原绑定，校验 SDK 协议版本、节点 key、状态载荷格式与内容完整性；不读取平台 Release、不比较配置版本指纹。调用方必须保证本次提供原配置。内层恢复从最近校验通过快照S装载，按ScopeCommit顺序应用S+1..head的不可变after引用；发现缺号/hash错误先尝试更早完整快照，仍缺失则 `CHECKPOINT_CORRUPT` 停止。不得“跳过一条看起来不重要的增量”。`read latest AgentContextHead`不是读取指定历史快照的实现。
 
 ## 7. 执行权接管与恢复算法
 
@@ -361,7 +364,7 @@ CommitWorkflowTaskWrites 区分 task_result、task_error、task_interruption、s
 | model_ready有permit但无Attempt | 控制检查后开始第一个Attempt，票据不重复reserve |
 | Attempt有provider handle且可查询 | 查询原执行，保存结果；不先重试 |
 | Attempt执行结果未知 | Manager先reconcile；无结果按调用策略转unknown/错误，是否自动重试见调用总线设计，不宣称无副作用 |
-| raw_saved/response_hooks | 仅接续后置Hook，不重复模型/工具 |
+| raw_saved/after_call | 原Loop／节点续发已保存的after事件；复用已提交StageResult，只补最终结算，不重复模型/工具 |
 | completed Operation尚未消费 | 返回原response，节点消费事务幂等 |
 | Hook started但无结果 | 尝试取回；不可取回记indeterminate并fail-open，不盲目重放 |
 | 子Task已终态、父成员未结算 | 用原TaskResult推进父委派Operation后处理，不新建Executor |
@@ -430,7 +433,7 @@ NodeCheckpoint
   waiting_refs: WaitCondition[]
 ```
 
-共同信封描述“哪个执行范围、哪个保存水位”，不塞入平台 Release。parent_execution_ref 是完整子 Agent 图的关系，Executor 的父子关系在同图 NodeTask 内保存。
+共同信封描述“哪个执行范围、哪个保存水位”，不塞入平台 Release。NodeContext 含当前 lease 和服务引用，只在接管后重新装配，不能进入信封或引擎载荷。parent_execution_ref 是完整子 Agent 图的关系，Executor 的父子关系在同图 NodeTask 内保存。
 
 AgentCheckpointPayload 至少含图阶段、ready task IDs、任务及 NodeCheckpoint 引用、已结算结果、CallBatch／WaitGroup 成员与 ordinal、未消费结果、Operation 引用和当前控制引用。私有消息通过 ContextRevisionRef 定位，不复制任意最新 messages。这里只需要角色调度，不引入 Workflow channels／reducer 的第二套实现。
 
@@ -462,5 +465,7 @@ classDiagram
     ScopeCommit --> NodeCheckpoint : 变更引用
     ScopeCommit --> Operation : 调用修订引用
 ```
+
+Agent 的内存 AgentContext 从消息头／有效记录和 NodeCheckpoint 的 continuation 共同恢复；continuation 只保存一份，不能在 AgentNode 或 NodeContext 再建独立进度。原始消息、有效修订与进度的变更同事务发布，物理 Agent 释放不触发记录删除。
 
 此图表示持久载荷的引用；一个 GraphCheckpoint 只选一种引擎载荷。ContextSnapshot 是摘要，GraphCheckpoint 是执行现场，两者不能相互替代。Snapshot 可以延后物化，但已经提交的结果、消费与后继意图不能延后到一起“补存”。

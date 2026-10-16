@@ -7,8 +7,8 @@
 - Executor 继承所属 AgentDefinition 的主模型；CompactionEpisode 继承当前角色模型，二者没有独立模型选择入口。
 - 角色 Prompt、工具目录、模型配置、上下文参数、重试策略及环境策略在 Agent 构造时注入并固定；恢复不读取“最新”配置替换它们。
 - 调用方可通过控制接口撤销执行或更新授权服务；SDK 在能力边界检查已注入访问范围，固定配置不能绕过撤销。
-- 每个 React 类 NodeTask 有自己的 RoleContext；同 Invocation 的 Planner／Executor 共享工作文件，不共享私有消息。
-- 外层 CapabilityNode 没有隐含 RoleContext；其调用有效值留在 Operation，并通过节点映射进入 GraphState。
+- 每个角色 NodeTask 对应一个执行中的 ReactAgent，由它持有私有 AgentContext；同 Invocation 的 Planner／Executor 共享工作文件，不共享模型消息。
+- 外层 CapabilityNode 没有隐含 AgentContext；其调用有效值留在 Operation，并通过节点映射进入 GraphState。
 - ContextManager、ModelManager、ToolManager、EnvironmentManager 是事件请求的唯一对应消费者；内部 writer、适配器和纯函数不再次进入相同请求链。
 
 下文所有持久 DTO 均带 `schema_version=1`；UUID 由 SDK 生成或调用方稳定传入，时间使用 UTC，大小使用字节，tokens 为非负整数。普通实体revision从1开始；Context.effective_revision和record_head允许初始0。`?` 表示可空；集合默认空集合，不以缺失字段表达不同语义。不可变正文使用规范 JSON／UTF-8 编码后计算 SHA-256。
@@ -29,11 +29,19 @@ inline内容的owner和权限由承载它的可信实体决定，blob分支保�
 
 ## 2. 原始记录、有效版本与提交端口
 
-### 2.1 持久 DTO
+### 2.1 AgentContext 与持久 DTO
+
+`ReactAgent.context: AgentContext` 是本次角色任务的上下文对象：它关联下表的消息头、有效记录视图和压缩引用，并持有当前已提交的 `ReactContinuationV1`。消息头 DTO 命名为 AgentContextHead，表示存储投影，不是另一个独立运行上下文；进度只保存一份不可变 continuation，由 NodeCheckpoint 引用。恢复器从同一已提交现场重建这些部分，不序列化整个 Python Agent 对象。
+
+NodeContext 只携带任务身份、控制和受限服务引用；其中的 ContextPort 可以访问本任务 ContextManager，却不拥有或复制消息。AgentContext 的修改通过 ContextDelta 和 RuntimeCommit 提交，成功后才刷新 Agent 的已提交视图。候选输出、未提交写集和缓存不作为恢复权威；已提交 Hook 修改必须在后续物化中可见。
+
+AgentContext 的本机结构固定为 `head: AgentContextHead` 和 `continuation: ReactContinuationV1`；`context_id` 取自 head，消息按 head 的有效修订经 ContextManager 物化，压缩引用也来自 head，不强制把所有原始历史常驻内存。head 与 continuation 都是已提交只读视图，Agent 按提交回执替换它们。Hook 可以先推进消息修订；continuation 中的 context_revision_ref 仍表示该执行阶段固定使用的版本，下一次准备模型视图时读取当前有效 head，不用旧版本倒写 head。
+
+下表只定义 AgentContext **消息部分**的持久字段；执行进度格式以 [ReactContinuation](runtime.md#1-所有权配置与共同类型) 为准，两者同事务推进。
 
 | DTO | 字段 |
 | --- | --- |
-| `RoleContext` | `context_id, invocation_id, owner_node_task_id, role_key, record_head:int, effective_revision:int, active_snapshot_id?, last_model_operation_id?` |
+| `AgentContextHead` | `context_id, invocation_id, owner_node_task_id, role_key, record_head:int, effective_revision:int, active_snapshot_id?, last_model_operation_id?` |
 | `ContextRecord` | `record_id, context_id, context_seq, run_id, role:user\|assistant\|tool\|system, message_kind, payload_ref, operation_id?, call_id?, origin_input_id?` |
 | `ContextMutation` | `mutation_id, context_id, base_revision, committed_revision, source_kind:hook\|runtime\|user, source_ref, cause_operation_id?, patch_ref, created_at` |
 | `EffectiveContextRevision` | `context_id, revision, parent_revision?, record_watermark, mutation_ids[], effective_manifest_ref, commit_ref, created_at` |
@@ -48,7 +56,7 @@ ContextRecord 永不更新正文。有效 manifest 按 `(context_seq, record_id)
 
 ```python
 class ContextManager:
-    async def prepare_create(self, cmd: CreateRoleContext) -> ContextDelta: ...
+    async def prepare_create(self, cmd: CreateAgentContext) -> ContextDelta: ...
     async def prepare_original(self, cmd: AppendOriginal) -> ContextDelta: ...
     async def prepare(self, cmd: PrepareContext, authority: ContextReadAuthority) -> ContextDraft: ...
     async def materialize(self, cmd: MaterializeContext, authority: ContextReadAuthority) -> ModelView: ...
@@ -70,7 +78,7 @@ class ContextManager:
 
 | 命令／返回 | 必填字段及含义 |
 | --- | --- |
-| `CreateRoleContext` | `context_id, invocation_id, owner_node_task_id, role_key, expected_node_revision, idempotency_key`；身份随 NodeTask 初始提交创建 |
+| `CreateAgentContext` | `context_id, invocation_id, owner_node_task_id, role_key, expected_node_revision, idempotency_key`；身份随 NodeTask 初始提交创建 |
 | `AppendOriginal` | `context_id, expected_revision, records:OriginalRecordInput[], cause_operation_id?, idempotency_key` |
 | `OriginalRecordInput` | `record_id, role, message_kind, payload_ref, operation_id?, call_id?, origin_input_id?, logical_result_key, dependencies[]` |
 | `AppendReceipt` | `context_revision_ref, record_refs[], commit_receipt`；重复命令返回原 record_id／seq |
@@ -85,11 +93,11 @@ class ContextManager:
 
 上述准备端口无持久状态推进；写出的不可变 blob 尚未被事务引用时都是可回收材料。调用方将 ContextDelta／ContextWriteSet／ModelFreezeWriteSet 放入 `RuntimeCommit`，唯一写入口为 `CommitCoordinator.commit(RuntimeCommit, ExecutionLease)`。普通 ContextPort.append_original 门面也由所属 Manager 准备并提交该写集，不开放数据库 writer 给节点。
 
-`Pipeline.prepare_business_model(ref,scope)` 在 request_hooks 阶段返回前置 Hook 已应用的 `PreparedModelRequest`；尚未最终冻结，不授予出网许可。字段使用[调用协议的唯一 DTO](event-bus.md#22-持久调用记录)：以 operation_ref／operation_revision 关联调用，以 candidate_payload_ref／prepared_hash 关联前置处理后的候选，以 request_hook_state_ref、context_revision_refs 和 effective_parameters_ref 固定处理依据，另保存 purpose、protection_manifest_ref、model_budget_ref。候选不等于最终 FrozenModelRequest。ContextManager.materialize_prepared_model 只根据新上下文／摘要重建 messages，逐项保留原 effective_parameters_ref 中的非messages参数；不重新运行已完成 Hook。
+`NodeDriver.prepare_business_model(ref,scope)` 由 Loop 发 before 事件，并在 before_call 阶段读取已提交 StageResult，返回处理后的 `PreparedModelRequest`；尚未最终冻结，不授予出网许可。字段使用[调用协议的唯一 DTO](event-bus.md#22-持久调用记录)：以 operation_ref／operation_revision 关联调用，以 candidate_payload_ref／prepared_hash 关联前置处理后的候选，以 before_stage_result_ref、context_revision_refs 和 effective_parameters_ref 固定处理依据，另保存 purpose、protection_manifest_ref、model_budget_ref。候选不等于最终 FrozenModelRequest。ContextManager.materialize_prepared_model 只根据新上下文／摘要重建 messages，逐项保留原 effective_parameters_ref 中的非messages参数；不重新运行已完成 Hook。
 
-NodeDriver 用 `commit_model_ready(RuntimeCommit)` 同事务发布最终请求／hash、InputClaim、LoopTicket预占、execution_permit 和 continuation，成功后 Pipeline 才出网。ModelFreezeWriteSet 不自行扣票据。压缩模型不占业务票据，仍有相同scope控制。
+NodeDriver 用 `commit_model_ready(RuntimeCommit)` 同事务发布最终请求／hash、InputClaim、LoopTicket预占、execution_permit 和 continuation，成功后 EventBusImpl 才出网。ModelFreezeWriteSet 不自行扣票据。压缩模型不占业务票据，仍有相同scope控制。
 
-`prepare_accept_model` 要求响应已经是 Operation 的最终有效响应，mutation_key 固定 `model:<operation_id>:accept`，把 assistant 与调用关联一次追加；与票据consume、CallBatch或候选答案phase同事务。Pipeline保存effective期间仅保留当前调用的稳定记录绑定／待接受投影，不提前追加第二条assistant消息。`prepare_batch_delivery` 要求所有ordinal已有最终结果，键固定 `batch:<batch_id>:deliver`，填原反馈槽并生成完整工具协议组，与batch consumed和父phase同事务。Executor失败的PendingFeedbackSlot按runtime.md复用，不另加一条重复错误。
+`prepare_accept_model` 要求响应已经是 Operation 的最终有效响应，mutation_key 固定 `model:<operation_id>:accept`，把 assistant 与调用关联一次追加；与票据consume、CallBatch或候选答案phase同事务。Loop在after处理后通过CommitCoordinator保存effective，期间仅保留当前调用的稳定记录绑定／待接受投影，不提前追加第二条assistant消息。`prepare_batch_delivery` 要求所有ordinal已有最终结果，键固定 `batch:<batch_id>:deliver`，填原反馈槽并生成完整工具协议组，与batch consumed和父phase同事务。Executor失败的PendingFeedbackSlot按runtime.md复用，不另加一条重复错误。
 
 这些端口通过调用篇的原始 Manager 门面装配：`context.materialize/context.mutate/result.read` 属于 internal，不虚构外部 Attempt；`prepare_effect` 返回 `PreparedDomainEffect{effect_kind:read|context_mutation,expected_context_revisions[],effect_ref?,result_ref,effect_hash}`，其写集与raw_saved同事务。`context.compact` 属于recoverable，`prepare_wait` 返回 `RecoverableWaitPlan{wait_kind:compaction_episode,wait_ref,source_operation_id,expected_revision,initial_effects_ref}`，Episode初始状态与Operation.target_ref同事务；块模型调用有自己的Operation／Attempt，Episode完成再桥接外层raw结果。
 
@@ -101,7 +109,7 @@ NodeDriver 用 `commit_model_ready(RuntimeCommit)` 同事务发布最终请求�
 
 `ContextPatch{context_id,base_revision,operations[]}` 的每项为 `ContextPatchOperation{target_record_id,field_key,operation:replace_value|append_annotation,value_ref}`，不得使用消息数组下标。`ContextReadPrecondition` 为 `context_id,expected_revision,record_id?,field_key?,expected_effective_hash?,authorization_digest`；读集覆盖目标字段及影响可见性／授权的字段，而非只覆盖写字段。
 
-`ContextWriteSet` 包含 `read_preconditions[], context_mutations[], new_revision_manifests[], effective_payload_ref, effective_payload_hash, source_dependencies[], validation_diagnostics[]`。Pipeline 的 Hook APPLY 提交增加 `hook_decision_write, hook_cursor_write, expected_operation_revision, expected_node_revision, idempotency_key`，与该写集同事务。`PatchReceipt` 返回 `accepted, context_revision_refs[], effective_payload_ref, diagnostic_ref?, commit_receipt`，是此统一提交的结果。
+`ContextWriteSet` 包含 `read_preconditions[], context_mutations[], new_revision_manifests[], effective_payload_ref, effective_payload_hash, source_dependencies[], validation_diagnostics[]`。HookHandler 经 CommitCoordinator 发起的 Hook APPLY 提交增加 `hook_decision_write, hook_cursor_write, expected_operation_revision, expected_node_revision, idempotency_key`，与该写集同事务。`PatchReceipt` 返回 `accepted, context_revision_refs[], effective_payload_ref, diagnostic_ref?, commit_receipt`，是此统一提交的结果。
 
 ContextManager 执行以下校验，任何一个失败都不发布部分写集：
 
@@ -167,7 +175,7 @@ prepare_context固定本轮input_cutoff，压缩与Hook处理期间不刷新这�
 | 边界 | 事务读取／前置 | 事务写入及幂等键 |
 | --- | --- | --- |
 | 根输入投影追加 | ExecutionRecord 可推进；入口 NodeTask、context head、input_seq 水位和未送达记录 | user_ref、revision、delivery.context_seq；`input-project:<context>:<input>` |
-| 请求冻结与领取 | Operation request_hooks 已完成、有效请求 hash、所有 context heads、保护清单、ExecutionRecord／局部控制 | FrozenModelRequestRef、claimed、Operation phase、continuation；`model-freeze:<operation>` |
+| 请求冻结与领取 | Operation 的before StageResult已提交、有效请求 hash、所有 context heads、保护清单、ExecutionRecord／局部控制 | FrozenModelRequestRef、claimed、Operation phase、continuation；`model-freeze:<operation>` |
 | 首输出接收 | 当前 lease、Attempt 仍归属原 Operation、claim 引用一致 | receipt、first_output_at、delivered；`first-output:<attempt>` |
 | ExecutionRecord 终态转交 | 根 ExecutionRecord 已关闭准入、未 delivered 记录 | carried／pending 链和终态一并提交；`carry:<run>:<input>:<delivery>` |
 
@@ -246,7 +254,7 @@ class CompactionService:
 
 `CompactionProgress` 为 `episode_ref, status, chunk_cursor, chunk_count, pending_operation_ref?, result_snapshot_id?, error?`。`CompactionResult` 为 `episode_id, status, snapshot_id?, applicability, rebuilt_view_ref?, error?`。plan 每个 triggering_model_operation_id 至多创建一个 Episode；重入返回同一 ID，不能通过故障重建绕过唯一性。
 
-`advance` 每次最多推进一个 chunk；先查 purpose_key 对应 Operation，有最终结果则消费，有 raw_saved 则继续后置处理，有待执行意图才由调用管道执行。它不持有数据库事务等待模型。业务 continuation 处于 compact_context，恢复不用还原 Python 栈。
+`advance` 每次最多推进一个 chunk；先查 purpose_key 对应 Operation，有最终结果则消费，有 raw_saved 则由压缩 Agent 的调用方阶段逻辑发 after，有已许可的执行意图才交总线执行主 Handler。它不持有数据库事务等待模型。业务 continuation 处于 compact_context，恢复不用还原 Python 栈。
 
 ### 5.3 目标与分块
 
@@ -283,9 +291,9 @@ T = min(Agent显式正整数目标,P) if 已配置 else T_auto
 
 全部块完成后，读取当前 context heads、原 active_snapshot_id、manifest 的每个已覆盖 record_id 的有效 hash／mutation 集。只有追加新记录或修改未覆盖内容，不阻止提交原覆盖 snapshot；新增材料稍后接回。
 
-若任一已覆盖记录有效内容改变，保存基于原固定来源的不可变 ContextSnapshot 和 Episode.result_snapshot_id，保留模型成功事实，`status=succeeded`，但不更新 RoleContext.active_snapshot_id；诊断 `SNAPSHOT_SOURCE_CHANGED`，从原 source manifest 展开所有覆盖原材料，以当前有效版本重新物化。该快照只供固定旧版本查询，不用于新视图。该 Operation 已用过唯一 Episode，最终仍超 B 就 `CONTEXT_WINDOW_EXCEEDED`，不重新调用摘要模型。
+若任一已覆盖记录有效内容改变，保存基于原固定来源的不可变 ContextSnapshot 和 Episode.result_snapshot_id，保留模型成功事实，`status=succeeded`，但不更新 AgentContextHead.active_snapshot_id；诊断 `SNAPSHOT_SOURCE_CHANGED`，从原 source manifest 展开所有覆盖原材料，以当前有效版本重新物化。该快照只供固定旧版本查询，不用于新视图。该 Operation 已用过唯一 Episode，最终仍超 B 就 `CONTEXT_WINDOW_EXCEEDED`，不重新调用摘要模型。
 
-来源未变时，同事务插入 ContextSnapshot、关联 Episode.result_snapshot_id、替换 RoleContext.active_snapshot_id、写 continuation 与 ScopeCommit。generation=该 context 已提交 generation+1；唯一键 `(context_id,generation)` 和 `(triggering_model_operation_id)` 分别保护快照序列与 Episode 数量。
+来源未变时，同事务插入 ContextSnapshot、关联 Episode.result_snapshot_id、替换 AgentContextHead.active_snapshot_id、写 continuation 与 ScopeCommit。generation=该 context 已提交 generation+1；唯一键 `(context_id,generation)` 和 `(triggering_model_operation_id)` 分别保护快照序列与 Episode 数量。
 
 后续 materialize 按“适用摘要＋未覆盖记录／更正＋保护输入”组装。覆盖判断使用稳定 record_id、有效 hash、mutation 集和 source revision；不能仅按最大 seq 跳过消息。一次记录版本只替代一次。旧摘要失效是整份替代范围失效，不在摘要自然语言中删除单句。
 

@@ -7,8 +7,8 @@
 | 阶段 | 交付 | 门槛 |
 | --- | --- | --- |
 | S1 对象与公共端口 | Agent、Node、Definition、作用域、事件、RuntimeStore 协议与内存适配 | 不导入 Platform；接口实现、对象归属和唯一写入者明确 |
-| S2 调用基础 | EventBus、Pipeline、Manager、Hook、Attempt | 请求恰好路由一个 Handler；拒绝、失败放行、结果等待通过 |
-| S3 Agent 执行 | ReactNode／PlannerNode／ExecutorNode、批次、LoopTicket | 三种确定性场景、额度与串并行边界通过 |
+| S2 调用基础 | EventBus、HandlerRegistry、EventHandler、HookHandler、Attempt | 请求恰好路由一个 Handler；拒绝、失败放行、结果等待通过 |
+| S3 Agent 执行 | ReactAgent、AgentNode 及角色绑定、AgentContext、批次、LoopTicket | 三种确定性场景、额度与串并行边界通过 |
 | S4 上下文和文件 | 历史、补充、压缩、SDK 工具、受限执行环境 | 不丢用户输入，Hook 修改持续可见，主子共享且跨 Session 隔离 |
 | S5 持久恢复 | 原子存储、执行权、快照增量、父子交接 | 独立进程故障注入，旧 writer 撤权，终态与后继一致 |
 | S6 Workflow | 源码迁入、编译／状态／reducer、AgentNode、Saver adapter | 原生语义与 SDK 原子提交适配测试通过 |
@@ -19,7 +19,7 @@
 | 编号 | 场景 | 必须断言 |
 | --- | --- | --- |
 | SDK01 | ReAct 直接回答／多轮工具 | 一 Graph、一 React Task、同 Context；工具只有 Operation |
-| SDK02 | Planner 同类型两次委派 | 同图三个 Task、三个私有 Context；不是三个图 |
+| SDK02 | Planner 同类型两次委派 | 同图三个 Task、三个 ReactAgent、三个私有 AgentContext；同类 Executor 只复用配置，不复用活动对象 |
 | SDK03 | 无 Executor | Planner 可调用授权工具；不出现虚构默认执行器 |
 | SDK04 | parallel=false，混合工具与委派 | 按原 ordinal 逐项完成；慢后置 Hook 也不能越过串行顺序 |
 | SDK05 | parallel=true，max=2，三个 Executor | 最多两个活跃子任务；已结束子任务释放槽位，未完成结果 Hook 仍须等待后再结算 |
@@ -28,8 +28,8 @@
 | SDK08 | 第 100 张票据仍 reserved | 等待结算，不误报耗尽；第 100 次可成功，第 101 次不能出网 |
 | SDK09 | SDK 自动重试、格式纠正、压缩 | 尝试不重复计票；模型纠正正常计票；压缩不计业务票 |
 | SDK10 | 外层 AgentNode 调 Plan | 一个根 ExecutionRecord、外图与内图分离；Executor 仍在内图；私有 Context 不进入 GraphState |
-| SDK11 | 纯能力 Workflow | 可以没有 AgentInvocation／RoleContext；不造假上下文 |
-| SDK12 | 同一绑定在不同 ExecutionRecord 并行 | Node 对象不保存可变消息；ExecutionRunner、总线、Task scope 不串用 |
+| SDK11 | 纯能力 Workflow | 可以没有 AgentInvocation／AgentContext；不造假上下文 |
+| SDK12 | 同一绑定在不同 ExecutionRecord 并行 | 节点定义／工厂可复用，活动 AgentNode／ReactAgent 按 Task 隔离；ExecutionRunner、总线、Task scope 不串用 |
 | SDK13 | 完整空候选／格式不合规，再修正成功 | 接受每个完整决策只 consume 一次；反馈键固定 format；新修正新票据；不偷换为网络重试 |
 | SDK14 | 第 100 次返回格式错误 | 原票据只扣一次；修正需第 101 次时预算异常；不追加总结调用 |
 | SDK15 | 纯工具 Workflow 未传 session_id | 无 AgentInvocation 仍有合法 run 文件分区；不伪造会话或重复嵌套 runs 目录 |
@@ -46,12 +46,40 @@
 | SDK26 | 终态事件后清理缓慢；从 terminal_seq 重连 | 答案流在固定终态序号结束；清理状态单独查询，不重发最终结果 |
 | SDK27 | 相同 command_id 不同 stop 参数；接收回执未知重投 | 冲突明确，重投不双重接收，不把未知提交解释为 ExecutionRecord 失败 |
 | SDK28 | ReactAgent／PlanAgent 赋给 Agent 类型，再使用统一入口 | 类型检查与调用合同一致；构造不执行，接口不暴露 Node.activate 或平台 CRUD |
-| SDK29 | StateGraph 编译纯工具图 | 返回 Workflow；不要求模型、AgentDefinition 或 RoleContext，不因复用 RunHandle 继承 Agent |
+| SDK29 | StateGraph 编译纯工具图 | 返回 Workflow；不要求模型、AgentDefinition 或 AgentContext，不因复用 RunHandle 继承 Agent |
 | SDK30 | AgentNode 绑定内置 Agent／只实现公共方法的第三方 Agent | 前者走内部调用桥、同根 ExecutionRecord；后者编译时报 ConfigurationError，不偷偷调用 start 新建根 ExecutionRecord |
 | SDK31 | 同一 RuntimeEngine 并发执行两个不同 run_id，其中一个关闭观察或终结 | 两个 ExecutionRecord、两个有效 ExecutionRunner；总线、Manager 活动索引、预算和上下文隔离，共享客户端不被其中一次收尾关闭 |
 | SDK32 | 旧 Runner 失权后重建并接管原 run_id | ExecutionRecord 与已提交 Task／Operation 身份不变，新建 ExecutionRunner／总线／激活端口；旧句柄或代理不能继续以旧 epoch 写入，终态记录只读附着不创建 Runner |
+| SDK33 | AgentNode 作为 Agent 调用，再作为 Node 在图内激活 | 公共入口只转发一次；图内入口继续原任务，不新增根记录、不重复模型／工具 Hook |
+| SDK34 | 同一 Agent 实例绑定另一 run_id，另案同 ID 重投 | 前者返回 AGENT_INSTANCE_BOUND；后者附着原执行。省略 ID 不得意外重用旧结果或开启新执行 |
+| SDK35 | 任务等待后重激活，或迁移到另一机器 | 重建 NodeContext 和当前有效的服务代理，沿用原 task/context/continuation；不恢复旧 lease、锁、客户端或协程 |
+| SDK36 | Hook 修改已提交，Agent 持有旧消息缓存 | 下一次模型物化读到有效新修订；节点／Agent 缓存不能覆盖已提交修改；检查点不含 NodeContext |
+| SDK37 | Workflow 同一 PreparedAgentRef 并发调用两次 | 共用冻结配置与服务，创建两个独立活动 Agent 及上下文；节点绑定不能捕获编译时活动状态 |
 
 ## 3. Hook 与 EventBus 测试
+
+接口和组合注册关系必须先通过以下验收；这些是待实施用例，文档构建不能替代运行验证。
+
+| 场景 | 必须断言 |
+| --- | --- |
+| 接口实现 | EventBusImpl 可作为 EventBus、HandlerRegistry；HookHandler 可作为三接口；末端子 Hook 只要求 EventHandler |
+| 本地注册隔离 | 两个组合处理器注册同名子项，resolve 只返回各自表；不自动回退根表；根业务键重复拒绝 |
+| 顺序与有效修改 | 第一个子 Hook 修改已提交后，第二个读到新版本；最终 StageResult 保留累计效果，合法 deny 后续计数为零 |
+| 转发与递归 | HookHandler.handle 只委托本地 request；Loop发出的前后 CallStageEvent 不新增 Operation／Attempt／LoopTicket，也不再触发自身 Hook |
+| 恢复与重入 | 子 Hook applied 后宕机，以同 Operation 与游标接续；重复阶段 request 不重复执行已完成项，raw_saved 后不重调业务工具 |
+| 类型与授权 | 根发送代理无注册入口；伪造阶段事件拒绝；错误输入／响应合同和循环注册在 freeze 前报错，失败不半冻结 |
+
+增加事件归属断言：
+
+| 场景 | 必须断言 |
+| --- | --- |
+| 发出者 | model.generate.before／after 的 source 是原 Loop；ModelManager／ToolManager 不调用 Hook、不发本次外围阶段事件；总线不能自行补发 |
+| 阶段屏障 | 阻塞 before 处理器，Adapter 调用次数保持 0；允许后才执行，拒绝后仍为 0 |
+| 无用户 Hook | 空链返回已提交原视图，正常继续；Loop 代码没有 has_hooks 或 HookHandler 分支 |
+| 有效修改 | before 修改进入实际请求；after 修改进入本次交付、后续上下文及恢复读取；raw 保持原样 |
+| 流式与重试 | 多个 delta 不增加阶段事件数；同 Operation 的自动重试不重复已完成 before；最终 raw 选定后才发一次逻辑 after |
+| 恢复 | raw_saved 后崩溃，恢复由原发起方续 after；StageResult 已提交但回执丢失时查回原结果，Adapter 不再调用 |
+| 并行成员 | 每个成员独立 before／after；其中一个完成不触发下一模型 Loop，全批 settled 才交付 |
 
 请求只有一个 Manager，观察者不得响应请求；空 Hook 链也保存 Operation 事实。前置 deny 不创建 Attempt；后置 deny 保留执行事实。Hook 异常 fail-open 与必要存储失败严格分开。
 

@@ -16,8 +16,9 @@ SDK 接收构造参数和运行依赖，自行执行、管理上下文、保存�
 | ExecutionRunner / RunControl | 单次执行的现场、预算、截止、停止和接管 | 跨 ExecutionRecord 的共享可变上下文、另一套节点调度队列 |
 | AgentGraphEngine | 轻量角色调度、批次、等待与汇合 | Workflow 的 channels / super-step |
 | WorkflowEngine | 通用图编排、状态合并、原生恢复 | Planner 的业务决策与 Agent Loop |
-| ReactNode / PlannerNode / ExecutorNode | 共用可恢复 Loop，各自维护 continuation | 独立用户／应用生命周期 |
-| EventBus / Pipeline / HookManager | 调用关联、有序拦截、结果与通知 | 把观察订阅当作可靠执行者 |
+| ReactAgent / AgentNode | Agent 执行 Loop 并持有 AgentContext；节点代理和适配图内调用 | 跨任务共享可变消息、另一套角色 Loop |
+| NodeContext | 本次激活的身份、控制与受限服务引用 | 消息保存、资源生命周期、另一套 RuntimeEngine |
+| EventBus / HandlerRegistry / EventHandler / HookHandler | 调用关联、有序拦截、结果与通知 | 把观察订阅当作可靠执行者 |
 | ContextManager | 连续记录、有效上下文、历史投影、压缩 | 判断用户输入“有没有用” |
 | 能力与环境适配器 | 模型、Tool、MCP、Skill、文件和脚本访问 | 资源商城、上传 UI、平台权限目录 |
 | RuntimeStore / CommitCoordinator | 执行事实的一致提交、检查点、接管 | 平台发布与应用删除策略 |
@@ -39,7 +40,7 @@ SDK 接收构造参数和运行依赖，自行执行、管理上下文、保存�
 
 调用者负责提供正确配置，SDK 负责执行该配置。平台重新构造 Agent 并交回原 ExecutionRecord 标识即可恢复，不需要知道 Executor 执行到哪一轮。
 
-构造的程序可以复用，运行状态不能保存在共享程序对象上。每次执行／接管创建独立的 ExecutionRunner；同一 ExecutionRecord 在有效租约下只有一个执行者。
+固定配置、已编译 Workflow 和服务可复用；实际 Agent 对象按任务绑定，由 ReactAgent 持有私有 AgentContext，不能将活动实例交给另一任务。每次执行／接管创建独立的 ExecutionRunner；同一 ExecutionRecord 在有效租约下只有一个执行者。
 
 RuntimeEngine 是这些本机执行的宿主，一个实例可托管多个 ExecutionRecord。共享存储与环境依赖可以复用；单次现场按 ExecutionRecord 装配，Agent 模型、Prompt 和能力集合仍按各自配置固定。范围与资源所有权见[运行时引擎设计](assembly.md#11-runtimeengine-管理的范围)。
 

@@ -10,10 +10,10 @@
 | --- | --- | --- | --- |
 | 执行配置 | AgentDefinition、RoleDefinition、GraphDefinition、NodeBinding、HookSet、HookBinding、SkillPackage | 不可变配置与资源描述 | 构造 Agent／编译 Workflow 时固定 |
 | 可复用服务 | RuntimeEngine、NodeRegistry、ModelAdapter、CapabilityAdapter、SkillLoader、RuntimeStore | 连接、不可变注册和工厂；不存某次角色消息 | 调用方装配，通常跨 ExecutionRecord 复用 |
-| 本次进程对象 | ExecutionRunner、EventBusImpl、InvocationPipeline、HookManager、NodeDriver、ResultWaitRegistry | 本机任务、等待者、当前 lease 与运行 scope | 每次执行或故障接管重新创建 |
-| 持久执行实体 | ExecutionRecord、GraphExecution、NodeTask、RoleContext、Operation、Attempt、HookInvocation、Checkpoint | 可恢复进度、结果、身份与版本 | 原子提交后保存；进程销毁不删除 |
+| 本次进程对象 | ReactAgent／PlanAgent、AgentNode、AgentContext、NodeContext、ExecutionRunner 及本次总线服务 | Agent 私有状态、任务服务视图、本机任务与等待者 | 按执行任务创建；接管时从已提交事实重建 |
+| 持久执行实体 | ExecutionRecord、GraphExecution、NodeTask、AgentContextHead、Operation、Attempt、HookInvocation、Checkpoint | 可恢复进度、结果、身份与版本 | 原子提交后保存；进程销毁不删除 |
 
-ReactAgent、PlanAgent 是实现公共 Agent 接口的程序对象，不等于数据库中的 Agent 应用，也不等于 ExecutionRecord。Workflow 是另一种可执行程序，不继承 Agent。new PlanAgent 只装配依赖；start 开始、附着或恢复一次执行，ainvoke／astream 复用 start。Node 是图内调度接口，节点实现不保存 messages 等可变任务状态，NodeTask 与 RoleContext 才保存这些内容。构造合同与资源所有权见[装配设计](assembly.md)。
+ReactAgent、PlanAgent 实现公共 Agent 接口，不等于平台 Agent 应用或 ExecutionRecord。构造只冻结配置并装配依赖；start 才绑定、附着或恢复执行，ainvoke／astream 复用 start。实际执行的 ReactAgent 持有自己的 AgentContext；AgentNode 持有该 Agent，不另存一份消息。配置和基础设施可以复用，活动 Agent 实例按任务隔离。Workflow 是另一种可执行程序，不继承 Agent。构造合同与资源所有权见[装配设计](assembly.md)。
 
 ### 1.1 作用域与生命周期的读法
 
@@ -21,10 +21,10 @@ ReactAgent、PlanAgent 是实现公共 Agent 接口的程序对象，不等于�
 
 | 范围 | 如何确定 | 共享和隔离规则 |
 | --- | --- | --- |
-| 接口／类型 | Agent、Node、EventHandler、Hook 等代码协议 | 协议本身没有某次执行身份；实现对象按下表约束分配 |
+| 接口／类型 | Agent、Node、EventHandler、EventBus、HandlerRegistry 等代码协议 | 协议本身没有某次执行身份；实现对象按下表约束分配 |
 | 宿主实例 | 一次 `RuntimeEngine(...)` 装配及其 asyncio event loop | 可同时托管多次执行；不是进程或集群强制单例，不持有跨执行共享的角色消息 |
 | 程序配置 | 一次 ReactAgent／PlanAgent 构造或 Workflow 编译 | 不可变定义与已解析资源可跨执行复用；不等于平台的应用或发布实体 |
-| 会话 | `namespace + session_id` | 多次提问的正式输入及历史关联；同一会话不共用一个活动 Runner 或可写 RoleContext |
+| 会话 | `namespace + session_id` | 多次提问的正式输入及历史关联；同一会话的不同提问不共用活动 Runner、Agent 实例或可写 AgentContext |
 | 一次逻辑执行 | `namespace + run_id`，持久实体为 ExecutionRecord | 共享根额度、截止、停止和结果；可跨进程恢复，不能因接管变成一次新提问 |
 | 本机执行权期间 | 同一 `run_id` 的本机 ExecutionRunner 与当前有效 lease epoch | 管理该次执行的临时服务和协程；失权即停止推进，接管时重建对象 |
 | 图／完整 Agent 调用 | `graph_execution_id`／`invocation_id` | 图状态按图隔离；每次完整 Agent 调用有自己的内层图和环境范围，同一根执行可包含多个 |
@@ -86,8 +86,6 @@ classDiagram
     class AgentGraphEngine
     class WorkflowEngine
     class EventBusImpl
-    class InvocationPipeline
-    class HookManager
     class CommitCoordinator
     class RuntimeStore
     class ContentStore
@@ -105,30 +103,29 @@ classDiagram
     RuntimeEngine --> ContentStore : 注入
     RuntimeEngine --> EnvironmentProvider : 注入环境服务
     ExecutionRunner "1" *-- "1" EventBusImpl
-    ExecutionRunner "1" *-- "1" InvocationPipeline
-    ExecutionRunner "1" *-- "1" HookManager
     ExecutionRunner "1" *-- "1" CommitCoordinator
     ExecutionRunner "1" *-- "0..1" AgentGraphEngine
     ExecutionRunner "1" *-- "0..1" WorkflowEngine
     CommitCoordinator --> RuntimeStore : 唯一命令提交入口
-    InvocationPipeline --> ContentStore : 原始及有效正文
+    EventBusImpl --> ContentStore : 原始及有效正文
 ```
 
 | 概念 | 作用域 | 生命周期与共享边界 |
 | --- | --- | --- |
 | Agent | SDK 公共接口 | 没有独立实例或执行状态；定义 start／ainvoke／astream 的使用合同 |
-| ReactAgent／PlanAgent／Workflow | 一个已装配的可执行程序 | 构造后可复用；每次 start 指向具体执行，不把其消息放入程序对象 |
+| ReactAgent／PlanAgent | 一个待绑定或已绑定任务的 Agent 对象 | 配置可复用；执行实例只绑定一次逻辑任务，消息与进度由其私有上下文管理；接管可重建物理对象 |
+| Workflow | 一个已编译的工作流程序 | 编译结构可复用；每次调用产生独立执行现场，不在编译对象保存可变节点状态 |
 | RuntimeEngine | 一个本机宿主实例 | open 到 closed；持有多次执行的任务和服务引用，注入客户端仍归调用方所有 |
 | ExecutionRecord | 一次逻辑执行，键为 `namespace + run_id` | 初次接收时创建，结束后保留；保存状态、根控制与结果关联，不运行协程 |
 | ExecutionRunner | 一次执行在本机持有执行权的期间 | 只推进一个 ExecutionRecord；完成必要收尾或关闭／失权后释放，故障接管新建；同一记录至多一个有效 owner |
 | RunHandle | 一个观察者对一个 `run_id` 的本机引用 | 一条执行记录可有多个句柄；不拥有 Runner，关闭观察不停止执行，也不删除记录 |
 | AgentGraphEngine／WorkflowEngine | 一个 ExecutionRunner 中对应的图内核服务，各 0..1 个 | 按需装配，可推进该次执行的多个所属图；每张图的状态和队列归各自内核管理 |
-| EventBusImpl／InvocationPipeline／HookManager／CommitCoordinator | 一个 ExecutionRunner，每类一个逻辑服务 | 同次执行内的图和角色共享服务，通过 scope 隔离；其他执行不共用这些可变服务对象 |
+| EventBusImpl／CommitCoordinator | 一个 ExecutionRunner，每类一个逻辑服务 | 总线路由调用方发出的业务／阶段事件，管理实际 Attempt；提交协调器保存权威事实。同次执行内的角色共享服务，通过 scope 隔离；其他执行不共用这些可变对象 |
 | RuntimeStore／ContentStore／EnvironmentProvider | 调用方注入的存储或环境服务 | 可在遵守并发合同下跨程序、跨执行复用；请求必须带受限范围；Runner 退出不关闭共享客户端或删除持久内容 |
 
 ExecutionRunner 具有一个逻辑总线，外层 Workflow 与其中的 AgentInvocation 共享它，按 scope 隔离。不同 ExecutionRecord 各建自己的总线和本机等待器。GraphExecution 可以有多个，AgentGraphEngine 是推进这些内层图的服务，不要求每个 Executor 新建一个 Engine。
 
-RuntimeEngine 托管本进程的多次执行，每次实际执行／接管时创建独立 ExecutionRunner。图中的 EventBus、HookManager 和图引擎服务归该次现场装配；RuntimeEngine 只复用基础设施，不让多次 ExecutionRecord 共用可变现场。模型、Prompt、角色资源和 Hook 绑定仍来自各自 Agent 配置。职责拆分见[运行时引擎范围](assembly.md#11-runtimeengine-管理的范围)。
+RuntimeEngine 托管本进程的多次执行，每次实际执行／接管时创建独立 ExecutionRunner。图中的总线和图引擎服务归该次现场装配；总线内部的处理器注册关系在第 4 节展开。RuntimeEngine 只复用基础设施，不让多次 ExecutionRecord 共用可变现场。模型、Prompt、角色资源和 Hook 绑定仍来自各自 Agent 配置。职责拆分见[运行时引擎范围](assembly.md#11-runtimeengine-管理的范围)。
 
 引擎服务按需装配：直接 Agent 只需要 AgentGraphEngine，纯工具 Workflow 只需要 WorkflowEngine，包含 AgentNode 的 Workflow 两者都需要。这里的 0..1 表示本机服务对象数量，不是持久 GraphExecution 数量。
 
@@ -136,164 +133,205 @@ RuntimeStore／ContentStore 由调用方注入，不能画成 Agent 销毁就级
 
 ## 3. Node、角色与执行实例
 
-**AgentNode 持有 Agent，图引擎通过节点调用 Agent。** Agent 负责决策循环；节点负责接入图；本次任务的消息与执行进度单独保存。
-
-本节按最新讨论改为组合关系，先核对这张对象图。其他设计页中的 ReactNode → PlannerNode／ExecutorNode 继承结构属于前一版，待本图确认后统一调整接口和详细调用协议；不把两套结构同时作为实现要求。
+**AgentNode 持有 Agent；执行中的 ReactAgent 持有自己的 AgentContext；图引擎向节点传入 NodeContext。** 三者的责任分别是图接入、智能体执行状态、图内调用环境。Planner 和 Executor 的 Loop 都由 ReactAgent 执行。
 
 ```mermaid
 classDiagram
     direction TB
     class Node {
       <<interface>>
-      图可调度的执行单元
-    }
-    class AgentNode {
-      +Agent agent
-      将节点执行交给Agent
+      +activate(input, continuation, node_context)
     }
     class Agent {
       <<interface>>
-      完整智能体的公共接口
+      +start(input, ids)
+      +ainvoke(input, ids)
+      +astream(input, ids)
+    }
+    class AgentNode {
+      +Agent agent
+      代理公共调用并接入图调度
     }
     class ReactAgent {
-      模型与工具的决策循环
+      +AgentContext context
+      执行模型与工具循环
     }
     class PlanAgent {
-      编排Planner与Executor
+      装配Planner与Executor
+      关联本次内层图
+    }
+    class AgentContext {
+      消息与有效修订
+      Loop进度与待处理调用
+      压缩及结果引用
+    }
+    class NodeContext {
+      当前图与任务身份
+      执行权和控制信号
+      受限服务引用
     }
     Node <|.. AgentNode
+    Agent <|.. AgentNode
     Agent <|.. ReactAgent
     Agent <|.. PlanAgent
-    AgentNode "0..*" --> "1" Agent : 持有固定程序引用
+    AgentNode --> Agent : 持有本任务的Agent
+    ReactAgent "1" *-- "0..1" AgentContext : 执行时持有
+    AgentNode ..> NodeContext : 激活时接收并传递
+    ReactAgent ..> NodeContext : 通过上下文调用服务
 ```
 
-图中虚线空心三角表示接口实现，普通箭头表示持有引用；这里没有 Agent 与 Node 之间的继承。`AgentNode.agent` 是程序引用，不是当前任务的消息容器。角色配置与任务状态放在下表单独解释，避免与执行接口混在同一层。
+图中的组成关系表示**本机对象的归属**，不表示 Agent 对象释放就删除历史或检查点。ReactAgent 构造后尚未执行时没有 AgentContext；获得本机执行权并创建／恢复任务后拥有一个。仅附着远端执行或查询终态时，通过 RunHandle 观察，不伪造一份活动上下文。
 
-| 概念 | 作用域 | 生命周期与共享边界 |
+| 概念 | 作用域 | 保存什么、由谁使用 |
 | --- | --- | --- |
-| Agent／Node | 两个不同用途的接口 | Agent 面向智能体调用者，Node 面向图调度；普通函数或工具节点无须拥有 Agent |
-| ReactAgent | 一份已装配的 ReAct 程序 | 实现模型—工具循环，可用于主角色、Planner 或 Executor；不把任务消息存进共享程序对象 |
-| PlanAgent | 一份已装配的 Plan–Executor 程序 | 定义内部图及角色绑定；图引擎实际调度 Planner 与 Executor，PlanAgent 不维护第二份调度队列 |
-| AgentNode | 图中的一个已绑定执行位置 | 持有一个固定 Agent 引用，可被多次调度；内层 Planner／Executor 位置均绑定 ReactAgent |
-| RoleDefinition | 当前 Agent 配置中的一个角色 | 固定职责、Prompt 和可用能力；同一角色可产生多次任务，不共享可变上下文 |
-| NodeTask | 当前图内的一次实际任务 | 保存输入，关联自己的上下文与执行进度；Loop 和恢复沿用原任务身份，新委派才产生新任务 |
+| Agent／Node | 接口／类型 | Agent 面向调用者，Node 面向图调度；普通函数和工具节点不必实现 Agent |
+| ReactAgent | 一次角色任务的本机执行实例 | 固定角色配置，以及私有 `context: AgentContext`；实现唯一的 ReAct Loop |
+| PlanAgent | 一次完整 Plan 调用的本机对象 | 固定角色目录、图绑定与本次图引用；不另建汇总所有角色消息的上下文，不维护第二份调度队列 |
+| AgentNode | 本次图任务的 Agent 适配对象 | `agent` 引用与接入绑定；公共方法代理 Agent，图内激活接续当前任务 |
+| AgentContext | 一个 ReactAgent 的角色任务 | 输入、消息、工具结果、有效修订、压缩引用、Loop 进度及待处理调用；各任务私有 |
+| NodeContext | 当前任务的一次激活 | 任务身份、当前 lease、停止／截止视图及受限服务入口；不存模型消息，不进入检查点 |
+| RoleDefinition／NodeDefinition | 一份配置／一个图位置 | 可被多次执行复用；节点定义不等于运行中的 AgentNode 对象 |
+| NodeTask | 图内一次逻辑任务的持久记录 | 状态、输入和上下文／检查点引用；Loop 与恢复沿用原任务身份 |
 
-### 3.1 ReAct 与 Plan–Executor 怎样使用这组对象
+### 3.1 NodeContext 与 AgentContext 怎样分工
 
-| 模式 | 图中的位置 | AgentNode 持有的 Agent | 谁执行 Loop |
+`NodeContext` 是图引擎为当前调用组装的参数对象，服务仍来自 RuntimeEngine 所组织的本次 ExecutionRunner。它只引用已有服务，并绑定任务权限；不新建总线、模型客户端、文件系统或检查点引擎。普通函数节点也可以需要这种调用环境，即使它完全没有 Agent 或模型消息。
+
+`AgentContext` 才是 Agent 的执行上下文。ReactAgent 推进自己的消息和 Loop；AgentNode 不另存 messages，NodeContext 也不复制它。`NodeContext.context_port` 如存在，只是访问上下文服务的受限入口，不是一份上下文数据。
+
+| 内容 | 所属位置 |
+| --- | --- |
+| 问题、补充、模型回答、工具反馈、压缩摘要引用 | `agent.context` 的消息及有效修订部分 |
+| 当前阶段、Loop 序号、待处理模型／工具批次、结果消费位置 | `agent.context.continuation` |
+| 当前 graph／task／activation 标识、执行租约、停止信号 | `node_context` |
+| 模型、能力、上下文、文件等受限服务入口 | `node_context` 引用本次执行已有服务 |
+| 消息记录、有效修订和已提交进度的持久保存 | 统一 CommitCoordinator／RuntimeStore，不由 Agent 自行写数据库 |
+
+ContextManager 负责历史选择、上下文物化与压缩等处理；这是一项可复用服务，不是所有 Agent 共用的消息容器。Hook 的有效修改提交后，Agent 在下一次物化／推进边界读取新修订；不能一直使用旧内存消息列表，也不能把未提交修改当作已完成事实。
+
+### 3.2 ReAct 与 Plan–Executor 的实例关系
+
+| 模式 | 图中的位置 | 运行中的 Agent | 上下文 |
 | --- | --- | --- | --- |
-| ReAct | 一个主节点 | 当前已装配的 ReactAgent | ReactAgent 使用主任务上下文执行循环 |
-| Plan–Executor | 一个 Planner，以及配置好的 Executor 位置 | 各位置绑定对应角色配置的 ReactAgent | Planner 与每个 Executor 任务分别运行自己的循环 |
+| ReAct | 一个主节点 | 一个 ReactAgent，由 AgentNode 接入 | 一个私有 AgentContext |
+| Plan–Executor | Planner 与配置的 Executor 位置 | Planner 和每次 Executor 委派各有一个 ReactAgent | 每个执行实例各自持有 AgentContext |
 
-Planner 和 Executor 在这里是**角色与图中位置**，不再是分别实现 Loop 的两个节点子类。Planner 的授权包含委派任务，也可使用自己的普通工具；Executor 接收任务并执行，首版不递归委派。Executor 继续继承主模型配置，拥有自己配置的 Prompt 与能力范围。
+PlannerNode／ExecutorNode 若作为专用类保留，继承 AgentNode，只表达角色绑定与接入约束；Loop 放在内部 ReactAgent，不再设计 ReactNode 的另一套 Loop 继承链。PlannerNode 持有规划角色的 ReactAgent，不持有完整 PlanAgent。Executor 继承主模型，使用自己的 Prompt 和能力范围，首版不递归委派。
 
-**例子：Planner 同时委派两次“资料检索”。** 一份检索角色配置、一个绑定该角色 ReactAgent 的 Executor 节点，会产生“查价格”和“查限制”两个 NodeTask。两份上下文和两份进度彼此独立，允许共享本次任务的工作文件；仍属于同一个内层 GraphExecution。继续 Loop 不创建新任务，普通 Tool／MCP 调用也不创建新 Agent 或图。
+**两次“资料检索”委派：** 复用一份检索配置和一个 Executor 节点定义，创建两个 NodeTask、两个 AgentNode、两个 ReactAgent 和两个 AgentContext。Planner 自己还有一个 ReactAgent 和一个上下文；这三个角色任务仍在同一内层 GraphExecution 中。工作文件和授权基础设施可以共享，模型消息不能共享。
 
-组合关系不表示节点直接调用 `agent.start()`：公开入口负责开始或附着整次执行，图内通过内部可恢复执行入口继续当前任务，沿用本次执行的额度、总线和停止控制。ReactAgent 在此入口只推进自己的 Loop，不再创建另一张包住自身的图，避免递归装配和重复启动。
+继续 Loop／从等待恢复时沿用原任务及其上下文；故障接管时可重建物理 Agent 对象，但恢复原 `task_id`、`context_id` 和进度。普通 Tool／MCP、Skill 读取和脚本调用产生 Operation，不额外创建 AgentContext 或图实例。
 
-外层 Workflow 仍可用节点承载完整 ReactAgent／PlanAgent。外层完整 Agent 调用与内层角色任务的范围不同，前者仍通过调用桥创建或接回子 Invocation；内层 Executor 委派只创建角色任务。**有 `agent` 属性不等于每次调用都新增根执行或子图。** Workflow 的原生节点协议仍由适配层衔接，不要求两套引擎采用相同激活方法。
+### 3.3 两个入口与配置复用
 
-### 3.2 本次任务保存什么
-
-| 任务状态 | 含义 | 保存与恢复 |
+| 入口 | 调用如何处理 | 执行范围 |
 | --- | --- | --- |
-| 上下文 `RoleContext` | 本次任务的输入、模型消息、工具结果 | 每个任务私有；共享文件不等于共享消息 |
-| 执行进度 `ReactContinuation` | 当前执行阶段、待处理调用与结果消费位置 | 随进度提交；恢复后从原位置继续，不只把聊天记录交给 LLM 重新开始 |
+| Agent 的 `start`／`ainvoke`／`astream` | 代理内部 Agent 同名方法，返回原句柄、结果或事件流 | 开始、附着或恢复调用者指定的执行；AgentNode 不额外创建根记录 |
+| Node 的 `activate(input, continuation, node_context)` | 接入已分配的任务，恢复内部 AgentContext 后推进 Agent | 继续图内执行，沿用原额度、总线和停止控制；不再调用公共 start |
 
-它们是执行实例的状态组成部分，无须各自成为一个新的运行引擎。AgentNode 衔接 Agent 的进度与图内等待，图引擎通过统一提交路径保存；重建 Python 对象时沿用已保存的任务、上下文和调用身份。
+AgentNode 不重复实现 Loop、消息、额度或模型／工具 Hook。`continuation` 是激活时从检查点恢复进度的输入；接入后就是 `agent.context.continuation` 的已提交起点，不是 NodeContext 中的第二份进度。
 
-### 3.3 引擎内部辅助对象
+共享的注册表保存固定配置和创建绑定的工厂；**不把一个正在执行的 Agent 对象交给两个任务**。公开构造返回待绑定实例；首次成功接收调用时绑定执行身份，之后同身份可附着或恢复。下一次新提问创建新 Agent，继续复用配置与基础设施。完整规则见[装配生命周期](assembly.md#12-agent-实例与配置复用)。
 
-下列名称从主图中移出，作为实现细节保留；不要求每个名称都单独建设一个模块。
+外层 Workflow 调用完整 ReactAgent／PlanAgent 时，经调用桥创建或接回 AgentInvocation，使用独立的内层图；内层角色委派仅创建角色任务。Workflow 编译保存固定装配绑定，执行时据此实例化 Agent，而非把编译时的活动对象当作共享实例。两套节点调度协议由 WorkflowNodeAdapter 适配，不把内层 activate 冒充外层原生节点接口。
+
+独立调用 Planner 必须已经具备完整的委派目标及图服务绑定；代理不自动补出缺失配置。只有公共 Agent 方法的第三方实现，也不能据此声明支持可恢复嵌入。
+
+### 3.4 上下文怎样保存与恢复
+
+AgentContext 由 Agent 使用和持有，持久化由统一设施完成；这两个职责不冲突。
+
+1. 消息头 `AgentContextHead`、原始记录、有效修订和摘要引用保存上下文内容；`ReactContinuation` 保存 Loop 位置。它们是 AgentContext 的存储组成，不是两个新的上下文管理器。
+2. NodeCheckpoint 引用不可变 continuation，NodeTask 关联该检查点与上下文身份。一次推进涉及的消息修改和进度通过同一个 RuntimeCommit 发布。
+3. 恢复时读取一致的任务现场，重建 ReactAgent 及其 AgentContext，再装配带新执行权的 NodeContext；不把模型客户端、服务引用、锁或协程写进检查点。
+4. Agent 本机对象释放后，持久记录继续保留。删除 Agent 应用、记录过期等业务生命周期仍由平台按约定发起。
+
+### 3.5 引擎内部辅助对象
 
 | 辅助对象 | 实际作用及作用域 |
 | --- | --- |
-| NodeDriver | 图引擎内部负责节点激活、提交进度、等待和恢复的代码，可先实现为引擎内部方法；不另建调度器 |
-| NodeRuntime | 本次任务激活的受限运行环境参数；提供当前身份、租约和可用服务，不是另一个 RuntimeEngine，也不进入检查点 |
-| ModelPort／CapabilityPort／ContextPort／DelegationPort | 绑定当前任务授权的模型、能力、上下文与委派入口；通过现有总线及 Manager 提供服务，不是四套新引擎；委派入口仅授予 Planner |
-| NodeRegistry | 已装配节点实现或工厂的只读映射表；不管理任务状态 |
-| WorkflowNodeAdapter／CapabilityNode | 外层工作流的适配和能力节点细节，单独在 Workflow 设计中展开 |
+| NodeDriver | 图引擎内部激活节点、提交进度、等待和恢复的代码；可先实现为引擎内部方法 |
+| NodeRegistry | 固定节点配置与创建工厂的只读映射；不保存跨任务共享的活动 Agent |
+| ModelPort／CapabilityPort／ContextPort／DelegationPort | 现有服务的任务受限入口；委派入口仅授予 Planner，不是四套新引擎 |
+| WorkflowNodeAdapter／CapabilityNode | 外层工作流的接入和能力节点，单独在 Workflow 设计中展开 |
 
-运行环境不暴露原始数据库连接、平台应用服务、凭据或无限制文件路径。模型／能力／委派入口继续经过事件总线；上下文内部的纯物化和准备写集可直接调用，避免递归包装持久化基础操作。
+NodeContext 不暴露原始数据库连接、平台应用服务、凭据或无限制文件路径。模型／能力／委派入口仍经过事件总线；上下文内部的物化和准备写集可直接调用，避免递归包装持久化基础操作。
 
-## 4. EventBus、EventHandler 与 Manager
+## 4. EventBus、HandlerRegistry 与 EventHandler
+
+通信层固定三个独立接口：**HandlerRegistry 注册和查询处理器，EventBus 发送请求并取得响应，EventHandler 处理收到的事件。** 注册接口不保存执行进度；发送接口不要求接收方同时具有注册权限。
 
 ```mermaid
 classDiagram
-    class ModelPortProxy
-    class CapabilityPortProxy
-    class DelegationPortProxy
+    direction TB
+    class HandlerRegistry {
+      <<interface>>
+      +register_handler()
+      +resolve()
+      +freeze()
+    }
     class EventBus {
       <<interface>>
-      +begin(request, scope) PendingOperationRef
-      +await_result(ref, scope) EventResponse
-      +request(request, scope) EventResponse
-      +request_many(requests, policy, scope) EventResponseList
-      +subscribe(type, observer, scope) Subscription
-    }
-    class EventBusImpl
-    class RequestHandlerRegistry {
-      +resolve(event_type, schema_version) HandlerBinding
-    }
-    class HandlerBinding {
-      +handler_id
-      +execution_kind
-      +request_schema
-      +raw_port
+      +request()
     }
     class EventHandler {
       <<interface>>
-      +handle(payload, context) HandlerOutcome
+      +handle()
     }
-    class ModelManager
-    class ToolManager
-    class ContextManager
-    class EnvironmentManager
-    class GraphExecutionManager
-    class InvocationPipeline
-    class ResultWaitRegistry
-    class ObservationDispatcher
-    ModelPortProxy --> EventBus
-    CapabilityPortProxy --> EventBus
-    DelegationPortProxy --> EventBus
+    class EventBusImpl
+    class HookHandler
+    HandlerRegistry <|.. EventBusImpl
     EventBus <|.. EventBusImpl
-    EventBusImpl --> RequestHandlerRegistry : 精确路由
-    EventBusImpl --> InvocationPipeline : 推进Operation
-    EventBusImpl --> ResultWaitRegistry : 本机唤醒
-    EventBusImpl --> ObservationDispatcher : 已提交观察
-    RequestHandlerRegistry "1" *-- "1..*" HandlerBinding
-    HandlerBinding --> EventHandler : raw_port
-    EventHandler <|.. ModelManager
-    EventHandler <|.. ToolManager
-    EventHandler <|.. ContextManager
-    EventHandler <|.. EnvironmentManager
-    EventHandler <|.. GraphExecutionManager
-    InvocationPipeline --> EventHandler : 调用获准的原始端口
+    HandlerRegistry <|.. HookHandler
+    EventBus <|.. HookHandler
+    EventHandler <|.. HookHandler
+    EventBusImpl --> HookHandler : 注册业务阶段处理器
 ```
+
+虚线空心三角表示接口实现，普通箭头表示注册／调用关系。主图只显示三个接口与两个实现；子处理器在第 6 节展开。HookHandler 对上作为 EventHandler，对下通过自己的 HandlerRegistry 和 EventBus 接口组织处理器；EventBusImpl 实现注册和发送两个接口，不要求实现 EventHandler。方法完整签名见调用设计。
 
 | 概念 | 作用域 | 生命周期与共享边界 |
 | --- | --- | --- |
-| ModelPortProxy／CapabilityPortProxy／DelegationPortProxy | 当前任务激活或受限调用端口 | 带入可信 scope，使用所属 ExecutionRunner 的总线；不是全局可切换身份的代理 |
-| EventBus | 调用与观察协议 | 接口无活动状态；EventBusImpl 是单次执行内的实现 |
-| RequestHandlerRegistry／HandlerBinding | 当前 ExecutionRunner 的固定路由表／路由项 | 装配后只读；绑定该现场的 Manager 原始端口，不能引用另一 Runner 的处理器 |
-| EventHandler | 领域处理器接口 | 实现实例由本次现场装配；每次调用显式接收请求及上下文 |
-| ModelManager／ToolManager／ContextManager／EnvironmentManager／GraphExecutionManager | 当前 ExecutionRunner 的领域服务 | 可处理多个角色的调用，但不得用可变 `current_context` 等字段保存隐式调用身份；通过参数及存储引用定位 |
-| InvocationPipeline | 当前 ExecutionRunner 的逻辑调用推进服务 | 按 operation_id 隔离本机 runner 和阶段；恢复从持久 Operation 接续，不从 Python 调用栈猜测 |
-| ResultWaitRegistry | 当前 ExecutionRunner 的本机等待器目录 | 同 Operation 可有多个 waiter；关闭／失权时解除等待，持久结果仍在存储中 |
-| ObservationDispatcher／Subscription | 本次执行的通知分发器／一个观察订阅 | 订阅有自己的授权 scope、队列和游标；可靠游标可持久保存，本机回调和队列需要重建 |
+| HandlerRegistry | 注册／查询／冻结的接口 | 接口没有实例状态；EventBusImpl 和 HookHandler 分别持有自己的绑定表，注册后冻结 |
+| EventBus | 请求发送接口 | 最小共同方法为 request；请求与返回值按事件类型配对，不强迫所有总线都暴露根执行控制和持久查询 |
+| EventHandler | 事件处理接口 | 每次显式接收事件与受限处理环境；普通 Handler、组合 HookHandler 和末端 Hook 都实现它，输入输出类型各自明确 |
+| EventBusImpl | 当前 ExecutionRunner 的根总线 | 登记和路由请求、管理 Attempt 超时重试、等待结果；调用前后事件由 Loop 发出，不在总线中隐式编排 |
+| HookHandler | 当前根总线注册的组合处理器 | 拥有本地 HookBinding 表；按程序、阶段和 matcher 选择有序子链，共用根执行的提交与存储设施 |
+| HandlerBinding／HookBinding | 根路由项／本地 Hook 注册项 | 装配期固定，保存 handler 身份及配置；Operation 另存选中的链和执行游标 |
+| ModelManager／ToolManager／ContextManager／EnvironmentManager／GraphExecutionManager | 当前 ExecutionRunner 的领域服务 | 实现 EventHandler 入口并调用原始适配器或准备领域操作；不要求每个末端处理器再实现总线与注册接口 |
+| ModelPortProxy／CapabilityPortProxy／DelegationPortProxy | 当前任务的受限发送端口 | 只获得 EventBus 发送能力及可信 scope，不获得 HandlerRegistry 注册能力 |
+| ResultWaitRegistry／ObservationDispatcher | 根总线内部的等待与观察设施 | 本机等待者与队列接管时重建；已提交结果和可靠通知游标按既有存储合同保存 |
 
-EventHandler 是被注册处理器的接口，不是一个统一的大类。Manager 按领域实现该入口，再调用自己的原始适配器。实现可以将 handle 绑定到对应方法；ModelManager.execute_once 等方法仍是单次执行端口。Registry 不注册已经代理过的端口，避免再次回到同一个请求。
+**HandlerRegistry 是接口名称，不是另一个必须实例化的注册中心。** 各实现可以使用普通映射保存绑定。调用方组装时使用注册接口，执行中的 Agent／Node 只使用发送接口。begin、await_result、request_many、subscribe 等根总线方法在详细设计中定义，不作为 HookHandler 必须重复实现的基础接口。
 
-HandlerOutcome 是按 HandlerBinding.execution_kind 判别的结果：
+### 4.1 请求怎样经过这组对象
 
-| 类型 | Handler 返回什么 | 后续由谁处理 |
+1. Agent 的 Loop 经受限端口登记本次业务 Operation，保存调用阶段。
+2. Loop 发出 `model.generate.before` 或 `capability.invoke.before` 等事件，说明自己即将做什么。总线路由给注册处理器，发送方不直接调用 HookHandler。
+3. HookHandler 若被注册到该阶段，就通过自己的 request 调用本地子 Handler。每项有效修改和游标经 CommitCoordinator 保存；全部处理完成或合法拒绝后，返回已提交 StageResult。
+4. Loop 等待阶段结果；允许后进行最终校验和许可提交，再经总线执行主 Handler。ModelManager／ToolManager 只返回业务原始结果，不替 Loop 发前后事件。
+5. 原始结果先保存，Loop 再发对应 after 事件；处理完成后保存最终有效响应，才解释结果或向批次交付。
+
+**Loop 知道业务阶段，不知道有没有 Hook。EventBus 知道如何路由，不决定何时开始下一业务阶段。** 调用方的阶段算法在原 Loop／NodeDriver 内复用，无需 InvocationPipeline 对象。状态仍记录在原 Operation；故障后从原阶段恢复。
+
+before／after 都是需要等待结果的事件。把 before 当普通异步广播，会造成 Hook 还未拒绝，模型或工具就已执行。只读记录／展示订阅另走已提交事实通知，其返回值不参与决策。
+
+### 4.2 注册与分发边界
+
+根业务路由的 `(event_type, schema_version)` 只允许一个主 Handler；同键重复注册拒绝，缺项返回 ROUTE_NOT_FOUND。HookHandler 的本地同一事件可以注册多个子 Handler，按固定 ordinal 顺序处理；同一程序内 binding_key 重复仍拒绝。resolve 统一返回不可变有序列表：根业务路由至多一项，本地 Hook 链可有多项，发送方负责检查相应基数。
+
+本地注册、冻结和分发只作用于当前对象，不自动回退到父总线。跨领域的业务请求使用显式注入的根发送端口；Hook 阶段分发不能再次触发自身的前后 Hook，也不能新建一套 Operation 或执行额度。子处理器输入与输出分别为 HookInput／HookDecision；组合处理器接收 CallStageEvent 并返回 StageResult，类型合同见[调用接口](event-bus.md#10-三个接口与组合关系)。
+
+HandlerOutcome 继续按业务绑定的 execution_kind 区分：
+
+| 类型 | 主 Handler 返回什么 | 后续由谁处理 |
 | --- | --- | --- |
-| external | 一次外部尝试的 RawResult | Pipeline 保存 Attempt／raw，驱动后置 Hook |
-| internal | PreparedDomainEffect 与读／写集 | CommitCoordinator 校验并应用，Manager 不自行提交 |
-| graph | 委派／完整 Agent 调用的启动计划 | 对应引擎按已提交意图调度；Pipeline 等原目标结果 |
+| external | 一次外部尝试的 RawResult | 总线保存 Attempt／raw 并返回；Loop 发 after，再结算有效响应 |
+| internal | PreparedDomainEffect 与读／写集 | CommitCoordinator 校验并应用，领域服务不自行写表 |
+| graph | 委派／完整 Agent 调用的启动计划 | 对应引擎按已提交意图调度，根总线等待原目标结果 |
 | recoverable | RecoverableWaitPlan，例如压缩 Episode | 注册可恢复目标后等待，不伪造一次网络 Attempt |
 
-一个请求类型恰好匹配一个 Handler；零个返回 ROUTE_NOT_FOUND，重复注册拒绝。subscribe 只是观察已提交事件，不参与请求响应，不以多个观察回调的返回值决定业务结果。request_many 的 list 来自多个独立请求的最终 EventResponse，而不是广播后收集未知订阅者的返回值。
+调用方发出的 before／after 阶段属于独立内部路由种类 call_stage，不占用上表的业务 Operation 类型。普通观察 subscribe 只消费已提交事实；返回值不修改执行。request_many 的结果列表来自多个独立业务请求，不来自广播后任意订阅者的返回值。
 
 ## 5. Event、Operation 与 Hook 记录
 
@@ -358,67 +396,45 @@ Event 是通信值对象，Operation 是一次可恢复逻辑调用。event_id �
 
 普通事件不自行生成检查点。必要状态由 Coordinator 一致提交，outbox 是同提交的通知投影。消费观察事件不能触发重放工具。没有订阅者也必须能够执行和恢复。
 
-## 6. Hook 与 HookManager
+## 6. HookHandler 与子处理器
 
 ```mermaid
 classDiagram
-    class InvocationPipeline
-    class HookManager {
-      +resume_chain(operation, stage) ChainProgress
-    }
-    class HookBinding {
-      +binding_key
-      +event_type
-      +stage
-      +matcher
-      +ordinal
-      +timeout_ms
-    }
-    class Hook {
+    direction TB
+    class EventHandler {
       <<interface>>
-      +evaluate(input, context, reader) HookDecision
+      +handle()
     }
-    class FunctionHook
-    class ScriptHook
-    class HookInput
-    class HookDecision
-    class HookSchemaRegistry
-    class ContextManager
-    class CommitCoordinator
-    InvocationPipeline --> HookManager : 前置或后置链
-    HookManager "1" --> "0..*" HookBinding : 已装配有序绑定
-    HookBinding --> Hook : 受限处理器
-    Hook <|.. FunctionHook
-    Hook <|.. ScriptHook
-    HookManager --> HookInput : 构建当前有效视图
-    HookManager --> HookSchemaRegistry : 校验允许字段
-    HookManager --> ContextManager : 准备规范化patch
-    Hook --> HookDecision : allow或deny及patch
-    InvocationPipeline --> CommitCoordinator : 决定及修改同提交
+    class HookHandler
+    class RecordHookHandler
+    class FunctionHookHandler
+    class ScriptHookHandler
+    EventHandler <|.. HookHandler
+    EventHandler <|.. RecordHookHandler
+    EventHandler <|.. FunctionHookHandler
+    EventHandler <|.. ScriptHookHandler
+    HookHandler --> RecordHookHandler : 注册子处理器
+    HookHandler --> FunctionHookHandler : 注册子处理器
+    HookHandler --> ScriptHookHandler : 注册子处理器
 ```
+
+HookHandler 同时实现的 HandlerRegistry 与 EventBus 已在第 4 节展示；本图只展开子处理器关系。RecordHookHandler 是记录型 Hook 的示例名称；FunctionHookHandler 和 ScriptHookHandler 分别适配函数和脚本，均返回 HookDecision。
 
 | 概念 | 作用域 | 生命周期与共享边界 |
 | --- | --- | --- |
-| HookManager | 当前 ExecutionRunner 的拦截服务 | 同次执行可服务多个程序；按 ExecutionBindingRef 选链，不把各程序 Hook 混成一条链 |
-| HookBinding | 所属程序中的一个绑定 | 固定时机、顺序和 matcher；可以被多次调用命中，绑定本身不保存执行游标 |
-| Hook／FunctionHook／ScriptHook | 用户处理器协议／其已装配实现 | 处理器可复用，但每次 evaluate 的输入与授权独立；可复用实例必须满足并发合同，不保留上次调用的上下文 |
-| HookInput／HookContext／HookReadPort | 一次 HookInvocation 的有效输入、元数据与读取能力 | 输入固定引用已提交版本；HookReadPort 为本次调用创建，结束即失效，不序列化客户端或读取函数 |
-| HookSchemaRegistry | 当前 SDK 协议的不可变挂点及补丁规则表 | 规则可跨执行复用；不保存用户决定，不允许通过运行期注册绕过字段校验 |
-| ContextManager／CommitCoordinator | 当前 ExecutionRunner 的上下文服务／提交入口 | Hook 修改通过原任务授权范围准备并提交；可访问服务不等于可访问所有角色消息 |
+| HookHandler | 当前 ExecutionRunner 中根总线注册的组合处理器 | handle 进入自身的 request；选择本地固定链、按顺序执行并返回已提交阶段结果，不启动新的根调用 |
+| HookBinding | 所属程序中的一个子处理器注册项 | 固定事件类型、阶段、顺序、matcher、timeout；不保存本次执行游标 |
+| FunctionHookHandler／ScriptHookHandler／用户子处理器 | EventHandler 的具体实现 | handle 返回 HookDecision；可复用实现必须遵守并发合同，不保留上次调用的可变上下文 |
+| CallStageEvent／StageResult | 一项已登记 Operation 的阶段输入／聚合结果 | 由原 Loop 发出、等待；不暴露 Hook 内部游标，不产生第二套 Operation；结果引用累计已提交的有效修订 |
+| HookInput／HookContext／HookReadPort | 一次 HookInvocation 的输入、身份和读取能力 | 读取固定授权版本；端口执行结束即失效，不把客户端写入检查点 |
+| HookSchemaRegistry | SDK 协议的挂点与字段规则表 | 规则可跨执行复用；不是 HandlerRegistry 的路由绑定表，不保存用户决定 |
+| ContextManager／CommitCoordinator | 当前执行的上下文服务／唯一提交入口 | HookHandler 经二者准备并提交决定、有效修改和链游标；子 Handler 不能直接写上下文或存储 |
 
-Hook 是用户处理器，HookBinding 描述何时运行，HookManager 负责筛选、顺序、超时、校验与恢复链游标。它不是全局事件观察者；需要修改或阻止调用时必须在 Pipeline 中被有序 await。HookSet 的精确绑定字段、受限读取端口及 matcher 规则见[Hook 装配](assembly.md#5-hookset-与-hookbinding)。
+HookHandler 统一承担选择、顺序、限时、字段校验和链恢复。每个子处理器实现 EventHandler，输入内容校验与业务修改在 handle 中完成。HookSet 是构造期配置，执行时据其组装 HookHandler 的本地注册表；受限端口和精确字段见[Hook 装配](assembly.md#5-hookset-与-hookbinding)。
 
-同一 ExecutionRecord 可能包含多个可执行 Agent 的配置。HookManager 按可信 ExecutionBindingRef 选择该程序的绑定，再用 stage／matcher 筛选角色；不会将外层 Workflow、Planner 和所有子 Agent 的 Hook 合成全局链。绑定 key 在 program_key 内唯一，固定链及已选绑定保存到 Operation，恢复不跨程序重新选取。
+同一 ExecutionRecord 可包含多个程序。HookHandler 按可信 ExecutionBindingRef／program_key 选择注册项，再按 stage／matcher 筛选；不把不同程序或角色的私有上下文拼成一条全局链。固定链、每项结果和游标保存到原 Operation，接管使用原选择。
 
-FunctionHook 面向可信高代码函数；不可信脚本通过受限 HookAdapter 执行。脚本失败、非法修改和合法拒绝分别处理：
-
-1. 失败或超时：记录诊断，放行原有效值。
-2. patch 非法：丢弃非法修改，保留此前合法修改；如果仍有独立合法 deny，拒绝仍生效。
-3. allow＋合法 patch：提交有效 payload、ContextMutation、Hook 游标，再执行下一项。
-4. deny：保存明确拒绝；前置未执行、后置已执行的事实不能混写。
-5. 提交失败：停止推进等待恢复，不能以 Hook fail-open 为由跳过必要存储。
-
-“全上下文可见”指合法修改成为相应授权 scope 的权威有效修订，供后续 Loop、历史投影、压缩与恢复读取；并非允许 Hook 读取或修改所有 Executor 私有 Context。
+合法 deny 终止当前链；Hook 自身异常、超时或非法返回按既有规则记录后继续。必要持久化／租约错误必须中止推进，不能当成用户 Hook 失败放行。每项有效修改先提交，随后 Hook、Agent 的下一轮物化、历史读取和恢复都使用相应授权范围内的有效修订。后置拒绝不声称撤回已发生的外部副作用。
 
 ## 7. Skill 与能力对象
 
@@ -480,49 +496,54 @@ MCP 只是一类能力适配器，FunctionTool 是另一类；它们共用 Opera
 
 ```mermaid
 sequenceDiagram
-    participant D as AgentNode与ReactAgent
-    participant X as ContextManager
-    participant B as EventBus
-    participant P as InvocationPipeline
-    participant H as HookManager
+    participant D as ReactAgent Loop与NodeDriver
+    participant B as EventBusImpl
+    participant H as HookHandler
     participant M as ModelManager
+    participant X as ContextManager
     participant C as CommitCoordinator
-    D->>X: prepare固定输入水位与有效上下文
+    D->>X: 准备有效上下文
     X-->>D: 候选模型视图
-    D->>B: begin model.generate 稳定purpose_key
-    B->>C: T_BEGIN或读取原Operation
-    B->>P: schedule_resume
-    P->>H: resume_chain request
-    H-->>P: 决定及规范化修改
-    P->>C: 提交Hook修改及游标
-    P-->>D: PreparedModelRequest或blocked
+    D->>B: begin model.generate
+    B->>C: 保存或查回原Operation
+    B-->>D: PendingOperationRef
+    D->>B: request model.generate.before
+    B->>H: 路由该业务阶段事件
+    H->>H: 按本地注册表处理子Handler
+    H->>C: 逐项决定与修改，最终StageResult
+    H-->>B: 已提交StageResult
+    B-->>D: allowed或denied及有效视图
+    Note over D,C: 以下为允许路径；拒绝直接结算blocked
     D->>X: 必要压缩、保护输入、硬窗口检查
     D->>C: 冻结请求、InputClaim、LoopTicket、permit
-    D->>P: 继续原Operation
-    P->>M: execute_once已冻结请求
-    Note over M: 内部聚合流式输出，首输出证据单独保存
-    M-->>P: 完整RawResult或明确错误
-    P->>C: 保存Attempt及raw
-    P->>H: resume_chain response
-    H-->>P: 决定及修改
-    P->>C: 有效结果、Context修订及completed
-    B-->>D: EventResponse
+    D->>B: 推进已许可的实际模型请求
+    B->>M: execute_once冻结请求
+    Note over M: 聚合流式输出；不发before或after
+    M-->>B: 完整RawResult或最终错误
+    B->>C: 保存Attempt及raw
+    B-->>D: 原始结果已保存
+    D->>B: request model.generate.after
+    B->>H: 路由该业务阶段事件
+    H->>C: 有效修改及StageResult
+    H-->>B: 已提交StageResult
+    B-->>D: 最终有效视图或拒绝
+    D->>C: 结算唯一EventResponse
     D->>C: 接受决策、消费Ticket、更新continuation
 ```
 
-作用域：这条时序属于一个 NodeTask 的一次模型逻辑调用。NodeDriver、Manager、Pipeline 和 HookManager 是本次 ExecutionRunner 的服务；Operation、各 Attempt、HookInvocation、LoopTicket 和输入水位属于本次调用。下一次业务 Loop 新建模型 Operation；同一次调用的连接重试沿用 Operation，新增 Attempt。
+这条时序属于一个 NodeTask 的一次模型逻辑调用。根总线和组合处理器是本次 ExecutionRunner 的服务；Operation、Attempt、HookInvocation、LoopTicket 属于本次调用。下一次业务 Loop 新建模型 Operation；连接重试沿用 Operation，新增 Attempt。HookHandler 的内部转发不额外生成业务调用。before／after 的 source 始终是原 Loop，HookHandler 自己的诊断来源单独记录。
 
-前置 Hook 后不能直接发业务模型请求：必须先处理压缩、最终输入预算和额度许可。不同 Attempt 不重复跑 Hook 或领取新输入，不拼接两次失败流。Driver 等待时释放本机推进资源。
+前置 Hook 完成后，必须处理压缩、最终预算和额度许可才能发送模型请求。前置 deny 直接返回 blocked，不进入图中允许路径。不同 Attempt 不重复执行已完成 Hook 或领取新输入，不拼接失败流。原始结果保存后恢复只由原 Loop 继续 after 和最终提交，不重新调用模型。每次完整模型响应发一次 after，不按 token 发；raw_saved 只是内部阶段事实，不等于向用户交付最终答案。
 
 ## 9. Tool／MCP／Skill 与 Executor 的交互差异
 
 ```mermaid
 sequenceDiagram
-    participant N as AgentNode与ReactAgent
+    participant N as ReactAgent Loop与成员阶段
     participant J as CallBatchCoordinator
     participant C as CommitCoordinator
     participant E as AgentGraphEngine
-    participant B as EventBus与Pipeline
+    participant B as EventBusImpl
     participant T as ToolManager
     participant A as CapabilityAdapter
     participant G as GraphExecutionManager
@@ -530,9 +551,14 @@ sequenceDiagram
     J-->>N: PreparedBatch
     N->>C: 接受决策并提交批次及父等待
     E->>C: 按串并行策略提交成员准入意图
-    E->>B: begin已提交的成员意图
+    E->>N: 推进已准入成员的原阶段
+    N->>B: begin已提交的成员意图
+    N->>B: request该成员的before事件
+    B-->>N: 已提交StageResult
+    N->>C: 允许后冻结请求与permit
+    N->>B: 推进该成员实际执行
     alt 普通工具或MCP
-        B->>T: 前置处理后交有效参数
+        B->>T: 已许可的有效参数
         T->>A: invoke_once
         A-->>T: 原始结果
         T-->>B: RawResult
@@ -549,7 +575,11 @@ sequenceDiagram
         E->>E: 读取已提交意图，激活Executor私有Loop
         E->>C: 子终态与父Operation raw结果同提交
     end
-    B->>C: 保存raw、后置Hook及最终effective响应
+    B->>C: 保存raw，子结果已保存则复用
+    B-->>N: 成员原始结果已保存
+    N->>B: request该成员的after事件
+    B-->>N: 已提交StageResult
+    N->>C: 提交最终effective响应
     E->>J: plan_settlement读取最终响应
     J-->>E: 成员结算及可选父唤醒写集
     E->>C: 提交成员settled；全批完成后唤醒父任务
@@ -565,9 +595,9 @@ sequenceDiagram
 | PreparedBatch／PreparedDelegate | 一次批次／委派命令的提案 | 提交前只是候选数据；只有已提交的 Task、关联和 ready 意图才能触发执行 |
 | Executor NodeTask | 同一内层 GraphExecution 中一次委派的任务 | 同一个执行器配置被委派两次产生两个任务和两份私有上下文；共用 Invocation 工作文件 |
 
-图中的分支是单个成员的不同类型，不表示整批只能选一种。一个批次可以同时有 Tool、MCP 和多个 Executor；只有 parallel_enabled 开启才并行。工具执行不会新增图实例，Executor 也只新增本内层图的 NodeTask。
+图中的 N 包括原 Loop 的动作成员推进方法，不表示每完成一个动作就调用一次模型；这些方法经 NodeDriver 恢复和调度，不建立另一层 Agent。before 拒绝直接结算该成员，不进入实际执行或 after。图中的分支是单个成员的不同类型，不表示整批只能选一种。一个批次可以同时有 Tool、MCP 和多个 Executor；只有 parallel_enabled 开启才并行。工具执行不会新增图实例，Executor 也只新增本内层图的 NodeTask。
 
-图中一次“保存”箭头概括相应阶段的提交，raw、各 Hook 与最终响应仍遵循调用协议各自的原子边界；Executor 的 raw 已在子终态事务保存，Pipeline 只续后置阶段。Coordinator 才能写入事实；CallBatchCoordinator／GraphExecutionManager 返回准备结果，不能自行启动协程或提交。批次本地拒绝项无 Operation，按 Agent 执行协议直接结算。
+图中一次“保存”箭头概括相应阶段的提交，raw、各 Hook 与最终响应仍遵循调用协议各自的原子边界；Executor 的 raw 已在子终态事务保存，原成员推进逻辑续发 after。Coordinator 才能写入事实；CallBatchCoordinator／GraphExecutionManager 返回准备结果，不能自行启动协程或提交。批次本地拒绝项无 Operation，按 Agent 执行协议直接结算。
 
 ## 10. 故障恢复的对象重建
 
@@ -580,7 +610,7 @@ sequenceDiagram
     participant V as EnvironmentProvider
     participant X as 新ExecutionRunner
     participant E as 对应图引擎
-    participant P as Pipeline
+    participant P as EventBusImpl
     participant C as CommitCoordinator
     A->>R: 同配置、同store、同run_id调用
     R->>S: 读取ExecutionRecord状态
@@ -611,10 +641,10 @@ sequenceDiagram
 
 | 概念 | 作用域 | 生命周期与共享边界 |
 | --- | --- | --- |
-| Session | 多次提问的正式输入与历史范围 | 独立持久保存；新提问创建新 ExecutionRecord，历史按策略投影进入新的 RoleContext |
+| Session | 多次提问的正式输入与历史范围 | 独立持久保存；新提问创建新 ExecutionRecord，历史按策略投影进入新 Agent 的 AgentContext |
 | AgentInvocation | 一次完整 Agent 调用 | 直接 Agent 有根 Invocation；外层每次 AgentNode 调用另建 Invocation；业务 Executor 委派不另建 Invocation |
 | GraphExecution | 一张图的一次逻辑执行 | 固定 engine_kind；父外层图与内层图分别保存现场，同一记录内可有多张图 |
-| GraphState | 一个外层 GraphExecution 的工作流业务状态 | 按 schema／reducer 合并并持久保存；不会自动吸收内层角色的私有 RoleContext |
+| GraphState | 一个外层 GraphExecution 的工作流业务状态 | 按 schema／reducer 合并并持久保存；不会自动吸收内层角色的私有 AgentContext |
 | NodeActivation | 一个 NodeTask 的一次物理激活 | 可以有多次；故障恢复创建新的激活，沿用原任务及 continuation |
 | RunControl | 一次根执行的控制范围 | 根额度、截止、停止按 run_id 保存并由新 Runner 接续；图和 Executor 不另建根额度 |
 | Checkpoint／GraphCheckpoint | 检查点概念／某个图的具体快照信封 | 引擎载荷按图分开保存，由 RecoveryBundle 及提交关联组织恢复；不是每个组件各存一套任意快照 |
@@ -631,9 +661,10 @@ LeaseService 的控制面 claim／激活通过 RuntimeStore 的受控事务入�
 | --- | --- | --- |
 | 解释模型决策并决定继续Loop | ReactAgent（主角色／Planner／Executor） | AgentNode、EventBus、ToolManager |
 | 任务准入与整批汇合 | AgentGraphEngine／CallBatchCoordinator | Hook、MCP adapter |
-| 请求路由到一个领域处理器 | RequestHandlerRegistry | 全局观察订阅 |
-| Attempt重试与调用阶段恢复 | InvocationPipeline | 模型SDK内部隐式重试、Node重复实现 |
-| Hook选择与有序处理 | HookManager | Node逐个手写Hook调用 |
+| 请求路由到一个领域处理器 | EventBusImpl 使用自身 HandlerRegistry 注册表 | 全局观察订阅 |
+| 发出调用前后事件并接续阶段 | 原 ReactAgent Loop／NodeDriver；无 Loop 的调用由原节点驱动器负责 | EventBus 自动加 Hook、ModelManager／ToolManager 发起外围阶段 |
+| Attempt超时、配置允许的自动重试与raw保存 | EventBusImpl 的执行设施 | ModelAdapter 隐式重试、每个 Node 重写重试算法 |
+| Hook选择与有序处理 | HookHandler | Node逐个手写Hook调用 |
 | 上下文投影与patch写集 | ContextManager | ModelAdapter私自裁剪消息 |
 | 原子提交与执行权验证 | CommitCoordinator／RuntimeStore | Hook直接SQL、观察事件回调 |
 | 文件实际访问及脚本执行 | EnvironmentProvider与受限适配器 | LLM提供宿主路径 |

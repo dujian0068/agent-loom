@@ -2,16 +2,17 @@
 
 状态：推荐的详细设计，尚未实现。本文补齐“开发者传什么、SDK 创建什么、对象存活多久”；不改变已确认的 Loop、并行、重试和历史规则。执行入口见[公共 API](public-api.md)，运行数据和恢复事务分别见[定义](definitions.md)与[检查点](checkpoints.md)。
 
-## 1. 四层对象，分别承担什么
+## 1. 对象分类与职责
 
 | 层次 | 对象 | 谁创建 | 可以跨 ExecutionRecord 复用吗 | 是否进入检查点 |
 | --- | --- | --- | --- | --- |
 | 配置 | AgentDefinition、RoleDefinition、WorkspaceBinding、HookBinding | 调用者 | 可以，构造后不可变 | 保存执行所需的值或引用；不保存平台发布关系 |
-| 可执行程序 | ReactAgent、PlanAgent、Workflow | SDK 构造／编译 | 可以，不存消息和当前进度 | 保存本地绑定 key；不序列化 Python 对象 |
+| Agent 对象 | ReactAgent、PlanAgent | SDK 构造；图中按绑定创建 | 活动实例不跨任务复用，固定配置与依赖可以复用 | 保存上下文与进度的持久投影，不序列化对象或服务引用 |
+| 工作流程序 | Workflow | SDK 编译 | 编译结构可以复用，节点执行实例按任务创建 | 保存绑定 key 与各次执行现场，不序列化编译对象 |
 | 宿主服务 | RuntimeEngine、ModelAdapter、CapabilityRegistry、存储和环境适配器 | 调用者装配 | 可以，必须遵守并发契约 | 连接、函数、锁、协程不保存 |
 | 执行现场 | ExecutionRunner、EventBus、NodeDriver；ExecutionRecord、Task、Operation、Context | SDK 在执行时创建 | 不能把本次可变状态交给另一 ExecutionRecord | 前者是进程设施，后者是持久事实 |
 
-`AgentDefinition` 描述行为，`GraphDefinition` 描述组织，具体的 `ReactAgent`／`PlanAgent` 把两者和依赖关联起来，并实现公共 `Agent` 接口。`Workflow` 是独立的已编译程序，`StateGraph` 是其构建器。`RuntimeEngine`（运行时引擎）是 SDK 的执行宿主，管理运行服务和执行生命周期。普通开发者构建 Agent 时无需手动创建 EventBus、HookManager、NodeTask 或检查点。
+`AgentDefinition` 描述行为，`GraphDefinition` 描述组织，具体的 `ReactAgent`／`PlanAgent` 把两者和依赖关联起来，并实现公共 `Agent` 接口。`Workflow` 是独立的已编译程序，`StateGraph` 是其构建器。`RuntimeEngine`（运行时引擎）是 SDK 的执行宿主，管理运行服务和执行生命周期。普通开发者构建 Agent 时无需手动创建 EventBus、HookHandler、NodeTask 或检查点。
 
 下面以 PlanAgent 展开配置引用；ReactAgent 使用相同构造依赖，但不配置 Executor。Agent 接口只定义使用合同，不拥有这些对象。
 
@@ -63,16 +64,30 @@ classDiagram
 | --- | --- | --- |
 | 共享基础设施 | 接入执行存储、内容存储和环境适配器 | RuntimeStore、ContentStore、EnvironmentProvider |
 | 执行托管 | 接收启动／接续请求，持有后台任务，提供查询和停止入口 | RunService、输入服务、本机 supervisor 与执行权协议 |
-| 单次现场装配 | 获得执行权后，为该 ExecutionRecord 创建 ExecutionRunner，按需装配调用服务与图引擎 | ExecutionRunner 内的 EventBus、HookManager、调用管道及引擎服务 |
+| 单次现场装配 | 获得执行权后，为该 ExecutionRecord 创建 ExecutionRunner，按需装配调用服务与图引擎 | ExecutionRunner 内的根 EventBusImpl、已注册 HookHandler 及引擎服务 |
 | 结束与宿主关闭 | 协调本次执行收尾、本机退出和资源释放 | 单次执行控制、提交协调器和环境适配器 |
 
-每个 ExecutionRecord 的 EventBus、HookManager、上下文、预算和执行进度独立；同一 ExecutionRecord 内的外层图与内层 Agent 按既有 scope 规则共享服务。Agent 自己的模型、Prompt、能力选择、Hook 绑定和 WorkspaceBinding 仍由该程序配置，不因共用 RuntimeEngine 合并成全局配置。
+每个 ExecutionRecord 的 EventBus、HookHandler、上下文、预算和执行进度独立；同一 ExecutionRecord 内的外层图与内层 Agent 按既有 scope 规则共享服务。Agent 自己的模型、Prompt、能力选择、Hook 绑定和 WorkspaceBinding 仍由该程序配置，不因共用 RuntimeEngine 合并成全局配置。
 
 节点路由由 AgentGraphEngine／WorkflowEngine 决定，模型请求由 ModelAdapter 执行，文件和沙箱操作由 EnvironmentProvider 执行。RuntimeEngine 组织这些模块，不新增第三套节点调度队列。服务器部署、Worker 分派及平台用户／应用管理由调用方负责。
 
 例如同一宿主同时处理“生成报告”和“检查 SQL”：可以共用一个 RuntimeEngine，分别创建两个 ExecutionRecord 和两个活动 ExecutionRunner。报告中的 Planner 委派多个 Executor，仍属于同一次执行，不为每个 Executor 创建 RuntimeEngine。A 机器失效后，B 机器新建 RuntimeEngine 和 ExecutionRunner，使用共享存储接回原 ExecutionRecord；它们的 Python 对象不进入检查点。
 
 ExecutionRecord 在执行结束后继续保存；ExecutionRunner 只在本机持有执行权期间有效，完成必要收尾、关闭或失去租约后释放。接管重建 Runner，沿用原执行记录。一个 RuntimeEngine 可同时持有多个 Runner，每个 Runner 只对应一个 `run_id`；仅观察已结束或被其他进程执行的记录时，不创建 Runner。完整作用域清单见[对象 UML](object-collaboration.md#11-作用域与生命周期的读法)。
+
+### 1.2 Agent 实例与配置复用
+
+构造 ReactAgent／PlanAgent 得到待绑定对象，不创建消息记录。首次成功接收 `start` 后绑定一个执行身份；同实例再次使用原 `run_id` 只附着／恢复原执行，已终态也只返回原结果。若已绑定却省略 run_id 或传入另一 run_id，返回 `AGENT_INSTANCE_BOUND`，调用方应复用原配置创建新 Agent。首次接收与本机绑定要串行化；并发初始化不得让同一实例绑定两次。接收结果未知时保留已分配身份供同 ID 重试，不把它当成新问题。
+
+只有取得本机执行权后才创建活动上下文。直接 ReAct 的根 AgentNode 使用当前 ReactAgent；PlanAgent 关联本次图，Planner 和各 Executor 任务分别创建自己的 ReactAgent。PlanAgent 本身不再复制 Planner 的消息。停止等待、观察远端执行与创建活动 AgentContext 是不同操作；查询使用 RunHandle。
+
+节点注册表保存固定装配配置和工厂；NodeDriver 的内部 `bind_task(binding, task_state)` 从这些工厂创建该任务专属的 AgentNode／Agent。若复用同一 task 的本机对象，缓存也只归当前 ExecutionRunner，不放进共享注册表；任务进入等待可以释放物理对象，后续从原进度重建。**两个不同 task 绝不能返回同一个活动 Agent 或 AgentContext。** NodeContext 每次激活重建，不能沿用旧 lease 或过期服务代理。
+
+角色实例由 SDK 内部按 RoleDefinition、所属 Agent 的固定策略和已注入服务装配，复用 ReactAgent 的 Loop 实现。它不再次调用独立 Agent 的公开构造／start 流程来生成一张包住自身的图；公开构造的 mode 校验仍适用于完整 Agent。调用方不需要为每次 Planner／Executor 激活手工创建一个 AgentDefinition。
+
+Workflow 编译从预装配 Agent 提取冻结定义、资源绑定和创建方式，PreparedAgentRef 定位这份固定绑定；不捕获其当前上下文。每次图内完整调用据绑定创建独立 Agent，恢复时接回原 Invocation。开发者不需要另外编写工厂；这由 SDK 装配层完成。图中构造新 Agent 对象并不等于调用公共 start 或建立新根 ExecutionRecord。
+
+AgentContext 在逻辑上归执行中的 ReactAgent；持久事实仍由统一提交设施管理。释放 Agent 对象不删除记录。共享适配器的关闭和工作文件清理也不能由单个角色对象擅自完成。
 
 ## 2. Python 构造合同
 
@@ -192,16 +207,20 @@ Registry 的 `for_role / for_node_binding` 面向**已绑定视图**：Agent 构
 这里只冻结已设计的 **Operation 请求／响应挂点**。ExecutionRecord／节点生命周期 Hook 需要另一种输入和控制合同，尚未开放；不能拿 operation_id=null 冒充调用型 Hook。
 
 ```python
-class Hook(Protocol):
-    async def evaluate(
-        self, input: HookInput, context: HookContext, *, reader: HookReadPort,
-    ) -> HookDecision: ...
+class FunctionHookHandler(EventHandler[HookInput, HookCallContext, HookDecision]):
+    async def handle(self, event: HookInput,
+                     context: HookCallContext) -> HookDecision: ...
+
+
+class ScriptHookHandler(EventHandler[HookInput, HookCallContext, HookDecision]):
+    async def handle(self, event: HookInput,
+                     context: HookCallContext) -> HookDecision: ...
 
 
 class HookSet:
     def __init__(
         self, *, bindings: tuple[HookBinding, ...],
-        handlers: Mapping[str, Hook],
+        handlers: Mapping[str, EventHandler[HookInput, HookCallContext, HookDecision]],
     ) -> None: ...
 ```
 
@@ -211,9 +230,9 @@ class HookSet:
 | HookMatcher | role_keys:tuple[str,...]\|null、node_binding_keys:tuple[str,...]\|null、capability_binding_keys:tuple[str,...]\|null、purposes:tuple[business\|compaction\|system,...]\|null | 非 null 的条件之间 AND；集合内 OR；null 表示不限制，空集合非法；按固定绑定校验引用 |
 | HookInput | event_type、stage、payload_ref、context_refs:tuple[ContextRevisionRef,...] | 指向该项开始时已提交的有效输入；由 HookReadPort 读取，不暴露原始存储客户端 |
 
-绑定按 ordinal 升序串行执行；ordinal 是配置内顺序，不是跨 Operation 的全局序号。matcher 只匹配可信元数据，首版不开放任意 Python 表达式或 JSONPath。要按输入内容检查，由获得受限有效输入的 Hook.evaluate 实现并返回 allow／deny／patch。
+绑定按 ordinal 升序串行执行；ordinal 是配置内顺序，不是跨 Operation 的全局序号。matcher 只匹配可信元数据，首版不开放任意 Python 表达式或 JSONPath。要按输入内容检查，由获得受限有效输入的子处理器 handle 实现并返回 allow／deny／patch。
 
-HookContext 沿用总线篇的持久元数据，不往该 DTO 塞数据库客户端。每次 evaluate 另注入本次处理器专属的只读端口：
+HookContext 沿用总线篇的持久元数据，不往该 DTO 塞数据库客户端。每次 handle 通过 HookCallContext.reader 注入本次处理器专属的只读端口：
 
 ```python
 class HookReadPort(Protocol):
@@ -229,9 +248,13 @@ read_payload 读取固定 HookInput 的有效 payload；read_context 只接受 i
 
 `capability_binding_keys` 仅适用于 capability.invoke；role_keys 仅适用于具有角色的程序。不适用字段、未知事件／阶段或未注册挂点在构造时明确报错。某次调用没有 matcher 所要求的元数据则不匹配，不以空值通配。
 
-FunctionHook 实现可信异步函数，ScriptHook 经受限 HookAdapter 执行；HookAdapter 是执行机制，不是第二套用户挂点。timeout、失败放行、合法 deny、补丁校验、持久游标全部复用[Hook 管道](event-bus.md#23-hook-输入与补丁)。HookSet 不提供 fail_closed 开关，不允许修改停止／额度／必要清理控制。
+FunctionHookHandler 实现可信异步函数，ScriptHookHandler 经受限 HookAdapter 执行；HookAdapter 是执行机制，不是第二套用户挂点。timeout、失败放行、合法 deny、补丁校验、持久游标全部复用[Hook 调用规则](event-bus.md#23-业务阶段事件与-hook-输入)。HookSet 不提供 fail_closed 开关，不允许修改停止／额度／必要清理控制。
 
 同一注册可被不同角色命中，不设“通用 Hook／角色 Hook”两套类型。程序固定的 HookSet 与运行时按可信 scope 筛选是两件事。
+
+执行装配时，SDK 将 HookSet 的绑定及末端处理器注册到 HookHandler 的本地表，再将同一个 HookHandler 注册到根 EventBusImpl 的 model.generate.before／after、capability.invoke.before／after 等业务阶段键。HandlerRegistry 是两者共同实现的注册接口，EventBus 是发送接口，HookHandler 额外实现 EventHandler；末端处理器只需实现 EventHandler。根表和子表分别保存绑定，并在开始执行前一并校验、冻结。普通 SDK 调用者仍只提供 HookSet，无需手工创建嵌套总线。阶段由 Loop／调用节点发出，总线不自动包一层 Hook；原 HookBinding.event_type 和 stage 继续按业务请求及阶段配置，由 HookHandler 映射。
+
+组合处理器的 handle 委托自己的 request，不能重新向根发送当前 CallStageEvent。每个子 Hook 的决定、修改和游标由 HookHandler 通过同一 CommitCoordinator 保存；只恢复原链，不生成额外根执行或业务调用。完整接口与类型映射见[三个接口与组合关系](event-bus.md#10-三个接口与组合关系)。
 
 ## 6. program_key 从哪里来
 
@@ -246,7 +269,7 @@ program_key 是**一次根程序装配内的本地地址**，不是平台应用 
 
 `agent_key` 由 Workflow 构建者为预装配 Agent 指定，在该 Workflow 内唯一；推荐静态短 key，语法为 `[A-Za-z_][A-Za-z0-9_-]{0,63}`。PreparedAgentRef 只含此 key；编译时解析本地映射，执行期不可从平台加载。SDK 内部根绑定表根据上述规则派生地址，调用者不在 AgentDefinition 写入它。
 
-同一个完整 Agent 被调用两次，program_key 相同而 invocation_id 不同；Hook 集合可复用，匹配 scope、上下文和处理游标各自独立。两个不同 Agent 即使 role_key、Hook binding_key 相同，也由 program_key 区分。
+同一份完整 Agent 配置被 Workflow 调用两次，创建两个执行实例，program_key 相同而 invocation_id 不同；Hook 集合可复用，匹配 scope、上下文和处理游标各自独立。两个不同 Agent 即使 role_key、Hook binding_key 相同，也由 program_key 区分。
 
 Workflow 编译接收的 Agent 必须绑定同一个 RuntimeEngine 实例；否则报 `RUNTIME_BINDING_MISMATCH`。RuntimeEngine 提供共同的存储 namespace 和环境服务，根控制在该次 ExecutionRecord 的现场内独立建立；各程序仍保留模型、角色资源、WorkspaceBinding 和局部策略。不能在 AgentNode 内调用 child.ainvoke 创建另一个根 ExecutionRecord。
 
@@ -286,7 +309,7 @@ sequenceDiagram
     participant X as ExecutionRunner
     C->>A: 构造：定义和已解析依赖
     A->>A: 校验、冻结、生成图和绑定
-    A-->>C: 可复用程序，不开始执行
+    A-->>C: 待绑定Agent，配置固定，不开始执行
     C->>A: start(input, run_id, input_id)
     A->>R: open_run(program, request)
     R->>S: 原子初始化或读取原ExecutionRecord及接收事实
@@ -312,7 +335,7 @@ sequenceDiagram
 | sdk/public/inputs.py、results.py | 输入规范化、RunHandle 和公开只读 DTO |
 | sdk/assembly/ | Definition 校验、角色目录、HookSet、程序绑定及构造报告 |
 | sdk/runtime/host.py | RuntimeEngine 生命周期、本机 supervisor、open_run |
-| sdk/runtime/ | ExecutionRunner、执行控制、已定义的管道／检查点服务 |
+| sdk/runtime/ | ExecutionRunner、执行控制、总线请求处理与检查点服务 |
 
 这里的 sdk 表示后续 Python 包根，实际分发名仍为 agentloom-sdk；不要求为每一行再拆独立服务。
 
@@ -322,7 +345,7 @@ sequenceDiagram
 2. 修改调用者原始配置 dict；已构造对象行为不变。
 3. 注册三个工具但只绑定一个；模型目录、文件与脚本视图均不扩大授权。
 4. 两个程序存在同名 Hook；同 ExecutionRecord 内各自只运行自己的固定链。
-5. 同一个 Agent 并发处理不同 Session；消息、Task、EventBus 和 RunHandle 不串用。
+5. 同配置创建两个 Agent 并发处理不同 Session；AgentContext、Task、EventBus 和 RunHandle 不串用。同一活动 Agent 绑定另一 run_id 明确拒绝。
 6. 取消等待后任务仍执行；显式 stop 后不能再启动新动作。
 7. 关闭 RuntimeEngine 后，用新对象和原 ID 接续；不生成新的问题、Executor 或程序地址。
 

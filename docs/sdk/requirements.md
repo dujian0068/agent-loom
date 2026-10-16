@@ -4,7 +4,7 @@
 
 ## 1. 产品能力与运行模式
 
-SDK 提供 ReactAgent、PlanAgent 和 Workflow。ReAct 与 Plan 共用 ReactNode 的模型—动作—反馈循环；Plan 增加 Planner 委派和结果汇合。Workflow 是用户显式编排完整 Agent、工具及业务步骤的外层图，两种引擎共用调用、上下文与恢复基础设施。
+SDK 提供 ReactAgent、PlanAgent 和 Workflow。ReAct 与 Plan 的角色共用 ReactAgent 的模型—动作—反馈循环，由 AgentNode 接入图；每个角色任务拥有自己的 AgentContext，NodeContext 只提供当前激活的身份、控制和服务引用；Plan 增加 Planner 委派和结果汇合。Workflow 是用户显式编排完整 Agent、工具及业务步骤的外层图，两种引擎共用调用、上下文与恢复基础设施。
 
 ReAct 没有业务 Executor。Plan 的普通工具由 Planner 直接调用；Executor 是独立上下文的角色任务，不是每次工具调用的必经包装。通用 Executor 默认关闭，可配置专业 Executor。Executor 继承主模型，不继承 Planner Prompt；各角色可以使用不同 Skill、Tool、MCP，主子共享被授权的本次工作文件。
 
@@ -61,7 +61,7 @@ Loop 中达到阈值即压缩，不等模型报超窗。压缩使用独立摘要
 
 Hook 按时机执行，可在白名单内修改输入输出或拒绝执行。合法修改提交为权威有效上下文，后续消费者、压缩和恢复可见；私有上下文仍按 scope 隔离。Hook 自身失败、超时或非法 patch 不影响主流程继续；合法 deny 生效。必要持久化失败不能当 Hook fail-open 忽略。
 
-Skill 使用 SKILL.md、目录元数据、按需阅读和受限脚本；MCP／Tool 使用标准输入输出及同一调用管道。具体兼容清单见[能力设计](capabilities.md)，不把“参考 Claude Code”理解为已实现全部功能。
+Skill 使用 SKILL.md、目录元数据、按需阅读和受限脚本；MCP／Tool 使用标准输入输出及同一总线调用流程。具体兼容清单见[能力设计](capabilities.md)，不把“参考 Claude Code”理解为已实现全部功能。
 
 模型连接内部流式接收；完整响应后才发布一次调用结果，不逐 token 发 EventBus 事件。单次模型完成不代表 Agent 完成；ExecutionRecord 最终收束后才交付最终答案。结构化输出不合规交模型修正，仍共享总 Loop，无额外修正额度。
 

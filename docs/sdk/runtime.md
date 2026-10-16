@@ -2,11 +2,11 @@
 
 状态：详细设计，尚未实现。AgentGraphEngine 仅推进 ReAct／Plan 角色任务；Workflow 编译与 super-step 见[工作流](workflow.md)。平台不会调用这些内部阶段接口。
 
-RuntimeEngine（运行时引擎）负责 SDK 的运行服务和执行托管，详细构造及生命周期见[装配设计](assembly.md#11-runtimeengine-管理的范围)。本文描述它装配的单次执行现场和图内算法；节点收到的 NodeRuntime 是受限任务视图，不是共享宿主 RuntimeEngine。
+RuntimeEngine（运行时引擎）负责 SDK 的运行服务和执行托管，详细构造及生命周期见[装配设计](assembly.md#11-runtimeengine-管理的范围)。本文描述它装配的单次执行现场和图内算法；节点收到的 NodeContext 只包含当前任务身份、控制和已有服务的受限引用；ReactAgent.context 才保存角色的消息和 Loop 进度。
 
 ## 1. 所有权、配置与共同类型
 
-内部 Agent 的 **AgentGraphEngine** 是调度权威；本文内部算法中简称 GraphEngine。NodeDriver 是其执行组件，CallBatchCoordinator 只准备批次变更。外层由独立 WorkflowEngine 推进；两个内核共用根 ExecutionRecord 的租约、控制、调用与存储，不共用图 ready 队列。恢复按 engine_kind 分派，整体接管执行树；详细边界见[双引擎协议](workflow.md)。节点实现只含不可变配置，任务私有数据只在 continuation。SDK 执行事实均通过 `CommitCoordinator.commit(RuntimeCommit, ExecutionLease)` 提交，不得让 BudgetService、批次协调器或恢复器单独提交同一事实。
+内部 Agent 的 **AgentGraphEngine** 是调度权威；本文内部算法中简称 GraphEngine。NodeDriver 是其执行组件，CallBatchCoordinator 只准备批次变更。外层由独立 WorkflowEngine 推进；两个内核共用根 ExecutionRecord 的租约、控制、调用与存储，不共用图 ready 队列。恢复按 engine_kind 分派，整体接管执行树；详细边界见[双引擎协议](workflow.md)。注册表保存不可变配置和工厂；活动 AgentNode／ReactAgent 按任务创建，ReactAgent 持有私有 AgentContext，其中 continuation 是可恢复执行位置。SDK 执行事实均通过 `CommitCoordinator.commit(RuntimeCommit, ExecutionLease)` 提交，不得让 BudgetService、批次协调器或恢复器单独提交同一事实。
 
 固定默认值：业务 Loop 合计 100；ExecutionRecord 从创建起 3600 秒；并行关闭；开启后每个 Planner 批次最多 2 个活跃 Executor；自动重试关闭，开启时同 Operation 共 2 次 Attempt、间隔 2 秒；工具单次 10 秒；模型首有效输出 60 秒。Executor 和压缩继承主模型；压缩不占业务票据。有效截止取根与适用 Invocation 局部截止的最小值，排队、Hook、压缩、重试与恢复均计时。
 
@@ -102,7 +102,7 @@ ActivationStream = AsyncGenerator[NodeOutcome, CommitReceipt]
 
 class Node(Protocol):
     def activate(self, input: NodeInput, continuation: ContinuationRef | None,
-                 runtime: NodeRuntime) -> ActivationStream: ...
+                 node_context: NodeContext) -> ActivationStream: ...
 class NodeDriver(Protocol):
     async def activate(self, task: TaskRef, claim: ExecutionLease) -> ActivationReceipt: ...
 class GraphEngine(Protocol):
@@ -118,7 +118,7 @@ class GraphEngine(Protocol):
 
 | 当前 Task.status | 输入／条件 | 原子结果 | 后续 |
 | --- | --- | --- | --- |
-| ready | ActivateTask，CAS 命中 | running、新 activation_no/id、固定 start revision | 重建 NodeRuntime 和 generator |
+| ready | ActivateTask，CAS 命中 | running、新 activation_no/id、固定 start revision | 创建或恢复任务私有 Agent，重建 NodeContext 和 generator |
 | running | Progress | running、revision+1、NodeCheckpoint/effects | receipt 传回 generator 后继续 |
 | running | Wait，条件未满足 | waiting、wait/resume 引用、activation ended | 释放 Driver worker |
 | running | Wait，提交时条件已满足 | ready、同一 wait/resume 引用、ready_seq、activation ended | 重新入队；避免丢唤醒 |
@@ -128,13 +128,19 @@ class GraphEngine(Protocol):
 | ready/running/waiting | 控制收束 | 先关 scope；静默后 cancelled/failed | 保留原因，不再业务激活 |
 | succeeded/failed/cancelled | 重复结果／通知 | 返回原结果，无 revision 变化 | 不再执行 Node |
 
+NodeContext 由 Driver 按每次激活创建，字段为 `scope: InvocationScopeRef`、`activation_id`、`lease: ExecutionLease`、`context_read_authority: ContextReadAuthority`、只读 `control`，以及按授权装配的 `model_port`、`capability_port`、`context_port`、`environment_port` 和可选 `delegation_port`。访问端口时仍验证执行权；对象随激活结束失效。它不含 messages、continuation 或客户端所有权，也不能写入检查点。所有端口引用 ExecutionRunner 已装配的服务，不再创建一份服务实例。
+
+`AgentNode.activate` 将恢复输入交给内部 Agent 的可恢复执行入口。ReactAgent 在接入时装载 `AgentContext`：continuation 与输入任务身份必须一致；后续阶段从 `self.context.continuation` 读取，准备新的候选写集，收到提交回执后才刷新已提交视图。AgentContext 的消息头和进度通过一致任务现场恢复；不得用旧内存 messages 覆盖已提交 Hook 修改。NodeOutcome 继续携带准备发布的进度引用，AgentNode 不维护第二份状态。
+
 Driver 唯一实现选用 async generator 的 `asend(receipt)` 握手，禁止“yield 之后立即自行继续”的后台任务：
 
 ```python
 async def activate(task_ref, lease):
     start = await commits.commit(plan_activate(task_ref), lease)
-    state = await reader.load_task(task_ref)               # 读取已提交 continuation
-    stream = registry.node(state.binding).activate(state.input, state.continuation, runtime(state))
+    state = await reader.load_task_bundle(task_ref)         # 一致任务、消息修订与已提交进度
+    node = driver.bind_task(state.binding, state)          # 使用注册工厂；缓存仅属于本Runner
+    node_context = services.for_activation(state, lease)  # 只引用当前有效的受限服务
+    stream = node.activate(state.input, state.continuation, node_context)
     try:
         outcome = await anext(stream)
         while True:
@@ -162,19 +168,21 @@ async def activate(task_ref, lease):
 
 ## 4. ReAct 各阶段的确定推进
 
-共同入口：每次从准备阶段开始新业务模型前先检查 root/local 已消费额度、停止和截止；耗尽时不先压缩。已有最后一张已消费决策的动作不做“consumed==limit”拒绝，只检查 scope 是否已经关闭、停止及截止。Operation 的 begin/prepare/execute/recover 由调用管道提供，以下 `prepare_*` 返回可供同一 RuntimeCommit 提交的强类型 effect；它们不能偷偷推进节点状态。
+以下阶段函数中的 `c` 是 `agent.context.continuation` 的已提交视图；`node_context` 只提供当前激活的控制与服务。共同入口：每次从准备阶段开始新业务模型前先检查 root/local 已消费额度、停止和截止；耗尽时不先压缩。已有最后一张已消费决策的动作不做“consumed==limit”拒绝，只检查 scope 是否已经关闭、停止及截止。Operation 的阶段推进由原 Loop／NodeDriver 提供；登记、路由和已许可的 Attempt 执行使用 EventBusImpl，以下 `prepare_*` 返回可供同一 RuntimeCommit 提交的强类型 effect；它们不能偷偷推进节点状态。
 
 | 阶段 | 必需引用／入口事实 | 唯一成功输出与下一阶段 |
 | --- | --- | --- |
 | prepare_context | 本 task context；上批已 consumed 或首次输入 | 固定 projection/ref/revision/补充读取水位 → prepare_model |
-| prepare_model | projection；尚无本轮 operation 或已有同 purpose operation | 固定 operation/role_loop_index，请求 Hook 完成 → compact_context 或 call_model |
+| prepare_model | projection；尚无本轮 operation 或已有同 purpose operation | 固定 operation/role_loop_index，发 before 并等待 StageResult → compact_context 或 call_model |
 | compact_context | 当前 operation、compaction_ref、请求有效 revision | 压缩提交新 revision、重组并硬窗口验证 → call_model |
-| call_model | effective 请求冻结、ticket 已预留或可申请 | completed EventResponse 引用 → interpret_response；非终态则等待同 operation |
+| call_model | effective 请求冻结、ticket 已预留或可申请 | 原始结果保存后发 after，结算 completed EventResponse → interpret_response；非终态等待同 operation |
 | interpret_response | completed effective 响应，未接受过该 operation | 接受决策+消费 ticket+冻结 batch → wait_batch；无动作 → validate_output |
 | wait_batch | pending_batch_id、固定 WaitGroup | 全成员 settled → consume_results；否则 Wait |
 | consume_results | 全成员结果引用、未 consumed | 一次 ContextDelta+consumed+清空本轮引用 → prepare_context |
 | validate_output | 已接受候选+已消费 ticket | 本地 schema 合规 → completed；不合规反馈+清空本轮引用 → prepare_context |
 | completed | final_output_ref | Complete；不请求模型或能力 |
+
+阶段发送与处理合同见[Loop 发出阶段事件](event-bus.md#6-loop-发出阶段事件总线执行主请求)。同一 Loop 内的模型、工具和 Executor 委派都有各自 Operation；成员阶段可以在父任务 wait_batch 期间推进。推进一个成员的 after 不等于进入下一次模型 Loop，仍须等待全批 settled。NodeDriver 对同 Operation 合并激活，防止父等待和成员恢复各发一套事件。
 
 ### 4.1 prepare_context 与 prepare_model
 
@@ -182,25 +190,25 @@ async def activate(task_ref, lease):
 2. 直接 Agent ExecutionRecord 的根 ReAct/Planner 领取顺序水位以内的 pending UserInputDelivery；Executor 和 Workflow 内 AgentInvocation 不领取根补充。后者只使用 input_only 输入和本次私有过程。直接 Agent 此时只是选入 projection，冻结请求时才 claimed；ContextManager 按构造策略 recent_runs=2、角色私有范围、已提交 effective revision 生成 projection，同 input_id 去重。已发生的上下文 Hook 修改通过重新读取 authoritative revision 生效。
 3. 以 `(task_id,"context-prepare",role_loop_index+1,source_revision,input_watermark)` 形成准备键，提交 projection_ref/context revision/水位和 phase=prepare_model。准备期间新到补充留下一轮；不能补写到已经冻结请求。
 4. 新模型 Operation 的 purpose_key 固定 `business-model:{role_loop_index+1}`。不存在时在 Progress 同事务保存 prepared Operation 意图、递增角色序号、写 model_operation_id；存在则复用，不递增。压缩 Operation 使用不同 purpose，不增加此序号。
-5. 调用 `InvocationPipeline.prepare_business_model(op_ref, scope) -> PreparedModelRequest | FinalResponseRef`，请求 Hook 已提交而 Operation 仍保持 request_hooks，等待模型执行许可。前置 deny 作为模型失败按角色范围处理；Hook 自身错误按调用规范 fail-open。请求与 context 的有效 revision 必须一致，不允许 Driver 从原 projection 覆盖 Hook 结果。
+5. 调用 `NodeDriver.prepare_business_model(op_ref, scope) -> PreparedModelRequest | FinalResponseRef`，由 Loop 显式发 model.generate.before 并等待已提交 StageResult；Operation 仍保持 before_call，等待模型执行许可。该方法是 NodeDriver 内部方法，不是总线隐藏调用 Hook。前置 deny 作为模型失败按角色范围处理；Hook 自身错误按调用规范 fail-open。请求与 context 的有效 revision 必须一致，不允许 Driver 从原 projection 覆盖 Hook 结果。
 6. ContextManager 用 Hook 后有效请求计算软阈值和硬窗口。触发压缩则创建/复用 `compaction:{model_operation_id}` 的 CompactionEpisode，保存 compaction_ref，Progress 到 compact_context；不触发则到 call_model。没有工具调用、网络等待或 Hook 在数据库锁内发生。
 
 ### 4.2 compact_context 与 call_model
 
 ```python
-async def compact_context(c, runtime):
+async def compact_context(c, node_context):
     check_new_loop_control(c.task_scope)                     # 耗尽先终结，不白做压缩
-    prior = await compactions.inspect(c.compaction_ref, runtime.context_read_authority)
-    episode = await compactions.advance(c.compaction_ref, prior.episode_ref.revision, runtime.lease)
+    prior = await compactions.inspect(c.compaction_ref, node_context.context_read_authority)
+    episode = await compactions.advance(c.compaction_ref, prior.episode_ref.revision, node_context.lease)
     if episode.pending_operation_ref:
         return Wait(c, operation_condition(episode.pending_operation_ref), resume_ref(episode), ())
-    if episode.status == "cancelled": return Fail(error=current_control_error(runtime.scope))
+    if episode.status == "cancelled": return Fail(error=current_control_error(node_context.scope))
     if episode.status == "failed":
         return Fail(error="COMPACTION_FAILED", scope="invocation")
     if episode.chunk_cursor < episode.chunk_count:
         return Progress(c, effects=())                    # 安全点后再推进下一块
-    result = await compactions.publish(c.compaction_ref, episode.episode_ref.revision, runtime.lease)
-    candidate = await pipeline.prepare_business_model(c.model_operation_id, runtime.scope)
+    result = await compactions.publish(c.compaction_ref, episode.episode_ref.revision, node_context.lease)
+    candidate = await driver.prepare_business_model(c.model_operation_id, node_context.scope)
     if is_final_response(candidate): return Progress(phase="interpret_response", effects=(reference(candidate),))
     rebuilt = await contexts.materialize_prepared_model(candidate.ref, current_context_revision(c), result.snapshot_id)
     if rebuilt.over_hard_limit:
@@ -208,12 +216,12 @@ async def compact_context(c, runtime):
     return Progress(phase="call_model", context_revision_ref=rebuilt.revision,
                     effects=(rebuilt.request_binding_effect,))
 
-async def call_model(c, runtime):  # 阶段伪代码：yield用于commit-ack，return表示下一outcome
+async def call_model(c, node_context):  # 阶段伪代码：yield用于commit-ack，return表示下一outcome
     op = await invocations.get(c.model_operation_id)
     if op.completed:
         return Progress(phase="interpret_response", effects=(reference(op.response),))
     if not op.request_frozen:
-        candidate = await pipeline.prepare_business_model(op.ref, runtime.scope)
+        candidate = await driver.prepare_business_model(op.ref, node_context.scope)
         if is_final_response(candidate): return Progress(phase="interpret_response", effects=(reference(candidate),))
         prepared = await contexts.materialize_prepared_model(candidate.ref, current_context_revision(c), applicable_snapshot(c))
         admission = await budget.prepare_reserve_loop(c.task_ref, op.ref)
@@ -225,14 +233,15 @@ async def call_model(c, runtime):  # 阶段伪代码：yield用于commit-ack，r
             prepared.freeze_request, prepared.claim_inputs, admission.reserve_ticket,
             prepared.execution_permit))
         # receipt 后才能出网；事务内二次检查 revision、lease、root/local 控制与容量
-    await pipeline.schedule_resume(op.operation_id)       # 只提示调用管道推进，不等网络
+    progress = await driver.advance_call(op.operation_id, node_context.lease)
+    # 原Loop在raw保存后发model.generate.after；等待时保存阶段并释放激活
     # 未结束只返回可恢复 operation wait；完整响应已提交才推进
     response = await invocations.get_result(op.ref)
     return Wait(c, operation_condition(op), resume_ref(op), ()) if response is None else \
            Progress(phase="interpret_response", effects=(reference(response),))
 ```
 
-压缩的内部冲突、覆盖范围与增量接回算法由[上下文设计](context.md)规定；本模块恢复固定 episode，不创建第二个压缩节点或调度器。阶段伪代码中的 `Progress(phase=...)` 是构造新 continuation 和 effects 的简写，实际对象严格使用第 3 节签名；`Fail(error=...,scope=...)` 同样封装为 RuntimeErrorRecord，不接受未声明 kwargs。压缩失败在任何角色都终结所属 Invocation。已有冻结请求不可热改；最终冻结时 revision 冲突要重建未发请求，不重复已提交请求 Hook；同业务 Operation 最多一个 CompactionEpisode，已有 episode 成功后不能为了换源 revision 再压一次。旧摘要不适用时按上下文契约重建视图，仍超硬窗口即失败；没有已有 episode 时才按软阈值判断首次压缩。`commit_model_ready` 在锁内发现容量被其他任务预占时以 `BUDGET_ADMISSION_CHANGED` 拒绝本次未提交效果；Driver 重读后落 budget Wait，不能把准备阶段的 granted 当成已授予。该码按 CommitConflict 分支处理。`Pipeline.schedule_resume(operation_id) -> None` 只合并本机提示；实际由 `start_or_resume(operation_id, lease) -> PipelineProgress` 推进唯一 Attempt/重试循环。提示丢失由持久待处理事实扫描补齐，不使等待父任务占 Driver worker。
+压缩的内部冲突、覆盖范围与增量接回算法由[上下文设计](context.md)规定；本模块恢复固定 episode，不创建第二个压缩节点或调度器。阶段伪代码中的 `Progress(phase=...)` 是构造新 continuation 和 effects 的简写，实际对象严格使用第 3 节签名；`Fail(error=...,scope=...)` 同样封装为 RuntimeErrorRecord，不接受未声明 kwargs。压缩失败在任何角色都终结所属 Invocation。已有冻结请求不可热改；最终冻结时 revision 冲突要重建未发请求，不重复已提交请求 Hook；同业务 Operation 最多一个 CompactionEpisode，已有 episode 成功后不能为了换源 revision 再压一次。旧摘要不适用时按上下文契约重建视图，仍超硬窗口即失败；没有已有 episode 时才按软阈值判断首次压缩。`commit_model_ready` 在锁内发现容量被其他任务预占时以 `BUDGET_ADMISSION_CHANGED` 拒绝本次未提交效果；Driver 重读后落 budget Wait，不能把准备阶段的 granted 当成已授予。该码按 CommitConflict 分支处理。`EventBusImpl.schedule_resume(operation_id) -> None` 只提示原调用方驱动器；`NodeDriver.advance_call` 续发原 before／after，`EventBusImpl.execute_or_resume` 只推进已许可的主 Handler 与唯一 Attempt/重试循环。提示丢失由持久待处理事实扫描补齐，不使等待父任务占 Driver worker。
 
 ### 4.3 interpret_response、wait_batch、consume_results
 
@@ -323,7 +332,7 @@ def plan_admissions(batch, root, invocation, active_tasks, tokens):
 
 `reserve_admission_token` 和 `begin_intent` 都只返回写集，不自行提交。选中 Executor 时，无论串行还是并行，T_MEMBER_ADMIT 都将令牌、成员 queued→admitting、服务端 call_id/purpose_key 及待 begin 意图放在同一事务；令牌唯一键为 `(batch_id,member_id)`。普通工具不创建 Executor 令牌。串行上一成员未 settled 不准入下一成员，因此最多一项占用／预留；重复 advance 看到 admitting 后不再预留。
 
-提交后才由调用设施 begin，返回 PendingOperationRef；重复投递意图复用同 Operation。begin 从可信主体+purpose_key 取准入意图，在同一 CommitOperation 中创建 `processing_phase=prepared,status=pending` 的 Operation，并写 BatchMember.operation_id、WaitMember.result_operation_id 和 operation target；之后才推进前置处理，不授权创建 Executor。T_MEMBER_ADMIT 已提交而 T_BEGIN 未提交时，BatchMember／WaitMember 都为 admitting，调用和目标引用均为空；此现场合法，恢复只能补投原 begin 意图，不能退回 queued 或另建令牌。T_BEGIN 提交后、子任务创建前仍为 admitting，target_ref 指向原 Operation。快速完成也已有父成员关联；begin 回执丢失按原 key 取回同关联。串行有任意 admitting/admitted 成员时禁止 begin 后续成员，普通工具与 Executor 共用此闸门。
+提交后才由调用设施 begin，返回 PendingOperationRef；重复投递意图复用同 Operation。begin 从可信主体+purpose_key 取准入意图，在同一 CommitOperation 中创建 `processing_phase=prepared,status=pending` 的 Operation，并写 BatchMember.operation_id、WaitMember.result_operation_id 和 operation target；之后由原 Loop 的动作成员阶段发 before；总线不自动发此事件，begin 也不授权创建 Executor。T_MEMBER_ADMIT 已提交而 T_BEGIN 未提交时，BatchMember／WaitMember 都为 admitting，调用和目标引用均为空；此现场合法，恢复只能补投原 begin 意图，不能退回 queued 或另建令牌。T_BEGIN 提交后、子任务创建前仍为 admitting，target_ref 指向原 Operation。快速完成也已有父成员关联；begin 回执丢失按原 key 取回同关联。串行有任意 admitting/admitted 成员时禁止 begin 后续成员，普通工具与 Executor 共用此闸门。
 
 委派前置链完成后，`register_executor` 必须读 batch/member/admission token/control；验证目标是本图允许 executor binding、最终输入已通过授权/schema，再在一笔提交中创建 child Task/context、保存父 Operation 和 WaitMember 的 child 引用、将 token reserved→converted、登记 ready 意图。此时 active+1/token−1；child 的 graph_execution_id/invocation_id 与 Planner 相同。不能为 Executor 调 AgentInvocationService.start。
 
@@ -410,7 +419,7 @@ Executor 错误反馈槽键为 `(parent_context_id,batch_id,member_id)`；记录
 收束严格按以下步骤执行：
 
 1. 短事务锁控制范围并固定首个终结原因，关闭新 Loop、未启动 action、Executor、Attempt 的门；同一竞争中以事务先提交者为准，迟到成功不能改写。根截止检查早于局部检查。
-2. 取消未 begin 成员、本机 ready 意图和未 converted token；已存在 Operation 保留原引用，由调用管道保存已取得事实及取消结果。所有业务后置 Hook 在关闭 scope 下不得发起新业务调用。调用管道使用control_finalize_operation将未启动Hook记skipped_control并结清Operation；不是卡在raw_saved等一条不能运行的后链。
+2. 取消未 begin 成员、本机 ready 意图和未 converted token；已存在 Operation 保留原引用，由总线调用流程保存已取得事实及取消结果。所有业务后置 Hook 在关闭 scope 下不得发起新业务调用。总线调用流程使用control_finalize_operation将未启动Hook记skipped_control并结清Operation；不是卡在raw_saved等一条不能运行的后链。
 3. 向已开始模型/工具/脚本发送支持的取消信号，登记 WriterBarrier；不把取消本机 Future 当成外部写入已结束。不可取消外部操作按剩余尝试/scope 时间收束，未确认结果记录 unknown；环境写能力由代次 fence 撤销。
 4. 对当前无完整决策且不反馈票据 release；接受过决策的保持 consumed。所有子任务达到终态或其写权限已确认撤销后，保存 scope 终态、唯一结果与父通知；根终态同时处理补充交接及 cleanup intent，需预锁 Session。
 5. 根全部写入者静默后才清理临时工作文件。Invocation 局部结束不清理全 ExecutionRecord 共享目录。cleanup_state 独立，清理失败只重试清理，不重新打开业务。
@@ -445,12 +454,12 @@ async def recover_run(run_id, new_lease):
             else:
                 restore_ready_intent(task)
         rebuild_active_slots_and_admission_tokens(graph)  # 从Task/令牌事实，非WaitMember数
-        enqueue_unfinished_operation_pipelines(graph)      # 复用原Operation；只补必要阶段
+        enqueue_unfinished_operation_dispatchs(graph)      # 复用原Operation；只补必要阶段
         enqueue_unconsumed_batches_and_join_intents(graph)
     return await runtime.drive_registered_engines(run_id, new_lease)
 ```
 
-`load_run_consistently` 为持久化层聚合读取能力，不另建状态存储；跨 scope 先固定一致读水位。旧 running Activation 记录为 abandoned 后新建 Activation，task/context/graph/invocation/op/ticket 均不变。未完成调用的具体恢复交[调用管道](event-bus.md)：prepared 继续前置，raw_saved 只续后置，completed 直接复用；executing 无可靠结果按已识别异常策略处理，缺记录本身不能猜成可重试网络错误。
+`load_run_consistently` 为持久化层聚合读取能力，不另建状态存储；跨 scope 先固定一致读水位。旧 running Activation 记录为 abandoned 后新建 Activation，task/context/graph/invocation/op/ticket 均不变。未完成调用的具体恢复交[总线调用流程](event-bus.md)：prepared 继续前置，raw_saved 只续后置，completed 直接复用；executing 无可靠结果按已识别异常策略处理，缺记录本身不能猜成可重试网络错误。
 
 | 错误码 | 检测点 | 保存／恢复分支 |
 | --- | --- | --- |

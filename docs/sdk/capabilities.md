@@ -21,7 +21,7 @@ class ModelManager:
     async def execute_once(self, operation_ref, attempt_ref, execution_permit) -> RawResultRef: ...
 ```
 
-`ModelManager` 在执行前核对 execution_permit 与冻结 request_hash；业务模型没有同事务预占的 LoopTicket 不出网。压缩调用无需业务票据，但仍验证 ExecutionRecord／Invocation 控制、lease、授权和有效截止。Gateway／Adapter 的 `once` 禁用 SDK 内部重试；多次 Attempt 仅由调用管道驱动。
+`ModelManager` 在执行前核对 execution_permit 与冻结 request_hash；业务模型没有同事务预占的 LoopTicket 不出网。压缩调用无需业务票据，但仍验证 ExecutionRecord／Invocation 控制、lease、授权和有效截止。Gateway／Adapter 的 `once` 禁用 SDK 内部重试；多次 Attempt 仅由总线的调用执行设施按固定策略驱动。ModelManager 不发外围 model.generate.before／after，不执行 Hook；这些事件由原 Loop 发出。
 
 | DTO | 字段与约束 |
 | --- | --- |
@@ -96,7 +96,7 @@ NodeDriver 在同一提交中保存反馈及下一 prepare_context 阶段；该�
 
 SDK 生成的对象 input_schema 默认 additionalProperties=false；MCP schema 保留其声明扩展语义。导入收拢许可本地 `$ref`，拒绝外部网络 `$ref`；运行校验不得顺带出网取 schema。
 
-`OperationError` 复用[调用协议的唯一 DTO 定义](event-bus.md#21-范围信封和响应)，不另定义精简枚举。Adapter 通常填 connect／send／receive／execute，Pipeline 还可产生 prepare／after 阶段错误。成功没有 error；unknown 必须有 error 且 external_outcome=unknown。
+`OperationError` 复用[调用协议的唯一 DTO 定义](event-bus.md#21-范围信封和响应)，不另定义精简枚举。Adapter 通常填 connect／send／receive／execute，调用方阶段驱动器还可产生 prepare／after 阶段错误。成功没有 error；unknown 必须有 error 且 external_outcome=unknown。
 
 ### 2.2 结果预览与 result.read
 
@@ -167,7 +167,7 @@ OAuth 在配置阶段完成授权码＋PKCE、metadata、audience 和刷新策�
 | `isError=true` 工具结果 | business / `MCP_TOOL_ERROR`，保留内容和已知执行事实 |
 | output_schema 对 structuredContent 校验失败 | protocol / `MCP_OUTPUT_SCHEMA_INVALID`，外部执行可能已发生，保留 raw |
 | 明确连接 reset、临时 connect timeout、502/503/504 | transport；发送后无法确定则 external_outcome=unknown，由统一 RetryPolicy 决定 |
-| HTTP 429 | rate_limit；解析合法 Retry-After，等待规则沿用调用管道 |
+| HTTP 429 | rate_limit；解析合法 Retry-After，等待规则沿用总线调用流程 |
 | 不可识别远端错误文字 | unknown；不凭“网络”字样转换为可重试异常 |
 | 停止／deadline／lease过期 | cancelled／控制错误，禁止再次自动发送 |
 
@@ -326,7 +326,7 @@ driver 将 ExecCommand 编译为固定 OCI process spec：argv 直接数组传�
 
 - accepted 意图已保存但进程未启动：inspect返回accepted；原执行服务按同 execution_id 启动一次，不能由 SDK 生成新 ID 重开。
 - 进程已结束但结果未交付：inspect取回原输出；SDK 保存 raw 后继续后置链，不再次exec。
-- 进程存在但不可查询：记unknown，先收束原域；调用管道根据已识别错误和重试策略处理，不能把unknown当作已停止。
+- 进程存在但不可查询：记unknown，先收束原域；总线调用流程根据已识别错误和重试策略处理，不能把unknown当作已停止。
 - revoke unconfirmed：ExecutionRecord接管保留阻塞诊断，不发新写句柄；停止／清理可继续重试撤销，但不能先删除仍可被写入的目录。
 - 只读查看也需要授权；同路径不意味着不同epoch可以复用旧handle。成功 revoke 不承诺撤销已经完成的远端业务副作用。
 

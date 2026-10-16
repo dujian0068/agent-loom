@@ -30,9 +30,9 @@ async with RuntimeEngine(
     result = await handle.wait()
 ```
 
-构造 ReactAgent／PlanAgent 只校验与冻结配置，不开始任务。start 返回运行句柄；需要直接等结果时使用 ainvoke，需要持续观察时使用 astream。三者使用同一条准入／恢复路径，不实现三套执行逻辑。
+构造 ReactAgent／PlanAgent 只校验与冻结配置，不开始任务。实例在首次成功接收调用时绑定执行身份，同身份可重入；新提问用同配置创建新实例。具体约束见[实例生命周期](assembly.md#12-agent-实例与配置复用)。start 返回运行句柄；需要直接等结果时使用 ainvoke，需要持续观察时使用 astream。三者使用同一条准入／恢复路径，不实现三套执行逻辑。
 
-`RuntimeEngine` 是调用方装配的 SDK 运行时引擎，参数统一命名为 `runtime_engine`。同一实例可以托管多次 Agent／Workflow 执行；每次执行的上下文、预算和活动现场独立。进入 `async with` 开启托管服务，调用 `agent.start(...)` 才接收具体任务。Node.activate 的 `runtime: NodeRuntime` 是任务受限视图，与这里的构造参数不同，签名保持不变。
+`RuntimeEngine` 是调用方装配的 SDK 运行时引擎，参数统一命名为 `runtime_engine`。同一实例可以托管多次 Agent／Workflow 执行；每次执行的上下文、预算和活动现场独立。进入 `async with` 开启托管服务，调用 `agent.start(...)` 才接收具体任务。Node.activate 的 `node_context: NodeContext` 是任务身份、控制和受限服务引用；AgentContext 则由执行中的 ReactAgent 持有。两者均不等于共享宿主 RuntimeEngine。
 
 SDK 将该次执行的持久记录称为 `ExecutionRecord`，由取得执行权的 `ExecutionRunner` 在本机推进。公开 `run_id` 标识这条记录；`RunHandle` 是它的观察／控制句柄，`RunResult` 是结果投影。调用者不直接 new ExecutionRunner，也不通过修改 ExecutionRecord 推进执行，恢复仍使用原 `run_id` 调用同一入口。
 
@@ -41,12 +41,12 @@ SDK 将该次执行的持久记录称为 `ExecutionRecord`，由取得执行权�
 | 类型 | 面向谁 | 职责与关系 |
 | --- | --- | --- |
 | Agent | SDK 调用者和平台装配代码 | 完整智能体的执行接口；由 ReactAgent、PlanAgent 实现 |
-| ReactAgent | SDK 调用者 | 构造单角色程序，内部使用 ReactNode 与轻量 Agent 图 |
+| ReactAgent | SDK 调用者 | 执行 ReAct Loop，持有私有 AgentContext；通过 AgentNode 接入轻量图 |
 | PlanAgent | SDK 调用者 | 构造 Planner／Executor 程序，内部使用同一轻量图引擎 |
 | Workflow | SDK 调用者 | 编译后的通用工作流；独立于 Agent，可以完全没有模型或 Agent 节点 |
 | StateGraph | 工作流作者 | 定义节点、边与状态，compile 返回 Workflow；构建器不直接执行任务 |
 | Node | 内层图引擎及节点扩展作者 | activate 合同；返回进度、等待、完成或失败，由 Driver 保存现场 |
-| AgentNode | 工作流作者与外层引擎适配层 | 将 SDK 的完整 Agent 绑定为一个工作流步骤，不与该 Agent 建立继承关系 |
+| AgentNode | 图内角色接入及工作流装配 | 同时实现 Agent 和 Node，组合并代理本任务 Agent；外层原生调度另由 WorkflowNodeAdapter 衔接 |
 
 ```mermaid
 classDiagram
@@ -62,29 +62,25 @@ classDiagram
     class StateGraph {
       +compile() Workflow
     }
-    class AgentNode
-    class WorkflowNodeAdapter {
-      <<interface>>
-    }
     class Node {
       <<interface>>
-      +activate(input, continuation, runtime) ActivationStream
+      +activate(input, continuation, node_context) ActivationStream
     }
-    class ReactNode
-    class PlannerNode
-    class ExecutorNode
-    Agent <|.. ReactAgent : 实现
-    Agent <|.. PlanAgent : 实现
+    class AgentNode {
+      +Agent agent
+    }
+    class WorkflowNodeAdapter {
+      <<interface>>
+      外层原生执行与写入合同
+    }
+    Agent <|.. ReactAgent
+    Agent <|.. PlanAgent
+    Agent <|.. AgentNode
+    Node <|.. AgentNode
+    AgentNode --> Agent : 代理本任务实例
     StateGraph ..> Workflow : 编译创建
-    Workflow ..> AgentNode : 可选节点实现
-    WorkflowNodeAdapter <|.. AgentNode
-    AgentNode --> Agent : 绑定SDK内置实现
-    Node <|.. ReactNode : 实现
-    ReactNode <|-- PlannerNode : 继承Loop
-    ReactNode <|-- ExecutorNode : 继承Loop
-    ReactAgent ..> ReactNode : 装配
-    PlanAgent ..> PlannerNode : 装配
-    PlanAgent ..> ExecutorNode : 按配置装配
+    Workflow ..> WorkflowNodeAdapter : 原生接入
+    WorkflowNodeAdapter ..> AgentNode : 使用完整Agent调用绑定
 ```
 
 `Agent` 用 Python Protocol 定义统一使用合同；`ReactAgent`、`PlanAgent` 是可构造的具体类。创建通过具体类的构造函数完成，接口不提供 `Agent.create()`，也不负责查找平台配置。平台可以在自己的 AssemblyService 中根据 mode 选择构造函数；未来便利工厂也只能包装同一合同。
@@ -150,7 +146,7 @@ content 按主角色 input_schema 校验；variables 按主角色变量声明校
 
 ### 2.3 同一 ExecutionRecord 的处理顺序
 
-1. 校验 RuntimeEngine 处于 open、身份参数与权限范围；检查已接收输入和停止准入标记。
+1. 校验 RuntimeEngine 处于 open、Agent 实例未绑定或与原执行身份一致、身份参数与权限范围；检查已接收输入和停止准入标记。
 2. 对不存在的 ExecutionRecord 原子初始化；已存在则验证原 Session／初始问题，不能把重投内容追加为补充。
 3. ExecutionRecord 已终态：返回只读句柄，wait 立即读取原结果，不触发模型、Hook 或沙箱准备。
 4. 原 owner 仍有效：默认附着，不报模糊的“可能 busy”，也不抢执行权。
@@ -221,6 +217,7 @@ started_at 在执行前即被停止时可以为 null。cleanup_state 使用 pend
 | 情况 | API 行为 | 是否可以推断 ExecutionRecord 失败 |
 | --- | --- | --- |
 | 构造引用缺失／模式冲突 | ConfigurationError | 没有创建 ExecutionRecord |
+| 已绑定 Agent 实例用于另一执行，或再次调用时未提供原 run_id | RequestError，code=AGENT_INSTANCE_BOUND | 不创建新执行；使用原身份附着，或用相同配置构造新 Agent |
 | 新输入不合法、INPUT_CONFLICT、SESSION_BUSY、RUN_ADMISSION_CLOSED | RequestError，含稳定 code 和字段定位 | 本请求未成功接收，既有 ExecutionRecord 不受影响 |
 | 接收或查询时存储失联 | InfrastructureError，注明接收结果可能未知 | 不可以；用相同 ID 查询／重投 |
 | 已持久结束：模型失败、预算耗尽、用户停止等 | wait／ainvoke 返回非成功 RunResult | 可以，以保存的终态为准 |
@@ -266,9 +263,9 @@ stop 与初次 start 争用同一 admission key：stop 先提交则迟到 start 
 
 StateGraph.compile 返回公开类型 Workflow。Workflow 不实现 Agent；其 start／ainvoke／astream 与 RunHandle 复用相同根执行控制和结果语义，但输入是 Workflow 自身的结构化状态，不能直接把 AgentInput 的聊天补充协议套上去。Workflow 初始输入回执、完整编译签名和映射 DSL 仍在[Workflow 合同](workflow.md)中待细化。
 
-编译时传入已构造的 ReactAgent／PlanAgent 或指向它们的 PreparedAgentRef。AgentNode 使用内部调用桥保存父 Operation 与子 Invocation 引用，共享根 ExecutionRecord 和预算。不能在普通节点里无关联地调用 child.ainvoke，再声称获得了嵌套恢复。
+编译时传入预装配的 ReactAgent／PlanAgent 或其 PreparedAgentRef，编译结果保存冻结装配绑定和创建方式，不保存活动上下文。AgentNode 代理也可解包到相同内置绑定，禁止循环代理。每次实际任务创建自己的 Agent 实例，经内部调用桥保存父 Operation 与子 Invocation 引用，共享根 ExecutionRecord 和预算。不能在普通节点里无关联地调用 child.ainvoke，再声称获得了嵌套恢复。
 
-公共 Agent 接口保证完整程序可独立执行，不保证任意第三方实现都支持图内接续。首版编译器只接受带 SDK 内部执行绑定的两种内置实现，并校验 RuntimeEngine 一致；仅提供 start／ainvoke／astream 的对象须报 ConfigurationError，不退化为新建子 ExecutionRecord。将来开放第三方 Agent 嵌入时，需要单独定义执行绑定与恢复协议，不能偷偷把它加入 Agent 的公共使用接口。
+公共 Agent 接口保证完整程序可独立执行，不保证任意第三方实现都支持图内接续。首版编译器只接受带 SDK 内部执行绑定的两种内置实现（含可解包到它们的 AgentNode 代理），并校验 RuntimeEngine 一致；仅提供 start／ainvoke／astream 的对象须报 ConfigurationError，不退化为新建子 ExecutionRecord。将来开放第三方 Agent 嵌入时，需要单独定义执行绑定与恢复协议，不能偷偷把它加入 Agent 的公共使用接口。
 
 Workflow 活动输入必须有显式接收点和状态映射。当前未定义的接收模式返回 WORKFLOW_INPUT_UNSUPPORTED，不自动广播或交给任意 AgentNode，更不能先 accepted 再丢弃。初始 Workflow 输入不受此限制。
 

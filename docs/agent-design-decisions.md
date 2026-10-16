@@ -14,11 +14,17 @@ AgentLoom 交付高代码 SDK 与低代码 Platform。
 
 Agent 应用、可执行 Agent 对象、角色定义、NodeTask 和 GraphExecution 不是同一对象。具体见 [SDK 定义](sdk/definitions.md)及[平台领域模型](platform/domain-model.md)。
 
-接口层区分两类职责：Agent 面向调用者，统一使用完整智能体；Node 面向图引擎，约定节点的激活和结果。具体 Agent 类负责构造，Agent 接口不负责创建其他 Agent。ReactNode 实现节点协议，PlannerNode、ExecutorNode 继承它的 Loop；ReactAgent／PlanAgent 装配这些节点，不继承节点类。
+接口层区分两类职责：Agent 面向调用者，统一使用完整智能体；Node 面向图引擎，约定节点的激活和结果。具体 Agent 类负责构造，Agent 接口不负责创建其他 Agent。2026-10-16 确认 AgentNode 同时实现 Agent 和 Node，内部持有 `agent: Agent`：公共 Agent 方法代理内部程序，图内激活接续已有任务，不另起根执行。Loop 由内部 ReactAgent 实现；Planner／Executor 均复用它，若设专用节点子类则继承 AgentNode，只表达角色绑定与接入约束。
 
-工程设计将 Workflow 保持为独立可执行类型，由 StateGraph 构建并编译；它可以只编排工具和函数，不要求具备 Agent 的模型与聊天语义。AgentNode 通过组合把完整 Agent 接入 Workflow。内层 Node 与外层 WorkflowNodeAdapter 保留各自的调度合同，检查点仍通过 SDK 的统一设施衔接。精确 UML 见[公共类型关系](sdk/public-api.md#11-公共-agent-接口与图内-node-接口)。
+工程设计将 Workflow 保持为独立可执行类型，由 StateGraph 构建并编译；它可以只编排工具和函数，不要求具备 Agent 的模型与聊天语义。AgentNode 通过组合把完整 Agent 接入 Workflow，也可承载内层角色。内层 Node 与外层 WorkflowNodeAdapter 保留各自的调度合同，检查点仍通过 SDK 的统一设施衔接。最新关系及独立调用／图内执行边界见[Node、角色与执行实例](sdk/object-collaboration.md#3-node角色与执行实例)。
 
 RuntimeEngine 组织共享基础设施、托管执行、装配本次现场并协调收尾。ExecutionRecord 是一次执行的持久记录；ExecutionRunner 是取得执行权后驱动该次执行的本机对象，负责运行现场及所属图引擎的协调。节点调度仍由两套图引擎完成，模型、文件与沙箱操作由对应适配器执行。模型与能力配置按 Agent 固定，上下文、预算、事件总线等活动状态按一次执行隔离。详见[运行时引擎范围](sdk/assembly.md#11-runtimeengine-管理的范围)及[对象作用域](sdk/object-collaboration.md#11-作用域与生命周期的读法)。
+
+2026-10-16 补充上下文归属：`NodeContext` 是图内任务身份、执行控制和受限服务引用，不保存模型消息，也不另建 RuntimeEngine。执行中的 ReactAgent 持有自己的 `AgentContext`，包括消息与有效修订、Loop 进度、待处理调用和压缩引用；Planner 与每次 Executor 委派各有私有实例。共享的是配置、获准的文件和基础设施。AgentNode 只持有并代理 Agent，不复制上下文。消息与进度由统一检查点设施保存，恢复时重建 Agent 和 NodeContext，沿用原逻辑身份。
+
+事件协作采用三个接口：HandlerRegistry 负责注册／查询／冻结，EventBus 负责发送，EventHandler 负责处理。EventBusImpl 实现前两个；组合式 HookHandler 同时实现三个接口，能够注册 RecordHookHandler 等末端处理器。子处理器实现 EventHandler，按本地固定顺序处理；注册关系不自动向父级回退。
+
+模型／工具调用的前后阶段由 ReactAgent Loop 经 NodeDriver 发出业务事件，告知“准备调用什么／调用已结束”；发送方不调用 Hook 专用方法，也不判断是否配置 Hook。EventBus 只按注册表路由，ModelManager／ToolManager 只处理实际业务调用，不代发外围 before／after。需要修改或拒绝的阶段必须等待 StageResult，再继续执行或交付；普通观察订阅不改变执行。原始结果先保存，再由 Loop 发 after，且模型完整流式响应只发一次，不逐 token 发送。调用设施保留 Attempt 超时和配置允许的重试，阶段恢复由原 Loop／节点驱动器负责，不另设 InvocationPipeline。HookHandler 沿用原 Operation 保存决定、有效修改及游标，修改进入授权范围的有效上下文；不生成另一套执行、额度或检查点设施。接口关系与类型合同见[对象 UML](sdk/object-collaboration.md#4-eventbushandlerregistry-与-eventhandler)和[调用设计](sdk/event-bus.md#10-三个接口与组合关系)。
 
 ## 二、已确认行为的权威位置
 

@@ -5,7 +5,7 @@
 ## 边界
 
 - ReactAgent、PlanAgent 实现公共 Agent 接口；Workflow 是由 StateGraph 编译得到的独立入口。内部使用轻量 Agent 引擎与通用 Workflow 引擎。
-- Node 定义图内调度合同；ReactNode、PlannerNode、ExecutorNode 承担角色 Loop。完整 Agent 通过 AgentNode 组合进入 Workflow，不与节点类建立继承关系。
+- Node 定义图内调度合同；AgentNode 同时实现 Node 与 Agent，组合并代理实际 Agent。Planner／Executor 使用各自的 ReactAgent 和私有 AgentContext；NodeContext 只传递任务身份、控制及服务引用。外层通过 Workflow 适配器接入完整 Agent。
 - RuntimeEngine（运行时引擎）组织共享基础设施、托管多次执行并协调收尾；Agent 配置独立，各次执行的上下文、预算及事件总线按 ExecutionRecord 隔离。
 - 提供模型、Tool、MCP、Skill、Hook、上下文、工作空间和检查点扩展接口。
 - 调用者传入完整执行配置与必要依赖。SDK 不管理用户、应用、发布版本，不要求平台服务或平台业务库。
