@@ -1,0 +1,153 @@
+{
+  "schema_controls": [
+    {
+      "schema": {
+        "enum": [
+          {
+            "$ref": "https://example.invalid/resource"
+          }
+        ]
+      },
+      "reference_validator": "accepted",
+      "sdk": "REMOTE_SCHEMA_REF"
+    },
+    {
+      "schema": {
+        "const": {
+          "$ref": "https://example.invalid/resource"
+        }
+      },
+      "reference_validator": "accepted",
+      "sdk": "REMOTE_SCHEMA_REF"
+    },
+    {
+      "schema": {
+        "type": "object",
+        "properties": {
+          "$ref": {
+            "type": "string"
+          }
+        }
+      },
+      "reference_validator": "accepted",
+      "sdk": "REMOTE_SCHEMA_REF"
+    }
+  ],
+  "shared_http_parser_retains_retry_after": true,
+  "mcp_retry": [
+    {
+      "backend": "memory",
+      "run_status": "succeeded",
+      "elapsed_between_calls_seconds": 0.0011766250245273113,
+      "operation_status": "succeeded",
+      "attempts": [
+        {
+          "attempt_id": "a337661e-8601-50bf-8258-72196a9e44f3",
+          "attempt_no": 1,
+          "status": "failed",
+          "started_at": 1792218824.030852,
+          "first_output_at": null,
+          "error": {
+            "code": "HTTP_429",
+            "message": "HTTP_429",
+            "category": "rate_limit",
+            "phase": "receive",
+            "external_outcome": "unknown",
+            "retryable_transport": true,
+            "field_path": null
+          },
+          "ended_at": 1792218824.03163,
+          "result": {
+            "status": "failed",
+            "result": null,
+            "error": {
+              "code": "HTTP_429",
+              "message": "HTTP_429",
+              "category": "rate_limit",
+              "phase": "receive",
+              "external_outcome": "unknown",
+              "retryable_transport": true,
+              "field_path": null
+            },
+            "execution_fact": "unknown"
+          },
+          "next_attempt_at": 1792218824.031633
+        },
+        {
+          "attempt_id": "6b060483-e968-5b45-8f22-3c298f0496e0",
+          "attempt_no": 2,
+          "status": "succeeded",
+          "started_at": 1792218824.031947,
+          "first_output_at": null,
+          "error": null,
+          "ended_at": 1792218824.032722,
+          "result": {
+            "status": "succeeded",
+            "result": {
+              "receipt": "ok"
+            },
+            "error": null,
+            "execution_fact": "completed"
+          }
+        }
+      ]
+    },
+    {
+      "backend": "file",
+      "run_status": "succeeded",
+      "elapsed_between_calls_seconds": 0.005524125066585839,
+      "operation_status": "succeeded",
+      "attempts": [
+        {
+          "attempt_id": "cd6b2520-9fd4-51f0-b1ff-93fa034daba9",
+          "attempt_no": 1,
+          "ended_at": 1792218824.1052852,
+          "error": {
+            "category": "rate_limit",
+            "code": "HTTP_429",
+            "external_outcome": "unknown",
+            "field_path": null,
+            "message": "HTTP_429",
+            "phase": "receive",
+            "retryable_transport": true
+          },
+          "first_output_at": null,
+          "next_attempt_at": 1792218824.105289,
+          "result": {
+            "error": {
+              "category": "rate_limit",
+              "code": "HTTP_429",
+              "external_outcome": "unknown",
+              "field_path": null,
+              "message": "HTTP_429",
+              "phase": "receive",
+              "retryable_transport": true
+            },
+            "execution_fact": "unknown",
+            "result": null,
+            "status": "failed"
+          },
+          "started_at": 1792218824.1020968,
+          "status": "failed"
+        },
+        {
+          "attempt_id": "05715e34-5bc5-5af1-9ff5-9aafdb1b7a8b",
+          "attempt_no": 2,
+          "ended_at": 1792218824.110744,
+          "error": null,
+          "first_output_at": null,
+          "result": {
+            "error": null,
+            "execution_fact": "completed",
+            "result": {
+              "receipt": "ok"
+            },
+            "status": "succeeded"
+          },
+          "started_at": 1792218824.1075132,
+          "status": "succeeded"
+        }
+      ]
+    }
+  ]
+}

@@ -1,3 +1,4 @@
+from .json_values import canonical, digest, freeze, json_copy
 from .models import (
     AgentDefinition,
     CapabilityBinding,
@@ -7,14 +8,9 @@ from .models import (
     RetryPolicy,
     VariableSpec,
     WorkspaceBinding,
-    canonical,
-    check_schema,
-    digest,
-    freeze,
-    json_copy,
     number,
-    validate_schema,
 )
+from .schemas import check_schema, validate_schema
 
 __all__ = [
     "AgentDefinition",

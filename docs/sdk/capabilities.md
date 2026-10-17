@@ -37,6 +37,10 @@ class ModelHandler:
 | `ModelAttemptResult` | `status:succeeded\|failed\|cancelled\|unknown, response_ref?, partial_ref?, first_output_receipt_ref?, error?, started_at, ended_at` |
 | `PartialModelMaterial` | `attempt_id, text_fragments[], reasoning_fragments[], incomplete_calls[], complete:false, last_received_at, error_ref`；仅内部审计 |
 
+归一后的 `usage` 只接受对象或 null；`input_tokens`／`output_tokens` 可以缺失或为 null，已提供的计数必须是非负整数，不接受布尔值。缺失统计按未知处理；非对象 usage 或非法计数归为 `protocol / MODEL_PROTOCOL_ERROR`，在 Attempt 结果提交前拒绝，按模型失败收束角色，不能在持久事务中泄漏属性访问异常。已经解析出的已知统计不因后续帧的空 usage 被清空。
+
+失败 Attempt 的文本、reasoning 和不完整工具调用均保留独立审计材料，绑定原 attempt_id／operation_id；有提供方索引或调用 ID 时保留关联，无法关联的片段不能猜测合并。总材料受模型响应大小限制，超限时保留已接收的限额内材料并标记截断。停止时，在租约仍有效的前提下提交已收到的材料；这些材料不进入后续 Attempt 的消息或工具执行。
+
 首版只有 `OpenAIChatAdapter` 和 `OpenAIResponsesAdapter` 两种协议实现；供应商 preset 显式固定协议、API／Coding Plan 地址、feature 映射、错误和完成帧映射版本。本文不猜测 GLM、Aliyun、DeepSeek、MiniMax 的 Think 字段或窗口。适配 profile 未实现某项配置时构造返回 `MODEL_FEATURE_UNSUPPORTED`，不得忽略参数后宣称已启用。
 
 `ModelAdapter.discover` 只返回实际查询／核验信息，不能探测时明确失败或保留未知；构造要求的窗口由用户显式提供。普通请求不会在运行中偷偷重新发现或切换 endpoint/model。

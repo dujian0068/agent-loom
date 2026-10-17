@@ -3,7 +3,7 @@
 import time
 
 from ..errors import AgentLoomError
-from ..storage import CommitCoordinator, claim
+from ..storage import TERMINAL, CommitCoordinator, claim
 from ..types import new_id
 from .calls import failure
 from .maintenance import maintenance_due, maintenance_failed, maintenance_recovered
@@ -30,6 +30,24 @@ def run_sequence(state):
     )
 
 
+def request_stop(tx, run_id, error):
+    """Close admission and persist the first terminal reason under the same lock.
+
+    This is a control intent, not proof of termination. A valid lease holder must
+    still revoke writers before committing the terminal result.
+    """
+    state = tx.get("runs", run_id)
+    if state and state["status"] not in TERMINAL and state["status"] != "stopping":
+        state.update(status="stopping", control_error=error)
+        if error["code"] == "RUN_TIMEOUT":
+            maintenance_recovered(state, "deadline", tx.now)
+        state["revision"] += 1
+        emit(state, "run.stopping")
+        tx.put("runs", run_id, state)
+    tx.put("admission", run_id, {"closed": True})
+    return state["status"] if state else None
+
+
 def finalize_run(runtime, lease, status, *, output=None, error=None):
     state = runtime._load(lease.run_id)
     scope = state["workspace"]
@@ -39,11 +57,9 @@ def finalize_run(runtime, lease, status, *, output=None, error=None):
     def finish(s):
         final_status, final_output, final_error = status, output, error
         if s["status"] == "stopping":
-            final_status, final_output, final_error = (
-                "cancelled",
-                None,
-                AgentLoomError("RUN_STOPPED").to_dict(),
-            )
+            final_error = s.get("control_error") or AgentLoomError("RUN_STOPPED").to_dict()
+            final_status = "timed_out" if final_error["code"] == "RUN_TIMEOUT" else "cancelled"
+            final_output = None
         elif time.time() >= s["deadline_at"]:
             final_status, final_output, final_error = (
                 "timed_out",

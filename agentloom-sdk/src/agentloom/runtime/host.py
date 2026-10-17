@@ -8,11 +8,13 @@ from ..configuration.assembly import recovery_manifest
 from ..environment import LocalEnvironment
 from ..errors import ConfigurationError, InfrastructureError, RequestError
 from ..public.handles import RunHandle
+from ..public.validation import identity
 from ..storage import TERMINAL, CommitCoordinator, FileRuntimeStore, claim
 from ..types import AgentInput, RunUsage, new_id
 from .cleanup import CleanupService
 from .control import emit, settle_orphaned_stops
-from .maintenance import maintenance_failed
+from .deadlines import request_expired_stops
+from .maintenance import scan_forever
 from .runner import ExecutionRunner
 from .services import (
     EventService,
@@ -92,7 +94,7 @@ class RuntimeEngine:
         # All injected clients and stores remain owned by the caller.
 
     def _load(self, run_id):
-        state = self.store.load(self.namespace, str(run_id))
+        state = self.store.load(self.namespace, identity(run_id, "run_id"))
         if state is None:
             raise RequestError("RUN_NOT_FOUND")
         if state.get("schema_version") != 1:
@@ -111,11 +113,9 @@ class RuntimeEngine:
         if input is None and input_id is not None:
             raise RequestError("INVALID_ID_COMBINATION")
         supplied_run_id = run_id is not None
-        run_id = str(run_id) if supplied_run_id else new_id()
-        session_id = str(session_id) if session_id is not None else None
-        input_id = str(input_id) if input_id is not None else None
-        if not run_id or session_id == "" or input_id == "":
-            raise RequestError("IDENTITY_INVALID")
+        run_id = identity(run_id, "run_id") if supplied_run_id else new_id()
+        session_id = identity(session_id, "session_id") if session_id is not None else None
+        input_id = identity(input_id, "input_id") if input_id is not None else None
         if isinstance(input, str):
             input = AgentInput(input)
         if input is not None and not isinstance(input, AgentInput):
@@ -297,26 +297,21 @@ class RuntimeEngine:
 
     async def _maintenance(self):
         cleanup = CleanupService(self)
-
-        def scan():
-            for phase, action in (
-                ("stop_scan", lambda: settle_orphaned_stops(self)),
-                ("cleanup_scan", cleanup.scan_once),
-            ):
-                try:
-                    action()
-                except Exception as exc:
-                    # Discovery/storage failures in one scan must not suppress the other.
-                    maintenance_failed(self, phase, exc)
-
-        while True:
-            work = asyncio.create_task(asyncio.to_thread(scan))
-            try:
-                await asyncio.shield(work)
-            except asyncio.CancelledError:
-                # No store/file worker is left running after aclose returns.
-                await asyncio.gather(work, return_exceptions=True)
-                raise
-            except Exception as exc:
-                maintenance_failed(self, "scan_worker", exc)
-            await asyncio.sleep(0.05)
+        workers = [
+            asyncio.create_task(
+                scan_forever(
+                    self,
+                    (
+                        ("deadline_scan", lambda: request_expired_stops(self)),
+                        ("stop_scan", lambda: settle_orphaned_stops(self)),
+                    ),
+                )
+            ),
+            asyncio.create_task(scan_forever(self, (("cleanup_scan", cleanup.scan_once),))),
+        ]
+        try:
+            await asyncio.gather(*workers)
+        finally:
+            for worker in workers:
+                worker.cancel()
+            await asyncio.gather(*workers, return_exceptions=True)

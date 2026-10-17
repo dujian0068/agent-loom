@@ -1,0 +1,34 @@
+{
+  "commit": "ef31404d71f4abbf3d9c9db80ddf25b06dcf6183",
+  "environment": "macOS-26.7-arm64-arm-64bit",
+  "python": "3.12.14",
+  "suite_results": {
+    "baseline": {
+      "name": "pytest",
+      "errors": "0",
+      "failures": "0",
+      "skipped": "0",
+      "tests": "148",
+      "time": "131.721",
+      "timestamp": "2026-10-17T11:58:30.241272+08:00",
+      "hostname": "bmilk"
+    },
+    "audit": {
+      "name": "pytest",
+      "errors": "0",
+      "failures": "56",
+      "skipped": "0",
+      "tests": "110",
+      "time": "11.135",
+      "timestamp": "2026-10-17T12:36:21.993828+08:00",
+      "hostname": "bmilk"
+    }
+  },
+  "audit_test_sha256": "5558b16f18d985693ff70259c9995caf70f5735044d4d6ff25b2934b03ff50c8",
+  "scope_exclusions": [
+    "workflow",
+    "default tools",
+    "platform"
+  ],
+  "production_code_modified": false
+}

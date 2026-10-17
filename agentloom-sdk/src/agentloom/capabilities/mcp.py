@@ -129,7 +129,7 @@ def _transport_error(exc):
     from ..models.http import http_error
 
     if isinstance(exc, httpx.HTTPStatusError):
-        return http_error(exc.response.status_code)
+        return http_error(exc.response.status_code, exc.response.headers)
     if isinstance(exc, (httpx.TransportError, ConnectionError)):
         return AgentLoomError(
             "MCP_CONNECTION_FAILED",

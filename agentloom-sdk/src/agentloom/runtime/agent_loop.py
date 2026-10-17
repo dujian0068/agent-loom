@@ -6,7 +6,7 @@ import json
 from ..configuration import canonical, json_copy, validate_schema
 from ..context import append
 from ..context.results import project_result
-from ..errors import AgentLoomError, InfrastructureError
+from ..errors import AgentLoomError, ConfigurationError, InfrastructureError
 
 
 def assistant_message(response):
@@ -151,6 +151,9 @@ class AgentLoop:
                         )
                         if definition.output_schema is None and not value.strip():
                             raise AgentLoomError("OUTPUT_EMPTY")
+                    except ConfigurationError:
+                        # A broken schema cannot be repaired by another model response.
+                        raise
                     except (ValueError, AgentLoomError):
 
                         def correction(s):

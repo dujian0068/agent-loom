@@ -2,7 +2,7 @@
 
 from dataclasses import asdict
 
-from .models import json_copy
+from .json_values import json_copy
 
 
 def recovery_manifest(program):

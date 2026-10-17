@@ -1,0 +1,677 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="56" skipped="0" tests="110" time="11.135" timestamp="2026-10-17T12:36:21.993828+08:00" hostname="bmilk"><testcase classname="qa.test_sdk_audit" name="test_numeric_policy_boundaries[ExecutionPolicy-loop_max-1-100000]" time="0.001" /><testcase classname="qa.test_sdk_audit" name="test_numeric_policy_boundaries[ExecutionPolicy-run_timeout_seconds-1-86400]" time="0.000" /><testcase classname="qa.test_sdk_audit" name="test_numeric_policy_boundaries[ExecutionPolicy-executor_max_parallel-1-128]" time="0.000" /><testcase classname="qa.test_sdk_audit" name="test_numeric_policy_boundaries[ExecutionPolicy-model_first_output_timeout_seconds-1-3600]" time="0.000" /><testcase classname="qa.test_sdk_audit" name="test_numeric_policy_boundaries[ExecutionPolicy-model_stream_idle_timeout_seconds-1-3600]" time="0.000" /><testcase classname="qa.test_sdk_audit" name="test_numeric_policy_boundaries[ExecutionPolicy-tool_timeout_seconds-1-3600]" time="0.000" /><testcase classname="qa.test_sdk_audit" name="test_numeric_policy_boundaries[RetryPolicy-max_attempts-1-20]" time="0.000" /><testcase classname="qa.test_sdk_audit" name="test_numeric_policy_boundaries[RetryPolicy-delay_seconds-0-300]" time="0.000" /><testcase classname="qa.test_sdk_audit" name="test_numeric_policy_boundaries[ContextPolicy-recent_runs-0-100]" time="0.000" /><testcase classname="qa.test_sdk_audit" name="test_context_and_retry_special_boundaries" time="0.000" /><testcase classname="qa.test_sdk_audit" name="test_no_schema_rejects_empty_and_nontext_input[memory-]" time="0.001" /><testcase classname="qa.test_sdk_audit" name="test_no_schema_rejects_empty_and_nontext_input[memory- ]" time="0.001" /><testcase classname="qa.test_sdk_audit" name="test_no_schema_rejects_empty_and_nontext_input[memory-\t\n]" time="0.001" /><testcase classname="qa.test_sdk_audit" name="test_no_schema_rejects_empty_and_nontext_input[memory-None]" time="0.001" /><testcase classname="qa.test_sdk_audit" name="test_no_schema_rejects_empty_and_nontext_input[memory-0]" time="0.001" /><testcase classname="qa.test_sdk_audit" name="test_no_schema_rejects_empty_and_nontext_input[memory-False]" time="0.001" /><testcase classname="qa.test_sdk_audit" name="test_no_schema_rejects_empty_and_nontext_input[memory-value6]" time="0.001" /><testcase classname="qa.test_sdk_audit" name="test_no_schema_rejects_empty_and_nontext_input[memory-value7]" time="0.001" /><testcase classname="qa.test_sdk_audit" name="test_no_schema_rejects_empty_and_nontext_input[file-]" time="0.001" /><testcase classname="qa.test_sdk_audit" name="test_no_schema_rejects_empty_and_nontext_input[file- ]" time="0.001" /><testcase classname="qa.test_sdk_audit" name="test_no_schema_rejects_empty_and_nontext_input[file-\t\n]" time="0.001" /><testcase classname="qa.test_sdk_audit" name="test_no_schema_rejects_empty_and_nontext_input[file-None]" time="0.001" /><testcase classname="qa.test_sdk_audit" name="test_no_schema_rejects_empty_and_nontext_input[file-0]" time="0.001" /><testcase classname="qa.test_sdk_audit" name="test_no_schema_rejects_empty_and_nontext_input[file-False]" time="0.001" /><testcase classname="qa.test_sdk_audit" name="test_no_schema_rejects_empty_and_nontext_input[file-value6]" time="0.001" /><testcase classname="qa.test_sdk_audit" name="test_no_schema_rejects_empty_and_nontext_input[file-value7]" time="0.001" /><testcase classname="qa.test_sdk_audit" name="test_explicit_json_schema_preserves_falsy_values[memory-None]" time="0.013" /><testcase classname="qa.test_sdk_audit" name="test_explicit_json_schema_preserves_falsy_values[memory-]" time="0.012" /><testcase classname="qa.test_sdk_audit" name="test_explicit_json_schema_preserves_falsy_values[memory-0]" time="0.013" /><testcase classname="qa.test_sdk_audit" name="test_explicit_json_schema_preserves_falsy_values[memory-False]" time="0.012" /><testcase classname="qa.test_sdk_audit" name="test_explicit_json_schema_preserves_falsy_values[memory-value4]" time="0.012" /><testcase classname="qa.test_sdk_audit" name="test_explicit_json_schema_preserves_falsy_values[memory-value5]" time="0.012" /><testcase classname="qa.test_sdk_audit" name="test_explicit_json_schema_preserves_falsy_values[file-None]" time="0.057" /><testcase classname="qa.test_sdk_audit" name="test_explicit_json_schema_preserves_falsy_values[file-]" time="0.052" /><testcase classname="qa.test_sdk_audit" name="test_explicit_json_schema_preserves_falsy_values[file-0]" time="0.055" /><testcase classname="qa.test_sdk_audit" name="test_explicit_json_schema_preserves_falsy_values[file-False]" time="0.053" /><testcase classname="qa.test_sdk_audit" name="test_explicit_json_schema_preserves_falsy_values[file-value4]" time="0.054" /><testcase classname="qa.test_sdk_audit" name="test_explicit_json_schema_preserves_falsy_values[file-value5]" time="0.054" /><testcase classname="qa.test_sdk_audit" name="test_same_session_and_run_id_admission[memory]" time="0.016" /><testcase classname="qa.test_sdk_audit" name="test_same_session_and_run_id_admission[file]" time="0.050" /><testcase classname="qa.test_sdk_audit" name="test_invalid_delegate_hook_patch_fails_open[memory-None]" time="0.029"><failure message="AssertionError: {'error': {'category': 'business', 'code': 'EXECUTOR_INPUT_INVALID', 'external_outcome': 'known', 'field_path': None, ...}, 'execution_fact': 'unknown', 'operation_id': '605a6656-98ae-598f-95fc-4baf2c3c2756', 'result': None, ...}&#10;assert 0 == 1&#10; +  where 0 = len([])">/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_audit.py:213: in test_invalid_delegate_hook_patch_fails_open
+    assert len(children) == 1, op["response"]
+E   AssertionError: {'error': {'category': 'business', 'code': 'EXECUTOR_INPUT_INVALID', 'external_outcome': 'known', 'field_path': None, ...}, 'execution_fact': 'unknown', 'operation_id': '605a6656-98ae-598f-95fc-4baf2c3c2756', 'result': None, ...}
+E   assert 0 == 1
+E    +  where 0 = len([])</failure></testcase><testcase classname="qa.test_sdk_audit" name="test_invalid_delegate_hook_patch_fails_open[memory-]" time="0.028"><failure message="AssertionError: {'error': {'category': 'business', 'code': 'EXECUTOR_INPUT_INVALID', 'external_outcome': 'known', 'field_path': None, ...}, 'execution_fact': 'unknown', 'operation_id': 'dccdd21c-3017-5032-b537-24f4e649a9b7', 'result': None, ...}&#10;assert 0 == 1&#10; +  where 0 = len([])">/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_audit.py:213: in test_invalid_delegate_hook_patch_fails_open
+    assert len(children) == 1, op["response"]
+E   AssertionError: {'error': {'category': 'business', 'code': 'EXECUTOR_INPUT_INVALID', 'external_outcome': 'known', 'field_path': None, ...}, 'execution_fact': 'unknown', 'operation_id': 'dccdd21c-3017-5032-b537-24f4e649a9b7', 'result': None, ...}
+E   assert 0 == 1
+E    +  where 0 = len([])</failure></testcase><testcase classname="qa.test_sdk_audit" name="test_invalid_delegate_hook_patch_fails_open[memory- \n]" time="0.028"><failure message="AssertionError: {'error': {'category': 'business', 'code': 'EXECUTOR_INPUT_INVALID', 'external_outcome': 'known', 'field_path': None, ...}, 'execution_fact': 'unknown', 'operation_id': '04010d12-75a6-500a-b692-293cb959b806', 'result': None, ...}&#10;assert 0 == 1&#10; +  where 0 = len([])">/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_audit.py:213: in test_invalid_delegate_hook_patch_fails_open
+    assert len(children) == 1, op["response"]
+E   AssertionError: {'error': {'category': 'business', 'code': 'EXECUTOR_INPUT_INVALID', 'external_outcome': 'known', 'field_path': None, ...}, 'execution_fact': 'unknown', 'operation_id': '04010d12-75a6-500a-b692-293cb959b806', 'result': None, ...}
+E   assert 0 == 1
+E    +  where 0 = len([])</failure></testcase><testcase classname="qa.test_sdk_audit" name="test_invalid_delegate_hook_patch_fails_open[memory-0]" time="0.029"><failure message="AssertionError: {'error': {'category': 'business', 'code': 'EXECUTOR_INPUT_INVALID', 'external_outcome': 'known', 'field_path': None, ...}, 'execution_fact': 'unknown', 'operation_id': '59a885bf-18a8-5ea8-be3b-de7eb63694c8', 'result': None, ...}&#10;assert 0 == 1&#10; +  where 0 = len([])">/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_audit.py:213: in test_invalid_delegate_hook_patch_fails_open
+    assert len(children) == 1, op["response"]
+E   AssertionError: {'error': {'category': 'business', 'code': 'EXECUTOR_INPUT_INVALID', 'external_outcome': 'known', 'field_path': None, ...}, 'execution_fact': 'unknown', 'operation_id': '59a885bf-18a8-5ea8-be3b-de7eb63694c8', 'result': None, ...}
+E   assert 0 == 1
+E    +  where 0 = len([])</failure></testcase><testcase classname="qa.test_sdk_audit" name="test_invalid_delegate_hook_patch_fails_open[memory-bad_task4]" time="0.029"><failure message="AssertionError: {'error': {'category': 'business', 'code': 'EXECUTOR_INPUT_INVALID', 'external_outcome': 'known', 'field_path': None, ...}, 'execution_fact': 'unknown', 'operation_id': 'fa2ea02f-157f-53f4-bc13-afbcd3ef136c', 'result': None, ...}&#10;assert 0 == 1&#10; +  where 0 = len([])">/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_audit.py:213: in test_invalid_delegate_hook_patch_fails_open
+    assert len(children) == 1, op["response"]
+E   AssertionError: {'error': {'category': 'business', 'code': 'EXECUTOR_INPUT_INVALID', 'external_outcome': 'known', 'field_path': None, ...}, 'execution_fact': 'unknown', 'operation_id': 'fa2ea02f-157f-53f4-bc13-afbcd3ef136c', 'result': None, ...}
+E   assert 0 == 1
+E    +  where 0 = len([])</failure></testcase><testcase classname="qa.test_sdk_audit" name="test_invalid_delegate_hook_patch_fails_open[memory-bad_task5]" time="0.029"><failure message="AssertionError: {'error': {'category': 'business', 'code': 'EXECUTOR_INPUT_INVALID', 'external_outcome': 'known', 'field_path': None, ...}, 'execution_fact': 'unknown', 'operation_id': '074e8c3d-0328-5495-a1aa-418f1439b50a', 'result': None, ...}&#10;assert 0 == 1&#10; +  where 0 = len([])">/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_audit.py:213: in test_invalid_delegate_hook_patch_fails_open
+    assert len(children) == 1, op["response"]
+E   AssertionError: {'error': {'category': 'business', 'code': 'EXECUTOR_INPUT_INVALID', 'external_outcome': 'known', 'field_path': None, ...}, 'execution_fact': 'unknown', 'operation_id': '074e8c3d-0328-5495-a1aa-418f1439b50a', 'result': None, ...}
+E   assert 0 == 1
+E    +  where 0 = len([])</failure></testcase><testcase classname="qa.test_sdk_audit" name="test_invalid_delegate_hook_patch_fails_open[file-None]" time="0.107"><failure message="AssertionError: {'error': {'category': 'business', 'code': 'EXECUTOR_INPUT_INVALID', 'external_outcome': 'known', 'field_path': None, ...}, 'execution_fact': 'unknown', 'operation_id': 'cec56e6d-83e2-5f66-8edf-79f1c2d0b139', 'result': None, ...}&#10;assert 0 == 1&#10; +  where 0 = len([])">/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_audit.py:213: in test_invalid_delegate_hook_patch_fails_open
+    assert len(children) == 1, op["response"]
+E   AssertionError: {'error': {'category': 'business', 'code': 'EXECUTOR_INPUT_INVALID', 'external_outcome': 'known', 'field_path': None, ...}, 'execution_fact': 'unknown', 'operation_id': 'cec56e6d-83e2-5f66-8edf-79f1c2d0b139', 'result': None, ...}
+E   assert 0 == 1
+E    +  where 0 = len([])</failure></testcase><testcase classname="qa.test_sdk_audit" name="test_invalid_delegate_hook_patch_fails_open[file-]" time="0.106"><failure message="AssertionError: {'error': {'category': 'business', 'code': 'EXECUTOR_INPUT_INVALID', 'external_outcome': 'known', 'field_path': None, ...}, 'execution_fact': 'unknown', 'operation_id': '66334cf0-4765-5070-bd6f-da8a91bcc9e7', 'result': None, ...}&#10;assert 0 == 1&#10; +  where 0 = len([])">/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_audit.py:213: in test_invalid_delegate_hook_patch_fails_open
+    assert len(children) == 1, op["response"]
+E   AssertionError: {'error': {'category': 'business', 'code': 'EXECUTOR_INPUT_INVALID', 'external_outcome': 'known', 'field_path': None, ...}, 'execution_fact': 'unknown', 'operation_id': '66334cf0-4765-5070-bd6f-da8a91bcc9e7', 'result': None, ...}
+E   assert 0 == 1
+E    +  where 0 = len([])</failure></testcase><testcase classname="qa.test_sdk_audit" name="test_invalid_delegate_hook_patch_fails_open[file- \n]" time="0.107"><failure message="AssertionError: {'error': {'category': 'business', 'code': 'EXECUTOR_INPUT_INVALID', 'external_outcome': 'known', 'field_path': None, ...}, 'execution_fact': 'unknown', 'operation_id': 'c4854be8-7edc-521f-b6e2-49fb9a2cebc9', 'result': None, ...}&#10;assert 0 == 1&#10; +  where 0 = len([])">/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_audit.py:213: in test_invalid_delegate_hook_patch_fails_open
+    assert len(children) == 1, op["response"]
+E   AssertionError: {'error': {'category': 'business', 'code': 'EXECUTOR_INPUT_INVALID', 'external_outcome': 'known', 'field_path': None, ...}, 'execution_fact': 'unknown', 'operation_id': 'c4854be8-7edc-521f-b6e2-49fb9a2cebc9', 'result': None, ...}
+E   assert 0 == 1
+E    +  where 0 = len([])</failure></testcase><testcase classname="qa.test_sdk_audit" name="test_invalid_delegate_hook_patch_fails_open[file-0]" time="0.106"><failure message="AssertionError: {'error': {'category': 'business', 'code': 'EXECUTOR_INPUT_INVALID', 'external_outcome': 'known', 'field_path': None, ...}, 'execution_fact': 'unknown', 'operation_id': '1aeee71f-88e8-5158-9357-7d0502f19f45', 'result': None, ...}&#10;assert 0 == 1&#10; +  where 0 = len([])">/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_audit.py:213: in test_invalid_delegate_hook_patch_fails_open
+    assert len(children) == 1, op["response"]
+E   AssertionError: {'error': {'category': 'business', 'code': 'EXECUTOR_INPUT_INVALID', 'external_outcome': 'known', 'field_path': None, ...}, 'execution_fact': 'unknown', 'operation_id': '1aeee71f-88e8-5158-9357-7d0502f19f45', 'result': None, ...}
+E   assert 0 == 1
+E    +  where 0 = len([])</failure></testcase><testcase classname="qa.test_sdk_audit" name="test_invalid_delegate_hook_patch_fails_open[file-bad_task4]" time="0.105"><failure message="AssertionError: {'error': {'category': 'business', 'code': 'EXECUTOR_INPUT_INVALID', 'external_outcome': 'known', 'field_path': None, ...}, 'execution_fact': 'unknown', 'operation_id': 'bb90ffa1-0b78-54c2-8817-55188f99b773', 'result': None, ...}&#10;assert 0 == 1&#10; +  where 0 = len([])">/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_audit.py:213: in test_invalid_delegate_hook_patch_fails_open
+    assert len(children) == 1, op["response"]
+E   AssertionError: {'error': {'category': 'business', 'code': 'EXECUTOR_INPUT_INVALID', 'external_outcome': 'known', 'field_path': None, ...}, 'execution_fact': 'unknown', 'operation_id': 'bb90ffa1-0b78-54c2-8817-55188f99b773', 'result': None, ...}
+E   assert 0 == 1
+E    +  where 0 = len([])</failure></testcase><testcase classname="qa.test_sdk_audit" name="test_invalid_delegate_hook_patch_fails_open[file-bad_task5]" time="0.115"><failure message="AssertionError: {'error': {'category': 'business', 'code': 'EXECUTOR_INPUT_INVALID', 'external_outcome': 'known', 'field_path': None, ...}, 'execution_fact': 'unknown', 'operation_id': '3900300d-090c-5d6f-bfe5-43a3eabc664d', 'result': None, ...}&#10;assert 0 == 1&#10; +  where 0 = len([])">/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_audit.py:213: in test_invalid_delegate_hook_patch_fails_open
+    assert len(children) == 1, op["response"]
+E   AssertionError: {'error': {'category': 'business', 'code': 'EXECUTOR_INPUT_INVALID', 'external_outcome': 'known', 'field_path': None, ...}, 'execution_fact': 'unknown', 'operation_id': '3900300d-090c-5d6f-bfe5-43a3eabc664d', 'result': None, ...}
+E   assert 0 == 1
+E    +  where 0 = len([])</failure></testcase><testcase classname="qa.test_sdk_audit" name="test_dangling_local_schema_reference_rejected_at_construction[input_schema]" time="0.001"><failure message="Failed: DID NOT RAISE &lt;class 'agentloom.errors.ConfigurationError'&gt;">/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_audit.py:221: in test_dangling_local_schema_reference_rejected_at_construction
+    with pytest.raises(ConfigurationError):
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   Failed: DID NOT RAISE &lt;class 'agentloom.errors.ConfigurationError'&gt;</failure></testcase><testcase classname="qa.test_sdk_audit" name="test_dangling_local_schema_reference_rejected_at_construction[output_schema]" time="0.000"><failure message="Failed: DID NOT RAISE &lt;class 'agentloom.errors.ConfigurationError'&gt;">/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_audit.py:221: in test_dangling_local_schema_reference_rejected_at_construction
+    with pytest.raises(ConfigurationError):
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   Failed: DID NOT RAISE &lt;class 'agentloom.errors.ConfigurationError'&gt;</failure></testcase><testcase classname="qa.test_sdk_audit" name="test_dangling_output_schema_does_not_strand_running_execution[memory]" time="0.013"><failure message="agentloom.errors.InfrastructureError: EXECUTION_DRIVER_FAILED: _WrappedReferencingError">/Users/bmilk/code/project/agent-loom/.venv/lib/python3.12/site-packages/referencing/_core.py:276: in pointer
+    contents = contents[segment]  # type: ignore[reportUnknownArgumentType]
+               ^^^^^^^^^^^^^^^^^
+E   KeyError: '$defs'
+
+The above exception was the direct cause of the following exception:
+/Users/bmilk/code/project/agent-loom/.venv/lib/python3.12/site-packages/jsonschema/validators.py:462: in _validate_reference
+    resolved = self._resolver.lookup(ref)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^
+/Users/bmilk/code/project/agent-loom/.venv/lib/python3.12/site-packages/referencing/_core.py:690: in lookup
+    return retrieved.value.pointer(pointer=fragment, resolver=resolver)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/Users/bmilk/code/project/agent-loom/.venv/lib/python3.12/site-packages/referencing/_core.py:279: in pointer
+    raise error from lookup_error
+E   referencing.exceptions.PointerToNowhere: '/$defs/missing' does not exist within {'$ref': '#/$defs/missing'}
+
+The above exception was the direct cause of the following exception:
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/runtime/host.py:278: in _drive
+    await runner.run()
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/runtime/runner.py:268: in run
+    result = await work
+             ^^^^^^^^^^
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/runtime/agent_engine.py:24: in run_task
+    return await AgentNode(agent).activate(None, task["stage"], NodeContext(task_id, runner))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/public/agents.py:204: in activate
+    return await self.agent._activate(node_context)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/public/agents.py:95: in _activate
+    return await AgentLoop(self, node_context).run()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/runtime/agent_loop.py:149: in run
+    validate_schema(
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/configuration/models.py:125: in validate_schema
+    errors = sorted(
+/Users/bmilk/code/project/agent-loom/.venv/lib/python3.12/site-packages/jsonschema/validators.py:383: in iter_errors
+    for error in errors:
+                 ^^^^^^
+/Users/bmilk/code/project/agent-loom/.venv/lib/python3.12/site-packages/jsonschema/_keywords.py:275: in ref
+    yield from validator._validate_reference(ref=ref, instance=instance)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/Users/bmilk/code/project/agent-loom/.venv/lib/python3.12/site-packages/jsonschema/validators.py:464: in _validate_reference
+    raise exceptions._WrappedReferencingError(err) from err
+E   jsonschema.exceptions._WrappedReferencingError: PointerToNowhere: '/$defs/missing' does not exist within {'$ref': '#/$defs/missing'}
+
+The above exception was the direct cause of the following exception:
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_audit.py:235: in test_dangling_output_schema_does_not_strand_running_execution
+    result = await handle.wait(timeout_s=4)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/public/handles.py:49: in wait
+    return await observe()
+           ^^^^^^^^^^^^^^^
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/public/handles.py:44: in observe
+    self._runtime.raise_local_failure(self.run_id)
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/runtime/host.py:104: in raise_local_failure
+    raise failure
+E   agentloom.errors.InfrastructureError: EXECUTION_DRIVER_FAILED: _WrappedReferencingError</failure></testcase><testcase classname="qa.test_sdk_audit" name="test_dangling_output_schema_does_not_strand_running_execution[file]" time="0.053"><failure message="agentloom.errors.InfrastructureError: EXECUTION_DRIVER_FAILED: _WrappedReferencingError">/Users/bmilk/code/project/agent-loom/.venv/lib/python3.12/site-packages/referencing/_core.py:276: in pointer
+    contents = contents[segment]  # type: ignore[reportUnknownArgumentType]
+               ^^^^^^^^^^^^^^^^^
+E   KeyError: '$defs'
+
+The above exception was the direct cause of the following exception:
+/Users/bmilk/code/project/agent-loom/.venv/lib/python3.12/site-packages/jsonschema/validators.py:462: in _validate_reference
+    resolved = self._resolver.lookup(ref)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^
+/Users/bmilk/code/project/agent-loom/.venv/lib/python3.12/site-packages/referencing/_core.py:690: in lookup
+    return retrieved.value.pointer(pointer=fragment, resolver=resolver)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/Users/bmilk/code/project/agent-loom/.venv/lib/python3.12/site-packages/referencing/_core.py:279: in pointer
+    raise error from lookup_error
+E   referencing.exceptions.PointerToNowhere: '/$defs/missing' does not exist within {'$ref': '#/$defs/missing'}
+
+The above exception was the direct cause of the following exception:
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/runtime/host.py:278: in _drive
+    await runner.run()
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/runtime/runner.py:268: in run
+    result = await work
+             ^^^^^^^^^^
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/runtime/agent_engine.py:24: in run_task
+    return await AgentNode(agent).activate(None, task["stage"], NodeContext(task_id, runner))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/public/agents.py:204: in activate
+    return await self.agent._activate(node_context)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/public/agents.py:95: in _activate
+    return await AgentLoop(self, node_context).run()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/runtime/agent_loop.py:149: in run
+    validate_schema(
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/configuration/models.py:125: in validate_schema
+    errors = sorted(
+/Users/bmilk/code/project/agent-loom/.venv/lib/python3.12/site-packages/jsonschema/validators.py:383: in iter_errors
+    for error in errors:
+                 ^^^^^^
+/Users/bmilk/code/project/agent-loom/.venv/lib/python3.12/site-packages/jsonschema/_keywords.py:275: in ref
+    yield from validator._validate_reference(ref=ref, instance=instance)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/Users/bmilk/code/project/agent-loom/.venv/lib/python3.12/site-packages/jsonschema/validators.py:464: in _validate_reference
+    raise exceptions._WrappedReferencingError(err) from err
+E   jsonschema.exceptions._WrappedReferencingError: PointerToNowhere: '/$defs/missing' does not exist within {'$ref': '#/$defs/missing'}
+
+The above exception was the direct cause of the following exception:
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_audit.py:235: in test_dangling_output_schema_does_not_strand_running_execution
+    result = await handle.wait(timeout_s=4)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/public/handles.py:49: in wait
+    return await observe()
+           ^^^^^^^^^^^^^^^
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/public/handles.py:44: in observe
+    self._runtime.raise_local_failure(self.run_id)
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/runtime/host.py:104: in raise_local_failure
+    raise failure
+E   agentloom.errors.InfrastructureError: EXECUTION_DRIVER_FAILED: _WrappedReferencingError</failure></testcase><testcase classname="qa.test_sdk_audit" name="test_ref_named_property_inside_enum_is_literal_data[schema0]" time="0.000"><failure message="agentloom.errors.ConfigurationError: REMOTE_SCHEMA_REF: Only local JSON Schema references are supported">/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_audit.py:252: in test_ref_named_property_inside_enum_is_literal_data
+    assert AgentDefinition("literal", "SYSTEM", input_schema=schema)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+&lt;string&gt;:10: in __init__
+    ???
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/configuration/models.py:331: in __post_init__
+    check_schema(schema)
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/configuration/models.py:115: in check_schema
+    walk(schema)
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/configuration/models.py:110: in walk
+    walk(item)
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/configuration/models.py:113: in walk
+    walk(item)
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/configuration/models.py:107: in walk
+    raise ConfigurationError(
+E   agentloom.errors.ConfigurationError: REMOTE_SCHEMA_REF: Only local JSON Schema references are supported</failure></testcase><testcase classname="qa.test_sdk_audit" name="test_ref_named_property_inside_enum_is_literal_data[schema1]" time="0.000"><failure message="agentloom.errors.ConfigurationError: REMOTE_SCHEMA_REF: Only local JSON Schema references are supported">/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_audit.py:252: in test_ref_named_property_inside_enum_is_literal_data
+    assert AgentDefinition("literal", "SYSTEM", input_schema=schema)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+&lt;string&gt;:10: in __init__
+    ???
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/configuration/models.py:331: in __post_init__
+    check_schema(schema)
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/configuration/models.py:115: in check_schema
+    walk(schema)
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/configuration/models.py:110: in walk
+    walk(item)
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/configuration/models.py:107: in walk
+    raise ConfigurationError(
+E   agentloom.errors.ConfigurationError: REMOTE_SCHEMA_REF: Only local JSON Schema references are supported</failure></testcase><testcase classname="qa.test_sdk_audit" name="test_ref_named_property_inside_enum_is_literal_data[schema2]" time="0.000"><failure message="agentloom.errors.ConfigurationError: REMOTE_SCHEMA_REF: Only local JSON Schema references are supported">/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_audit.py:252: in test_ref_named_property_inside_enum_is_literal_data
+    assert AgentDefinition("literal", "SYSTEM", input_schema=schema)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+&lt;string&gt;:10: in __init__
+    ???
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/configuration/models.py:331: in __post_init__
+    check_schema(schema)
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/configuration/models.py:115: in check_schema
+    walk(schema)
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/configuration/models.py:110: in walk
+    walk(item)
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/configuration/models.py:107: in walk
+    raise ConfigurationError(
+E   agentloom.errors.ConfigurationError: REMOTE_SCHEMA_REF: Only local JSON Schema references are supported</failure></testcase><testcase classname="qa.test_sdk_audit" name="test_malformed_model_usage_does_not_strand_running_execution[memory-True]" time="0.013"><failure message="agentloom.errors.InfrastructureError: EXECUTION_DRIVER_FAILED: AttributeError">/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/runtime/host.py:278: in _drive
+    await runner.run()
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/runtime/runner.py:268: in run
+    result = await work
+             ^^^^^^^^^^
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/runtime/agent_engine.py:24: in run_task
+    return await AgentNode(agent).activate(None, task["stage"], NodeContext(task_id, runner))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/public/agents.py:204: in activate
+    return await self.agent._activate(node_context)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/public/agents.py:95: in _activate
+    return await AgentLoop(self, node_context).run()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/runtime/agent_loop.py:73: in run
+    response = await runner.calls.model(task_id, f"model:{round_number}")
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/runtime/calls.py:103: in model
+    return await self.advance(op_id)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/runtime/calls.py:243: in advance
+    await self._attempts(op_id)
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/runtime/calls.py:398: in _attempts
+    self._save_attempt(op_id, raw, partial)
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/runtime/calls.py:456: in _save_attempt
+    runner.commit(f"attempt-result:{op_id}:{index}", save)
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/runtime/runner.py:91: in commit
+    return self.coordinator.commit(command, mutation)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/storage/commit.py:41: in commit
+    return self._commit_once(command, change, fingerprint=fingerprint)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/storage/commit.py:60: in _commit_once
+    change(state)
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/runtime/calls.py:441: in save
+    and all(
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/runtime/calls.py:442: in &lt;genexpr&gt;
+    type(usage.get(k)) is int and usage[k] &gt;= 0
+         ^^^^^^^^^
+E   AttributeError: 'bool' object has no attribute 'get'
+
+The above exception was the direct cause of the following exception:
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_audit.py:262: in test_malformed_model_usage_does_not_strand_running_execution
+    result = await handle.wait(timeout_s=4)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/public/handles.py:49: in wait
+    return await observe()
+           ^^^^^^^^^^^^^^^
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/public/handles.py:44: in observe
+    self._runtime.raise_local_failure(self.run_id)
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/runtime/host.py:104: in raise_local_failure
+    raise failure
+E   agentloom.errors.InfrastructureError: EXECUTION_DRIVER_FAILED: AttributeError</failure></testcase><testcase classname="qa.test_sdk_audit" name="test_malformed_model_usage_does_not_strand_running_execution[memory-usage1]" time="0.013"><failure message="agentloom.errors.InfrastructureError: EXECUTION_DRIVER_FAILED: AttributeError">/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/runtime/host.py:278: in _drive
+    await runner.run()
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/runtime/runner.py:268: in run
+    result = await work
+             ^^^^^^^^^^
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/runtime/agent_engine.py:24: in run_task
+    return await AgentNode(agent).activate(None, task["stage"], NodeContext(task_id, runner))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/public/agents.py:204: in activate
+    return await self.agent._activate(node_context)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/public/agents.py:95: in _activate
+    return await AgentLoop(self, node_context).run()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/runtime/agent_loop.py:73: in run
+    response = await runner.calls.model(task_id, f"model:{round_number}")
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/runtime/calls.py:103: in model
+    return await self.advance(op_id)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/runtime/calls.py:243: in advance
+    await self._attempts(op_id)
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/runtime/calls.py:398: in _attempts
+    self._save_attempt(op_id, raw, partial)
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/runtime/calls.py:456: in _save_attempt
+    runner.commit(f"attempt-result:{op_id}:{index}", save)
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/runtime/runner.py:91: in commit
+    return self.coordinator.commit(command, mutation)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/storage/commit.py:41: in commit
+    return self._commit_once(command, change, fingerprint=fingerprint)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/storage/commit.py:60: in _commit_once
+    change(state)
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/runtime/calls.py:441: in save
+    and all(
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/runtime/calls.py:442: in &lt;genexpr&gt;
+    type(usage.get(k)) is int and usage[k] &gt;= 0
+         ^^^^^^^^^
+E   AttributeError: 'list' object has no attribute 'get'
+
+The above exception was the direct cause of the following exception:
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_audit.py:262: in test_malformed_model_usage_does_not_strand_running_execution
+    result = await handle.wait(timeout_s=4)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/public/handles.py:49: in wait
+    return await observe()
+           ^^^^^^^^^^^^^^^
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/public/handles.py:44: in observe
+    self._runtime.raise_local_failure(self.run_id)
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/runtime/host.py:104: in raise_local_failure
+    raise failure
+E   agentloom.errors.InfrastructureError: EXECUTION_DRIVER_FAILED: AttributeError</failure></testcase><testcase classname="qa.test_sdk_audit" name="test_malformed_model_usage_does_not_strand_running_execution[memory-invalid]" time="0.013"><failure message="agentloom.errors.InfrastructureError: EXECUTION_DRIVER_FAILED: AttributeError">/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/runtime/host.py:278: in _drive
+    await runner.run()
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/runtime/runner.py:268: in run
+    result = await work
+             ^^^^^^^^^^
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/runtime/agent_engine.py:24: in run_task
+    return await AgentNode(agent).activate(None, task["stage"], NodeContext(task_id, runner))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/public/agents.py:204: in activate
+    return await self.agent._activate(node_context)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/public/agents.py:95: in _activate
+    return await AgentLoop(self, node_context).run()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/runtime/agent_loop.py:73: in run
+    response = await runner.calls.model(task_id, f"model:{round_number}")
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/runtime/calls.py:103: in model
+    return await self.advance(op_id)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/runtime/calls.py:243: in advance
+    await self._attempts(op_id)
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/runtime/calls.py:398: in _attempts
+    self._save_attempt(op_id, raw, partial)
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/runtime/calls.py:456: in _save_attempt
+    runner.commit(f"attempt-result:{op_id}:{index}", save)
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/runtime/runner.py:91: in commit
+    return self.coordinator.commit(command, mutation)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/storage/commit.py:41: in commit
+    return self._commit_once(command, change, fingerprint=fingerprint)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/storage/commit.py:60: in _commit_once
+    change(state)
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/runtime/calls.py:441: in save
+    and all(
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/runtime/calls.py:442: in &lt;genexpr&gt;
+    type(usage.get(k)) is int and usage[k] &gt;= 0
+         ^^^^^^^^^
+E   AttributeError: 'str' object has no attribute 'get'
+
+The above exception was the direct cause of the following exception:
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_audit.py:262: in test_malformed_model_usage_does_not_strand_running_execution
+    result = await handle.wait(timeout_s=4)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/public/handles.py:49: in wait
+    return await observe()
+           ^^^^^^^^^^^^^^^
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/public/handles.py:44: in observe
+    self._runtime.raise_local_failure(self.run_id)
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/runtime/host.py:104: in raise_local_failure
+    raise failure
+E   agentloom.errors.InfrastructureError: EXECUTION_DRIVER_FAILED: AttributeError</failure></testcase><testcase classname="qa.test_sdk_audit" name="test_malformed_model_usage_does_not_strand_running_execution[file-True]" time="0.048"><failure message="agentloom.errors.InfrastructureError: EXECUTION_DRIVER_FAILED: AttributeError">/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/runtime/host.py:278: in _drive
+    await runner.run()
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/runtime/runner.py:268: in run
+    result = await work
+             ^^^^^^^^^^
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/runtime/agent_engine.py:24: in run_task
+    return await AgentNode(agent).activate(None, task["stage"], NodeContext(task_id, runner))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/public/agents.py:204: in activate
+    return await self.agent._activate(node_context)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/public/agents.py:95: in _activate
+    return await AgentLoop(self, node_context).run()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/runtime/agent_loop.py:73: in run
+    response = await runner.calls.model(task_id, f"model:{round_number}")
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/runtime/calls.py:103: in model
+    return await self.advance(op_id)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/runtime/calls.py:243: in advance
+    await self._attempts(op_id)
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/runtime/calls.py:398: in _attempts
+    self._save_attempt(op_id, raw, partial)
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/runtime/calls.py:456: in _save_attempt
+    runner.commit(f"attempt-result:{op_id}:{index}", save)
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/runtime/runner.py:91: in commit
+    return self.coordinator.commit(command, mutation)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/storage/commit.py:41: in commit
+    return self._commit_once(command, change, fingerprint=fingerprint)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/storage/commit.py:60: in _commit_once
+    change(state)
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/runtime/calls.py:441: in save
+    and all(
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/runtime/calls.py:442: in &lt;genexpr&gt;
+    type(usage.get(k)) is int and usage[k] &gt;= 0
+         ^^^^^^^^^
+E   AttributeError: 'bool' object has no attribute 'get'
+
+The above exception was the direct cause of the following exception:
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_audit.py:262: in test_malformed_model_usage_does_not_strand_running_execution
+    result = await handle.wait(timeout_s=4)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/public/handles.py:49: in wait
+    return await observe()
+           ^^^^^^^^^^^^^^^
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/public/handles.py:44: in observe
+    self._runtime.raise_local_failure(self.run_id)
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/runtime/host.py:104: in raise_local_failure
+    raise failure
+E   agentloom.errors.InfrastructureError: EXECUTION_DRIVER_FAILED: AttributeError</failure></testcase><testcase classname="qa.test_sdk_audit" name="test_malformed_model_usage_does_not_strand_running_execution[file-usage1]" time="0.050"><failure message="agentloom.errors.InfrastructureError: EXECUTION_DRIVER_FAILED: AttributeError">/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/runtime/host.py:278: in _drive
+    await runner.run()
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/runtime/runner.py:268: in run
+    result = await work
+             ^^^^^^^^^^
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/runtime/agent_engine.py:24: in run_task
+    return await AgentNode(agent).activate(None, task["stage"], NodeContext(task_id, runner))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/public/agents.py:204: in activate
+    return await self.agent._activate(node_context)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/public/agents.py:95: in _activate
+    return await AgentLoop(self, node_context).run()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/runtime/agent_loop.py:73: in run
+    response = await runner.calls.model(task_id, f"model:{round_number}")
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/runtime/calls.py:103: in model
+    return await self.advance(op_id)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/runtime/calls.py:243: in advance
+    await self._attempts(op_id)
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/runtime/calls.py:398: in _attempts
+    self._save_attempt(op_id, raw, partial)
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/runtime/calls.py:456: in _save_attempt
+    runner.commit(f"attempt-result:{op_id}:{index}", save)
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/runtime/runner.py:91: in commit
+    return self.coordinator.commit(command, mutation)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/storage/commit.py:41: in commit
+    return self._commit_once(command, change, fingerprint=fingerprint)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/storage/commit.py:60: in _commit_once
+    change(state)
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/runtime/calls.py:441: in save
+    and all(
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/runtime/calls.py:442: in &lt;genexpr&gt;
+    type(usage.get(k)) is int and usage[k] &gt;= 0
+         ^^^^^^^^^
+E   AttributeError: 'list' object has no attribute 'get'
+
+The above exception was the direct cause of the following exception:
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_audit.py:262: in test_malformed_model_usage_does_not_strand_running_execution
+    result = await handle.wait(timeout_s=4)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/public/handles.py:49: in wait
+    return await observe()
+           ^^^^^^^^^^^^^^^
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/public/handles.py:44: in observe
+    self._runtime.raise_local_failure(self.run_id)
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/runtime/host.py:104: in raise_local_failure
+    raise failure
+E   agentloom.errors.InfrastructureError: EXECUTION_DRIVER_FAILED: AttributeError</failure></testcase><testcase classname="qa.test_sdk_audit" name="test_malformed_model_usage_does_not_strand_running_execution[file-invalid]" time="0.049"><failure message="agentloom.errors.InfrastructureError: EXECUTION_DRIVER_FAILED: AttributeError">/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/runtime/host.py:278: in _drive
+    await runner.run()
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/runtime/runner.py:268: in run
+    result = await work
+             ^^^^^^^^^^
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/runtime/agent_engine.py:24: in run_task
+    return await AgentNode(agent).activate(None, task["stage"], NodeContext(task_id, runner))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/public/agents.py:204: in activate
+    return await self.agent._activate(node_context)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/public/agents.py:95: in _activate
+    return await AgentLoop(self, node_context).run()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/runtime/agent_loop.py:73: in run
+    response = await runner.calls.model(task_id, f"model:{round_number}")
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/runtime/calls.py:103: in model
+    return await self.advance(op_id)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/runtime/calls.py:243: in advance
+    await self._attempts(op_id)
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/runtime/calls.py:398: in _attempts
+    self._save_attempt(op_id, raw, partial)
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/runtime/calls.py:456: in _save_attempt
+    runner.commit(f"attempt-result:{op_id}:{index}", save)
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/runtime/runner.py:91: in commit
+    return self.coordinator.commit(command, mutation)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/storage/commit.py:41: in commit
+    return self._commit_once(command, change, fingerprint=fingerprint)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/storage/commit.py:60: in _commit_once
+    change(state)
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/runtime/calls.py:441: in save
+    and all(
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/runtime/calls.py:442: in &lt;genexpr&gt;
+    type(usage.get(k)) is int and usage[k] &gt;= 0
+         ^^^^^^^^^
+E   AttributeError: 'str' object has no attribute 'get'
+
+The above exception was the direct cause of the following exception:
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_audit.py:262: in test_malformed_model_usage_does_not_strand_running_execution
+    result = await handle.wait(timeout_s=4)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/public/handles.py:49: in wait
+    return await observe()
+           ^^^^^^^^^^^^^^^
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/public/handles.py:44: in observe
+    self._runtime.raise_local_failure(self.run_id)
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/runtime/host.py:104: in raise_local_failure
+    raise failure
+E   agentloom.errors.InfrastructureError: EXECUTION_DRIVER_FAILED: AttributeError</failure></testcase><testcase classname="qa.test_sdk_audit" name="test_stop_rejects_missing_or_blank_command_id[memory-None]" time="0.001"><failure message="Failed: DID NOT RAISE &lt;class 'agentloom.errors.RequestError'&gt;">/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_audit.py:274: in test_stop_rejects_missing_or_blank_command_id
+    with pytest.raises(RequestError):
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   Failed: DID NOT RAISE &lt;class 'agentloom.errors.RequestError'&gt;</failure></testcase><testcase classname="qa.test_sdk_audit" name="test_stop_rejects_missing_or_blank_command_id[memory-]" time="0.001" /><testcase classname="qa.test_sdk_audit" name="test_stop_rejects_missing_or_blank_command_id[memory- ]" time="0.001"><failure message="Failed: DID NOT RAISE &lt;class 'agentloom.errors.RequestError'&gt;">/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_audit.py:274: in test_stop_rejects_missing_or_blank_command_id
+    with pytest.raises(RequestError):
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   Failed: DID NOT RAISE &lt;class 'agentloom.errors.RequestError'&gt;</failure></testcase><testcase classname="qa.test_sdk_audit" name="test_stop_rejects_missing_or_blank_command_id[file-None]" time="0.002"><failure message="Failed: DID NOT RAISE &lt;class 'agentloom.errors.RequestError'&gt;">/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_audit.py:274: in test_stop_rejects_missing_or_blank_command_id
+    with pytest.raises(RequestError):
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   Failed: DID NOT RAISE &lt;class 'agentloom.errors.RequestError'&gt;</failure></testcase><testcase classname="qa.test_sdk_audit" name="test_stop_rejects_missing_or_blank_command_id[file-]" time="0.001" /><testcase classname="qa.test_sdk_audit" name="test_stop_rejects_missing_or_blank_command_id[file- ]" time="0.002"><failure message="Failed: DID NOT RAISE &lt;class 'agentloom.errors.RequestError'&gt;">/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_audit.py:274: in test_stop_rejects_missing_or_blank_command_id
+    with pytest.raises(RequestError):
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   Failed: DID NOT RAISE &lt;class 'agentloom.errors.RequestError'&gt;</failure></testcase><testcase classname="qa.test_sdk_audit" name="test_append_rejects_missing_or_blank_input_id[memory-None]" time="0.016"><failure message="Failed: DID NOT RAISE &lt;class 'agentloom.errors.RequestError'&gt;">/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_audit.py:296: in test_append_rejects_missing_or_blank_input_id
+    with pytest.raises(RequestError):
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   Failed: DID NOT RAISE &lt;class 'agentloom.errors.RequestError'&gt;</failure></testcase><testcase classname="qa.test_sdk_audit" name="test_append_rejects_missing_or_blank_input_id[memory-]" time="0.016" /><testcase classname="qa.test_sdk_audit" name="test_append_rejects_missing_or_blank_input_id[memory- ]" time="0.016"><failure message="Failed: DID NOT RAISE &lt;class 'agentloom.errors.RequestError'&gt;">/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_audit.py:296: in test_append_rejects_missing_or_blank_input_id
+    with pytest.raises(RequestError):
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   Failed: DID NOT RAISE &lt;class 'agentloom.errors.RequestError'&gt;</failure></testcase><testcase classname="qa.test_sdk_audit" name="test_append_rejects_missing_or_blank_input_id[file-None]" time="0.052"><failure message="Failed: DID NOT RAISE &lt;class 'agentloom.errors.RequestError'&gt;">/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_audit.py:296: in test_append_rejects_missing_or_blank_input_id
+    with pytest.raises(RequestError):
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   Failed: DID NOT RAISE &lt;class 'agentloom.errors.RequestError'&gt;</failure></testcase><testcase classname="qa.test_sdk_audit" name="test_append_rejects_missing_or_blank_input_id[file-]" time="0.048" /><testcase classname="qa.test_sdk_audit" name="test_append_rejects_missing_or_blank_input_id[file- ]" time="0.050"><failure message="Failed: DID NOT RAISE &lt;class 'agentloom.errors.RequestError'&gt;">/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_audit.py:296: in test_append_rejects_missing_or_blank_input_id
+    with pytest.raises(RequestError):
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   Failed: DID NOT RAISE &lt;class 'agentloom.errors.RequestError'&gt;</failure></testcase><testcase classname="qa.test_sdk_audit" name="test_event_read_rejects_bad_cursor_with_sdk_error[memory-None]" time="0.012"><failure message="TypeError: '&gt;' not supported between instances of 'NoneType' and 'int'">/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_audit.py:313: in test_event_read_rejects_bad_cursor_with_sdk_error
+    await runtime.events.read(handle.run_id, after_seq=cursor)
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/runtime/services.py:177: in read
+    if after_seq &gt; len(self.runtime._load(str(run_id))["events"]):
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   TypeError: '&gt;' not supported between instances of 'NoneType' and 'int'</failure></testcase><testcase classname="qa.test_sdk_audit" name="test_event_read_rejects_bad_cursor_with_sdk_error[memory-0]" time="0.012"><failure message="TypeError: '&gt;' not supported between instances of 'str' and 'int'">/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_audit.py:313: in test_event_read_rejects_bad_cursor_with_sdk_error
+    await runtime.events.read(handle.run_id, after_seq=cursor)
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/runtime/services.py:177: in read
+    if after_seq &gt; len(self.runtime._load(str(run_id))["events"]):
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   TypeError: '&gt;' not supported between instances of 'str' and 'int'</failure></testcase><testcase classname="qa.test_sdk_audit" name="test_event_read_rejects_bad_cursor_with_sdk_error[memory-cursor2]" time="0.012"><failure message="TypeError: '&gt;' not supported between instances of 'list' and 'int'">/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_audit.py:313: in test_event_read_rejects_bad_cursor_with_sdk_error
+    await runtime.events.read(handle.run_id, after_seq=cursor)
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/runtime/services.py:177: in read
+    if after_seq &gt; len(self.runtime._load(str(run_id))["events"]):
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   TypeError: '&gt;' not supported between instances of 'list' and 'int'</failure></testcase><testcase classname="qa.test_sdk_audit" name="test_event_read_rejects_bad_cursor_with_sdk_error[memory-cursor3]" time="0.012"><failure message="TypeError: '&gt;' not supported between instances of 'dict' and 'int'">/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_audit.py:313: in test_event_read_rejects_bad_cursor_with_sdk_error
+    await runtime.events.read(handle.run_id, after_seq=cursor)
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/runtime/services.py:177: in read
+    if after_seq &gt; len(self.runtime._load(str(run_id))["events"]):
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   TypeError: '&gt;' not supported between instances of 'dict' and 'int'</failure></testcase><testcase classname="qa.test_sdk_audit" name="test_event_read_rejects_bad_cursor_with_sdk_error[file-None]" time="0.055"><failure message="TypeError: '&gt;' not supported between instances of 'NoneType' and 'int'">/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_audit.py:313: in test_event_read_rejects_bad_cursor_with_sdk_error
+    await runtime.events.read(handle.run_id, after_seq=cursor)
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/runtime/services.py:177: in read
+    if after_seq &gt; len(self.runtime._load(str(run_id))["events"]):
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   TypeError: '&gt;' not supported between instances of 'NoneType' and 'int'</failure></testcase><testcase classname="qa.test_sdk_audit" name="test_event_read_rejects_bad_cursor_with_sdk_error[file-0]" time="0.054"><failure message="TypeError: '&gt;' not supported between instances of 'str' and 'int'">/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_audit.py:313: in test_event_read_rejects_bad_cursor_with_sdk_error
+    await runtime.events.read(handle.run_id, after_seq=cursor)
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/runtime/services.py:177: in read
+    if after_seq &gt; len(self.runtime._load(str(run_id))["events"]):
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   TypeError: '&gt;' not supported between instances of 'str' and 'int'</failure></testcase><testcase classname="qa.test_sdk_audit" name="test_event_read_rejects_bad_cursor_with_sdk_error[file-cursor2]" time="0.055"><failure message="TypeError: '&gt;' not supported between instances of 'list' and 'int'">/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_audit.py:313: in test_event_read_rejects_bad_cursor_with_sdk_error
+    await runtime.events.read(handle.run_id, after_seq=cursor)
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/runtime/services.py:177: in read
+    if after_seq &gt; len(self.runtime._load(str(run_id))["events"]):
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   TypeError: '&gt;' not supported between instances of 'list' and 'int'</failure></testcase><testcase classname="qa.test_sdk_audit" name="test_event_read_rejects_bad_cursor_with_sdk_error[file-cursor3]" time="0.054"><failure message="TypeError: '&gt;' not supported between instances of 'dict' and 'int'">/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_audit.py:313: in test_event_read_rejects_bad_cursor_with_sdk_error
+    await runtime.events.read(handle.run_id, after_seq=cursor)
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/runtime/services.py:177: in read
+    if after_seq &gt; len(self.runtime._load(str(run_id))["events"]):
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   TypeError: '&gt;' not supported between instances of 'dict' and 'int'</failure></testcase><testcase classname="qa.test_sdk_audit" name="test_direct_skill_package_enforces_supported_metadata[allowed-tools]" time="0.001"><failure message="Failed: DID NOT RAISE &lt;class 'agentloom.errors.ConfigurationError'&gt;">/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_audit.py:324: in test_direct_skill_package_enforces_supported_metadata
+    with pytest.raises(ConfigurationError, match="SKILL_PROFILE_UNSUPPORTED"):
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   Failed: DID NOT RAISE &lt;class 'agentloom.errors.ConfigurationError'&gt;</failure></testcase><testcase classname="qa.test_sdk_audit" name="test_direct_skill_package_enforces_supported_metadata[disallowed-tools]" time="0.001"><failure message="Failed: DID NOT RAISE &lt;class 'agentloom.errors.ConfigurationError'&gt;">/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_audit.py:324: in test_direct_skill_package_enforces_supported_metadata
+    with pytest.raises(ConfigurationError, match="SKILL_PROFILE_UNSUPPORTED"):
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   Failed: DID NOT RAISE &lt;class 'agentloom.errors.ConfigurationError'&gt;</failure></testcase><testcase classname="qa.test_sdk_audit" name="test_direct_skill_package_enforces_supported_metadata[model]" time="0.001"><failure message="Failed: DID NOT RAISE &lt;class 'agentloom.errors.ConfigurationError'&gt;">/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_audit.py:324: in test_direct_skill_package_enforces_supported_metadata
+    with pytest.raises(ConfigurationError, match="SKILL_PROFILE_UNSUPPORTED"):
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   Failed: DID NOT RAISE &lt;class 'agentloom.errors.ConfigurationError'&gt;</failure></testcase><testcase classname="qa.test_sdk_audit" name="test_invalid_custom_tool_output_keeps_raw_evidence[memory]" time="0.027"><failure message="AssertionError: assert None == {'count': 'invalid', 'receipt': 'external-side-effect-123'}">/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_audit.py:391: in test_invalid_custom_tool_output_keeps_raw_evidence
+    assert op["raw"]["result"] == {"receipt": "external-side-effect-123", "count": "invalid"}
+E   AssertionError: assert None == {'count': 'invalid', 'receipt': 'external-side-effect-123'}</failure></testcase><testcase classname="qa.test_sdk_audit" name="test_invalid_custom_tool_output_keeps_raw_evidence[file]" time="0.101"><failure message="AssertionError: assert None == {'count': 'invalid', 'receipt': 'external-side-effect-123'}">/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_audit.py:391: in test_invalid_custom_tool_output_keeps_raw_evidence
+    assert op["raw"]["result"] == {"receipt": "external-side-effect-123", "count": "invalid"}
+E   AssertionError: assert None == {'count': 'invalid', 'receipt': 'external-side-effect-123'}</failure></testcase><testcase classname="qa.test_sdk_audit" name="test_http_retry_after_is_respected[memory]" time="0.012"><failure message="AssertionError: retried after only 0.0008s&#10;assert (852572.839889083 - 852572.839138833) &gt;= 0.9">/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_audit.py:435: in test_http_retry_after_is_respected
+    assert times[1] - times[0] &gt;= 0.9, f"retried after only {times[1] - times[0]:.4f}s"
+E   AssertionError: retried after only 0.0008s
+E   assert (852572.839889083 - 852572.839138833) &gt;= 0.9</failure></testcase><testcase classname="qa.test_sdk_audit" name="test_http_retry_after_is_respected[file]" time="0.057"><failure message="AssertionError: retried after only 0.0044s&#10;assert (852572.885194583 - 852572.880761625) &gt;= 0.9">/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_audit.py:435: in test_http_retry_after_is_respected
+    assert times[1] - times[0] &gt;= 0.9, f"retried after only {times[1] - times[0]:.4f}s"
+E   AssertionError: retried after only 0.0044s
+E   assert (852572.885194583 - 852572.880761625) &gt;= 0.9</failure></testcase><testcase classname="qa.test_sdk_audit" name="test_provider_context_length_error_has_stable_error_code[memory]" time="0.013"><failure message="AssertionError: assert 'HTTP_400' == 'MODEL_CONTEX...NGTH_EXCEEDED'&#10;  &#10;  - MODEL_CONTEXT_LENGTH_EXCEEDED&#10;  + HTTP_400">/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_audit.py:462: in test_provider_context_length_error_has_stable_error_code
+    assert result.error["code"] == "MODEL_CONTEXT_LENGTH_EXCEEDED"
+E   AssertionError: assert 'HTTP_400' == 'MODEL_CONTEX...NGTH_EXCEEDED'
+E     
+E     - MODEL_CONTEXT_LENGTH_EXCEEDED
+E     + HTTP_400</failure></testcase><testcase classname="qa.test_sdk_audit" name="test_provider_context_length_error_has_stable_error_code[file]" time="0.054"><failure message="AssertionError: assert 'HTTP_400' == 'MODEL_CONTEX...NGTH_EXCEEDED'&#10;  &#10;  - MODEL_CONTEXT_LENGTH_EXCEEDED&#10;  + HTTP_400">/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_audit.py:462: in test_provider_context_length_error_has_stable_error_code
+    assert result.error["code"] == "MODEL_CONTEXT_LENGTH_EXCEEDED"
+E   AssertionError: assert 'HTTP_400' == 'MODEL_CONTEX...NGTH_EXCEEDED'
+E     
+E     - MODEL_CONTEXT_LENGTH_EXCEEDED
+E     + HTTP_400</failure></testcase><testcase classname="qa.test_sdk_audit" name="test_interrupted_model_retains_nontext_partial_material[memory]" time="0.013"><failure message="assert ('PARTIAL_REASONING' in '{&quot;operations&quot;: {&quot;93598b67-1b1b-56da-9fd2-31f9b7f655ef&quot;: {&quot;operation_id&quot;: &quot;93598b67-1b1b-56da-9fd2-31f9b7f655ef&quot;, &quot;tas...&quot;binding_key&quot;: null, &quot;source_call_id&quot;: null, &quot;next_attempt_at&quot;: null, &quot;output_reserve&quot;: 4096}}, &quot;partial_results&quot;: []}')">/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_audit.py:523: in test_interrupted_model_retains_nontext_partial_material
+    assert "PARTIAL_REASONING" in evidence and "PARTIAL_ARGUMENT" in evidence
+E   assert ('PARTIAL_REASONING' in '{"operations": {"93598b67-1b1b-56da-9fd2-31f9b7f655ef": {"operation_id": "93598b67-1b1b-56da-9fd2-31f9b7f655ef", "tas..."binding_key": null, "source_call_id": null, "next_attempt_at": null, "output_reserve": 4096}}, "partial_results": []}')</failure></testcase><testcase classname="qa.test_sdk_audit" name="test_interrupted_model_retains_nontext_partial_material[file]" time="0.058"><failure message="assert ('PARTIAL_REASONING' in '{&quot;operations&quot;: {&quot;cf9b39b8-c577-5228-a694-15ae1153dc0b&quot;: {&quot;attempts&quot;: [{&quot;attempt_id&quot;: &quot;6869a571-f678-5c02-ad6f-2442e7d... &quot;target_ref&quot;: null, &quot;task_id&quot;: &quot;06fa8c89-ef5d-41de-903e-8c50a93f97df&quot;, &quot;ticket&quot;: &quot;released&quot;}}, &quot;partial_results&quot;: []}')">/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_audit.py:523: in test_interrupted_model_retains_nontext_partial_material
+    assert "PARTIAL_REASONING" in evidence and "PARTIAL_ARGUMENT" in evidence
+E   assert ('PARTIAL_REASONING' in '{"operations": {"cf9b39b8-c577-5228-a694-15ae1153dc0b": {"attempts": [{"attempt_id": "6869a571-f678-5c02-ad6f-2442e7d... "target_ref": null, "task_id": "06fa8c89-ef5d-41de-903e-8c50a93f97df", "ticket": "released"}}, "partial_results": []}')</failure></testcase><testcase classname="qa.test_sdk_audit" name="test_noncanonical_input_rejected[nan]" time="0.000" /><testcase classname="qa.test_sdk_audit" name="test_noncanonical_input_rejected[inf]" time="0.000" /><testcase classname="qa.test_sdk_audit" name="test_noncanonical_input_rejected[-inf]" time="0.000" /><testcase classname="qa.test_sdk_audit" name="test_noncanonical_input_rejected[9007199254740992]" time="0.000" /><testcase classname="qa.test_sdk_audit" name="test_noncanonical_input_rejected[-9007199254740992]" time="0.000" /><testcase classname="qa.test_sdk_audit" name="test_noncanonical_input_rejected[value5]" time="0.000" /><testcase classname="qa.test_sdk_audit" name="test_json_number_unicode_and_snapshot_immutability[memory]" time="0.013" /><testcase classname="qa.test_sdk_audit" name="test_json_number_unicode_and_snapshot_immutability[file]" time="0.054" /><testcase classname="qa.test_sdk_audit" name="test_slow_cleanup_renews_its_lease[memory]" time="1.848"><failure message="AssertionError: {'cleanup_calls': 4, 'cleanup_state': 'running', 'job': {'attempts': 4, 'error': None, 'job_id': '2e668955-c1e8-4094-a...82', 'lease': {'epoch': 4, 'expires_at': 1792211786.534529, 'worker_id': 'e342aa38-a14a-40a0-9e63-f6a4d4dfc373'}, ...}}&#10;assert 'running' == 'succeeded'&#10;  &#10;  - succeeded&#10;  + running">/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_audit.py:581: in test_slow_cleanup_renews_its_lease
+    assert snapshot["cleanup_state"] == "succeeded", {
+E   AssertionError: {'cleanup_calls': 4, 'cleanup_state': 'running', 'job': {'attempts': 4, 'error': None, 'job_id': '2e668955-c1e8-4094-a...82', 'lease': {'epoch': 4, 'expires_at': 1792211786.534529, 'worker_id': 'e342aa38-a14a-40a0-9e63-f6a4d4dfc373'}, ...}}
+E   assert 'running' == 'succeeded'
+E     
+E     - succeeded
+E     + running</failure></testcase><testcase classname="qa.test_sdk_audit" name="test_slow_cleanup_renews_its_lease[file]" time="1.917"><failure message="AssertionError: {'cleanup_calls': 4, 'cleanup_state': 'running', 'job': {'attempts': 4, 'error': None, 'job_id': 'fbb5b7ab-af10-4d2b-a...7c', 'lease': {'epoch': 4, 'expires_at': 1792211788.458721, 'worker_id': '9f637975-1951-44da-8b6c-3db81f06208c'}, ...}}&#10;assert 'running' == 'succeeded'&#10;  &#10;  - succeeded&#10;  + running">/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_audit.py:581: in test_slow_cleanup_renews_its_lease
+    assert snapshot["cleanup_state"] == "succeeded", {
+E   AssertionError: {'cleanup_calls': 4, 'cleanup_state': 'running', 'job': {'attempts': 4, 'error': None, 'job_id': 'fbb5b7ab-af10-4d2b-a...7c', 'lease': {'epoch': 4, 'expires_at': 1792211788.458721, 'worker_id': '9f637975-1951-44da-8b6c-3db81f06208c'}, ...}}
+E   assert 'running' == 'succeeded'
+E     
+E     - succeeded
+E     + running</failure></testcase><testcase classname="qa.test_sdk_audit" name="test_unowned_expired_execution_is_finalized_without_agent_reconstruction[memory]" time="2.211"><failure message="agentloom.errors.WaitTimeout: This wait expired; the run continues">/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/public/handles.py:49: in wait
+    return await observe()
+           ^^^^^^^^^^^^^^^
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/public/handles.py:45: in observe
+    await asyncio.sleep(0.01)
+/Users/bmilk/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/asyncio/tasks.py:665: in sleep
+    return await future
+           ^^^^^^^^^^^^
+E   asyncio.exceptions.CancelledError
+
+The above exception was the direct cause of the following exception:
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/public/handles.py:48: in wait
+    async with asyncio.timeout(timeout_s):
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^
+/Users/bmilk/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/asyncio/timeouts.py:115: in __aexit__
+    raise TimeoutError from exc_val
+E   TimeoutError
+
+The above exception was the direct cause of the following exception:
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_audit.py:606: in test_unowned_expired_execution_is_finalized_without_agent_reconstruction
+    result = await handle.wait(timeout_s=2.2)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/public/handles.py:51: in wait
+    raise WaitTimeout("This wait expired; the run continues") from exc
+E   agentloom.errors.WaitTimeout: This wait expired; the run continues</failure></testcase><testcase classname="qa.test_sdk_audit" name="test_unowned_expired_execution_is_finalized_without_agent_reconstruction[file]" time="2.246"><failure message="agentloom.errors.WaitTimeout: This wait expired; the run continues">/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/public/handles.py:49: in wait
+    return await observe()
+           ^^^^^^^^^^^^^^^
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/public/handles.py:45: in observe
+    await asyncio.sleep(0.01)
+/Users/bmilk/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/asyncio/tasks.py:665: in sleep
+    return await future
+           ^^^^^^^^^^^^
+E   asyncio.exceptions.CancelledError
+
+The above exception was the direct cause of the following exception:
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/public/handles.py:48: in wait
+    async with asyncio.timeout(timeout_s):
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^
+/Users/bmilk/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/asyncio/timeouts.py:115: in __aexit__
+    raise TimeoutError from exc_val
+E   TimeoutError
+
+The above exception was the direct cause of the following exception:
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_audit.py:606: in test_unowned_expired_execution_is_finalized_without_agent_reconstruction
+    result = await handle.wait(timeout_s=2.2)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/public/handles.py:51: in wait
+    raise WaitTimeout("This wait expired; the run continues") from exc
+E   agentloom.errors.WaitTimeout: This wait expired; the run continues</failure></testcase><testcase classname="qa.test_sdk_audit" name="test_artifact_input_is_explicitly_unimplemented[memory]" time="0.002" /><testcase classname="qa.test_sdk_audit" name="test_artifact_input_is_explicitly_unimplemented[file]" time="0.003" /></testsuite></testsuites>

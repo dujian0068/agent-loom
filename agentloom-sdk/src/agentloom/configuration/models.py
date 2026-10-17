@@ -3,136 +3,15 @@
 from __future__ import annotations
 
 import copy
-import hashlib
-import json
 import math
 import re
 from dataclasses import dataclass, field
 from pathlib import Path, PurePosixPath
 from typing import Any, Mapping
 
-import rfc8785
-from jsonschema import Draft202012Validator
-
 from ..errors import ConfigurationError, RequestError
-
-
-def json_copy(value):
-    def check(v):
-        if isinstance(v, int) and abs(v) > 9007199254740991:
-            raise ConfigurationError(
-                "INVALID_CANONICAL_JSON", "Integer exceeds the interoperable RFC 8785 range"
-            )
-        if isinstance(v, str):
-            try:
-                v.encode("utf-8")
-            except UnicodeError as exc:
-                raise ConfigurationError(
-                    "INVALID_CANONICAL_JSON", "Invalid Unicode scalar value"
-                ) from exc
-        if v is None or isinstance(v, (str, bool, int)):
-            return
-        if isinstance(v, float) and math.isfinite(v):
-            return
-        if isinstance(v, (list, tuple)):
-            for item in v:
-                check(item)
-            return
-        if isinstance(v, Mapping) and all(isinstance(k, str) for k in v):
-            for item in v.values():
-                check(item)
-            return
-        raise ConfigurationError("INVALID_JSON", "Only finite JSON values are accepted")
-
-    check(value)
-
-    def plain(item):
-        if isinstance(item, Mapping):
-            return {key: plain(child) for key, child in item.items()}
-        if isinstance(item, (tuple, list)):
-            return [plain(child) for child in item]
-        return item
-
-    return json.loads(json.dumps(plain(value), ensure_ascii=False, allow_nan=False))
-
-
-def canonical(value):
-    try:
-        return rfc8785.dumps(json_copy(value)).decode("utf-8")
-    except (rfc8785.CanonicalizationError, UnicodeError) as exc:
-        raise ConfigurationError(
-            "INVALID_CANONICAL_JSON", "Values must fit the RFC 8785 JSON profile"
-        ) from exc
-
-
-class FrozenDict(dict):
-    """JSON-compatible immutable mapping, including its nested values."""
-
-    def _immutable(self, *args, **kwargs):
-        raise TypeError("Configuration is immutable")
-
-    __setitem__ = __delitem__ = clear = pop = popitem = setdefault = update = __ior__ = _immutable
-
-    def __deepcopy__(self, memo):
-        return self
-
-
-def freeze(value):
-    value = json_copy(value)
-
-    def walk(item):
-        if isinstance(item, dict):
-            return FrozenDict({key: walk(child) for key, child in item.items()})
-        if isinstance(item, list):
-            return tuple(walk(child) for child in item)
-        return item
-
-    return walk(value)
-
-
-def digest(value):
-    return hashlib.sha256(canonical(value).encode()).hexdigest()
-
-
-def check_schema(schema):
-    if schema is None:
-        return
-
-    def walk(v):
-        if isinstance(v, dict):
-            for k, item in v.items():
-                if k in {"$ref", "$dynamicRef"} and (
-                    not isinstance(item, str) or not item.startswith("#")
-                ):
-                    raise ConfigurationError(
-                        "REMOTE_SCHEMA_REF", "Only local JSON Schema references are supported"
-                    )
-                walk(item)
-        elif isinstance(v, (list, tuple)):
-            for item in v:
-                walk(item)
-
-    walk(schema)
-    try:
-        Draft202012Validator.check_schema(json_copy(schema))
-    except Exception as exc:
-        raise ConfigurationError("INVALID_SCHEMA", type(exc).__name__) from exc
-
-
-def validate_schema(value, schema, *, code="INPUT_SCHEMA_INVALID"):
-    if schema is None:
-        return
-    errors = sorted(
-        Draft202012Validator(json_copy(schema)).iter_errors(value), key=lambda e: str(list(e.path))
-    )
-    if errors:
-        error = errors[0]
-        raise RequestError(
-            code,
-            f"Schema validation failed ({error.validator})",
-            field_path="/" + "/".join(map(str, error.path)),
-            category="validation",
-        )
+from .json_values import FrozenDict, canonical, freeze, json_copy
+from .schemas import check_schema, validate_schema
 
 
 def number(value, name, low, high, *, integer=False, open_low=False):

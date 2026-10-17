@@ -8,8 +8,8 @@ from uuid import NAMESPACE_URL, uuid5
 from ..capabilities import CapabilityContext, WorkspaceService
 from ..configuration import json_copy, validate_schema
 from ..errors import AgentLoomError
-from ..models.limits import MAX_MODEL_RESPONSE_BYTES
-from ..types import ModelRequest
+from ..models.material import PartialMaterial, protocol_error, validate_response, validate_usage
+from ..types import ModelRequest, ProviderEvent
 
 
 @dataclass(frozen=True)
@@ -50,7 +50,7 @@ class ModelHandler:
         iterator = runner.program.model.stream_once(request, attempt).__aiter__()
         policy = runner.program.execution_policy
         started, last_output, received = time.monotonic(), None, False
-        partial = ""
+        partial = PartialMaterial()
         try:
             while True:
                 runner.check_active()
@@ -87,25 +87,14 @@ class ModelHandler:
                         external_outcome="unknown",
                     ) from exc
                 response = None
+                if not isinstance(frame, ProviderEvent):
+                    raise protocol_error("Model adapter must yield ProviderEvent")
+                partial.add(frame)
+                if frame.kind == "usage":
+                    validate_usage(frame.data)
                 if frame.kind == "completed":
-                    response = json_copy(frame.data)
-                    if (
-                        not isinstance(response, dict)
-                        or not isinstance(response.get("text"), str)
-                        or not isinstance(response.get("tool_calls"), list)
-                    ):
-                        raise AgentLoomError("MODEL_PROTOCOL_ERROR")
-                    ids = set()
+                    response = validate_response(frame.data)
                     for ordinal, call in enumerate(response["tool_calls"]):
-                        if (
-                            not isinstance(call, dict)
-                            or not isinstance(call.get("name"), str)
-                            or not isinstance(call.get("call_id"), str)
-                            or "arguments" not in call
-                            or call["call_id"] in ids
-                        ):
-                            raise AgentLoomError("MODEL_PROTOCOL_ERROR")
-                        ids.add(call["call_id"])
                         call["provider_call_id"] = call["call_id"]
                         call["call_id"] = str(
                             uuid5(NAMESPACE_URL, op["operation_id"] + ":call:" + str(ordinal))
@@ -122,18 +111,13 @@ class ModelHandler:
                     if not received:
                         runner.first_output(op["operation_id"], attempt.attempt_id)
                         received = True
-                if frame.kind == "text_delta":
-                    partial += frame.data
-                    if len(partial.encode()) > MAX_MODEL_RESPONSE_BYTES:
-                        raise AgentLoomError("MODEL_RESPONSE_TOO_LARGE")
                 if frame.kind == "error":
                     raise AgentLoomError("MODEL_PROVIDER_ERROR")
                 if frame.kind == "completed":
                     return response
         except BaseException as exc:
             # The call driver persists these as audit material, never as a decision.
-            if isinstance(exc, Exception):
-                exc.partial_text = partial
+            exc.partial_material = partial.snapshot()
             raise
         finally:
             close = getattr(iterator, "aclose", None)
@@ -181,7 +165,21 @@ class ToolHandler:
             entry.spec.capability_key, arguments, context
         )
         value = json_copy(result)
-        validate_schema(value, entry.spec.output_schema, code="CAPABILITY_OUTPUT_SCHEMA_INVALID")
+        try:
+            validate_schema(
+                value,
+                entry.spec.output_schema,
+                code="MCP_OUTPUT_SCHEMA_INVALID"
+                if entry.binding.kind == "mcp"
+                else "CAPABILITY_OUTPUT_SCHEMA_INVALID",
+            )
+        except AgentLoomError as exc:
+            # The invocation completed even though its returned value is invalid.
+            exc.result_material = value
+            exc.execution_fact = "completed"
+            exc.category = "protocol"
+            exc.external_outcome = "known"
+            raise
         return value
 
 

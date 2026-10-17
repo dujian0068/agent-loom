@@ -83,6 +83,8 @@ class ModelResponse:
 class ProviderEvent:
     kind: str
     data: Any = None
+    provider_index: int | None = None
+    provider_call_id: str | None = None
 
 
 @dataclass(frozen=True)

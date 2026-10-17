@@ -1,0 +1,114 @@
+{
+  "assessment_time": "2026-10-17T14:34:35.727955+08:00",
+  "current_commit": "ec1c93dde6f63d6aa0f1272059221e7149b9d8cf",
+  "original_commit": "ef31404d71f4abbf3d9c9db80ddf25b06dcf6183",
+  "audit_test_sha256": "5558b16f18d985693ff70259c9995caf70f5735044d4d6ff25b2934b03ff50c8",
+  "original_statuses_match_recorded": true,
+  "recorded_audit": {
+    "counts": {
+      "passed": 54,
+      "failed": 56
+    },
+    "duration_seconds": 11.135
+  },
+  "original_audit_rerun": {
+    "counts": {
+      "passed": 54,
+      "failed": 56
+    },
+    "duration_seconds": 11.138
+  },
+  "current_audit_rerun": {
+    "counts": {
+      "passed": 68,
+      "failed": 42
+    },
+    "duration_seconds": 13.39
+  },
+  "changed_cases": [
+    {
+      "name": "test_invalid_delegate_hook_patch_fails_open[memory-None]",
+      "before": "failed",
+      "after": "passed"
+    },
+    {
+      "name": "test_invalid_delegate_hook_patch_fails_open[memory-]",
+      "before": "failed",
+      "after": "passed"
+    },
+    {
+      "name": "test_invalid_delegate_hook_patch_fails_open[memory- \\n]",
+      "before": "failed",
+      "after": "passed"
+    },
+    {
+      "name": "test_invalid_delegate_hook_patch_fails_open[memory-0]",
+      "before": "failed",
+      "after": "passed"
+    },
+    {
+      "name": "test_invalid_delegate_hook_patch_fails_open[memory-bad_task4]",
+      "before": "failed",
+      "after": "passed"
+    },
+    {
+      "name": "test_invalid_delegate_hook_patch_fails_open[memory-bad_task5]",
+      "before": "failed",
+      "after": "passed"
+    },
+    {
+      "name": "test_invalid_delegate_hook_patch_fails_open[file-None]",
+      "before": "failed",
+      "after": "passed"
+    },
+    {
+      "name": "test_invalid_delegate_hook_patch_fails_open[file-]",
+      "before": "failed",
+      "after": "passed"
+    },
+    {
+      "name": "test_invalid_delegate_hook_patch_fails_open[file- \\n]",
+      "before": "failed",
+      "after": "passed"
+    },
+    {
+      "name": "test_invalid_delegate_hook_patch_fails_open[file-0]",
+      "before": "failed",
+      "after": "passed"
+    },
+    {
+      "name": "test_invalid_delegate_hook_patch_fails_open[file-bad_task4]",
+      "before": "failed",
+      "after": "passed"
+    },
+    {
+      "name": "test_invalid_delegate_hook_patch_fails_open[file-bad_task5]",
+      "before": "failed",
+      "after": "passed"
+    },
+    {
+      "name": "test_http_retry_after_is_respected[memory]",
+      "before": "failed",
+      "after": "passed"
+    },
+    {
+      "name": "test_http_retry_after_is_respected[file]",
+      "before": "failed",
+      "after": "passed"
+    }
+  ],
+  "production_code_modified": false,
+  "original_qa_report_and_tests_modified": false,
+  "full_baseline_suite_rerun": false,
+  "additional_probes": "Three JSON Schema positive controls; injected MCP HTTP 429 passed through production invoke and retry code on memory and file stores. No real remote MCP service.",
+  "evidence_sha256": {
+    "ef31404-audit.txt": "78b10108a191adbb516a7b196881c365e09d93bf33340a86ab0a9a011fe31330",
+    "ef31404-audit.junit.xml": "d0a59102601bb4dd7e4e9fc11e0e0ed6738bba308b8b21e7de9de94f3585f27b",
+    "ec1c93d-audit.txt": "5ab6dbe4aff3791e8fe6b55bf94dfd06e60c3f133d836f0d06480acfabc87296",
+    "ec1c93d-audit.junit.xml": "ecc1c894f219a51991d4a2650ac6899d2feaf427752128dd655c823dfa9ac202",
+    "probes.py": "1274a7dce05ee21e90fb0d6feeceeb7f47be5fc0c9465e3ca1d51d0c6177340c",
+    "probes.json": "f558137ce7bd282377e5153896d2b1024b631c91393990da54f23db9aede21f8"
+  },
+  "executed_probe_sha256": "960c454dfe716fe4c994bdeff8227f3d62293c4ff8479665a7ca6977b1b18dc2",
+  "probe_format_only_ast_verified": true
+}

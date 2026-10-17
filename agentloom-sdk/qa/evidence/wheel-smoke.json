@@ -1,0 +1,16 @@
+[
+  {
+    "phase": "initial",
+    "status": "succeeded",
+    "output": "wheel-ok",
+    "model_calls": 1,
+    "imported_from_wheel": true
+  },
+  {
+    "phase": "reopen",
+    "status": "succeeded",
+    "output": "wheel-ok",
+    "model_calls": 0,
+    "imported_from_wheel": true
+  }
+]

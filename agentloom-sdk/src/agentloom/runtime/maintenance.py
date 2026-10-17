@@ -1,10 +1,33 @@
 """Bounded, durable diagnostics for independently retryable host maintenance."""
 
+import asyncio
 import logging
 
 from ..errors import error_record
 
 logger = logging.getLogger(__name__)
+
+
+async def scan_forever(runtime, actions):
+    """Drain each in-flight store/file worker on shutdown, with isolated scan failures."""
+
+    def scan():
+        for phase, action in actions:
+            try:
+                action()
+            except Exception as exc:
+                maintenance_failed(runtime, phase, exc)
+
+    while True:
+        work = asyncio.create_task(asyncio.to_thread(scan))
+        try:
+            await asyncio.shield(work)
+        except asyncio.CancelledError:
+            await asyncio.gather(work, return_exceptions=True)
+            raise
+        except Exception as exc:
+            maintenance_failed(runtime, "scan_worker", exc)
+        await asyncio.sleep(0.05)
 
 
 def maintenance_due(state, phase, now):

@@ -2,6 +2,7 @@
 
 from ..errors import error_record
 from ..storage import TERMINAL
+from .cleanup_lease import CleanupLeaseGuard
 from .maintenance import maintenance_due, maintenance_failed, maintenance_recovered
 
 
@@ -31,6 +32,7 @@ class CleanupService:
             state = tx.get("runs", run_id)
             if (
                 not state
+                or state["status"] not in TERMINAL
                 or state["cleanup_state"] == "succeeded"
                 or not maintenance_due(state, "cleanup", tx.now)
             ):
@@ -47,26 +49,23 @@ class CleanupService:
             }
             job["attempts"] += 1
             state["cleanup_state"] = "running"
+            state["revision"] += 1
             tx.put("runs", run_id, state)
             scope = job["scope"]
-        try:
-            if scope:
-                runtime.environment.cleanup(scope)
-            error = None
-        except Exception as exc:
-            error = error_record(exc)
+            guard = CleanupLeaseGuard(runtime, run_id, job["job_id"], epoch)
+        with guard:
+            try:
+                if scope:
+                    runtime.environment.cleanup(scope)
+                error = None
+            except Exception as exc:
+                error = error_record(exc)
         with runtime.store.transaction(runtime.namespace) as tx:
             state = tx.get("runs", run_id)
-            if not state:
+            if not guard.matches(state, tx.now):
                 return
             job = state["cleanup_job"]
             lease = job["lease"]
-            if (
-                lease["worker_id"] != runtime.worker_id
-                or lease["epoch"] != epoch
-                or lease["expires_at"] <= tx.now
-            ):
-                return
             state["cleanup_state"] = "failed" if error else "succeeded"
             state["revision"] += 1
             job.update(

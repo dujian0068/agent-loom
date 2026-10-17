@@ -1,11 +1,12 @@
 """Public read/control facades. Only these trusted commands bypass a business lease."""
 
 from ..configuration import digest
-from ..errors import RequestError
+from ..errors import AgentLoomError, RequestError
 from ..public.handles import RunHandle
+from ..public.validation import identity, pagination
 from ..storage import TERMINAL
 from ..types import new_id
-from .control import emit, run_sequence
+from .control import request_stop, run_sequence
 
 
 def input_receipt(state, item):
@@ -26,12 +27,12 @@ class RunService:
 
     async def attach(self, run_id):
         self.runtime.ensure_open()
-        state = self.runtime._load(str(run_id))
+        state = self.runtime._load(run_id)
         return RunHandle(self.runtime, state["run_id"], state["session_id"], state["input_id"])
 
     async def get(self, run_id):
         self.runtime.ensure_open()
-        state = self.runtime._load(str(run_id))
+        state = self.runtime._load(run_id)
         # Private contexts, provider requests, environment handles and credentials stay internal.
         keys = (
             "run_id",
@@ -61,8 +62,8 @@ class RunService:
     async def stop(self, run_id, *, command_id, reason="user"):
         runtime = self.runtime
         runtime.ensure_open()
-        run_id, command_id = str(run_id), str(command_id)
-        if not command_id or not isinstance(reason, str):
+        run_id, command_id = identity(run_id, "run_id"), identity(command_id, "command_id")
+        if not isinstance(reason, str):
             raise RequestError("INVALID_STOP_COMMAND")
         fingerprint = digest({"run_id": run_id, "reason": reason})
         with runtime.store.transaction(runtime.namespace) as tx:
@@ -71,14 +72,7 @@ class RunService:
                 if saved["fingerprint"] != fingerprint:
                     raise RequestError("IDEMPOTENCY_CONFLICT")
                 return saved["receipt"]
-            state = tx.get("runs", run_id)
-            status = state["status"] if state else None
-            if state and status not in TERMINAL:
-                state["status"] = status = "stopping"
-                state["revision"] += 1
-                emit(state, "run.stopping")
-                tx.put("runs", run_id, state)
-            tx.put("admission", run_id, {"closed": True})
+            status = request_stop(tx, run_id, AgentLoomError("RUN_STOPPED").to_dict())
             receipt = {
                 "run_id": run_id,
                 "command_id": command_id,
@@ -97,8 +91,8 @@ class InputCommands:
     async def append(self, run_id, *, input_id, content):
         runtime = self.runtime
         runtime.ensure_open()
-        run_id, input_id = str(run_id), str(input_id)
-        if not isinstance(content, str) or not content.strip() or not input_id:
+        run_id, input_id = identity(run_id, "run_id"), identity(input_id, "input_id")
+        if not isinstance(content, str) or not content.strip():
             raise RequestError("INPUT_INVALID")
         fingerprint = digest({"run_id": run_id, "content": content, "kind": "supplement"})
         with runtime.store.transaction(runtime.namespace) as tx:
@@ -145,9 +139,8 @@ class QueryServices:
 
     async def list(self, run_id, *, after=0, limit=100):
         self.runtime.ensure_open()
-        if type(after) is not int or after < 0 or type(limit) is not int or not 1 <= limit <= 256:
-            raise RequestError("INVALID_CURSOR")
-        state = self.runtime._load(str(run_id))
+        pagination(after, limit)
+        state = self.runtime._load(run_id)
         if self.kind == "tasks":
             entries = [
                 {
@@ -175,7 +168,9 @@ class QueryServices:
 
 class EventService(QueryServices):
     async def read(self, run_id, *, after_seq=0, limit=100):
-        if after_seq > len(self.runtime._load(str(run_id))["events"]):
+        self.runtime.ensure_open()
+        pagination(after_seq, limit)
+        if after_seq > len(self.runtime._load(run_id)["events"]):
             raise RequestError("EVENT_CURSOR_AHEAD")
         return await self.list(run_id, after=after_seq, limit=limit)
 
@@ -186,7 +181,9 @@ class OperationService:
 
     async def get(self, run_id, operation_id):
         self.runtime.ensure_open()
-        operation = self.runtime._load(str(run_id))["operations"].get(str(operation_id))
+        operation = self.runtime._load(run_id)["operations"].get(
+            identity(operation_id, "operation_id")
+        )
         if operation is None:
             raise RequestError("OPERATION_NOT_FOUND")
         return {
@@ -201,8 +198,8 @@ class SessionService:
 
     async def history(self, session_id, *, after=0, limit=100):
         self.runtime.ensure_open()
-        if type(after) is not int or after < 0 or type(limit) is not int or not 1 <= limit <= 256:
-            raise RequestError("INVALID_CURSOR")
+        pagination(after, limit)
+        session_id = identity(session_id, "session_id")
         with self.runtime.store.transaction(self.runtime.namespace) as tx:
             records = sorted(
                 (r for r in tx.list("runs") if r["session_id"] == str(session_id)),
@@ -219,6 +216,7 @@ class SessionService:
 
     async def inputs(self, session_id):
         self.runtime.ensure_open()
+        session_id = identity(session_id, "session_id")
         with self.runtime.store.transaction(self.runtime.namespace) as tx:
             items = {}
             for state in sorted(tx.list("runs"), key=run_sequence):
@@ -238,7 +236,7 @@ class RecordService:
     async def delete(self, run_id, *, command_id):
         runtime = self.runtime
         runtime.ensure_open()
-        run_id, command_id = str(run_id), str(command_id)
+        run_id, command_id = identity(run_id, "run_id"), identity(command_id, "command_id")
         fingerprint = digest({"delete": run_id})
         with runtime.store.transaction(runtime.namespace) as tx:
             saved = tx.get("commands", command_id)

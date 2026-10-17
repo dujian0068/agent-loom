@@ -11,6 +11,7 @@ import httpx
 from ..configuration import json_copy
 from ..errors import AgentLoomError
 from .limits import MAX_MODEL_RESPONSE_BYTES
+from .provider_errors import MAX_PROVIDER_ERROR_BYTES, provider_error
 
 
 def retry_after_deadline(value):
@@ -47,7 +48,19 @@ def http_error(status, headers=None):
 
 async def sse_data(response):
     if response.status_code >= 400:
-        raise http_error(response.status_code, response.headers)
+        error = http_error(response.status_code, response.headers)
+        if response.status_code == 400:
+            body = bytearray()
+            try:
+                async for chunk in response.aiter_bytes():
+                    if len(body) + len(chunk) > MAX_PROVIDER_ERROR_BYTES:
+                        break
+                    body.extend(chunk)
+                else:
+                    error = provider_error(json.loads(body), error)
+            except (ValueError, UnicodeError, httpx.TransportError):
+                pass
+        raise error
     if "text/event-stream" not in response.headers.get("content-type", ""):
         raise AgentLoomError("MODEL_PROTOCOL_ERROR", "Expected a server-sent event stream")
     lines, size = [], 0

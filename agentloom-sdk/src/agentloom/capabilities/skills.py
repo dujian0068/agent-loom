@@ -10,6 +10,7 @@ import yaml
 
 from ..configuration import digest, freeze
 from ..errors import AgentLoomError, ConfigurationError
+from .skill_profile import validate_metadata
 
 
 def parse_arguments(raw_arguments=None, arguments=None):
@@ -40,6 +41,7 @@ class SkillPackage:
     package_key: str
 
     def __post_init__(self):
+        validate_metadata(self.metadata)
         object.__setattr__(self, "root", Path(self.root).absolute())
         object.__setattr__(self, "metadata", freeze(self.metadata))
         object.__setattr__(self, "files_manifest", freeze(self.files_manifest))
@@ -61,26 +63,9 @@ class SkillPackage:
             if not match:
                 raise ConfigurationError("SKILL_METADATA_INVALID")
             metadata = yaml.safe_load(match[1])
-            if not isinstance(metadata, dict) or not all(
-                isinstance(metadata.get(k), str) and metadata[k].strip()
-                for k in ("name", "description")
-            ):
-                raise ConfigurationError("SKILL_METADATA_INVALID")
-            supported = {
-                "name",
-                "description",
-                "license",
-                "compatibility",
-                "metadata",
-                "argument-hint",
-                "user-invocable",
-                "disable-model-invocation",
-            }
-            if set(metadata) - supported or re.search(r"!`|\$\{(?:CLAUDE|CODEX)", text):
+            validate_metadata(metadata)
+            if re.search(r"!`|\$\{(?:CLAUDE|CODEX)", text):
                 raise ConfigurationError("SKILL_PROFILE_UNSUPPORTED")
-            for key in ("user-invocable", "disable-model-invocation"):
-                if key in metadata and type(metadata[key]) is not bool:
-                    raise ConfigurationError("SKILL_METADATA_INVALID")
             manifest = {}
             for path in sorted(root.rglob("*")):
                 if path.is_symlink():

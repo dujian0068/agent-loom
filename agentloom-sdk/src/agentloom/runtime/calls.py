@@ -381,6 +381,28 @@ class CallDriver:
                     async with asyncio.timeout(policy.tool_timeout_seconds):
                         value = await runner.bus.request(event, ctx)
                 raw = success(value)
+            except asyncio.CancelledError as exc:
+                if getattr(exc, "partial_material", None):
+                    partial = {
+                        **exc.partial_material,
+                        "attempt_id": attempt_id,
+                        "operation_id": op_id,
+                        "error": AgentLoomError(
+                            "MODEL_ATTEMPT_CANCELLED",
+                            category="cancelled",
+                            external_outcome="unknown",
+                        ).to_dict(),
+                    }
+
+                    def save_partial(state):
+                        current = state["operations"][op_id]["attempts"][-1]
+                        if current["attempt_id"] != attempt_id:
+                            raise InfrastructureError("ATTEMPT_ID_MISMATCH")
+                        current["partial"] = copy.deepcopy(partial)
+                        state["partial_results"].append(partial)
+
+                    runner.commit("attempt-partial:" + attempt_id, save_partial)
+                raise
             except InfrastructureError:
                 raise
             except TimeoutError:
@@ -391,13 +413,15 @@ class CallDriver:
                 )
             except Exception as exc:
                 raw = failure(error_record(exc))
-                if getattr(exc, "result_material", None) is not None:
+                if hasattr(exc, "result_material"):
                     raw["result"] = exc.result_material
-                if getattr(exc, "partial_text", ""):
+                    raw["execution_fact"] = getattr(exc, "execution_fact", "completed")
+                if getattr(exc, "partial_material", None):
                     partial = {
+                        **exc.partial_material,
                         "attempt_id": attempt_id,
-                        "text": exc.partial_text,
-                        "complete": False,
+                        "operation_id": op_id,
+                        "error": raw["error"],
                     }
             self._save_attempt(op_id, raw, partial)
 
@@ -431,6 +455,7 @@ class CallDriver:
                 result=copy.deepcopy(raw),
             )
             if partial:
+                attempt["partial"] = copy.deepcopy(partial)
                 s["partial_results"].append(partial)
             if retrying:
                 next_attempt_at = time.time() + retry.delay_seconds
@@ -446,7 +471,7 @@ class CallDriver:
             if current["event_type"] == "model.generate":
                 usage = (raw["result"] or {}).get("usage")
                 known = bool(
-                    usage
+                    isinstance(usage, dict)
                     and all(
                         type(usage.get(k)) is int and usage[k] >= 0
                         for k in ("input_tokens", "output_tokens")

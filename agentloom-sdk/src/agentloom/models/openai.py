@@ -8,6 +8,8 @@ from ..configuration import json_copy, number
 from ..errors import AgentLoomError, ConfigurationError
 from ..types import ModelDescriptor, ModelResponse, ProviderEvent, ToolCall
 from .http import frame_json, sse_data, tool_arguments
+from .material import normalize_usage
+from .provider_errors import provider_error
 from .responses import response_inputs
 
 
@@ -105,19 +107,19 @@ class OpenAIChatAdapter(_OpenAIAdapter):
                             return
                         frame = frame_json(raw)
                         if "error" in frame:
-                            raise AgentLoomError("MODEL_PROVIDER_ERROR")
+                            raise provider_error(frame, AgentLoomError("MODEL_PROVIDER_ERROR"))
                         if frame.get("id"):
                             if identity is not None and identity != frame["id"]:
                                 raise AgentLoomError(
                                     "MODEL_PROTOCOL_ERROR", "Stream identity changed"
                                 )
                             identity = frame["id"]
-                        if frame.get("usage"):
-                            u = frame["usage"]
-                            usage = {
-                                "input_tokens": u.get("prompt_tokens"),
-                                "output_tokens": u.get("completion_tokens"),
-                            }
+                        if "usage" in frame:
+                            statistics = normalize_usage(
+                                frame["usage"], "prompt_tokens", "completion_tokens"
+                            )
+                            if statistics is not None:
+                                usage = statistics
                         for choice in frame.get("choices", []):
                             if choice.get("index", 0) != 0:
                                 raise AgentLoomError(
@@ -157,7 +159,9 @@ class OpenAIChatAdapter(_OpenAIAdapter):
                                 ):
                                     if fn.get(key):
                                         call[key] += fn[key]
-                                        yield ProviderEvent(kind, fn[key])
+                                        yield ProviderEvent(
+                                            kind, fn[key], index, call["id"] or None
+                                        )
                             if choice.get("finish_reason") is not None:
                                 finish = choice["finish_reason"]
         except httpx.TransportError as exc:
@@ -190,7 +194,7 @@ class OpenAIResponsesAdapter(_OpenAIAdapter):
             "tools": [{"type": "function", **t} for t in request.tools],
             **json_copy(request.parameters),
         }
-        identity = None
+        identity, call_ids = None, {}
         try:
             async with self._connection() as client:
                 async with client.stream(
@@ -206,22 +210,37 @@ class OpenAIResponsesAdapter(_OpenAIAdapter):
                         if kind == "response.created":
                             identity = frame["response"]["id"]
                         elif kind in {"response.failed", "response.incomplete", "error"}:
-                            raise AgentLoomError(
-                                "MODEL_RESPONSE_INCOMPLETE"
-                                if kind == "response.incomplete"
-                                else "MODEL_PROVIDER_ERROR"
+                            raise provider_error(
+                                frame.get("response", frame),
+                                AgentLoomError(
+                                    "MODEL_RESPONSE_INCOMPLETE"
+                                    if kind == "response.incomplete"
+                                    else "MODEL_PROVIDER_ERROR"
+                                ),
                             )
                         elif kind == "response.output_text.delta":
                             yield ProviderEvent("text_delta", frame.get("delta", ""))
                         elif kind == "response.function_call_arguments.delta":
-                            yield ProviderEvent("tool_arguments_delta", frame.get("delta", ""))
+                            yield ProviderEvent(
+                                "tool_arguments_delta",
+                                frame.get("delta", ""),
+                                frame.get("output_index"),
+                                call_ids.get(frame.get("output_index")),
+                            )
                         elif kind == "response.reasoning_summary_text.delta":
                             yield ProviderEvent("reasoning_delta", frame.get("delta", ""))
                         elif (
                             kind == "response.output_item.added"
                             and frame.get("item", {}).get("type") == "function_call"
                         ):
-                            yield ProviderEvent("tool_name_delta", frame["item"].get("name", ""))
+                            index = frame.get("output_index")
+                            call_ids[index] = frame["item"].get("call_id")
+                            yield ProviderEvent(
+                                "tool_name_delta",
+                                frame["item"].get("name", ""),
+                                index,
+                                call_ids[index],
+                            )
                         elif kind == "response.completed":
                             result = frame["response"]
                             if (
@@ -243,9 +262,7 @@ class OpenAIResponsesAdapter(_OpenAIAdapter):
                                     calls.append(ToolCall(item["name"], arguments, item["call_id"]))
                                 elif item["type"] != "reasoning":
                                     raise AgentLoomError("MODEL_OUTPUT_TYPE_UNSUPPORTED")
-                            usage = result.get("usage")
-                            if usage:
-                                usage = {k: usage.get(k) for k in ("input_tokens", "output_tokens")}
+                            usage = normalize_usage(result.get("usage"))
                             yield ProviderEvent(
                                 "completed",
                                 ModelResponse(
