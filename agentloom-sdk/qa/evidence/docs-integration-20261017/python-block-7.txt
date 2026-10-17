@@ -1,0 +1,7 @@
+# 放在新进程的异步入口中；properties、definition 按原配置重新构造。
+from agentloom import AgentLoom
+
+async with AgentLoom(properties) as app:
+    agent = app.build(definition)
+    handle = await agent.start(run_id=saved_run_id)
+    result = await handle.wait()

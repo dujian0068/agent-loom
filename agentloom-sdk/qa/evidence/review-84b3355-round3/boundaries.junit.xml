@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="20" skipped="0" tests="44" time="9.787" timestamp="2026-10-17T21:55:19.787917+08:00" hostname="bmilk"><testcase classname="qa.test_sdk_review_round3" name="test_completed_mcp_call_is_not_repeated_when_only_teardown_times_out[memory-success-immediate-close]" time="0.034" /><testcase classname="qa.test_sdk_review_round3" name="test_completed_mcp_call_is_not_repeated_when_only_teardown_times_out[memory-success-close-timeout]" time="2.052"><failure message="AssertionError: Teardown after a known response must not repeat the business call&#10;assert 2 == 1&#10; +  where 2 = &lt;test_sdk_review_round3.DelayedCloseMcp object at 0x10b660710&gt;.calls">/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round3.py:135: in test_completed_mcp_call_is_not_repeated_when_only_teardown_times_out
+    assert adapter.calls == 1, (
+E   AssertionError: Teardown after a known response must not repeat the business call
+E   assert 2 == 1
+E    +  where 2 = &lt;test_sdk_review_round3.DelayedCloseMcp object at 0x10b660710&gt;.calls</failure></testcase><testcase classname="qa.test_sdk_review_round3" name="test_completed_mcp_call_is_not_repeated_when_only_teardown_times_out[memory-business-error-immediate-close]" time="0.030" /><testcase classname="qa.test_sdk_review_round3" name="test_completed_mcp_call_is_not_repeated_when_only_teardown_times_out[memory-business-error-close-timeout]" time="2.056"><failure message="AssertionError: Teardown after a known response must not repeat the business call&#10;assert 2 == 1&#10; +  where 2 = &lt;test_sdk_review_round3.DelayedCloseMcp object at 0x10b6a23c0&gt;.calls">/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round3.py:135: in test_completed_mcp_call_is_not_repeated_when_only_teardown_times_out
+    assert adapter.calls == 1, (
+E   AssertionError: Teardown after a known response must not repeat the business call
+E   assert 2 == 1
+E    +  where 2 = &lt;test_sdk_review_round3.DelayedCloseMcp object at 0x10b6a23c0&gt;.calls</failure></testcase><testcase classname="qa.test_sdk_review_round3" name="test_completed_mcp_call_is_not_repeated_when_only_teardown_times_out[file-success-immediate-close]" time="0.127" /><testcase classname="qa.test_sdk_review_round3" name="test_completed_mcp_call_is_not_repeated_when_only_teardown_times_out[file-success-close-timeout]" time="2.161"><failure message="AssertionError: Teardown after a known response must not repeat the business call&#10;assert 2 == 1&#10; +  where 2 = &lt;test_sdk_review_round3.DelayedCloseMcp object at 0x10b765460&gt;.calls">/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round3.py:135: in test_completed_mcp_call_is_not_repeated_when_only_teardown_times_out
+    assert adapter.calls == 1, (
+E   AssertionError: Teardown after a known response must not repeat the business call
+E   assert 2 == 1
+E    +  where 2 = &lt;test_sdk_review_round3.DelayedCloseMcp object at 0x10b765460&gt;.calls</failure></testcase><testcase classname="qa.test_sdk_review_round3" name="test_completed_mcp_call_is_not_repeated_when_only_teardown_times_out[file-business-error-immediate-close]" time="0.105" /><testcase classname="qa.test_sdk_review_round3" name="test_completed_mcp_call_is_not_repeated_when_only_teardown_times_out[file-business-error-close-timeout]" time="2.157"><failure message="AssertionError: Teardown after a known response must not repeat the business call&#10;assert 2 == 1&#10; +  where 2 = &lt;test_sdk_review_round3.DelayedCloseMcp object at 0x10b73bc80&gt;.calls">/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round3.py:135: in test_completed_mcp_call_is_not_repeated_when_only_teardown_times_out
+    assert adapter.calls == 1, (
+E   AssertionError: Teardown after a known response must not repeat the business call
+E   assert 2 == 1
+E    +  where 2 = &lt;test_sdk_review_round3.DelayedCloseMcp object at 0x10b73bc80&gt;.calls</failure></testcase><testcase classname="qa.test_sdk_review_round3" name="test_stop_during_model_close_preserves_already_received_completion[memory]" time="0.028"><failure message="AssertionError: A received complete response must survive cancellation during close&#10;assert None is not None">/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round3.py:170: in test_stop_during_model_close_preserves_already_received_completion
+    assert op["raw"] is not None, (
+E   AssertionError: A received complete response must survive cancellation during close
+E   assert None is not None</failure></testcase><testcase classname="qa.test_sdk_review_round3" name="test_stop_during_model_close_preserves_already_received_completion[file]" time="0.060"><failure message="AssertionError: A received complete response must survive cancellation during close&#10;assert None is not None">/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round3.py:170: in test_stop_during_model_close_preserves_already_received_completion
+    assert op["raw"] is not None, (
+E   AssertionError: A received complete response must survive cancellation during close
+E   assert None is not None</failure></testcase><testcase classname="qa.test_sdk_review_round3" name="test_known_usage_events_survive_missing_counters_in_completion[memory-null]" time="0.012"><failure message="assert (None, None) == (3, 2)&#10;  &#10;  At index 0 diff: None != 3&#10;  Use -v to get more diff">/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round3.py:202: in test_known_usage_events_survive_missing_counters_in_completion
+    assert actual == expected
+E   assert (None, None) == (3, 2)
+E     
+E     At index 0 diff: None != 3
+E     Use -v to get more diff</failure></testcase><testcase classname="qa.test_sdk_review_round3" name="test_known_usage_events_survive_missing_counters_in_completion[memory-empty]" time="0.012"><failure message="assert (None, None) == (3, 2)&#10;  &#10;  At index 0 diff: None != 3&#10;  Use -v to get more diff">/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round3.py:202: in test_known_usage_events_survive_missing_counters_in_completion
+    assert actual == expected
+E   assert (None, None) == (3, 2)
+E     
+E     At index 0 diff: None != 3
+E     Use -v to get more diff</failure></testcase><testcase classname="qa.test_sdk_review_round3" name="test_known_usage_events_survive_missing_counters_in_completion[memory-partial]" time="0.012"><failure message="assert (None, 5) == (3, 5)&#10;  &#10;  At index 0 diff: None != 3&#10;  Use -v to get more diff">/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round3.py:202: in test_known_usage_events_survive_missing_counters_in_completion
+    assert actual == expected
+E   assert (None, 5) == (3, 5)
+E     
+E     At index 0 diff: None != 3
+E     Use -v to get more diff</failure></testcase><testcase classname="qa.test_sdk_review_round3" name="test_known_usage_events_survive_missing_counters_in_completion[memory-complete-control]" time="0.012" /><testcase classname="qa.test_sdk_review_round3" name="test_known_usage_events_survive_missing_counters_in_completion[file-null]" time="0.061"><failure message="assert (None, None) == (3, 2)&#10;  &#10;  At index 0 diff: None != 3&#10;  Use -v to get more diff">/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round3.py:202: in test_known_usage_events_survive_missing_counters_in_completion
+    assert actual == expected
+E   assert (None, None) == (3, 2)
+E     
+E     At index 0 diff: None != 3
+E     Use -v to get more diff</failure></testcase><testcase classname="qa.test_sdk_review_round3" name="test_known_usage_events_survive_missing_counters_in_completion[file-empty]" time="0.068"><failure message="assert (None, None) == (3, 2)&#10;  &#10;  At index 0 diff: None != 3&#10;  Use -v to get more diff">/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round3.py:202: in test_known_usage_events_survive_missing_counters_in_completion
+    assert actual == expected
+E   assert (None, None) == (3, 2)
+E     
+E     At index 0 diff: None != 3
+E     Use -v to get more diff</failure></testcase><testcase classname="qa.test_sdk_review_round3" name="test_known_usage_events_survive_missing_counters_in_completion[file-partial]" time="0.068"><failure message="assert (None, 5) == (3, 5)&#10;  &#10;  At index 0 diff: None != 3&#10;  Use -v to get more diff">/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round3.py:202: in test_known_usage_events_survive_missing_counters_in_completion
+    assert actual == expected
+E   assert (None, 5) == (3, 5)
+E     
+E     At index 0 diff: None != 3
+E     Use -v to get more diff</failure></testcase><testcase classname="qa.test_sdk_review_round3" name="test_known_usage_events_survive_missing_counters_in_completion[file-complete-control]" time="0.068" /><testcase classname="qa.test_sdk_review_round3" name="test_usage_event_counter_is_validated_before_completion[memory-negative-control]" time="0.012" /><testcase classname="qa.test_sdk_review_round3" name="test_usage_event_counter_is_validated_before_completion[memory-boolean-control]" time="0.012" /><testcase classname="qa.test_sdk_review_round3" name="test_usage_event_counter_is_validated_before_completion[memory-over-canonical-limit]" time="0.012"><failure message="AssertionError: assert 'succeeded' == 'failed'&#10;  &#10;  - failed&#10;  + succeeded">/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round3.py:222: in test_usage_event_counter_is_validated_before_completion
+    assert result.status == "failed"
+E   AssertionError: assert 'succeeded' == 'failed'
+E     
+E     - failed
+E     + succeeded</failure></testcase><testcase classname="qa.test_sdk_review_round3" name="test_usage_event_counter_is_validated_before_completion[file-negative-control]" time="0.049" /><testcase classname="qa.test_sdk_review_round3" name="test_usage_event_counter_is_validated_before_completion[file-boolean-control]" time="0.050" /><testcase classname="qa.test_sdk_review_round3" name="test_usage_event_counter_is_validated_before_completion[file-over-canonical-limit]" time="0.067"><failure message="AssertionError: assert 'succeeded' == 'failed'&#10;  &#10;  - failed&#10;  + succeeded">/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round3.py:222: in test_usage_event_counter_is_validated_before_completion
+    assert result.status == "failed"
+E   AssertionError: assert 'succeeded' == 'failed'
+E     
+E     - failed
+E     + succeeded</failure></testcase><testcase classname="qa.test_sdk_review_round3" name="test_invalid_returned_value_keeps_completed_execution_fact[memory-function-adapter]" time="0.032"><failure message="AssertionError: assert 'unknown' == 'completed'&#10;  &#10;  - completed&#10;  + unknown">/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round3.py:255: in test_invalid_returned_value_keeps_completed_execution_fact
+    assert op["raw"]["execution_fact"] == "completed"
+E   AssertionError: assert 'unknown' == 'completed'
+E     
+E     - completed
+E     + unknown</failure></testcase><testcase classname="qa.test_sdk_review_round3" name="test_invalid_returned_value_keeps_completed_execution_fact[memory-native-control]" time="0.034" /><testcase classname="qa.test_sdk_review_round3" name="test_invalid_returned_value_keeps_completed_execution_fact[file-function-adapter]" time="0.119"><failure message="AssertionError: assert 'unknown' == 'completed'&#10;  &#10;  - completed&#10;  + unknown">/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round3.py:255: in test_invalid_returned_value_keeps_completed_execution_fact
+    assert op["raw"]["execution_fact"] == "completed"
+E   AssertionError: assert 'unknown' == 'completed'
+E     
+E     - completed
+E     + unknown</failure></testcase><testcase classname="qa.test_sdk_review_round3" name="test_invalid_returned_value_keeps_completed_execution_fact[file-native-control]" time="0.117" /><testcase classname="qa.test_sdk_review_round3" name="test_invalid_storage_wait_limit_raises_configuration_error_before_io[null-properties]" time="0.000" /><testcase classname="qa.test_sdk_review_round3" name="test_invalid_storage_wait_limit_raises_configuration_error_before_io[null-file-store]" time="0.000" /><testcase classname="qa.test_sdk_review_round3" name="test_invalid_storage_wait_limit_raises_configuration_error_before_io[bool-properties]" time="0.000" /><testcase classname="qa.test_sdk_review_round3" name="test_invalid_storage_wait_limit_raises_configuration_error_before_io[bool-file-store]" time="0.000" /><testcase classname="qa.test_sdk_review_round3" name="test_invalid_storage_wait_limit_raises_configuration_error_before_io[nan-properties]" time="0.000" /><testcase classname="qa.test_sdk_review_round3" name="test_invalid_storage_wait_limit_raises_configuration_error_before_io[nan-file-store]" time="0.000" /><testcase classname="qa.test_sdk_review_round3" name="test_invalid_storage_wait_limit_raises_configuration_error_before_io[infinity-properties]" time="0.000" /><testcase classname="qa.test_sdk_review_round3" name="test_invalid_storage_wait_limit_raises_configuration_error_before_io[infinity-file-store]" time="0.000" /><testcase classname="qa.test_sdk_review_round3" name="test_invalid_storage_wait_limit_raises_configuration_error_before_io[negative-properties]" time="0.000" /><testcase classname="qa.test_sdk_review_round3" name="test_invalid_storage_wait_limit_raises_configuration_error_before_io[negative-file-store]" time="0.000" /><testcase classname="qa.test_sdk_review_round3" name="test_invalid_storage_wait_limit_raises_configuration_error_before_io[huge-positive-properties]" time="0.000"><failure message="OverflowError: int too large to convert to float">/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round3.py:269: in test_invalid_storage_wait_limit_raises_configuration_error_before_io
+    RuntimeProperties(state_directory=path, store_lock_timeout_seconds=value)
+&lt;string&gt;:8: in __init__
+    ???
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/configuration/properties.py:61: in __post_init__
+    self, "store_lock_timeout_seconds", store_lock_timeout(self.store_lock_timeout_seconds)
+                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/configuration/properties.py:26: in store_lock_timeout
+    or not math.isfinite(value)
+           ^^^^^^^^^^^^^^^^^^^^
+E   OverflowError: int too large to convert to float</failure></testcase><testcase classname="qa.test_sdk_review_round3" name="test_invalid_storage_wait_limit_raises_configuration_error_before_io[huge-positive-file-store]" time="0.000"><failure message="OverflowError: int too large to convert to float">/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round3.py:271: in test_invalid_storage_wait_limit_raises_configuration_error_before_io
+    FileRuntimeStore(path, lock_timeout_s=value)
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/storage/filesystem.py:136: in __init__
+    self.lock_timeout_s = store_lock_timeout(lock_timeout_s)
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/configuration/properties.py:26: in store_lock_timeout
+    or not math.isfinite(value)
+           ^^^^^^^^^^^^^^^^^^^^
+E   OverflowError: int too large to convert to float</failure></testcase><testcase classname="qa.test_sdk_review_round3" name="test_invalid_storage_wait_limit_raises_configuration_error_before_io[huge-negative-properties]" time="0.000"><failure message="OverflowError: int too large to convert to float">/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round3.py:269: in test_invalid_storage_wait_limit_raises_configuration_error_before_io
+    RuntimeProperties(state_directory=path, store_lock_timeout_seconds=value)
+&lt;string&gt;:8: in __init__
+    ???
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/configuration/properties.py:61: in __post_init__
+    self, "store_lock_timeout_seconds", store_lock_timeout(self.store_lock_timeout_seconds)
+                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/configuration/properties.py:26: in store_lock_timeout
+    or not math.isfinite(value)
+           ^^^^^^^^^^^^^^^^^^^^
+E   OverflowError: int too large to convert to float</failure></testcase><testcase classname="qa.test_sdk_review_round3" name="test_invalid_storage_wait_limit_raises_configuration_error_before_io[huge-negative-file-store]" time="0.000"><failure message="OverflowError: int too large to convert to float">/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round3.py:271: in test_invalid_storage_wait_limit_raises_configuration_error_before_io
+    FileRuntimeStore(path, lock_timeout_s=value)
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/storage/filesystem.py:136: in __init__
+    self.lock_timeout_s = store_lock_timeout(lock_timeout_s)
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/configuration/properties.py:26: in store_lock_timeout
+    or not math.isfinite(value)
+           ^^^^^^^^^^^^^^^^^^^^
+E   OverflowError: int too large to convert to float</failure></testcase><testcase classname="qa.test_sdk_review_round3" name="test_zero_storage_wait_limit_is_accepted[properties]" time="0.000" /><testcase classname="qa.test_sdk_review_round3" name="test_zero_storage_wait_limit_is_accepted[file-store]" time="0.001" /></testsuite></testsuites>

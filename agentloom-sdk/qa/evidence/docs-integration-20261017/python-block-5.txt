@@ -1,0 +1,32 @@
+from agentloom import (
+    AgentDefinition, CapabilityBinding, CapabilityRegistration,
+    CapabilityRegistry, CapabilitySpec, FunctionToolAdapter,
+)
+
+
+async def echo(arguments, context):
+    context.check_active()
+    return {"text": arguments["text"]}
+
+
+registry = CapabilityRegistry(tools=(
+    CapabilityRegistration(
+        adapter_key="local",
+        adapter=FunctionToolAdapter(echo),
+        members=(CapabilitySpec(
+            capability_key="echo", name="echo", description="返回输入文本",
+            input_schema={
+                "type": "object", "properties": {"text": {"type": "string"}},
+                "required": ["text"], "additionalProperties": False,
+            },
+        ),),
+    ),
+))
+tool_definition = AgentDefinition(
+    "assistant", "使用已授权工具处理请求。",
+    capabilities=(CapabilityBinding(
+        binding_key="echo", kind="tool", visible_name="echo",
+        adapter_key="local", member_key="echo",
+    ),),
+)
+tool_agent = app.builder.with_options(capabilities=registry).build(tool_definition)

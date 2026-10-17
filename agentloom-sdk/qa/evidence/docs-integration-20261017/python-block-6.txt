@@ -1,0 +1,15 @@
+from agentloom import FunctionHookHandler, HookBinding, HookDecision, HookSet
+
+
+async def inspect_request(event, context):
+    payload = await context.reader.read_payload()
+    page = await context.reader.read_context(event.context_refs[0], limit=16)
+    print(context.metadata.role_key, len(payload["messages"]), len(page.records))
+    return HookDecision("allow")
+
+
+hooks = HookSet(
+    bindings=(HookBinding("inspect", "model.generate", "request", "inspect"),),
+    handlers={"inspect": FunctionHookHandler(inspect_request)},
+)
+hooked_agent = app.builder.with_options(hooks=hooks).build(definition)

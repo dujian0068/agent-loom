@@ -1,0 +1,68 @@
+.F.F.F.F.F.F....FFFF........                                             [100%]
+=================================== FAILURES ===================================
+_ test_completion_is_durable_before_close_and_control_still_wins[memory-stop-mcp] _
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/tests/test_attempt_completion.py:130: in test_completion_is_durable_before_close_and_control_still_wins
+    assert saved["raw"]["execution_fact"] == "completed"
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   TypeError: 'NoneType' object is not subscriptable
+_ test_completion_is_durable_before_close_and_control_still_wins[memory-deadline-mcp] _
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/tests/test_attempt_completion.py:130: in test_completion_is_durable_before_close_and_control_still_wins
+    assert saved["raw"]["execution_fact"] == "completed"
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   TypeError: 'NoneType' object is not subscriptable
+_ test_completion_is_durable_before_close_and_control_still_wins[memory-shutdown-mcp] _
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/tests/test_attempt_completion.py:130: in test_completion_is_durable_before_close_and_control_still_wins
+    assert saved["raw"]["execution_fact"] == "completed"
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   TypeError: 'NoneType' object is not subscriptable
+_ test_completion_is_durable_before_close_and_control_still_wins[file-stop-mcp] _
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/tests/test_attempt_completion.py:130: in test_completion_is_durable_before_close_and_control_still_wins
+    assert saved["raw"]["execution_fact"] == "completed"
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   TypeError: 'NoneType' object is not subscriptable
+_ test_completion_is_durable_before_close_and_control_still_wins[file-deadline-mcp] _
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/tests/test_attempt_completion.py:130: in test_completion_is_durable_before_close_and_control_still_wins
+    assert saved["raw"]["execution_fact"] == "completed"
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   TypeError: 'NoneType' object is not subscriptable
+_ test_completion_is_durable_before_close_and_control_still_wins[file-shutdown-mcp] _
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/tests/test_attempt_completion.py:130: in test_completion_is_durable_before_close_and_control_still_wins
+    assert saved["raw"]["execution_fact"] == "completed"
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   TypeError: 'NoneType' object is not subscriptable
+_ test_failed_completed_mcp_result_survives_timeout_with_original_error[memory-True-None] _
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/tests/test_attempt_completion.py:214: in test_failed_completed_mcp_result_survives_timeout_with_original_error
+    assert adapter.calls == len(op["attempts"]) == 1
+E   AssertionError: assert 0 == 2
+E    +  where 0 = <test_attempt_completion.ClosingMcp object at 0x109973dd0>.calls
+E    +  and   2 = len([{'attempt_id': 'c00566c0-1068-53c6-9444-6c34239eb244', 'attempt_no': 1, 'ended_at': 1792245893.357746, 'error': {'cat...'error': {'category': 'timeout', 'code': 'TOOL_TIMEOUT', 'external_outcome': 'unknown', 'field_path': None, ...}, ...}])
+_ test_failed_completed_mcp_result_survives_timeout_with_original_error[memory-False-schema1] _
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/tests/test_attempt_completion.py:214: in test_failed_completed_mcp_result_survives_timeout_with_original_error
+    assert adapter.calls == len(op["attempts"]) == 1
+E   AssertionError: assert 0 == 2
+E    +  where 0 = <test_attempt_completion.ClosingMcp object at 0x109986810>.calls
+E    +  and   2 = len([{'attempt_id': 'db66d28b-c5e4-5373-8782-1f5b85af1313', 'attempt_no': 1, 'ended_at': 1792245895.421752, 'error': {'cat...'error': {'category': 'timeout', 'code': 'TOOL_TIMEOUT', 'external_outcome': 'unknown', 'field_path': None, ...}, ...}])
+_ test_failed_completed_mcp_result_survives_timeout_with_original_error[file-True-None] _
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/tests/test_attempt_completion.py:214: in test_failed_completed_mcp_result_survives_timeout_with_original_error
+    assert adapter.calls == len(op["attempts"]) == 1
+E   AssertionError: assert 0 == 2
+E    +  where 0 = <test_attempt_completion.ClosingMcp object at 0x109739d60>.calls
+E    +  and   2 = len([{'attempt_id': '868fe7f6-c9dc-5fa4-a901-34edd0601436', 'attempt_no': 1, 'ended_at': 1792245897.5462358, 'error': {'ca...'error': {'category': 'timeout', 'code': 'TOOL_TIMEOUT', 'external_outcome': 'unknown', 'field_path': None, ...}, ...}])
+_ test_failed_completed_mcp_result_survives_timeout_with_original_error[file-False-schema1] _
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/tests/test_attempt_completion.py:214: in test_failed_completed_mcp_result_survives_timeout_with_original_error
+    assert adapter.calls == len(op["attempts"]) == 1
+E   AssertionError: assert 0 == 2
+E    +  where 0 = <test_attempt_completion.ClosingMcp object at 0x109890350>.calls
+E    +  and   2 = len([{'attempt_id': '3e0bf08b-3b2e-523d-b4f1-88dcee269c4f', 'attempt_no': 1, 'ended_at': 1792245899.734266, 'error': {'cat...'error': {'category': 'timeout', 'code': 'TOOL_TIMEOUT', 'external_outcome': 'unknown', 'field_path': None, ...}, ...}])
+=========================== short test summary info ============================
+FAILED agentloom-sdk/tests/test_attempt_completion.py::test_completion_is_durable_before_close_and_control_still_wins[memory-stop-mcp]
+FAILED agentloom-sdk/tests/test_attempt_completion.py::test_completion_is_durable_before_close_and_control_still_wins[memory-deadline-mcp]
+FAILED agentloom-sdk/tests/test_attempt_completion.py::test_completion_is_durable_before_close_and_control_still_wins[memory-shutdown-mcp]
+FAILED agentloom-sdk/tests/test_attempt_completion.py::test_completion_is_durable_before_close_and_control_still_wins[file-stop-mcp]
+FAILED agentloom-sdk/tests/test_attempt_completion.py::test_completion_is_durable_before_close_and_control_still_wins[file-deadline-mcp]
+FAILED agentloom-sdk/tests/test_attempt_completion.py::test_completion_is_durable_before_close_and_control_still_wins[file-shutdown-mcp]
+FAILED agentloom-sdk/tests/test_attempt_completion.py::test_failed_completed_mcp_result_survives_timeout_with_original_error[memory-True-None]
+FAILED agentloom-sdk/tests/test_attempt_completion.py::test_failed_completed_mcp_result_survives_timeout_with_original_error[memory-False-schema1]
+FAILED agentloom-sdk/tests/test_attempt_completion.py::test_failed_completed_mcp_result_survives_timeout_with_original_error[file-True-None]
+FAILED agentloom-sdk/tests/test_attempt_completion.py::test_failed_completed_mcp_result_survives_timeout_with_original_error[file-False-schema1]
+10 failed, 18 passed in 11.82s

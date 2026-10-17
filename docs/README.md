@@ -5,6 +5,8 @@
 | [设计约定](agent-design-decisions.md) | 已确认需求与权威文档位置 |
 | [SDK／Platform 边界](sdk-platform-boundary.md) | 领域归属、单向依赖和恢复责任 |
 | [SDK 总览](sdk/index.md) | 高代码底座设计入口 |
+| [SDK 接入指南](sdk/integration.md) | 当前版本安装、PropertiesConfig、build、工具／Hook、执行和恢复 |
+| [SDK 实现文档](sdk/implementation.md) | 当前接口状态、模块分工、已验证快照和目标缺口 |
 | [SDK 对象 UML](sdk/object-collaboration.md) | Agent、Node、EventBus、Hook、Skill 协作 |
 | [SDK 构造与绑定](sdk/assembly.md) | 构造参数、资源／Hook 注册、对象生命周期 |
 | [SDK 公共 API](sdk/public-api.md) | start、ainvoke、RunHandle、输入、停止和恢复 |
@@ -15,4 +17,4 @@
 | [目录规划](directory-plan.md) | 实际目录与后续代码组织 |
 | [文档站维护](documentation-site.md) | 本地预览与 GitHub Pages 发布 |
 
-本目录只有当前设计；旧 design/ 下混合平台与 SDK 的正文已撤下，历史版本在 Git 中保留。旧网页路径重定向到对应新章节，不参与全文搜索。
+本目录同时包含当前接入说明、实现记录和目标设计，阅读时以各页标明的范围为准。旧 design/ 下混合平台与 SDK 的正文已撤下，历史版本在 Git 中保留。旧网页路径重定向到对应新章节，不参与全文搜索。

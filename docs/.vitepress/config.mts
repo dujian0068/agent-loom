@@ -53,9 +53,10 @@ export default defineConfig({
       "/sdk/": [
         sharedReading,
         {
-          text: "SDK 设计",
+          text: "SDK 接入与设计",
           items: [
             { text: "SDK 总览", link: "/sdk/" },
+            { text: "SDK 接入指南", link: "/sdk/integration" },
             { text: "当前实现与验证", link: "/sdk/implementation" },
             { text: "行为约定与默认值", link: "/sdk/requirements" },
             { text: "定义、节点与运行实体", link: "/sdk/definitions" },

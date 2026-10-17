@@ -1,6 +1,6 @@
 # agentloom-sdk
 
-SDK 是可独立引入的 Python 执行底座。本目录保留 **2026-10-16 目标设计**；当前 `agentloom-sdk 0.1.0a1` 已实现独立 ReAct / Plan–Executor 及单机恢复链路，Workflow 暂不接入。实际接口、适配范围与尚未交付的设计项以 [实现记录](implementation.md) 和 [SDK 使用说明](../../agentloom-sdk/README.md) 为准，不能将本文的全部目标接口视为已发布能力。
+SDK 是可独立引入的 Python 执行底座。当前 `agentloom-sdk 0.1.0a1` 已实现 PropertiesConfig 统一参数、按 AgentDefinition 构建 ReAct / Plan–Executor 及单机文件恢复链路，Workflow 暂不接入。首次使用先读 [SDK 接入指南](integration.md)，当前能力与验证范围见[实现文档](implementation.md)。其余章节保留 **2026-10-16 起的目标设计**，不能将其中全部接口视为已发布能力。
 
 ## 1. 职责与依赖
 
@@ -28,6 +28,8 @@ SDK 接收构造参数和运行依赖，自行执行、管理上下文、保存�
 
 ## 2. 阅读顺序
 
+直接接入：先按[接入指南](integration.md)运行无凭据脚本，再阅读[当前接口状态](implementation.md#当前接口与交付状态)确认扩展边界。以下顺序用于理解完整目标设计：
+
 1. [行为约定](requirements.md)：默认值和已确认规则。
 2. [定义与对象关系](definitions.md)、[对象协作 UML](object-collaboration.md)：配置、节点、实例、类关系和调用时序。
 3. [构造、绑定与生命周期](assembly.md)、[公共接口](public-api.md)：精确构造字段、资源注册、RunHandle、输入、停止和重入。
@@ -47,8 +49,8 @@ SDK 接收构造参数和运行依赖，自行执行、管理上下文、保存�
 
 RuntimeEngine 是这些本机执行的宿主，一个实例可托管多个 ExecutionRecord。共享存储与环境依赖可以复用；单次现场按 ExecutionRecord 装配，Agent 模型、Prompt 和能力集合仍按各自配置固定。范围与资源所有权见[运行时引擎设计](assembly.md#11-runtimeengine-管理的范围)。
 
-平台删除整个目录后，SDK 的三个示例仍须能运行。平台 API 只能调用 SDK 公共门面，不能通过直接改 SDK 存储表来“帮助恢复”。
+SDK 的独立运行与恢复验证不依赖 Platform 源码；当前可运行脚本位于[接入指南](integration.md)，不要求已删除的示例目录存在。平台 API 只能调用 SDK 公共门面，不能通过直接改 SDK 存储文件来“帮助恢复”。
 
 ## 4. 尚需实施验证的边界
 
-直接 Agent 的构造、调用／重入、RunHandle、HookSet 和能力注册已补充详细合同；仍需补齐机器 Schema、查询及删除 DTO、扩展端口的机器合同、Workflow compile／输入／原生存储映射及生命周期 Hook，再进入实现验证，见[整理复核记录](../reorganization-review.md)。不承诺任意 LangGraph 程序或历史检查点原样兼容。
+当前核心 Agent、构建、Hook 和能力接口已有实现与回归；完整机器 Schema、部分查询／回执 DTO、内容授权、独立环境 SPI、可靠订阅及 Workflow 仍有缺口。以[实现状态](implementation.md#当前接口与交付状态)和[目标差异](implementation.md#与完整目标设计的差异)逐项判断，不以设计章节代替验收。不承诺任意 LangGraph 程序或历史检查点原样兼容。

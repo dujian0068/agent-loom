@@ -1,0 +1,121 @@
+"""Exit inside resource teardown, after a response but before invoke returns."""
+
+import asyncio
+import json
+import os
+import sys
+from contextlib import asynccontextmanager
+from pathlib import Path
+from types import SimpleNamespace
+
+from agentloom import (
+    AgentDefinition,
+    CapabilityBinding,
+    CapabilityRegistration,
+    CapabilityRegistry,
+    CapabilitySpec,
+    ExecutionPolicy,
+    FileRuntimeStore,
+    McpToolAdapter,
+    ModelDescriptor,
+    ModelResponse,
+    ProviderEvent,
+    ReactAgent,
+    RuntimeEngine,
+    ScriptedModel,
+    ToolCall,
+    WorkspaceBinding,
+)
+
+
+async def main():
+    root, kind, phase = Path(sys.argv[1]), sys.argv[2], sys.argv[3]
+
+    def audit(value):
+        with (root / "audit").open("a") as file:
+            file.write(value + "\n")
+            file.flush()
+            os.fsync(file.fileno())
+
+    def close():
+        if phase == "crash":
+            os._exit(74)
+
+    class Model:
+        descriptor = ModelDescriptor("completion-process", 32768)
+
+        async def stream_once(self, request, context):
+            audit("model")
+            try:
+                yield ProviderEvent("usage", {"input_tokens": 3, "output_tokens": 2})
+                yield ProviderEvent("completed", ModelResponse("saved").to_dict())
+            finally:
+                close()
+
+    class Mcp(McpToolAdapter):
+        @asynccontextmanager
+        async def _session(self):
+            try:
+                yield self
+            finally:
+                close()
+
+        async def list_tools(self, cursor=None):
+            return SimpleNamespace(
+                nextCursor=None,
+                tools=[
+                    SimpleNamespace(name="work", inputSchema={"type": "object"}, outputSchema=None)
+                ],
+            )
+
+        async def call_tool(self, name, arguments, meta=None):
+            audit("tool")
+            return SimpleNamespace(
+                isError=kind == "mcp-error",
+                model_dump=lambda **kwargs: {
+                    "structuredContent": {"receipt": "saved"},
+                    "isError": kind == "mcp-error",
+                },
+            )
+
+    def model(request):
+        audit("model")
+        return (
+            ModelResponse("done")
+            if any(item["role"] == "tool" for item in request.messages)
+            else ModelResponse(tool_calls=(ToolCall("work", {}),))
+        )
+
+    options = {"definition": AgentDefinition("test", "SYSTEM"), "model": Model()}
+    if kind != "model":
+        options = {
+            "definition": AgentDefinition(
+                "test", "SYSTEM", capabilities=(CapabilityBinding("work", "mcp", "work", "a"),)
+            ),
+            "model": ScriptedModel(model),
+            "capabilities": CapabilityRegistry(
+                tools=(
+                    CapabilityRegistration(
+                        "a",
+                        Mcp(url="https://example.invalid/mcp"),
+                        (CapabilitySpec("work", "work", kind="mcp"),),
+                    ),
+                )
+            ),
+        }
+    store = FileRuntimeStore(root / "state")
+    try:
+        async with RuntimeEngine(store=store, lease_seconds=0.3) as runtime:
+            agent = ReactAgent(
+                **options,
+                workspace=WorkspaceBinding(root / "workspace"),
+                runtime_engine=runtime,
+                execution_policy=ExecutionPolicy(run_timeout_seconds=15),
+            )
+            result = await agent.ainvoke("go" if phase == "crash" else None, run_id="fixed")
+            print(json.dumps({"status": result.status, "output": result.output.value}))
+    finally:
+        store.close()
+
+
+asyncio.run(main())

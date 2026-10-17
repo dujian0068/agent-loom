@@ -6,6 +6,8 @@
 
 ## 阅读 SDK
 
+实际接入先读 [SDK 接入指南](sdk/integration.md)，通过 PropertiesConfig 和 AgentLoom 运行现有定义；再读[实现文档](sdk/implementation.md)确认当前接口、模块职责和验证边界。以下是完整目标设计的阅读顺序，Workflow 等尚未实现部分以实现文档为准。
+
 1. [行为约定](sdk/requirements.md)：执行模式和已经确认的规则。
 2. [定义与实例](sdk/definitions.md)：AgentDefinition、GraphDefinition、NodeTask、Operation 分别是什么。
 3. [对象协作 UML](sdk/object-collaboration.md)：Agent、Node、EventBus、Handler、Hook、Skill 的类关系和时序。
@@ -22,4 +24,4 @@
 4. [HTTP API](platform/api.md)、[存储生命周期](platform/storage-lifecycle.md)：接入、管理事务及清理。
 5. [验收](platform/verification.md)：使用 API 验证平台与 SDK 衔接。
 
-页面侧栏按两份交付物组织，页面内目录定位具体字段和算法。图可以展开查看；继承、归属和调用图分开解释。所有设计尚待实现，文档验证不能替代运行验证。
+页面侧栏按两份交付物组织，页面内目录定位具体字段和算法。图可以展开查看；继承、归属和调用图分开解释。SDK 核心链路已有实现，Platform 仍为设计；文档构建通过不能代替运行验证或完整目标验收。

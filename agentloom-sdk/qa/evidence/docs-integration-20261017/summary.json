@@ -1,0 +1,75 @@
+{
+  "python_blocks": 7,
+  "passed_scenarios": 8,
+  "results": [
+    {
+      "block": 1,
+      "case": "complete-quickstart",
+      "output": [
+        "0bed95f6-c726-40cf-b14b-8fe0f6b17dfd succeeded",
+        "接入成功",
+        "重开结果： succeeded 模型调用次数： 1"
+      ]
+    },
+    {
+      "block": 3,
+      "case": "real-model-constructor",
+      "external_calls": 0
+    },
+    {
+      "block": 2,
+      "case": "parameter-overrides"
+    },
+    {
+      "block": 4,
+      "case": "plan-delegation",
+      "model_calls": 3
+    },
+    {
+      "block": 5,
+      "case": "tool-registration-and-execution"
+    },
+    {
+      "block": 6,
+      "case": "hook-input-and-pinned-read"
+    },
+    {
+      "block": 7,
+      "case": "reopen-original-run",
+      "additional_model_calls": 0
+    },
+    {
+      "case": "control-and-query-table",
+      "checks": [
+        "wait-timeout",
+        "append",
+        "stop",
+        "attach",
+        "snapshot",
+        "tasks",
+        "operations",
+        "events",
+        "history",
+        "inputs"
+      ]
+    }
+  ],
+  "remote_services_called": false,
+  "scope": "Documentation only: current SDK integration code and public query/control signatures",
+  "source_and_tests_unchanged": true,
+  "source_snapshot": "../round3-fixes-20261017/run-source-sha256.json",
+  "latest_full_regression": "../round3-fixes-20261017/summary.json",
+  "docs_build_log": "docs-build.txt",
+  "docs_link_check_log": "docs-check.txt",
+  "reproduce": "Copy snippet-checker.txt and python-block-N.txt into a temporary directory as check.py and block-N.py, then run with PYTHONPATH pointing to agentloom-sdk/src and cwd set to that directory.",
+  "markdown_links": {
+    "markdown_files": 8,
+    "local_links_and_anchors_checked": 123,
+    "failures": []
+  },
+  "documents_sha256": "documents-sha256.json",
+  "optional_mermaid_node_parse": {
+    "status": "unavailable",
+    "reason": "Mermaid requires browser DOM/DOMPurify; Node-only parse raised TypeError before validating the diagram. No site configuration or dependency was changed."
+  }
+}

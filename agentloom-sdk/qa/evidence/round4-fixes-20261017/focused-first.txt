@@ -1,0 +1,51 @@
+............................................FFFF........................ [ 40%]
+........................................................................ [ 80%]
+...................................                                      [100%]
+=================================== FAILURES ===================================
+______ test_error_material_is_validated_before_persistence[memory-cycle] _______
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/tests/test_completion_boundaries.py:179: in test_error_material_is_validated_before_persistence
+    next_result = await agent.ainvoke("next", session_id="material")
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/public/agents.py:135: in ainvoke
+    return await (await self.start(input, **ids)).wait()
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/public/agents.py:108: in start
+    raise RequestError("AGENT_INSTANCE_BOUND")
+E   agentloom.errors.RequestError: AGENT_INSTANCE_BOUND: AGENT_INSTANCE_BOUND
+_______ test_error_material_is_validated_before_persistence[memory-nan] ________
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/tests/test_completion_boundaries.py:179: in test_error_material_is_validated_before_persistence
+    next_result = await agent.ainvoke("next", session_id="material")
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/public/agents.py:135: in ainvoke
+    return await (await self.start(input, **ids)).wait()
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/public/agents.py:108: in start
+    raise RequestError("AGENT_INSTANCE_BOUND")
+E   agentloom.errors.RequestError: AGENT_INSTANCE_BOUND: AGENT_INSTANCE_BOUND
+_______ test_error_material_is_validated_before_persistence[file-cycle] ________
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/tests/test_completion_boundaries.py:179: in test_error_material_is_validated_before_persistence
+    next_result = await agent.ainvoke("next", session_id="material")
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/public/agents.py:135: in ainvoke
+    return await (await self.start(input, **ids)).wait()
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/public/agents.py:108: in start
+    raise RequestError("AGENT_INSTANCE_BOUND")
+E   agentloom.errors.RequestError: AGENT_INSTANCE_BOUND: AGENT_INSTANCE_BOUND
+________ test_error_material_is_validated_before_persistence[file-nan] _________
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/tests/test_completion_boundaries.py:179: in test_error_material_is_validated_before_persistence
+    next_result = await agent.ainvoke("next", session_id="material")
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/public/agents.py:135: in ainvoke
+    return await (await self.start(input, **ids)).wait()
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/public/agents.py:108: in start
+    raise RequestError("AGENT_INSTANCE_BOUND")
+E   agentloom.errors.RequestError: AGENT_INSTANCE_BOUND: AGENT_INSTANCE_BOUND
+- generated xml file: /Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/evidence/round4-fixes-20261017/focused-first.junit.xml -
+=========================== short test summary info ============================
+FAILED agentloom-sdk/tests/test_completion_boundaries.py::test_error_material_is_validated_before_persistence[memory-cycle]
+FAILED agentloom-sdk/tests/test_completion_boundaries.py::test_error_material_is_validated_before_persistence[memory-nan]
+FAILED agentloom-sdk/tests/test_completion_boundaries.py::test_error_material_is_validated_before_persistence[file-cycle]
+FAILED agentloom-sdk/tests/test_completion_boundaries.py::test_error_material_is_validated_before_persistence[file-nan]
+4 failed, 175 passed in 30.28s

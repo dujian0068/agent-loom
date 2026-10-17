@@ -6,6 +6,7 @@ from ..configuration import digest, json_copy
 from ..errors import AgentLoomError, ConfigurationError
 from ..resources import managed_resource
 from .contracts import ValueToolAdapter
+from .invocation import report_completion
 
 
 class McpToolAdapter(ValueToolAdapter):
@@ -108,14 +109,25 @@ class McpToolAdapter(ValueToolAdapter):
                 result = await session.call_tool(
                     spec.name, arguments, meta={"agentloom/operation_id": context.operation_id}
                 )
-                value = result.model_dump(mode="json", exclude_none=True)
+                try:
+                    value = json_copy(result.model_dump(mode="json", exclude_none=True))
+                except ConfigurationError as exc:
+                    error = AgentLoomError(
+                        "MCP_PROTOCOL_ERROR", category="protocol", external_outcome="known"
+                    )
+                    error.execution_fact = "completed"
+                    report_completion(context, error=error)
+                    raise error from exc
                 if result.isError:
                     error = AgentLoomError(
                         "MCP_TOOL_ERROR", category="business", external_outcome="known"
                     )
                     error.result_material = value
+                    report_completion(context, error=error)
                     raise error
-                return value.get("structuredContent", {"content": value.get("content", [])})
+                value = value.get("structuredContent", {"content": value.get("content", [])})
+                report_completion(context, value=value)
+                return value
         except Exception as exc:
             raise _transport_error(exc) from exc
 

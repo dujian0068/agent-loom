@@ -3,6 +3,7 @@
 import time
 
 from ..configuration import json_copy
+from ..configuration.json_values import MAX_JSON_INTEGER
 from ..errors import AgentLoomError
 from .limits import MAX_MODEL_RESPONSE_BYTES
 
@@ -25,8 +26,8 @@ def validate_usage(usage):
         raise protocol_error("Model usage must be an object or null")
     for key in ("input_tokens", "output_tokens"):
         count = usage.get(key)
-        if count is not None and (type(count) is not int or count < 0):
-            raise protocol_error("Model token counts must be nonnegative integers or null")
+        if count is not None and (type(count) is not int or not 0 <= count <= MAX_JSON_INTEGER):
+            raise protocol_error("Model token counts must be safe nonnegative integers or null")
 
 
 def normalize_usage(value, input_key="input_tokens", output_key="output_tokens"):

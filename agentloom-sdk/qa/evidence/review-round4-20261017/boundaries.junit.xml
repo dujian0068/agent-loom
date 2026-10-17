@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="22" skipped="0" tests="56" time="4.497" timestamp="2026-10-17T22:22:32.487252+08:00" hostname="bmilk"><testcase classname="qa.test_sdk_review_round4" name="test_known_error_completion_has_same_fact_and_retry_behavior_as_result[memory-known-business-error-callback]" time="0.036"><failure message="AssertionError: assert 'unknown' == 'completed'&#10;  &#10;  - completed&#10;  + unknown">/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round4.py:124: in test_known_error_completion_has_same_fact_and_retry_behavior_as_result
+    assert op["raw"]["execution_fact"] == ("completed" if outcome == "known" else outcome)
+E   AssertionError: assert 'unknown' == 'completed'
+E     
+E     - completed
+E     + unknown</failure></testcase><testcase classname="qa.test_sdk_review_round4" name="test_known_error_completion_has_same_fact_and_retry_behavior_as_result[memory-known-business-result-control]" time="0.032" /><testcase classname="qa.test_sdk_review_round4" name="test_known_error_completion_has_same_fact_and_retry_behavior_as_result[memory-known-transport-error-callback]" time="0.034"><failure message="AssertionError: Callback syntax must not change completion or retry semantics&#10;assert 2 == 1&#10; +  where 2 = &lt;test_sdk_review_round4.test_known_error_completion_has_same_fact_and_retry_behavior_as_result.&lt;locals&gt;.Native object at 0x1094008c0&gt;.calls">/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round4.py:121: in test_known_error_completion_has_same_fact_and_retry_behavior_as_result
+    assert adapter.calls == expected_calls, (
+E   AssertionError: Callback syntax must not change completion or retry semantics
+E   assert 2 == 1
+E    +  where 2 = &lt;test_sdk_review_round4.test_known_error_completion_has_same_fact_and_retry_behavior_as_result.&lt;locals&gt;.Native object at 0x1094008c0&gt;.calls</failure></testcase><testcase classname="qa.test_sdk_review_round4" name="test_known_error_completion_has_same_fact_and_retry_behavior_as_result[memory-known-transport-result-control]" time="0.031" /><testcase classname="qa.test_sdk_review_round4" name="test_known_error_completion_has_same_fact_and_retry_behavior_as_result[memory-unknown-business-error-callback]" time="0.031" /><testcase classname="qa.test_sdk_review_round4" name="test_known_error_completion_has_same_fact_and_retry_behavior_as_result[memory-unknown-business-result-control]" time="0.031" /><testcase classname="qa.test_sdk_review_round4" name="test_known_error_completion_has_same_fact_and_retry_behavior_as_result[memory-unknown-transport-error-callback]" time="0.034" /><testcase classname="qa.test_sdk_review_round4" name="test_known_error_completion_has_same_fact_and_retry_behavior_as_result[memory-unknown-transport-result-control]" time="0.035" /><testcase classname="qa.test_sdk_review_round4" name="test_known_error_completion_has_same_fact_and_retry_behavior_as_result[memory-not_started-business-error-callback]" time="0.031" /><testcase classname="qa.test_sdk_review_round4" name="test_known_error_completion_has_same_fact_and_retry_behavior_as_result[memory-not_started-business-result-control]" time="0.031" /><testcase classname="qa.test_sdk_review_round4" name="test_known_error_completion_has_same_fact_and_retry_behavior_as_result[memory-not_started-transport-error-callback]" time="0.034" /><testcase classname="qa.test_sdk_review_round4" name="test_known_error_completion_has_same_fact_and_retry_behavior_as_result[memory-not_started-transport-result-control]" time="0.035" /><testcase classname="qa.test_sdk_review_round4" name="test_known_error_completion_has_same_fact_and_retry_behavior_as_result[file-known-business-error-callback]" time="0.118"><failure message="AssertionError: assert 'unknown' == 'completed'&#10;  &#10;  - completed&#10;  + unknown">/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round4.py:124: in test_known_error_completion_has_same_fact_and_retry_behavior_as_result
+    assert op["raw"]["execution_fact"] == ("completed" if outcome == "known" else outcome)
+E   AssertionError: assert 'unknown' == 'completed'
+E     
+E     - completed
+E     + unknown</failure></testcase><testcase classname="qa.test_sdk_review_round4" name="test_known_error_completion_has_same_fact_and_retry_behavior_as_result[file-known-business-result-control]" time="0.171" /><testcase classname="qa.test_sdk_review_round4" name="test_known_error_completion_has_same_fact_and_retry_behavior_as_result[file-known-transport-error-callback]" time="0.133"><failure message="AssertionError: Callback syntax must not change completion or retry semantics&#10;assert 2 == 1&#10; +  where 2 = &lt;test_sdk_review_round4.test_known_error_completion_has_same_fact_and_retry_behavior_as_result.&lt;locals&gt;.Native object at 0x109532e70&gt;.calls">/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round4.py:121: in test_known_error_completion_has_same_fact_and_retry_behavior_as_result
+    assert adapter.calls == expected_calls, (
+E   AssertionError: Callback syntax must not change completion or retry semantics
+E   assert 2 == 1
+E    +  where 2 = &lt;test_sdk_review_round4.test_known_error_completion_has_same_fact_and_retry_behavior_as_result.&lt;locals&gt;.Native object at 0x109532e70&gt;.calls</failure></testcase><testcase classname="qa.test_sdk_review_round4" name="test_known_error_completion_has_same_fact_and_retry_behavior_as_result[file-known-transport-result-control]" time="0.123" /><testcase classname="qa.test_sdk_review_round4" name="test_known_error_completion_has_same_fact_and_retry_behavior_as_result[file-unknown-business-error-callback]" time="0.123" /><testcase classname="qa.test_sdk_review_round4" name="test_known_error_completion_has_same_fact_and_retry_behavior_as_result[file-unknown-business-result-control]" time="0.122" /><testcase classname="qa.test_sdk_review_round4" name="test_known_error_completion_has_same_fact_and_retry_behavior_as_result[file-unknown-transport-error-callback]" time="0.129" /><testcase classname="qa.test_sdk_review_round4" name="test_known_error_completion_has_same_fact_and_retry_behavior_as_result[file-unknown-transport-result-control]" time="0.128" /><testcase classname="qa.test_sdk_review_round4" name="test_known_error_completion_has_same_fact_and_retry_behavior_as_result[file-not_started-business-error-callback]" time="0.132" /><testcase classname="qa.test_sdk_review_round4" name="test_known_error_completion_has_same_fact_and_retry_behavior_as_result[file-not_started-business-result-control]" time="0.115" /><testcase classname="qa.test_sdk_review_round4" name="test_known_error_completion_has_same_fact_and_retry_behavior_as_result[file-not_started-transport-error-callback]" time="0.126" /><testcase classname="qa.test_sdk_review_round4" name="test_known_error_completion_has_same_fact_and_retry_behavior_as_result[file-not_started-transport-result-control]" time="0.112" /><testcase classname="qa.test_sdk_review_round4" name="test_error_completion_validates_error_dto_before_persistence[memory-empty-code-error-callback]" time="0.032"><failure message="AssertionError: assert '' == 'CAPABILITY_RESULT_INVALID'&#10;  &#10;  - CAPABILITY_RESULT_INVALID">/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round4.py:188: in test_error_completion_validates_error_dto_before_persistence
+    assert op["raw"]["error"]["code"] == "CAPABILITY_RESULT_INVALID"
+E   AssertionError: assert '' == 'CAPABILITY_RESULT_INVALID'
+E     
+E     - CAPABILITY_RESULT_INVALID</failure></testcase><testcase classname="qa.test_sdk_review_round4" name="test_error_completion_validates_error_dto_before_persistence[memory-empty-code-result-control]" time="0.032" /><testcase classname="qa.test_sdk_review_round4" name="test_error_completion_validates_error_dto_before_persistence[memory-bad-category-error-callback]" time="0.032"><failure message="AssertionError: assert 'FAILED' == 'CAPABILITY_RESULT_INVALID'&#10;  &#10;  - CAPABILITY_RESULT_INVALID&#10;  + FAILED">/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round4.py:188: in test_error_completion_validates_error_dto_before_persistence
+    assert op["raw"]["error"]["code"] == "CAPABILITY_RESULT_INVALID"
+E   AssertionError: assert 'FAILED' == 'CAPABILITY_RESULT_INVALID'
+E     
+E     - CAPABILITY_RESULT_INVALID
+E     + FAILED</failure></testcase><testcase classname="qa.test_sdk_review_round4" name="test_error_completion_validates_error_dto_before_persistence[memory-bad-category-result-control]" time="0.031" /><testcase classname="qa.test_sdk_review_round4" name="test_error_completion_validates_error_dto_before_persistence[memory-nan-retry-after-error-callback]" time="0.013"><failure message="AssertionError: Invalid adapter data must not strand the Run as a storage failure&#10;assert 'ATTEMPT_COMPLETION_COMMIT_FAILED' is None">/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round4.py:183: in test_error_completion_validates_error_dto_before_persistence
+    assert infrastructure_error is None, (
+E   AssertionError: Invalid adapter data must not strand the Run as a storage failure
+E   assert 'ATTEMPT_COMPLETION_COMMIT_FAILED' is None</failure></testcase><testcase classname="qa.test_sdk_review_round4" name="test_error_completion_validates_error_dto_before_persistence[memory-nan-retry-after-result-control]" time="0.032" /><testcase classname="qa.test_sdk_review_round4" name="test_error_completion_validates_error_dto_before_persistence[file-empty-code-error-callback]" time="0.113"><failure message="AssertionError: assert '' == 'CAPABILITY_RESULT_INVALID'&#10;  &#10;  - CAPABILITY_RESULT_INVALID">/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round4.py:188: in test_error_completion_validates_error_dto_before_persistence
+    assert op["raw"]["error"]["code"] == "CAPABILITY_RESULT_INVALID"
+E   AssertionError: assert '' == 'CAPABILITY_RESULT_INVALID'
+E     
+E     - CAPABILITY_RESULT_INVALID</failure></testcase><testcase classname="qa.test_sdk_review_round4" name="test_error_completion_validates_error_dto_before_persistence[file-empty-code-result-control]" time="0.119" /><testcase classname="qa.test_sdk_review_round4" name="test_error_completion_validates_error_dto_before_persistence[file-bad-category-error-callback]" time="0.123"><failure message="AssertionError: assert 'FAILED' == 'CAPABILITY_RESULT_INVALID'&#10;  &#10;  - CAPABILITY_RESULT_INVALID&#10;  + FAILED">/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round4.py:188: in test_error_completion_validates_error_dto_before_persistence
+    assert op["raw"]["error"]["code"] == "CAPABILITY_RESULT_INVALID"
+E   AssertionError: assert 'FAILED' == 'CAPABILITY_RESULT_INVALID'
+E     
+E     - CAPABILITY_RESULT_INVALID
+E     + FAILED</failure></testcase><testcase classname="qa.test_sdk_review_round4" name="test_error_completion_validates_error_dto_before_persistence[file-bad-category-result-control]" time="0.122" /><testcase classname="qa.test_sdk_review_round4" name="test_error_completion_validates_error_dto_before_persistence[file-nan-retry-after-error-callback]" time="0.069"><failure message="AssertionError: Invalid adapter data must not strand the Run as a storage failure&#10;assert 'ATTEMPT_COMPLETION_COMMIT_FAILED' is None">/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round4.py:183: in test_error_completion_validates_error_dto_before_persistence
+    assert infrastructure_error is None, (
+E   AssertionError: Invalid adapter data must not strand the Run as a storage failure
+E   assert 'ATTEMPT_COMPLETION_COMMIT_FAILED' is None</failure></testcase><testcase classname="qa.test_sdk_review_round4" name="test_error_completion_validates_error_dto_before_persistence[file-nan-retry-after-result-control]" time="0.122" /><testcase classname="qa.test_sdk_review_round4" name="test_invalid_error_callback_requires_recovery_but_does_not_repeat_work[memory]" time="0.039" /><testcase classname="qa.test_sdk_review_round4" name="test_invalid_error_callback_requires_recovery_but_does_not_repeat_work[file]" time="0.168" /><testcase classname="qa.test_sdk_review_round4" name="test_non_json_returned_container_keeps_completed_protocol_fact[memory-cycle-list-function]" time="0.032"><failure message="AssertionError: assert 'unknown' == 'completed'&#10;  &#10;  - completed&#10;  + unknown">/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round4.py:261: in test_non_json_returned_container_keeps_completed_protocol_fact
+    assert op["raw"]["execution_fact"] == "completed"
+E   AssertionError: assert 'unknown' == 'completed'
+E     
+E     - completed
+E     + unknown</failure></testcase><testcase classname="qa.test_sdk_review_round4" name="test_non_json_returned_container_keeps_completed_protocol_fact[memory-cycle-list-legacy]" time="0.033"><failure message="AssertionError: assert 'unknown' == 'completed'&#10;  &#10;  - completed&#10;  + unknown">/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round4.py:261: in test_non_json_returned_container_keeps_completed_protocol_fact
+    assert op["raw"]["execution_fact"] == "completed"
+E   AssertionError: assert 'unknown' == 'completed'
+E     
+E     - completed
+E     + unknown</failure></testcase><testcase classname="qa.test_sdk_review_round4" name="test_non_json_returned_container_keeps_completed_protocol_fact[memory-cycle-list-native]" time="0.032"><failure message="AssertionError: assert 'unknown' == 'completed'&#10;  &#10;  - completed&#10;  + unknown">/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round4.py:261: in test_non_json_returned_container_keeps_completed_protocol_fact
+    assert op["raw"]["execution_fact"] == "completed"
+E   AssertionError: assert 'unknown' == 'completed'
+E     
+E     - completed
+E     + unknown</failure></testcase><testcase classname="qa.test_sdk_review_round4" name="test_non_json_returned_container_keeps_completed_protocol_fact[memory-cycle-dict-function]" time="0.033"><failure message="AssertionError: assert 'unknown' == 'completed'&#10;  &#10;  - completed&#10;  + unknown">/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round4.py:261: in test_non_json_returned_container_keeps_completed_protocol_fact
+    assert op["raw"]["execution_fact"] == "completed"
+E   AssertionError: assert 'unknown' == 'completed'
+E     
+E     - completed
+E     + unknown</failure></testcase><testcase classname="qa.test_sdk_review_round4" name="test_non_json_returned_container_keeps_completed_protocol_fact[memory-cycle-dict-legacy]" time="0.033"><failure message="AssertionError: assert 'unknown' == 'completed'&#10;  &#10;  - completed&#10;  + unknown">/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round4.py:261: in test_non_json_returned_container_keeps_completed_protocol_fact
+    assert op["raw"]["execution_fact"] == "completed"
+E   AssertionError: assert 'unknown' == 'completed'
+E     
+E     - completed
+E     + unknown</failure></testcase><testcase classname="qa.test_sdk_review_round4" name="test_non_json_returned_container_keeps_completed_protocol_fact[memory-cycle-dict-native]" time="0.032"><failure message="AssertionError: assert 'unknown' == 'completed'&#10;  &#10;  - completed&#10;  + unknown">/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round4.py:261: in test_non_json_returned_container_keeps_completed_protocol_fact
+    assert op["raw"]["execution_fact"] == "completed"
+E   AssertionError: assert 'unknown' == 'completed'
+E     
+E     - completed
+E     + unknown</failure></testcase><testcase classname="qa.test_sdk_review_round4" name="test_non_json_returned_container_keeps_completed_protocol_fact[memory-nan-control-function]" time="0.032" /><testcase classname="qa.test_sdk_review_round4" name="test_non_json_returned_container_keeps_completed_protocol_fact[memory-nan-control-legacy]" time="0.032" /><testcase classname="qa.test_sdk_review_round4" name="test_non_json_returned_container_keeps_completed_protocol_fact[memory-nan-control-native]" time="0.032" /><testcase classname="qa.test_sdk_review_round4" name="test_non_json_returned_container_keeps_completed_protocol_fact[file-cycle-list-function]" time="0.120"><failure message="AssertionError: assert 'unknown' == 'completed'&#10;  &#10;  - completed&#10;  + unknown">/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round4.py:261: in test_non_json_returned_container_keeps_completed_protocol_fact
+    assert op["raw"]["execution_fact"] == "completed"
+E   AssertionError: assert 'unknown' == 'completed'
+E     
+E     - completed
+E     + unknown</failure></testcase><testcase classname="qa.test_sdk_review_round4" name="test_non_json_returned_container_keeps_completed_protocol_fact[file-cycle-list-legacy]" time="0.135"><failure message="AssertionError: assert 'unknown' == 'completed'&#10;  &#10;  - completed&#10;  + unknown">/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round4.py:261: in test_non_json_returned_container_keeps_completed_protocol_fact
+    assert op["raw"]["execution_fact"] == "completed"
+E   AssertionError: assert 'unknown' == 'completed'
+E     
+E     - completed
+E     + unknown</failure></testcase><testcase classname="qa.test_sdk_review_round4" name="test_non_json_returned_container_keeps_completed_protocol_fact[file-cycle-list-native]" time="0.136"><failure message="AssertionError: assert 'unknown' == 'completed'&#10;  &#10;  - completed&#10;  + unknown">/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round4.py:261: in test_non_json_returned_container_keeps_completed_protocol_fact
+    assert op["raw"]["execution_fact"] == "completed"
+E   AssertionError: assert 'unknown' == 'completed'
+E     
+E     - completed
+E     + unknown</failure></testcase><testcase classname="qa.test_sdk_review_round4" name="test_non_json_returned_container_keeps_completed_protocol_fact[file-cycle-dict-function]" time="0.120"><failure message="AssertionError: assert 'unknown' == 'completed'&#10;  &#10;  - completed&#10;  + unknown">/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round4.py:261: in test_non_json_returned_container_keeps_completed_protocol_fact
+    assert op["raw"]["execution_fact"] == "completed"
+E   AssertionError: assert 'unknown' == 'completed'
+E     
+E     - completed
+E     + unknown</failure></testcase><testcase classname="qa.test_sdk_review_round4" name="test_non_json_returned_container_keeps_completed_protocol_fact[file-cycle-dict-legacy]" time="0.108"><failure message="AssertionError: assert 'unknown' == 'completed'&#10;  &#10;  - completed&#10;  + unknown">/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round4.py:261: in test_non_json_returned_container_keeps_completed_protocol_fact
+    assert op["raw"]["execution_fact"] == "completed"
+E   AssertionError: assert 'unknown' == 'completed'
+E     
+E     - completed
+E     + unknown</failure></testcase><testcase classname="qa.test_sdk_review_round4" name="test_non_json_returned_container_keeps_completed_protocol_fact[file-cycle-dict-native]" time="0.119"><failure message="AssertionError: assert 'unknown' == 'completed'&#10;  &#10;  - completed&#10;  + unknown">/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round4.py:261: in test_non_json_returned_container_keeps_completed_protocol_fact
+    assert op["raw"]["execution_fact"] == "completed"
+E   AssertionError: assert 'unknown' == 'completed'
+E     
+E     - completed
+E     + unknown</failure></testcase><testcase classname="qa.test_sdk_review_round4" name="test_non_json_returned_container_keeps_completed_protocol_fact[file-nan-control-function]" time="0.123" /><testcase classname="qa.test_sdk_review_round4" name="test_non_json_returned_container_keeps_completed_protocol_fact[file-nan-control-legacy]" time="0.106" /><testcase classname="qa.test_sdk_review_round4" name="test_non_json_returned_container_keeps_completed_protocol_fact[file-nan-control-native]" time="0.120" /></testsuite></testsuites>

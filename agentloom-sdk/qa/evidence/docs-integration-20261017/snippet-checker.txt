@@ -1,0 +1,148 @@
+import ast
+import asyncio
+import hashlib
+import inspect
+import json
+import os
+from pathlib import Path
+import subprocess
+import sys
+
+from agentloom import (
+    AgentDefinition, AgentLoom, AgentProperties, ModelResponse, PropertiesConfig,
+    RuntimeProperties, ScriptedModel, ServiceProperties, ToolCall, WaitTimeout,
+    WorkspaceBinding,
+)
+
+root = Path(__file__).parent
+results = []
+
+
+async def fragment(number, namespace):
+    source = (root / f"block-{number}.py").read_text()
+    compiled = compile(source, f"integration.md:block-{number}", "exec", ast.PyCF_ALLOW_TOP_LEVEL_AWAIT)
+    value = eval(compiled, namespace)
+    if inspect.isawaitable(value):
+        await value
+
+
+def parameters(model, namespace):
+    return PropertiesConfig(
+        runtime=RuntimeProperties(namespace=namespace),
+        defaults=AgentProperties(workspace=WorkspaceBinding(root / "workspace")),
+        services=ServiceProperties(model=model),
+    )
+
+
+def respond(request):
+    names = {tool["name"] for tool in request.tools}
+    feedback = any(message["role"] == "tool" for message in request.messages)
+    if request.role_key == "planner" and not feedback:
+        return ModelResponse(tool_calls=(ToolCall("delegate_task", {"executor": "review", "task": "检查"}),))
+    if "echo" in names and not feedback:
+        return ModelResponse(tool_calls=(ToolCall("echo", {"text": "documented-tool"}),))
+    return ModelResponse("done")
+
+
+async def check_fragments():
+    model = ScriptedModel(respond)
+    properties = parameters(model, "docs-fragments")
+    definition = AgentDefinition("assistant", "SYSTEM")
+    os.environ.update({"AGENTLOOM_MODEL": "docs-model", "OPENAI_API_KEY": "docs-placeholder", "AGENTLOOM_CONTEXT_WINDOW": "32768", "AGENTLOOM_BASE_URL": "https://example.invalid/v1"})
+    real = {"properties": properties}
+    await fragment(3, real)
+    assert real["properties"].services.model.descriptor.provider_model_id == "docs-model"
+    assert real["properties"].services.model.descriptor.context_window_tokens == 32768
+    results.append({"block": 3, "case": "real-model-constructor", "external_calls": 0})
+
+    async with AgentLoom(properties) as app:
+        namespace = {"app": app, "properties": properties, "definition": definition}
+        await fragment(2, namespace)
+        assert namespace["agent"].properties.execution_policy.loop_max == 10
+        assert properties.defaults.execution_policy.loop_max == 100
+        assert namespace["other_properties"].runtime.namespace == "another-app"
+        results.append({"block": 2, "case": "parameter-overrides"})
+
+        start = len(model.requests)
+        await fragment(4, namespace)
+        assert namespace["result"].status == "succeeded"
+        assert [request.role_key for request in model.requests[start:]] == ["planner", "review", "planner"]
+        results.append({"block": 4, "case": "plan-delegation", "model_calls": 3})
+
+        await fragment(5, namespace)
+        result = await namespace["tool_agent"].ainvoke("echo")
+        assert result.status == "succeeded"
+        assert any(message["role"] == "tool" and "documented-tool" in str(message["content"]) for message in model.requests[-1].messages)
+        results.append({"block": 5, "case": "tool-registration-and-execution"})
+
+        observed = []
+        namespace["print"] = lambda *args: observed.append(args)
+        await fragment(6, namespace)
+        result = await namespace["hooked_agent"].ainvoke("inspect")
+        assert result.status == "succeeded" and len(observed) == 1
+        assert observed[0][0] == "react" and all(isinstance(v, int) and v > 0 for v in observed[0][1:])
+        results.append({"block": 6, "case": "hook-input-and-pinned-read"})
+
+        saved = await app.build(definition).ainvoke("save")
+        count = len(model.requests)
+    restored = {"properties": properties, "definition": definition, "saved_run_id": saved.run_id}
+    await fragment(7, restored)
+    assert restored["result"].status == "succeeded" and len(model.requests) == count
+    results.append({"block": 7, "case": "reopen-original-run", "additional_model_calls": 0})
+
+
+async def check_control_table():
+    ready, release = asyncio.Event(), asyncio.Event()
+
+    async def blocked(request):
+        ready.set()
+        await release.wait()
+        return ModelResponse("done")
+
+    model = ScriptedModel(blocked)
+    properties = parameters(model, "docs-control")
+    definition = AgentDefinition("assistant", "SYSTEM")
+    async with AgentLoom(properties) as app:
+        handle = await app.build(definition).start("first", run_id="docs-control-run", input_id="docs-control-input", session_id="docs-control-session")
+        await asyncio.wait_for(ready.wait(), 2)
+        try:
+            await handle.wait(timeout_s=0.01)
+        except WaitTimeout:
+            pass
+        else:
+            raise AssertionError("A local wait must time out without stopping this Run")
+        assert (await handle.snapshot())["status"] == "running"
+        receipt = await app.runtime.inputs.append(handle.run_id, input_id="docs-control-supplement", content="supplement")
+        assert receipt["acceptance"] == "accepted"
+        stopped = await handle.stop(command_id="docs-control-stop")
+        assert stopped["admission_closed"]
+        result = await handle.wait(timeout_s=2)
+        assert result.status == "cancelled"
+        attached = await app.runtime.runs.attach(handle.run_id)
+        assert (await attached.wait()).status == "cancelled"
+        snapshot = await app.runtime.runs.get(handle.run_id)
+        assert {"maintenance", "cleanup_state", "cleanup_error"}.issubset(snapshot)
+        tasks = await app.runtime.tasks.list(handle.run_id, after=0, limit=100)
+        assert isinstance(tasks["items"], list) and "next_cursor" in tasks
+        operation = await app.runtime.operations.get(handle.run_id, model.requests[0].operation_id)
+        assert operation["event_type"] == "model.generate"
+        events = await app.runtime.events.read(handle.run_id, after_seq=0, limit=100)
+        replay = [event async for event in attached.events(after_seq=0)]
+        assert replay and replay[-1].type == "run.completed"
+        assert events["items"][-1]["seq"] == replay[-1].seq
+        history = await app.runtime.sessions.history(handle.session_id, after=0, limit=100)
+        inputs = await app.runtime.sessions.inputs(handle.session_id)
+        assert len(history["items"]) == 1 and len(inputs) == 2
+        assert inspect.iscoroutinefunction(app.runtime.records.delete)
+    results.append({"case": "control-and-query-table", "checks": ["wait-timeout", "append", "stop", "attach", "snapshot", "tasks", "operations", "events", "history", "inputs"]})
+
+
+quickstart = subprocess.run([sys.executable, str(root / "block-1.py")], cwd=root, env=os.environ.copy(), capture_output=True, text=True, timeout=20)
+assert quickstart.returncode == 0, quickstart.stderr
+assert "接入成功" in quickstart.stdout and "模型调用次数： 1" in quickstart.stdout
+results.append({"block": 1, "case": "complete-quickstart", "output": quickstart.stdout.strip().splitlines()})
+asyncio.run(check_fragments())
+asyncio.run(check_control_table())
+report = {"python_blocks": 7, "passed_scenarios": len(results), "results": results, "remote_services_called": False}
+(root / "snippet-results.json").write_text(json.dumps(report, indent=2, ensure_ascii=False) + "\n")
+print(json.dumps(report, indent=2, ensure_ascii=False))

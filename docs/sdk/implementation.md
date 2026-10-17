@@ -1,6 +1,71 @@
 # SDK 当前实现与验证
 
-日期：2026-10-17。实现版本：`agentloom-sdk 0.1.0a1`。本页记录本轮实际交付；其他 SDK 章节保留完整目标设计，不能据此推定全部接口已实现。Workflow 按当前开发范围暂不接入，也没有恢复已删除的示例目录。
+日期：2026-10-17。实现版本：`agentloom-sdk 0.1.0a1`。当前推荐入口是 `PropertiesConfig → AgentLoom → build(AgentDefinition)`，默认使用文件系统保存执行状态。安装、可运行代码和接续步骤见 [SDK 接入指南](integration.md)。Workflow 按当前开发范围暂不接入。
+
+本页先说明当前状态与实现职责，再保留各阶段修复及验证记录。最近完成的第三轮修复回归是 **813 passed**，对应[固定源码摘要和测试清单](../../agentloom-sdk/qa/evidence/round3-fixes-20261017/summary.json)；后续新增 QA 文件不自动包含在该结论中。其他 SDK 章节仍含完整目标设计，不能据此推定全部接口已发布。
+
+## 当前接口与交付状态
+
+| 范围 | 当前可用内容 | 边界或待实现内容 |
+| --- | --- | --- |
+| 参数与装配 | PropertiesConfig、RuntimeProperties、AgentProperties、ServiceProperties；AgentLoom、AgentBuilder、直接构造共用校验 | 配置不可变，服务实例借用；不提供全局可变参数容器或热更新 |
+| Agent 执行 | ReAct／Plan–Executor、RunHandle、停止、补充、同配置重开、独立角色上下文 | 一个实例绑定一个 Run；AgentNode 是内部适配桥，Workflow／StateGraph 未接入 |
+| 模型 | Chat Completions／Responses、ScriptedModel；ModelAdapter.stream_once、ProviderEvent、ModelDescriptor | 窗口显式提供，未实现统一 ModelAdapter.discover；公开事件不是 token 流 |
+| 能力扩展 | CapabilityAdapter.invoke_once、CapabilityRequest、ToolInvocationContext、ToolResult；目录 for_role／for_node_binding／resolve | 先注册再按角色绑定；旧 invoke 仅作兼容；独立内容引用和 Artifact 授权未实现 |
+| Hook | HookInput、HookContext、HookRecordView／Page、FunctionHookHandler、有序 request／response 链 | 读端口固定版本且可过期；尚无 ScriptHookHandler 和生命周期修改 Hook |
+| 查询与删除 | runs／tasks／operations／events／sessions、补充和停止回执、records.delete | 当前多为 JSON dict／列表，尚无完整 RunSnapshot／分页／回执 DTO；sessions.inputs 无分页 |
+| 文件与环境 | LocalEnvironment、WorkspaceService、文件工具、执行域 fence、配套脚本适配入口 | 独立 WorkspaceBackend／EnvironmentProvider／SandboxGateway 协议与完整装配合同待补齐；没有默认宿主 shell |
+| 上下文与内容 | 原始／有效记录、历史、压缩、结果预览、按角色分片读取 | 完整值保存在执行快照；独立 ContentStore／BlobStore、ArtifactRef 输入和来源授权待实现 |
+| 存储与恢复 | FileRuntimeStore 默认、MemoryRuntimeStore 可选；原子快照、提交回执、租约、单机进程恢复 | 无 SQLite／PostgreSQL 实现；未实现目标增量日志、跨机存储与任意历史版本迁移 |
+| 事件总线 | 单处理者分发、局部注册、Hook 调用阶段持久化、已提交 RunEvent 观察 | 不等于完整可靠总线；独立 outbox、订阅 ACK 和全部持久等待合同待实现 |
+
+## 模块职责与调用路径
+
+| 包／主要模块 | 实现职责 |
+| --- | --- |
+| `public.application/properties/builder/assembly` | 启动参数组合、宿主生命周期、从定义 build、统一装配与资源所有权 |
+| `public.agents/handles/projections` | 执行门面、实例绑定、观察／控制和公开结果过滤 |
+| `configuration.properties/models/schemas/actions` | 参数冻结、默认值、数值与 Schema 校验、角色动作权限及恢复清单 |
+| `runtime.host/runner/agent_engine/agent_loop` | 本机宿主、每 Run 执行者、角色激活／批次汇合及独立 Agent Loop |
+| `runtime.calls/completion/handlers/usage` | 准入与重试、Attempt 完成回执、单次适配器调用、原子用量计量 |
+| `runtime.recovery/control/maintenance/cleanup/leases` | 恢复账本核验、停止和截止、撤权与清理重试、执行及清理租约 |
+| `events.hooks/hook_views/hook_reads/patches/control` | 有序 Hook、受限输入视图、读取授权、双补丁提交与无 Agent 控制收束 |
+| `context` | 消息物化、历史与补充顺序、受保护输入、预算、可恢复摘要、大结果读取 |
+| `capabilities`、`models` | 资源目录及结果合同、工具／MCP／Skill 适配；模型协议、完整材料与 usage 校验 |
+| `environment`、`storage` | POSIX 工作区和受限文件服务；JSON 文件事务、内存事务、提交回执和租约校验 |
+
+```mermaid
+flowchart LR
+    P[PropertiesConfig] --> A[AgentLoom 开启 Runtime]
+    D[AgentDefinition] --> B[AgentBuilder 装配]
+    A --> B
+    B --> S[start 持久接收 Run]
+    S --> R[Runner 与 Agent Loop]
+    R --> C[调用准入与 Hook]
+    C --> H[模型或能力适配器]
+    H --> F[结果与用量提交]
+    F --> E[后置 Hook 与上下文推进]
+    E --> O[已提交事件与 RunResult]
+```
+
+参数对象和服务引用停留在装配层；检查点只保存恢复合同需要的固定配置与执行事实。模型 completed 和 MCP 已知响应在资源关闭前进入结果提交；自定义能力内部有关闭阶段时可使用当前 Attempt 的 report_completion 回调。关闭仍在原调用任务中进行，不另起脱离生命周期的后台任务。
+
+| 异常／恢复边界 | 当前处理 |
+| --- | --- |
+| 已保存 raw 后关闭失败、超时或进程退出 | 保留完成事实，关闭诊断独立保存；接续只做后处理，不重复已完成调用 |
+| 结果提交或提交观察回调失败 | 作为基础设施故障向上传播；按原命令回执恢复，不降级成业务错误继续交付 |
+| 外部调用开始、尚无可靠结果时进程退出 | 记录 CALL_OUTCOME_UNKNOWN；不把未知副作用当作未执行后自动补发 |
+| 停止、根截止或执行权丢失 | 阻止后续业务交付；有效租约下保留已取得事实，旧 owner 不再写入 |
+| 单 Run 撤权／后台清理失败 | 保存维护诊断和重试时间，隔离其他 Run；终态与清理状态分别查询 |
+| usage、工具结果或锁等待参数非法 | 在对应协议／参数边界拒绝；已返回但非法的工具值保留 completed 事实，非规范 JSON 不写入检查点 |
+
+## 验证口径
+
+第四轮修复完整回归 **948 passed**：SDK 714 项、原 QA 110 项、复审 QA 24 项、第三轮 QA 44 项、第四轮 QA 56 项；修复边界及证据见[第四轮记录](#第四轮完成回调与-json-边界修复)。第三轮的 813 项及以下各阶段的 698／656／622 等数字属于历史快照，不是当前总数；各轮原始审查报告和失败证据保留。
+
+这些验证使用本地确定性模型、协议替身和已有的 MCP stdio／SSE 测试，没有远端模型、远端 MCP、多机或 Workflow 的验收结论。完整目标尚未实现的部分集中列在[设计差异](#与完整目标设计的差异)。
+
+接入文档此前另有 8 个本地验证场景，覆盖 7 个 Python 代码块及控制／查询签名，见[文档验证记录](../../agentloom-sdk/qa/evidence/docs-integration-20261017/summary.json)。该次文档整理没有修改 SDK 源码与测试，文档用例不重复计入 SDK 回归。
 
 ## 已实现的执行链路
 
@@ -15,7 +80,43 @@
 - 默认 JSON 文件后端、显式选择的内存后端、幂等提交回执、租约 epoch fencing、独立进程恢复；已保存 raw / Hook result / 子任务 / 批次继续原阶段，没有可靠外部结果的调用标记 unknown。文件后端采用 namespace 文件锁、不可变记录和原子清单，不需要数据库。
 - 独立停止命令与停止前准入关闭，宿主关闭保留现场；终态与 CleanupJob 原子提交，清理独立领取租约、失败重试，不再次激活 Agent。
 
-源码按 `public`、`configuration`、`runtime`、`events`、`context`、`capabilities`、`environment`、`models`、`storage` 分包。安装、完整构造参数、调用和能力绑定见 [SDK README](../../agentloom-sdk/README.md)。
+源码按 `public`、`configuration`、`runtime`、`events`、`context`、`capabilities`、`environment`、`models`、`storage` 分包。具体接入见[接入指南](integration.md)，包安装说明见 [SDK README](../../agentloom-sdk/README.md)。
+
+## 第四轮完成回调与 JSON 边界修复
+
+在第三轮修复工作区基础上处理第四轮报告的两类问题，Workflow 继续排除。原第四轮 QA 文件和报告未改；修复前 22 项失败按原断言复测全部通过。
+
+| 问题 | 修复及职责 |
+| --- | --- |
+| error 完成回调绕过结果校验 | `capabilities.invocation.normalize_error_completion` 将错误及附带材料送入统一 ToolResult 校验；明确 known／unknown／not_started 决定执行事实，不依赖私有异常属性。合法失败提交后仍抛出原异常，非法 DTO 转为完成后的协议失败；`runtime.handlers` 只负责输出 Schema、回执提交和异常传播 |
+| 循环返回值丢失完成事实 | `configuration.json_values` 检查当前遍历路径上的循环，允许不同分支共享子对象；JSON 校验、复制、规范化和冻结中的递归溢出归一为 ConfigurationError。已返回值继续由能力边界转为 CAPABILITY_RESULT_INVALID／protocol／completed，不改变函数执行中直接抛错的语义 |
+
+错误完成路径继续经过原 Attempt 完成回执和事务入口。真正的存储故障、取消、停止／截止及失权不会被当作非法结果吞掉；已提交失败在关闭或进程退出后可直接接续后处理。Retry-After 和错误字段通过同一校验来源，非有限数值不再以存储故障的形式中断运行。
+
+针对性回归 **180 passed**，覆盖原第四轮 56 项、共享／循环／过深容器、错误 DTO、私有属性不覆盖明确执行事实、回调过期、双后端租约接管、停止／截止／关闭、提交前后故障及真实进程退出。两个新增进程退出场景分别在原生错误回调提交合法失败、拒绝非法错误之后退出，重启均未重复工具调用。
+
+完整回归 **948 passed，0 failed，0 skipped**，耗时约 270 秒；较原有 813 项回归增加第四轮 QA 56 项和本轮 79 项验证。Ruff lint／format 通过，123 个 Python 文件格式一致；完整回归期间 124 个源码、配置与测试文件摘要未变化。离线 wheel 构建、独立目录安装及 79 模块逐字节对照通过；安装包的模型、MCP 成功／业务失败、原生错误／非法错误回调共 5 个真实进程退出场景全部恢复，完成调用未重复。
+
+[完整回归日志](../../agentloom-sdk/qa/evidence/round4-fixes-20261017/regression.txt)及[命令、源码和安装包摘要](../../agentloom-sdk/qa/evidence/round4-fixes-20261017/summary.json)独立保存。新增测试首次执行发现复用已绑定 Agent 的夹具错误，已按实例绑定合同修正为新建 Agent 后重跑；首次日志保留。
+
+## 第三轮边界问题修复
+
+以 `84b3355` 为基线，修复第三轮 QA 确认的四类问题。`runtime.completion` 单独管理完成结果投影和 Attempt 完成回执；调用驱动继续负责事务、重试和控制，资源关闭仍在原调用任务中执行，没有分离到失去生命周期约束的后台任务。
+
+| 问题 | 修复及边界 |
+| --- | --- |
+| 关闭阶段覆盖完成事实 | 模型 completed 和 MCP 已知响应在流／会话关闭前提交；关闭诊断单独保存，已完成结果不进入重试。停止、根截止、失权继续生效；恢复只续已提交结果的后处理。完成回调绑定 Attempt、执行租约及有效期，不能由旧回调写入新尝试；提交／回执异常按基础设施故障传播，不能降级为业务错误后继续交付 |
+| usage 事件被丢弃／越界漏检 | 通用 ModelHandler 按 Attempt 合并累计计数，completed 的缺字段／null 不清除已知值，0 保持合法；usage 事件、完整响应共用 `2**53-1` 上界，运行汇总继续使用原原子计量合同 |
+| 值返回适配器丢失完成事实 | FunctionToolAdapter 与旧 invoke 桥共用已返回值的包装边界；非法结果归协议失败并记录 completed，函数执行中抛错仍保留原失败事实。原生信封和提前报告的结果共用归一与输出 Schema 校验 |
+| 极端文件锁参数泄漏异常 | RuntimeProperties 和 FileRuntimeStore 共用安全数值转换；超大整数等非法值在 I/O 前归一为 STORE_LOCK_TIMEOUT_INVALID，0 仍表示不等待 |
+
+第三轮原测试保持断言不变；另补充双后端停止／截止／关闭恢复、失权前后结果提交、提交前后故障与幂等恢复、业务／Schema 错误与关闭超时竞争、回调过期、值桥接、usage 字段／上界及三个真实进程退出场景。旧审查报告和失败证据保留，不据本次修复推定 Workflow 或其他未完成目标已验收。
+
+完整回归 **813 passed in 251.51s**：SDK 635 项、原 QA 110 项、复审 QA 24 项、第三轮 QA 44 项，无失败或跳过；本轮新增 71 项边界验证。Ruff lint／format 通过，127 个 Python 文件格式一致。最终回归期间 120 个源码与测试文件摘要未变化。
+
+离线 wheel 构建和独立目录安装通过，79 个源码模块与安装包逐字节一致。安装后的模型完成、MCP 成功和 MCP 业务失败三个真实进程退出场景均可从文件检查点恢复，已完成调用不重复，用量不重复累计。文档构建及内部链接检查通过。验证使用本地确定性模型和协议替身，不包含付费模型、远端 MCP 或 Workflow。
+
+[完整回归日志](../../agentloom-sdk/qa/evidence/round3-fixes-20261017/regression.txt)与[命令、安装包及源码摘要](../../agentloom-sdk/qa/evidence/round3-fixes-20261017/summary.json)独立保存；首轮完整回归发现的两项提交异常传播失败及新增测试的初始夹具错误也保留在本轮证据目录，最终结果基于修正后的完整重跑。
 
 ## PropertiesConfig 统一参数入口
 
@@ -183,7 +284,7 @@ QA 的 Schema 用例调整为验证完整装配边界，并通过单独故障注
 运行命令：
 
 ```sh
-.venv/bin/python -m pytest -q agentloom-sdk/tests agentloom-sdk/qa/test_sdk_audit.py agentloom-sdk/qa/test_sdk_rereview.py
+.venv/bin/python -m pytest -q agentloom-sdk/tests agentloom-sdk/qa/test_sdk_audit.py agentloom-sdk/qa/test_sdk_rereview.py agentloom-sdk/qa/test_sdk_review_round3.py agentloom-sdk/qa/test_sdk_review_round4.py
 .venv/bin/ruff check agentloom-sdk/src agentloom-sdk/tests agentloom-sdk/qa
 .venv/bin/ruff format --check agentloom-sdk/src agentloom-sdk/tests agentloom-sdk/qa
 .venv/bin/python -m pip wheel ./agentloom-sdk --no-build-isolation --no-deps --no-index -w /tmp/agentloom-wheels
@@ -240,7 +341,7 @@ npm run docs:check
 
 当前交付采用明确的单机存储／环境实现范围：
 
-1. 默认 JSON 文件后端保存原子执行快照和幂等命令回执，按 namespace 串行提交，清单包含该 namespace 当前所有记录引用；尚非目标中的增量日志／索引布局，大运行记录的写入和查询有规模开销。已完成进程退出恢复验证，未验证断电或 NFS／跨机协调，也不提供任意历史版本迁移。PostgreSQL 只是可选参考适配器，不是 SDK 的依赖要求。
+1. 默认 JSON 文件后端保存原子执行快照和幂等命令回执，按 namespace 串行提交，清单包含该 namespace 当前所有记录引用；尚非目标中的增量日志／索引布局，大运行记录的写入和查询有规模开销。已完成进程退出恢复验证，未验证断电或 NFS／跨机协调，也不提供任意历史版本迁移。当前只有文件与内存后端，没有 SQLite 或 PostgreSQL 实现；目标设计中出现的数据库适配不是依赖要求或已交付能力。
 2. LocalEnvironment 只 fence 经 SDK 文件服务的访问，文件锁不约束任意宿主代码。没有 OCI 执行服务、多机卷撤销证明、NFS mutation journal；脚本适配器需要调用方另行提供配套的隔离环境和网关，默认拒绝本地宿主执行。[默认工具与 SPI](builtin-tools-spi.md)是 2026-10-17 新增设计，其中独立 WorkspaceBackend Protocol、后端能力装配校验以及共享文件／对象存储实现仍待实施。公共路径仍依赖本地实现，脚本适配也仍读取环境内部属性；当前分包不能代替这些接口合同，SPI01–SPI10 不包含在上述已通过测试的结论中。
 3. 大结果完整值保存在执行快照，已有预览、有效 hash、按角色受限的 `result.read`；尚无独立 BlobStore、ArtifactRef 导入、跨工作区来源撤销和显式外部结果授权。非空 `AgentInput.artifacts` 明确拒绝。
 4. 本地文件 grep 当前为字面搜索，未提供 RE2；目录 move 暂不支持。未知外部副作用不被重试成假成功；工作文件变更与运行状态提交是两个动作，即使使用同一文件系统，也不宣称二者原子。

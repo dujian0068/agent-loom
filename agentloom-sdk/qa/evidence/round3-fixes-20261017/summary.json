@@ -1,0 +1,103 @@
+{
+  "base_head": "84b3355b2c59539cae4c4d1bece2e35d1ca22bf2",
+  "scope": "SDK third-round review fixes; Workflow excluded; filesystem remains the default backend",
+  "worktree_changes_committed": false,
+  "issues_fixed": [
+    "Persist complete model/MCP outcomes before teardown without bypassing stop/deadline/lease fencing",
+    "Merge generic usage events and enforce canonical integer limits",
+    "Preserve completed execution facts for invalid returned value-adapter results",
+    "Normalize extreme store-lock timeouts as configuration errors before I/O"
+  ],
+  "full_regression": {
+    "passed": 813,
+    "failed": 0,
+    "errors": 0,
+    "skipped": 0,
+    "pytest_reported_seconds": 251.51,
+    "junit_seconds": 251.494,
+    "suites": {
+      "sdk": 635,
+      "qa_audit": 110,
+      "qa_rereview": 24,
+      "qa_round3": 44
+    },
+    "log": "regression.txt",
+    "junit": "regression.junit.xml"
+  },
+  "new_boundary_tests": {
+    "total": 71,
+    "modules": {
+      "tests.test_attempt_completion": 42,
+      "tests.test_completion_recovery": 3,
+      "tests.test_usage_events": 26
+    },
+    "original_third_round_qa_unchanged": true
+  },
+  "focused_regression": {
+    "passed": 131,
+    "seconds": 27.09,
+    "log": "boundaries-final.txt"
+  },
+  "ruff": {
+    "lint": "passed",
+    "format": "passed",
+    "files_checked": 127,
+    "logs": [
+      "ruff.txt",
+      "ruff-format.txt"
+    ]
+  },
+  "wheel": {
+    "wheel": "agentloom_sdk-0.1.0a1-py3-none-any.whl",
+    "sha256": "18ff8d2fc49a1de5131349961abb39f4af2be0cb0dfbe600083ec28a019befcb",
+    "source_modules": 79,
+    "matches_source_and_install": true,
+    "contains_completion_module_and_py_typed": true,
+    "no_test_qa_sqlite_modules": true
+  },
+  "installed_wheel_smoke": {
+    "passed": 3,
+    "cases": [
+      "model",
+      "mcp",
+      "mcp-error"
+    ],
+    "real_process_exit": 74,
+    "all_resume_without_repeated_completed_call": true,
+    "results": "wheel-smoke.json",
+    "runner": "wheel-smoke-runner.txt",
+    "worker": "wheel-smoke-source.txt"
+  },
+  "documentation_logs": {
+    "build": "docs-build.txt",
+    "link_check": "docs-check.txt"
+  },
+  "verification_environment": "verification-environment.json",
+  "source_and_tests": {
+    "sha256_file": "run-source-sha256.json",
+    "file_count": 120,
+    "unchanged_during_final_regression": true
+  },
+  "preserved_first_runs": {
+    "first_full_regression": {
+      "passed": 803,
+      "failed": 2,
+      "seconds": 251.64,
+      "log": "first-regression.txt",
+      "junit": "first-regression.junit.xml",
+      "cause": "Completion receipt committed inside adapter dispatch: an ordinary post-commit observer exception was classified as an adapter error. Fixed at persistence callback boundary, preserving original assertions; added before/after commit fault tests on model/MCP and both stores."
+    },
+    "new_fixture_first_runs": {
+      "logs": [
+        "fixture-first.txt",
+        "fixture-process-first.txt"
+      ],
+      "cause": "New MCP test fixtures advertised an empty schema instead of the registered object schema. Corrected fixtures, without weakening assertions or changing original review tests."
+    },
+    "initial_boundary_log": "boundaries.txt"
+  },
+  "validation_limits": [
+    "Local deterministic models and MCP doubles plus existing protocol regression; no paid live model or remote MCP service",
+    "Workflow and previously documented target API gaps are outside this change"
+  ]
+}

@@ -1,0 +1,138 @@
+{
+  "imported_from": "/private/tmp/agentloom-round3-final-package-_w2h8mj2/installed/agentloom/__init__.py",
+  "public_exports": [
+    "PropertiesConfig",
+    "AgentLoom",
+    "AgentBuilder",
+    "FileRuntimeStore"
+  ],
+  "cases": [
+    {
+      "kind": "model",
+      "crash_exit": 74,
+      "checkpoint_before_restart": {
+        "status": "running",
+        "execution_fact": "completed",
+        "attempts": 1,
+        "usage": {
+          "business_model_attempts": 1,
+          "compaction_model_attempts": 0,
+          "input_tokens": 3,
+          "loops_consumed": 0,
+          "loops_reserved": 1,
+          "output_tokens": 2,
+          "token_counts_complete": true,
+          "tool_attempts": 0
+        }
+      },
+      "resume_result": {
+        "status": "succeeded",
+        "output": "saved"
+      },
+      "calls": [
+        "model"
+      ],
+      "checkpoint_after_restart": {
+        "status": "succeeded",
+        "execution_fact": "completed",
+        "attempts": 1,
+        "usage": {
+          "business_model_attempts": 1,
+          "compaction_model_attempts": 0,
+          "input_tokens": 3,
+          "loops_consumed": 1,
+          "loops_reserved": 0,
+          "output_tokens": 2,
+          "token_counts_complete": true,
+          "tool_attempts": 0
+        }
+      }
+    },
+    {
+      "kind": "mcp",
+      "crash_exit": 74,
+      "checkpoint_before_restart": {
+        "status": "running",
+        "execution_fact": "completed",
+        "attempts": 1,
+        "usage": {
+          "business_model_attempts": 1,
+          "compaction_model_attempts": 0,
+          "input_tokens": null,
+          "loops_consumed": 1,
+          "loops_reserved": 0,
+          "output_tokens": null,
+          "token_counts_complete": false,
+          "tool_attempts": 1
+        }
+      },
+      "resume_result": {
+        "status": "succeeded",
+        "output": "done"
+      },
+      "calls": [
+        "model",
+        "tool",
+        "model"
+      ],
+      "checkpoint_after_restart": {
+        "status": "succeeded",
+        "execution_fact": "completed",
+        "attempts": 1,
+        "usage": {
+          "business_model_attempts": 2,
+          "compaction_model_attempts": 0,
+          "input_tokens": null,
+          "loops_consumed": 2,
+          "loops_reserved": 0,
+          "output_tokens": null,
+          "token_counts_complete": false,
+          "tool_attempts": 1
+        }
+      }
+    },
+    {
+      "kind": "mcp-error",
+      "crash_exit": 74,
+      "checkpoint_before_restart": {
+        "status": "running",
+        "execution_fact": "completed",
+        "attempts": 1,
+        "usage": {
+          "business_model_attempts": 1,
+          "compaction_model_attempts": 0,
+          "input_tokens": null,
+          "loops_consumed": 1,
+          "loops_reserved": 0,
+          "output_tokens": null,
+          "token_counts_complete": false,
+          "tool_attempts": 1
+        }
+      },
+      "resume_result": {
+        "status": "succeeded",
+        "output": "done"
+      },
+      "calls": [
+        "model",
+        "tool",
+        "model"
+      ],
+      "checkpoint_after_restart": {
+        "status": "succeeded",
+        "execution_fact": "completed",
+        "attempts": 1,
+        "usage": {
+          "business_model_attempts": 2,
+          "compaction_model_attempts": 0,
+          "input_tokens": null,
+          "loops_consumed": 2,
+          "loops_reserved": 0,
+          "output_tokens": null,
+          "token_counts_complete": false,
+          "tool_attempts": 1
+        }
+      }
+    }
+  ]
+}

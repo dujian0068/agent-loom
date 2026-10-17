@@ -1,0 +1,28 @@
+........................................................................ [  8%]
+........................................................................ [ 17%]
+........................................................................ [ 26%]
+........................................................................ [ 35%]
+........................................................................ [ 44%]
+........................................................................ [ 53%]
+........................................................................ [ 62%]
+.......F..F............................................................. [ 71%]
+........................................................................ [ 80%]
+........................................................................ [ 89%]
+........................................................................ [ 98%]
+.............                                                            [100%]
+=================================== FAILURES ===================================
+_ test_complete_model_crash_boundaries_resume_without_new_attempt[memory-attempt-result:] _
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/tests/test_recovery_invariants.py:77: in test_complete_model_crash_boundaries_resume_without_new_attempt
+    with pytest.raises(InfrastructureError):
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   Failed: DID NOT RAISE <class 'agentloom.errors.InfrastructureError'>
+_ test_complete_model_crash_boundaries_resume_without_new_attempt[file-attempt-result:] _
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/tests/test_recovery_invariants.py:77: in test_complete_model_crash_boundaries_resume_without_new_attempt
+    with pytest.raises(InfrastructureError):
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   Failed: DID NOT RAISE <class 'agentloom.errors.InfrastructureError'>
+- generated xml file: /Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/evidence/round3-fixes-20261017/regression.junit.xml -
+=========================== short test summary info ============================
+FAILED agentloom-sdk/tests/test_recovery_invariants.py::test_complete_model_crash_boundaries_resume_without_new_attempt[memory-attempt-result:]
+FAILED agentloom-sdk/tests/test_recovery_invariants.py::test_complete_model_crash_boundaries_resume_without_new_attempt[file-attempt-result:]
+2 failed, 803 passed in 251.64s (0:04:11)

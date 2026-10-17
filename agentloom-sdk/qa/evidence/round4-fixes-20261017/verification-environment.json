@@ -1,0 +1,16 @@
+{
+  "base_head": "84b3355b2c59539cae4c4d1bece2e35d1ca22bf2",
+  "python": "3.12.14 (main, Aug 25 2026, 13:50:33) [Clang 22.1.3 ]",
+  "platform": "macOS-26.7-arm64-arm-64bit",
+  "versions": {
+    "pytest": "8.4.2",
+    "pytest-asyncio": "1.4.0",
+    "ruff": "0.16.9",
+    "httpx": "0.28.1",
+    "mcp": "1.30.0",
+    "rfc8785": "0.1.4"
+  },
+  "workflow_in_scope": false,
+  "default_storage": "filesystem",
+  "external_paid_model_or_remote_mcp_calls": false
+}

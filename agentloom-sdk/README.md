@@ -2,6 +2,8 @@
 
 独立的 Python ReAct / Plan–Executor SDK，包名 `agentloom-sdk`，导入名 `agentloom`，当前版本 `0.1.0a1`。实现不依赖 Platform、数据库服务或 Web 服务；默认将运行状态保存到当前目录的 `.agentloom/state`。**本次不接入 Workflow / StateGraph**；设计文档中涉及 Workflow 的接口仍属于后续工作。
 
+首次接入请从 [SDK 接入指南](../docs/sdk/integration.md) 开始：提供无凭据的完整运行脚本、`PropertiesConfig → AgentLoom → build(agent_def)` 主路径、扩展合同和重启恢复步骤。[实现文档](../docs/sdk/implementation.md#当前接口与交付状态)列出当前接口状态、模块职责、验证快照与未实现项。
+
 ## 安装
 
 Python 3.11+，本地工作空间适配器支持 POSIX（Linux / macOS）。在仓库根目录执行：
@@ -183,12 +185,12 @@ definition = AgentDefinition(
 
 | 能力 | 入口与约束 |
 | --- | --- |
-| 自定义工具 | `CapabilityRegistration` + `CapabilitySpec` + `FunctionToolAdapter`；输入／输出 Schema 校验，提供当前角色的 `CapabilityContext.workspace` |
+| 自定义工具 | `CapabilityRegistration` + `CapabilitySpec` + `FunctionToolAdapter`；输入／输出 Schema 校验，提供当前角色的 `ToolInvocationContext.workspace` |
 | 文件 | `read/list/stat/write/edit/patch/mkdir/move/delete/glob/grep`；相对路径或 `/work/...`，拒绝越根和符号链接；修改须匹配 etag，list 游标绑定目录版本 |
 | 权限范围 | `CapabilityBinding.access_scope={"paths": ["reports"], "read_only": True}`；未支持的 scope 字段在构造时拒绝 |
 | MCP | 可选 `McpToolAdapter(url=...)` 或 `command=..., args=...`；显式 `await adapter.discover()` 后冻结选中的成员 Schema，调用前核对实际目录，每个 Attempt 独立会话 |
 | Skill | `SkillPackage.from_directory` + `DirectorySkillLoader` + `SkillRegistration`；manifest 校验、只读资源、确定性参数展开，读取不会执行脚本或增加工具权限 |
-| 脚本 | `ScriptToolAdapter` 只接受与隔离 EnvironmentProvider 配套的 SandboxGateway；本地文件环境不提供宿主 shell 执行 |
+| 脚本 | `ScriptToolAdapter` 需注入配套的隔离环境和执行网关；独立 Protocol 仍属目标设计，本地文件环境不提供宿主 shell 执行 |
 
 普通工具/MCP/Skill/委派的大结果保存完整有效值，模型收到最多 64 KiB 的 UTF-8 预览；可使用自动提供的 `result_read` 分片读取。引用校验来源、角色和 hash，Planner 不能凭 Executor 的私有引用读取其内部工具正文。
 
@@ -198,11 +200,15 @@ definition = AgentDefinition(
 
 `HookSet` 由显式 `HookBinding` 和 handler 映射组成，`stage` 为 `request` 或 `response`，按 `ordinal` 顺序执行。`FunctionHookHandler` 返回 `HookDecision`。支持模型、工具、委派、Skill 与 `result.read` 路由，`HookMatcher` 可限制角色、能力绑定和 purpose。
 
+回调输入是 `HookInput` 与 `HookCallContext`，使用 `event.payload_ref/context_refs` 和 `context.reader` 读取固定版本有效内容；记录提供 `context_seq/effective_payload/visible_fields`。原生能力实现 `invoke_once(CapabilityRequest, ToolInvocationContext) -> ToolResult`，函数工具仍返回业务值。可用代码见[扩展接入](../docs/sdk/integration.md#5-工具mcp-与-hook-扩展)。
+
 允许修改的字段由路由白名单控制；原始请求／结果保留，有效修改进入后续上下文。用户本轮原文、角色目标、调用槽位和真实失败状态不可改。异常、超时或无效 patch 留诊断并放行；有效 `deny` 即使携带无效 patch 仍生效。Hook 结果保存和应用分别有幂等提交点；已保存结果不会因重启再次调用 handler。`HookReadPort` 只读当前角色的固定版本，回调结束即过期。
 
 同会话默认注入最近 2 次执行的实际根角色过程，更早轮次保留输入、最终结果和终态；不复制之前已注入的历史，不泄漏 Executor 私有过程。补充按 input_id 去重并记录转交。上下文使用保守 UTF-8 封装预算，压缩采用可恢复的分块摘要，保留原始记录与来源 hash；当前任务输入始终原文保留。
 
 恢复沿用原 Task、Operation、Attempt 和截止时间。已经保存的模型／工具结果只续后置处理；外部调用开始后却没有可靠结果时记录 `CALL_OUTCOME_UNKNOWN`，不盲目重发可能产生副作用的调用。
+
+模型完整响应和 MCP 已知结果在关闭连接前持久化，关闭阶段超时不会触发重复业务调用；关闭失败诊断独立保留。停止／截止仍阻止成功交付，失权仍拒绝旧 owner 写入。自定义能力若在方法内部关闭资源，可在关闭前通过 `context.report_completion(tool_result)` 固定结果，详细合同见[能力接口](../docs/sdk/capabilities.md)。通用模型 usage 事件与 completed 的计数按字段合并，不因空值丢失已知用量。
 
 Runtime 关闭会停止本机推进并保留检查点，不等同于用户停止；注入的 store、HTTP 客户端和其他共享依赖仍由调用者关闭。临时目录在根执行终态后由独立 CleanupService 清理，失败单独重试；`persistent_sandbox=True` 保留会话文件，并使旧执行句柄失效。
 
@@ -219,7 +225,7 @@ Runtime 关闭会停止本机推进并保留检查点，不等同于用户停止
 | `FileRuntimeStore(".agentloom/state")` | `RuntimeEngine()` 的默认值，JSON 文件、POSIX 文件锁和原子提交，支持单机多进程恢复 |
 | `MemoryRuntimeStore()` | 需显式注入，适合不需要重启恢复的进程内执行 |
 
-自定义状态目录使用 `RuntimeEngine(store=FileRuntimeStore("/path/to/state"))`；纯内存运行使用 `RuntimeEngine(store=MemoryRuntimeStore())`。默认存储由 RuntimeEngine 创建并关闭，关闭只释放句柄，不删除持久状态；显式注入的存储由调用者管理。不同程序可用 namespace 隔离记录，同一 namespace 和目录可由新进程接续。
+统一入口通过 `RuntimeProperties(state_directory="/path/to/state")` 指定状态目录，保持默认文件存储由宿主管理。需要自管存储时注入 `ServiceProperties(store=..., model=...)`；纯内存运行显式传入 `MemoryRuntimeStore()`。直接使用 RuntimeEngine 时同样支持 `properties=RuntimeProperties(...)` 或注入 `store=...`。关闭默认存储只释放句柄，不删除持久状态；显式注入的存储由调用者管理。不同程序可用 namespace 隔离记录，同一 namespace 和目录可由新进程接续。
 
 文件后端目录结构：
 
@@ -241,9 +247,9 @@ Runtime 关闭会停止本机推进并保留检查点，不等同于用户停止
 
 | 包 | 职责 |
 | --- | --- |
-| `agentloom.public` | Agent 门面、AgentNode、RunHandle |
+| `agentloom.public` | PropertiesConfig、AgentLoom、AgentBuilder、统一装配、Agent 门面、RunHandle 与公开投影 |
 | `agentloom.configuration` | 冻结配置、Schema／变量校验、恢复清单、RFC 8785 canonical JSON |
-| `agentloom.runtime` | 宿主、Runner、角色激活引擎、Agent Loop、调用准入／Attempt、停止、输入、查询、清理 |
+| `agentloom.runtime` | 宿主、Runner、角色激活、Agent Loop、调用准入／Attempt、完成回执、恢复核验、停止、输入、查询、清理 |
 | `agentloom.events` | 单处理者 EventBus、局部注册、Hook 链和持久阶段 |
 | `agentloom.context` | 原始／有效记录、历史投影、预算、压缩、大结果分片 |
 | `agentloom.capabilities` | 角色能力目录、Tool、MCP、Skill、文件／脚本适配 |
@@ -265,10 +271,12 @@ Runtime 关闭会停止本机推进并保留检查点，不等同于用户停止
 ## 验证
 
 ```sh
-python -m pytest -q agentloom-sdk/tests
-ruff check agentloom-sdk/src agentloom-sdk/tests
-ruff format --check agentloom-sdk/src agentloom-sdk/tests
+python -m pytest -q agentloom-sdk/tests agentloom-sdk/qa/test_sdk_audit.py agentloom-sdk/qa/test_sdk_rereview.py agentloom-sdk/qa/test_sdk_review_round3.py agentloom-sdk/qa/test_sdk_review_round4.py
+ruff check agentloom-sdk/src agentloom-sdk/tests agentloom-sdk/qa
+ruff format --check agentloom-sdk/src agentloom-sdk/tests agentloom-sdk/qa
 python -m pip wheel ./agentloom-sdk --no-deps -w /tmp/agentloom-wheels
 ```
 
 测试不依赖 Platform 或真实模型凭据。覆盖持久化提交边界的独立进程退出、双宿主租约、并发与额度、Hook、补充及历史、压缩、文件 fence、真实 MCP stdio 子进程和 HTTP SSE 协议分片。
+
+最近第四轮修复的上述回归为 **948 passed**；结果对应[记录中的源码与测试快照](../docs/sdk/implementation.md#第四轮完成回调与-json-边界修复)，不自动涵盖此后新增的 QA 文件或远端服务联调。

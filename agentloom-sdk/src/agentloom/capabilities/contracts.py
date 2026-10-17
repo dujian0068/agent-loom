@@ -20,6 +20,17 @@ class CapabilityRequest:
 
 @dataclass(frozen=True)
 class ToolInvocationContext:
+    """Bound attempt services, valid only during this invocation.
+
+    report_completion, when supplied by the runtime, accepts a returned ToolResult
+    (or error=AgentLoomError) synchronously before adapter-owned resource teardown.
+    It validates and commits the outcome under the current lease. It does not
+    authorize further work or change stop/deadline semantics; errors propagate.
+    A valid error= report is committed and then raised. Its external_outcome
+    determines completed/unknown/not_started; execution exceptions are separate.
+    The first saved outcome is fixed and the callback expires when dispatch ends.
+    """
+
     content_scope_ref: object
     run_id: str
     graph_execution_id: str
@@ -41,6 +52,7 @@ class ToolInvocationContext:
     check_active: object = field(repr=False)
     spec: object = field(default=None, repr=False)
     report_diagnostic: object = field(default=None, repr=False)
+    report_completion: object = field(default=None, repr=False)
 
     def __post_init__(self):
         for key in (
@@ -138,6 +150,7 @@ class ValueToolAdapter:
     """Bridge SDK adapters' existing value-returning implementation to ToolResult."""
 
     async def invoke_once(self, request, context):
-        return ToolResult.from_value(
-            await self.invoke(request.capability_key, request.arguments, context)
-        )
+        from .invocation import result_from_value
+
+        value = await self.invoke(request.capability_key, request.arguments, context)
+        return result_from_value(value)

@@ -20,14 +20,15 @@ UNSET = _Unset()
 
 
 def store_lock_timeout(value):
-    if (
-        isinstance(value, bool)
-        or not isinstance(value, (int, float))
-        or not math.isfinite(value)
-        or value < 0
-    ):
+    if isinstance(value, bool) or not isinstance(value, (int, float)) or value < 0:
         raise ConfigurationError("STORE_LOCK_TIMEOUT_INVALID")
-    return float(value)
+    try:
+        converted = float(value)
+    except (OverflowError, TypeError, ValueError) as exc:
+        raise ConfigurationError("STORE_LOCK_TIMEOUT_INVALID") from exc
+    if not math.isfinite(converted):
+        raise ConfigurationError("STORE_LOCK_TIMEOUT_INVALID")
+    return converted
 
 
 @dataclass(frozen=True, kw_only=True)

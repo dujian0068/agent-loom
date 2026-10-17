@@ -11,24 +11,10 @@ from ..configuration import digest
 from ..context import CompactionService, estimate, materialize
 from ..errors import AgentLoomError, InfrastructureError, error_record
 from ..types import CallStageEvent
+from .completion import AttemptCompletion, failed_result, failure, success
 from .handlers import AttemptContext, BusinessEvent
 from .usage import account_model_usage
 from .validation import validate_action
-
-
-def success(result):
-    return {"status": "succeeded", "result": result, "error": None, "execution_fact": "completed"}
-
-
-def failure(error, *, blocked=False):
-    return {
-        "status": "blocked" if blocked else "failed",
-        "result": None,
-        "error": error,
-        "execution_fact": "not_started"
-        if blocked or error.get("external_outcome") == "not_started"
-        else "unknown",
-    }
 
 
 class CallDriver:
@@ -244,6 +230,7 @@ class CallDriver:
                     await self.compaction.prepare(op_id)
                 await self._permit(op_id)
                 await self._attempts(op_id)
+        runner.check_active()
         op = runner.operation(op_id)
         after = await self._stage(op_id, "response")
         response = runner.operation(op_id)["response"]
@@ -371,8 +358,20 @@ class CallDriver:
                     s["usage"]["token_counts_complete"] = False
 
             runner.commit(f"attempt-start:{op_id}:{index}", start)
+            diagnostics = []
+            completion = AttemptCompletion(
+                lambda raw, aid=attempt_id, notes=diagnostics: self._save_attempt(
+                    op_id, raw, None, diagnostics=notes, expected_attempt_id=aid
+                )
+            )
             ctx = AttemptContext(
-                op_id, attempt_id, index, runner.lease.epoch, runner.state()["deadline_at"]
+                op_id,
+                attempt_id,
+                index,
+                runner.lease.epoch,
+                runner.state()["deadline_at"],
+                diagnostics,
+                completion,
             )
             partial = None
             try:
@@ -384,6 +383,9 @@ class CallDriver:
                         value = await runner.bus.request(event, ctx)
                 raw = value.raw_result() if isinstance(value, ToolOutcome) else success(value)
             except asyncio.CancelledError as exc:
+                if completion.saved:
+                    self._close_diagnostic(ctx, "RESOURCE_CLOSE_CANCELLED", "cancelled")
+                    raise
                 if getattr(exc, "partial_material", None):
                     partial = {
                         **exc.partial_material,
@@ -413,22 +415,16 @@ class CallDriver:
             except InfrastructureError:
                 raise
             except TimeoutError:
-                raw = failure(
-                    AgentLoomError(
-                        "TOOL_TIMEOUT", category="timeout", external_outcome="unknown"
-                    ).to_dict()
-                )
+                if completion.saved:
+                    self._close_diagnostic(ctx, "RESOURCE_CLOSE_TIMEOUT", "timeout")
+                else:
+                    raw = failure(
+                        AgentLoomError(
+                            "TOOL_TIMEOUT", category="timeout", external_outcome="unknown"
+                        ).to_dict()
+                    )
             except Exception as exc:
-                raw = failure(error_record(exc))
-                if hasattr(exc, "result_material"):
-                    raw["result"] = exc.result_material
-                    raw["execution_fact"] = getattr(exc, "execution_fact", "completed")
-                elif hasattr(exc, "execution_fact"):
-                    raw["execution_fact"] = exc.execution_fact
-                if hasattr(exc, "tool_result"):
-                    raw["tool_result"] = exc.tool_result
-                if hasattr(exc, "invalid_tool_result"):
-                    raw["invalid_tool_result"] = exc.invalid_tool_result
+                raw = failed_result(exc)
                 if getattr(exc, "partial_material", None):
                     partial = {
                         **exc.partial_material,
@@ -436,9 +432,36 @@ class CallDriver:
                         "operation_id": op_id,
                         "error": raw["error"],
                     }
-            self._save_attempt(op_id, raw, partial, diagnostics=ctx.diagnostics)
+            finally:
+                completion.close()
+                if completion.saved and ctx.diagnostics:
+                    self._save_diagnostics(op_id, attempt_id, ctx.diagnostics)
+            if not completion.saved:
+                self._save_attempt(
+                    op_id, raw, partial, diagnostics=ctx.diagnostics, expected_attempt_id=attempt_id
+                )
 
-    def _save_attempt(self, op_id, raw, partial, *, force_final=False, diagnostics=()):
+    @staticmethod
+    def _close_diagnostic(context, code, category):
+        context.diagnostics.append(
+            {
+                "phase": "resource_close",
+                "error": AgentLoomError(code, category=category, phase="after").to_dict(),
+            }
+        )
+
+    def _save_diagnostics(self, op_id, attempt_id, diagnostics):
+        def save(state):
+            attempt = state["operations"][op_id]["attempts"][-1]
+            if attempt["attempt_id"] != attempt_id:
+                raise InfrastructureError("ATTEMPT_ID_MISMATCH")
+            attempt["diagnostics"] = copy.deepcopy(diagnostics)
+
+        self.runner.commit("attempt-diagnostics:" + attempt_id, save)
+
+    def _save_attempt(
+        self, op_id, raw, partial, *, force_final=False, diagnostics=(), expected_attempt_id=None
+    ):
         runner = self.runner
         op = runner.operation(op_id)
         index = len(op["attempts"])
@@ -446,6 +469,7 @@ class CallDriver:
         error = raw["error"]
         retrying = bool(
             not force_final
+            and raw["execution_fact"] != "completed"
             and error
             and retry.enabled
             and index < retry.max_attempts
@@ -461,6 +485,8 @@ class CallDriver:
         def save(s):
             current = s["operations"][op_id]
             attempt = current["attempts"][-1]
+            if expected_attempt_id is not None and attempt["attempt_id"] != expected_attempt_id:
+                raise InfrastructureError("ATTEMPT_ID_MISMATCH")
             saved_raw = copy.deepcopy(raw)
             envelope = saved_raw.pop("tool_result", None)
             invalid_envelope = saved_raw.pop("invalid_tool_result", None)

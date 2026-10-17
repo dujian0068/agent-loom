@@ -61,6 +61,10 @@ class ModelHandler:
 8. receipt 持久化失败视为必要存储故障：停止进一步业务交付，关闭连接，已有片段只作未完成材料；不能继续工具调用。
 9. complete 后须保存 raw，再完成后置链与 effective；等待者只读已提交最终响应。客户端没有 ProviderEvent 或 token outbox。
 
+当前 Python ModelHandler 在合法 completed 事件到达后、关闭流之前提交完整响应和用量。通用 usage 事件按 Attempt 聚合，与 completed 中的累计计数逐字段合并；null／缺字段不清除已知值，0 可以更新已有值，所有入口共用安全整数上界。新 Attempt／Operation 不继承前一次的临时聚合器。
+
+资源关闭仍在原调用任务中执行。关闭的普通异常、超时和取消诊断独立于已保存 raw；单纯关闭超时不得覆盖已完成结果或触发再次业务调用。根停止／截止及失权照常中断交付；有效租约下保留已取得事实，旧 owner 不能提交迟到结果。进程在关闭期间丢失后，接管者从已提交 raw 继续后处理。
+
 取消、deadline、LEASE_LOST 不可自动重试；HTTP 429、502/503/504、明确 reset／暂时连接超时按调用协议分类。网络结果 unknown 不等于协议失败可无条件重发。后置 Hook 拒绝或故障不重新调用供应商。
 
 `generate_once` 若返回完整响应之后提交失败，重试的是原 raw 保存命令；已持久 raw 的恢复只做后处理。如果进程丢失且无 raw，保留外部结果 unknown，再按明确异常类别与冻结 RetryPolicy 决定，不能因“没有结果”自动重发。
@@ -105,6 +109,12 @@ NodeDriver 在同一提交中保存反馈及下一 prepare_context 阶段；该�
 当前 Python 可直接实现 `invoke_once(CapabilityRequest, ToolInvocationContext)`，返回 `ToolResult` 或字段完全一致的 JSON 对象。`ContentBlock(type="text", text=...)` 和 `ContentBlock(type="json", json_ref={"kind":"inline","value":...})` 可以交付；blob／artifact 引用尚无完整内容授权服务，明确拒绝，不将引用或宿主路径当作已获准内容。原始 ToolResult（含 metadata）仅存 Attempt 审计，模型获得按内容归一和后置 Hook 修改后的有效结果。failed／unknown 保留明确错误与执行事实，不能因为 Adapter 正常返回就记为成功；非法结果按协议失败收束，能够规范化的原始材料单独留审计。
 
 SDK 内置适配器已提供 `invoke_once`。旧用户适配器的 `invoke(member, arguments, context)` 仍由兼容桥调用一次，其返回 JSON 按业务值包装，不猜测其中的 `status/error` 是 ToolResult 信封。同时定义两个方法时优先调用 `invoke_once`，异常后不回退到另一个方法。`ToolInvocationContext` 的绑定配置和 scope 引用不可变，`cancellation()`／`check_active()` 是单机实现的同步控制检查，异步取消仍通过调用任务传播；这些运行期对象不进入检查点。旧 `config/task_id` 属性分别映射到 `binding_config/node_task_id`。
+
+拥有内部资源关闭步骤的适配器可在取得响应后同步调用 `context.report_completion(tool_result)`；已知失败也可使用 `context.report_completion(error=error)`。Runtime 注入的此回调使用与正常返回相同的结果／输出 Schema 校验和租约保护，保存首个完成事实；校验或持久化失败必须向上传播。MCP 已接入该路径，成功与业务失败均在关闭会话前保存。普通直接返回仍有效；回调仅在当前 Attempt 派发期间有效，结束后调用返回 `ATTEMPT_COMPLETION_CLOSED`，不能用于后台补发结果。
+
+`error=` 接收 AgentLoomError，按 ToolResult 合同验证错误字段及附带材料；合法失败提交后继续抛出原异常。明确的 external_outcome=known 对应 completed，不因 retryable_transport=true 再次执行；unknown／not_started 保留各自事实，仍按既定重试策略处理。非法错误 DTO 在存储前转为 `CAPABILITY_RESULT_INVALID / protocol / completed`，基础设施异常和取消信号继续向上传播。调用方不需要设置私有 execution_fact 属性。
+
+值返回桥接在函数正常返回后统一包装结果；非法 JSON 值产生 `protocol / CAPABILITY_RESULT_INVALID` 并保留 `execution_fact=completed`，不能将 NaN、循环容器等非规范值写入检查点。JSON 校验、复制和冻结中的递归溢出归一为 SDK 错误；同一个子对象出现在不同分支仍是合法值。函数执行期间直接抛出的异常，包括 RecursionError，不因此被标为 completed。
 
 SDK 生成的对象 input_schema 默认 additionalProperties=false；MCP schema 保留其声明扩展语义。导入收拢许可本地 `$ref`，拒绝外部网络 `$ref`；运行校验不得顺带出网取 schema。
 

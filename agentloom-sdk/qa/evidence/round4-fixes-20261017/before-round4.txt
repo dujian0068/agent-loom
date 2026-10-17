@@ -1,0 +1,217 @@
+F.F.........F.F.........F.F.F.F.F.F...FFFFFF...FFFFFF...                 [100%]
+=================================== FAILURES ===================================
+_ test_known_error_completion_has_same_fact_and_retry_behavior_as_result[memory-known-business-error-callback] _
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round4.py:124: in test_known_error_completion_has_same_fact_and_retry_behavior_as_result
+    assert op["raw"]["execution_fact"] == ("completed" if outcome == "known" else outcome)
+E   AssertionError: assert 'unknown' == 'completed'
+E     
+E     - completed
+E     + unknown
+----------------------------- Captured stdout call -----------------------------
+{"channel": "error", "outcome": "known", "calls": 1, "raw": {"status": "failed", "result": null, "error": {"code": "KNOWN_RESPONSE", "message": "KNOWN_RESPONSE", "category": "business", "phase": "receive", "external_outcome": "known", "retryable_transport": false, "field_path": null}, "execution_fact": "unknown"}}
+_ test_known_error_completion_has_same_fact_and_retry_behavior_as_result[memory-known-transport-error-callback] _
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round4.py:121: in test_known_error_completion_has_same_fact_and_retry_behavior_as_result
+    assert adapter.calls == expected_calls, (
+E   AssertionError: Callback syntax must not change completion or retry semantics
+E   assert 2 == 1
+E    +  where 2 = <test_sdk_review_round4.test_known_error_completion_has_same_fact_and_retry_behavior_as_result.<locals>.Native object at 0x109e87080>.calls
+----------------------------- Captured stdout call -----------------------------
+{"channel": "error", "outcome": "known", "calls": 2, "raw": {"status": "failed", "result": null, "error": {"code": "KNOWN_RESPONSE", "message": "KNOWN_RESPONSE", "category": "transport", "phase": "receive", "external_outcome": "known", "retryable_transport": true, "field_path": null}, "execution_fact": "unknown"}}
+_ test_known_error_completion_has_same_fact_and_retry_behavior_as_result[file-known-business-error-callback] _
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round4.py:124: in test_known_error_completion_has_same_fact_and_retry_behavior_as_result
+    assert op["raw"]["execution_fact"] == ("completed" if outcome == "known" else outcome)
+E   AssertionError: assert 'unknown' == 'completed'
+E     
+E     - completed
+E     + unknown
+----------------------------- Captured stdout call -----------------------------
+{"channel": "error", "outcome": "known", "calls": 1, "raw": {"error": {"category": "business", "code": "KNOWN_RESPONSE", "external_outcome": "known", "field_path": null, "message": "KNOWN_RESPONSE", "phase": "receive", "retryable_transport": false}, "execution_fact": "unknown", "result": null, "status": "failed"}}
+_ test_known_error_completion_has_same_fact_and_retry_behavior_as_result[file-known-transport-error-callback] _
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round4.py:121: in test_known_error_completion_has_same_fact_and_retry_behavior_as_result
+    assert adapter.calls == expected_calls, (
+E   AssertionError: Callback syntax must not change completion or retry semantics
+E   assert 2 == 1
+E    +  where 2 = <test_sdk_review_round4.test_known_error_completion_has_same_fact_and_retry_behavior_as_result.<locals>.Native object at 0x109ef2990>.calls
+----------------------------- Captured stdout call -----------------------------
+{"channel": "error", "outcome": "known", "calls": 2, "raw": {"error": {"category": "transport", "code": "KNOWN_RESPONSE", "external_outcome": "known", "field_path": null, "message": "KNOWN_RESPONSE", "phase": "receive", "retryable_transport": true}, "execution_fact": "unknown", "result": null, "status": "failed"}}
+_ test_error_completion_validates_error_dto_before_persistence[memory-empty-code-error-callback] _
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round4.py:188: in test_error_completion_validates_error_dto_before_persistence
+    assert op["raw"]["error"]["code"] == "CAPABILITY_RESULT_INVALID"
+E   AssertionError: assert '' == 'CAPABILITY_RESULT_INVALID'
+E     
+E     - CAPABILITY_RESULT_INVALID
+----------------------------- Captured stdout call -----------------------------
+{"channel": "error", "malformed": "empty-code", "status": "succeeded", "infrastructure_error": null, "session_busy": false, "raw": {"status": "failed", "result": null, "error": {"code": "", "message": "", "category": "business", "phase": "execute", "external_outcome": "known", "retryable_transport": false, "field_path": null}, "execution_fact": "unknown"}}
+_ test_error_completion_validates_error_dto_before_persistence[memory-bad-category-error-callback] _
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round4.py:188: in test_error_completion_validates_error_dto_before_persistence
+    assert op["raw"]["error"]["code"] == "CAPABILITY_RESULT_INVALID"
+E   AssertionError: assert 'FAILED' == 'CAPABILITY_RESULT_INVALID'
+E     
+E     - CAPABILITY_RESULT_INVALID
+E     + FAILED
+----------------------------- Captured stdout call -----------------------------
+{"channel": "error", "malformed": "bad-category", "status": "succeeded", "infrastructure_error": null, "session_busy": false, "raw": {"status": "failed", "result": null, "error": {"code": "FAILED", "message": "FAILED", "category": "outside-enum", "phase": "execute", "external_outcome": "known", "retryable_transport": false, "field_path": null}, "execution_fact": "unknown"}}
+_ test_error_completion_validates_error_dto_before_persistence[memory-nan-retry-after-error-callback] _
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round4.py:183: in test_error_completion_validates_error_dto_before_persistence
+    assert infrastructure_error is None, (
+E   AssertionError: Invalid adapter data must not strand the Run as a storage failure
+E   assert 'ATTEMPT_COMPLETION_COMMIT_FAILED' is None
+----------------------------- Captured stdout call -----------------------------
+{"channel": "error", "malformed": "nan-retry-after", "status": "running", "infrastructure_error": "ATTEMPT_COMPLETION_COMMIT_FAILED", "session_busy": true, "raw": null}
+_ test_error_completion_validates_error_dto_before_persistence[file-empty-code-error-callback] _
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round4.py:188: in test_error_completion_validates_error_dto_before_persistence
+    assert op["raw"]["error"]["code"] == "CAPABILITY_RESULT_INVALID"
+E   AssertionError: assert '' == 'CAPABILITY_RESULT_INVALID'
+E     
+E     - CAPABILITY_RESULT_INVALID
+----------------------------- Captured stdout call -----------------------------
+{"channel": "error", "malformed": "empty-code", "status": "succeeded", "infrastructure_error": null, "session_busy": false, "raw": {"error": {"category": "business", "code": "", "external_outcome": "known", "field_path": null, "message": "", "phase": "execute", "retryable_transport": false}, "execution_fact": "unknown", "result": null, "status": "failed"}}
+_ test_error_completion_validates_error_dto_before_persistence[file-bad-category-error-callback] _
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round4.py:188: in test_error_completion_validates_error_dto_before_persistence
+    assert op["raw"]["error"]["code"] == "CAPABILITY_RESULT_INVALID"
+E   AssertionError: assert 'FAILED' == 'CAPABILITY_RESULT_INVALID'
+E     
+E     - CAPABILITY_RESULT_INVALID
+E     + FAILED
+----------------------------- Captured stdout call -----------------------------
+{"channel": "error", "malformed": "bad-category", "status": "succeeded", "infrastructure_error": null, "session_busy": false, "raw": {"error": {"category": "outside-enum", "code": "FAILED", "external_outcome": "known", "field_path": null, "message": "FAILED", "phase": "execute", "retryable_transport": false}, "execution_fact": "unknown", "result": null, "status": "failed"}}
+_ test_error_completion_validates_error_dto_before_persistence[file-nan-retry-after-error-callback] _
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round4.py:183: in test_error_completion_validates_error_dto_before_persistence
+    assert infrastructure_error is None, (
+E   AssertionError: Invalid adapter data must not strand the Run as a storage failure
+E   assert 'ATTEMPT_COMPLETION_COMMIT_FAILED' is None
+----------------------------- Captured stdout call -----------------------------
+{"channel": "error", "malformed": "nan-retry-after", "status": "running", "infrastructure_error": "ATTEMPT_COMPLETION_COMMIT_FAILED", "session_busy": true, "raw": null}
+_ test_non_json_returned_container_keeps_completed_protocol_fact[memory-cycle-list-function] _
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round4.py:261: in test_non_json_returned_container_keeps_completed_protocol_fact
+    assert op["raw"]["execution_fact"] == "completed"
+E   AssertionError: assert 'unknown' == 'completed'
+E     
+E     - completed
+E     + unknown
+----------------------------- Captured stdout call -----------------------------
+{"kind": "function", "shape": "cycle-list", "raw": {"status": "failed", "result": null, "error": {"code": "ADAPTER_ERROR", "message": "RecursionError", "category": "unknown", "phase": "execute", "external_outcome": "unknown", "retryable_transport": false, "field_path": null}, "execution_fact": "unknown"}}
+_ test_non_json_returned_container_keeps_completed_protocol_fact[memory-cycle-list-legacy] _
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round4.py:261: in test_non_json_returned_container_keeps_completed_protocol_fact
+    assert op["raw"]["execution_fact"] == "completed"
+E   AssertionError: assert 'unknown' == 'completed'
+E     
+E     - completed
+E     + unknown
+----------------------------- Captured stdout call -----------------------------
+{"kind": "legacy", "shape": "cycle-list", "raw": {"status": "failed", "result": null, "error": {"code": "ADAPTER_ERROR", "message": "RecursionError", "category": "unknown", "phase": "execute", "external_outcome": "unknown", "retryable_transport": false, "field_path": null}, "execution_fact": "unknown"}}
+_ test_non_json_returned_container_keeps_completed_protocol_fact[memory-cycle-list-native] _
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round4.py:261: in test_non_json_returned_container_keeps_completed_protocol_fact
+    assert op["raw"]["execution_fact"] == "completed"
+E   AssertionError: assert 'unknown' == 'completed'
+E     
+E     - completed
+E     + unknown
+----------------------------- Captured stdout call -----------------------------
+{"kind": "native", "shape": "cycle-list", "raw": {"status": "failed", "result": null, "error": {"code": "ADAPTER_ERROR", "message": "RecursionError", "category": "unknown", "phase": "execute", "external_outcome": "unknown", "retryable_transport": false, "field_path": null}, "execution_fact": "unknown"}}
+_ test_non_json_returned_container_keeps_completed_protocol_fact[memory-cycle-dict-function] _
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round4.py:261: in test_non_json_returned_container_keeps_completed_protocol_fact
+    assert op["raw"]["execution_fact"] == "completed"
+E   AssertionError: assert 'unknown' == 'completed'
+E     
+E     - completed
+E     + unknown
+----------------------------- Captured stdout call -----------------------------
+{"kind": "function", "shape": "cycle-dict", "raw": {"status": "failed", "result": null, "error": {"code": "ADAPTER_ERROR", "message": "RecursionError", "category": "unknown", "phase": "execute", "external_outcome": "unknown", "retryable_transport": false, "field_path": null}, "execution_fact": "unknown"}}
+_ test_non_json_returned_container_keeps_completed_protocol_fact[memory-cycle-dict-legacy] _
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round4.py:261: in test_non_json_returned_container_keeps_completed_protocol_fact
+    assert op["raw"]["execution_fact"] == "completed"
+E   AssertionError: assert 'unknown' == 'completed'
+E     
+E     - completed
+E     + unknown
+----------------------------- Captured stdout call -----------------------------
+{"kind": "legacy", "shape": "cycle-dict", "raw": {"status": "failed", "result": null, "error": {"code": "ADAPTER_ERROR", "message": "RecursionError", "category": "unknown", "phase": "execute", "external_outcome": "unknown", "retryable_transport": false, "field_path": null}, "execution_fact": "unknown"}}
+_ test_non_json_returned_container_keeps_completed_protocol_fact[memory-cycle-dict-native] _
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round4.py:261: in test_non_json_returned_container_keeps_completed_protocol_fact
+    assert op["raw"]["execution_fact"] == "completed"
+E   AssertionError: assert 'unknown' == 'completed'
+E     
+E     - completed
+E     + unknown
+----------------------------- Captured stdout call -----------------------------
+{"kind": "native", "shape": "cycle-dict", "raw": {"status": "failed", "result": null, "error": {"code": "ADAPTER_ERROR", "message": "RecursionError", "category": "unknown", "phase": "execute", "external_outcome": "unknown", "retryable_transport": false, "field_path": null}, "execution_fact": "unknown"}}
+_ test_non_json_returned_container_keeps_completed_protocol_fact[file-cycle-list-function] _
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round4.py:261: in test_non_json_returned_container_keeps_completed_protocol_fact
+    assert op["raw"]["execution_fact"] == "completed"
+E   AssertionError: assert 'unknown' == 'completed'
+E     
+E     - completed
+E     + unknown
+----------------------------- Captured stdout call -----------------------------
+{"kind": "function", "shape": "cycle-list", "raw": {"error": {"category": "unknown", "code": "ADAPTER_ERROR", "external_outcome": "unknown", "field_path": null, "message": "RecursionError", "phase": "execute", "retryable_transport": false}, "execution_fact": "unknown", "result": null, "status": "failed"}}
+_ test_non_json_returned_container_keeps_completed_protocol_fact[file-cycle-list-legacy] _
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round4.py:261: in test_non_json_returned_container_keeps_completed_protocol_fact
+    assert op["raw"]["execution_fact"] == "completed"
+E   AssertionError: assert 'unknown' == 'completed'
+E     
+E     - completed
+E     + unknown
+----------------------------- Captured stdout call -----------------------------
+{"kind": "legacy", "shape": "cycle-list", "raw": {"error": {"category": "unknown", "code": "ADAPTER_ERROR", "external_outcome": "unknown", "field_path": null, "message": "RecursionError", "phase": "execute", "retryable_transport": false}, "execution_fact": "unknown", "result": null, "status": "failed"}}
+_ test_non_json_returned_container_keeps_completed_protocol_fact[file-cycle-list-native] _
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round4.py:261: in test_non_json_returned_container_keeps_completed_protocol_fact
+    assert op["raw"]["execution_fact"] == "completed"
+E   AssertionError: assert 'unknown' == 'completed'
+E     
+E     - completed
+E     + unknown
+----------------------------- Captured stdout call -----------------------------
+{"kind": "native", "shape": "cycle-list", "raw": {"error": {"category": "unknown", "code": "ADAPTER_ERROR", "external_outcome": "unknown", "field_path": null, "message": "RecursionError", "phase": "execute", "retryable_transport": false}, "execution_fact": "unknown", "result": null, "status": "failed"}}
+_ test_non_json_returned_container_keeps_completed_protocol_fact[file-cycle-dict-function] _
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round4.py:261: in test_non_json_returned_container_keeps_completed_protocol_fact
+    assert op["raw"]["execution_fact"] == "completed"
+E   AssertionError: assert 'unknown' == 'completed'
+E     
+E     - completed
+E     + unknown
+----------------------------- Captured stdout call -----------------------------
+{"kind": "function", "shape": "cycle-dict", "raw": {"error": {"category": "unknown", "code": "ADAPTER_ERROR", "external_outcome": "unknown", "field_path": null, "message": "RecursionError", "phase": "execute", "retryable_transport": false}, "execution_fact": "unknown", "result": null, "status": "failed"}}
+_ test_non_json_returned_container_keeps_completed_protocol_fact[file-cycle-dict-legacy] _
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round4.py:261: in test_non_json_returned_container_keeps_completed_protocol_fact
+    assert op["raw"]["execution_fact"] == "completed"
+E   AssertionError: assert 'unknown' == 'completed'
+E     
+E     - completed
+E     + unknown
+----------------------------- Captured stdout call -----------------------------
+{"kind": "legacy", "shape": "cycle-dict", "raw": {"error": {"category": "unknown", "code": "ADAPTER_ERROR", "external_outcome": "unknown", "field_path": null, "message": "RecursionError", "phase": "execute", "retryable_transport": false}, "execution_fact": "unknown", "result": null, "status": "failed"}}
+_ test_non_json_returned_container_keeps_completed_protocol_fact[file-cycle-dict-native] _
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round4.py:261: in test_non_json_returned_container_keeps_completed_protocol_fact
+    assert op["raw"]["execution_fact"] == "completed"
+E   AssertionError: assert 'unknown' == 'completed'
+E     
+E     - completed
+E     + unknown
+----------------------------- Captured stdout call -----------------------------
+{"kind": "native", "shape": "cycle-dict", "raw": {"error": {"category": "unknown", "code": "ADAPTER_ERROR", "external_outcome": "unknown", "field_path": null, "message": "RecursionError", "phase": "execute", "retryable_transport": false}, "execution_fact": "unknown", "result": null, "status": "failed"}}
+- generated xml file: /private/tmp/agentloom-round4-verification-zi_7vtyl/boundaries.junit.xml -
+=========================== short test summary info ============================
+FAILED agentloom-sdk/qa/test_sdk_review_round4.py::test_known_error_completion_has_same_fact_and_retry_behavior_as_result[memory-known-business-error-callback]
+FAILED agentloom-sdk/qa/test_sdk_review_round4.py::test_known_error_completion_has_same_fact_and_retry_behavior_as_result[memory-known-transport-error-callback]
+FAILED agentloom-sdk/qa/test_sdk_review_round4.py::test_known_error_completion_has_same_fact_and_retry_behavior_as_result[file-known-business-error-callback]
+FAILED agentloom-sdk/qa/test_sdk_review_round4.py::test_known_error_completion_has_same_fact_and_retry_behavior_as_result[file-known-transport-error-callback]
+FAILED agentloom-sdk/qa/test_sdk_review_round4.py::test_error_completion_validates_error_dto_before_persistence[memory-empty-code-error-callback]
+FAILED agentloom-sdk/qa/test_sdk_review_round4.py::test_error_completion_validates_error_dto_before_persistence[memory-bad-category-error-callback]
+FAILED agentloom-sdk/qa/test_sdk_review_round4.py::test_error_completion_validates_error_dto_before_persistence[memory-nan-retry-after-error-callback]
+FAILED agentloom-sdk/qa/test_sdk_review_round4.py::test_error_completion_validates_error_dto_before_persistence[file-empty-code-error-callback]
+FAILED agentloom-sdk/qa/test_sdk_review_round4.py::test_error_completion_validates_error_dto_before_persistence[file-bad-category-error-callback]
+FAILED agentloom-sdk/qa/test_sdk_review_round4.py::test_error_completion_validates_error_dto_before_persistence[file-nan-retry-after-error-callback]
+FAILED agentloom-sdk/qa/test_sdk_review_round4.py::test_non_json_returned_container_keeps_completed_protocol_fact[memory-cycle-list-function]
+FAILED agentloom-sdk/qa/test_sdk_review_round4.py::test_non_json_returned_container_keeps_completed_protocol_fact[memory-cycle-list-legacy]
+FAILED agentloom-sdk/qa/test_sdk_review_round4.py::test_non_json_returned_container_keeps_completed_protocol_fact[memory-cycle-list-native]
+FAILED agentloom-sdk/qa/test_sdk_review_round4.py::test_non_json_returned_container_keeps_completed_protocol_fact[memory-cycle-dict-function]
+FAILED agentloom-sdk/qa/test_sdk_review_round4.py::test_non_json_returned_container_keeps_completed_protocol_fact[memory-cycle-dict-legacy]
+FAILED agentloom-sdk/qa/test_sdk_review_round4.py::test_non_json_returned_container_keeps_completed_protocol_fact[memory-cycle-dict-native]
+FAILED agentloom-sdk/qa/test_sdk_review_round4.py::test_non_json_returned_container_keeps_completed_protocol_fact[file-cycle-list-function]
+FAILED agentloom-sdk/qa/test_sdk_review_round4.py::test_non_json_returned_container_keeps_completed_protocol_fact[file-cycle-list-legacy]
+FAILED agentloom-sdk/qa/test_sdk_review_round4.py::test_non_json_returned_container_keeps_completed_protocol_fact[file-cycle-list-native]
+FAILED agentloom-sdk/qa/test_sdk_review_round4.py::test_non_json_returned_container_keeps_completed_protocol_fact[file-cycle-dict-function]
+FAILED agentloom-sdk/qa/test_sdk_review_round4.py::test_non_json_returned_container_keeps_completed_protocol_fact[file-cycle-dict-legacy]
+FAILED agentloom-sdk/qa/test_sdk_review_round4.py::test_non_json_returned_container_keeps_completed_protocol_fact[file-cycle-dict-native]
+22 failed, 34 passed in 4.30s

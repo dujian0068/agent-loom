@@ -1,0 +1,8 @@
+{
+  "wheel": "agentloom_sdk-0.1.0a1-py3-none-any.whl",
+  "sha256": "df99f98d9272e4ec6c74bf8fea49e088a488c1dfca26f74996e1937827e387ef",
+  "source_modules": 79,
+  "matches_source_and_install": true,
+  "contains_completion_module_and_py_typed": true,
+  "no_test_qa_sqlite_modules": true
+}

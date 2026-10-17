@@ -1,0 +1,58 @@
+{
+  "python_blocks": 7,
+  "passed_scenarios": 8,
+  "results": [
+    {
+      "block": 1,
+      "case": "complete-quickstart",
+      "output": [
+        "0bed95f6-c726-40cf-b14b-8fe0f6b17dfd succeeded",
+        "接入成功",
+        "重开结果： succeeded 模型调用次数： 1"
+      ]
+    },
+    {
+      "block": 3,
+      "case": "real-model-constructor",
+      "external_calls": 0
+    },
+    {
+      "block": 2,
+      "case": "parameter-overrides"
+    },
+    {
+      "block": 4,
+      "case": "plan-delegation",
+      "model_calls": 3
+    },
+    {
+      "block": 5,
+      "case": "tool-registration-and-execution"
+    },
+    {
+      "block": 6,
+      "case": "hook-input-and-pinned-read"
+    },
+    {
+      "block": 7,
+      "case": "reopen-original-run",
+      "additional_model_calls": 0
+    },
+    {
+      "case": "control-and-query-table",
+      "checks": [
+        "wait-timeout",
+        "append",
+        "stop",
+        "attach",
+        "snapshot",
+        "tasks",
+        "operations",
+        "events",
+        "history",
+        "inputs"
+      ]
+    }
+  ],
+  "remote_services_called": false
+}

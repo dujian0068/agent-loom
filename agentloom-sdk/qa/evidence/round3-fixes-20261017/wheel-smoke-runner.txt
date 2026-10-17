@@ -1,0 +1,103 @@
+"""Install and validate the repaired SDK outside the source checkout."""
+
+import hashlib
+import json
+import os
+from pathlib import Path
+import subprocess
+import sys
+import tempfile
+import time
+import zipfile
+
+repo, wheel = map(Path, sys.argv[1:3])
+evidence = repo / "agentloom-sdk/qa/evidence/round3-fixes-20261017"
+root = Path(tempfile.mkdtemp(prefix="agentloom-round3-final-package-", dir="/private/tmp"))
+installed = root / "installed"
+with (evidence / "wheel-install.txt").open("w") as log:
+    subprocess.run(
+        [sys.executable, "-m", "pip", "install", "--no-deps", "--no-index", "--no-cache-dir", "--target", str(installed), str(wheel)],
+        stdout=log, stderr=subprocess.STDOUT, check=True,
+    )
+meta = {"root": str(root), "installed": str(installed), "wheel": str(wheel)}
+(evidence / "wheel-environment.json").write_text(json.dumps(meta, indent=2) + "\n")
+source = repo / "agentloom-sdk/src"
+files = sorted(source.glob("agentloom/**/*.py"))
+with zipfile.ZipFile(wheel) as archive:
+    names = archive.namelist()
+    assert len(files) == len([name for name in names if name.startswith("agentloom/") and name.endswith(".py")])
+    for path in files:
+        name = path.relative_to(source).as_posix()
+        assert path.read_bytes() == archive.read(name) == (installed / name).read_bytes(), name
+    assert "agentloom/runtime/completion.py" in names and "agentloom/py.typed" in names
+    assert not any(name.startswith(("tests/", "qa/")) or "sqlite" in name.lower() for name in names)
+contents = {
+    "wheel": wheel.name,
+    "sha256": hashlib.sha256(wheel.read_bytes()).hexdigest(),
+    "source_modules": len(files),
+    "matches_source_and_install": True,
+    "contains_completion_module_and_py_typed": True,
+    "no_test_qa_sqlite_modules": True,
+}
+(evidence / "wheel-contents.json").write_text(json.dumps(contents, indent=2) + "\n")
+worker_source = (repo / "agentloom-sdk/tests/support/completion_process.py").read_text()
+(evidence / "wheel-smoke-source.txt").write_text(worker_source)
+(evidence / "wheel-smoke-runner.txt").write_text(Path(__file__).read_text())
+worker = root / "completion_process.py"
+worker.write_text(worker_source)
+env = {**os.environ, "PYTHONPATH": str(installed)}
+probe = 'import agentloom, json; from agentloom import PropertiesConfig, AgentLoom, AgentBuilder, FileRuntimeStore; print(json.dumps({"module":agentloom.__file__}))'
+result = subprocess.run([sys.executable, "-c", probe], cwd=root, env=env, capture_output=True, text=True, timeout=15)
+assert result.returncode == 0, result.stderr
+module_path = Path(json.loads(result.stdout)["module"]).resolve()
+assert module_path.is_relative_to(installed.resolve()), module_path
+smoke = {
+    "imported_from": str(module_path),
+    "public_exports": ["PropertiesConfig", "AgentLoom", "AgentBuilder", "FileRuntimeStore"],
+    "cases": [],
+}
+validation = '''import json, sys
+from pathlib import Path
+from agentloom import FileRuntimeStore
+from agentloom.runtime.recovery import validate_recovery
+root, kind, phase = Path(sys.argv[1]), sys.argv[2], sys.argv[3]
+store = FileRuntimeStore(root / "state")
+state = store.load("default", "fixed")
+validate_recovery(state)
+target = "model.generate" if kind == "model" else "capability.invoke"
+op = next(op for op in state["operations"].values() if op["event_type"] == target)
+assert op["raw"]["execution_fact"] == "completed" and len(op["attempts"]) == 1
+if phase == "crash":
+    assert op["phase"] == "after"
+else:
+    assert state["status"] == "succeeded" and state["usage"]["loops_reserved"] == 0
+    assert len([event for event in state["events"] if event["type"] == "run.completed"]) == 1
+    if kind == "model":
+        assert state["usage"]["input_tokens"] == 3 and state["usage"]["output_tokens"] == 2
+print(json.dumps({"status": state["status"], "execution_fact": op["raw"]["execution_fact"], "attempts": len(op["attempts"]), "usage": state["usage"]}))
+store.close()
+'''
+for kind in ("model", "mcp", "mcp-error"):
+    case = root / kind
+    case.mkdir()
+    first = subprocess.run([sys.executable, str(worker), str(case), kind, "crash"], cwd=root, env=env, capture_output=True, text=True, timeout=15)
+    assert first.returncode == 74, (kind, first.returncode, first.stderr)
+    before = subprocess.run([sys.executable, "-c", validation, str(case), kind, "crash"], cwd=root, env=env, capture_output=True, text=True, timeout=15)
+    assert before.returncode == 0, (kind, before.stderr)
+    time.sleep(0.35)
+    second = subprocess.run([sys.executable, str(worker), str(case), kind, "resume"], cwd=root, env=env, capture_output=True, text=True, timeout=15)
+    assert second.returncode == 0, (kind, second.stderr)
+    output = json.loads(second.stdout)
+    assert output == {"status": "succeeded", "output": "saved" if kind == "model" else "done"}, output
+    audit = (case / "audit").read_text().splitlines()
+    assert audit.count("model") == (1 if kind == "model" else 2) and audit.count("tool") == (0 if kind == "model" else 1), audit
+    after = subprocess.run([sys.executable, "-c", validation, str(case), kind, "resume"], cwd=root, env=env, capture_output=True, text=True, timeout=15)
+    assert after.returncode == 0, (kind, after.stderr)
+    smoke["cases"].append({
+        "kind": kind, "crash_exit": first.returncode,
+        "checkpoint_before_restart": json.loads(before.stdout),
+        "resume_result": output, "calls": audit,
+        "checkpoint_after_restart": json.loads(after.stdout),
+    })
+(evidence / "wheel-smoke.json").write_text(json.dumps(smoke, indent=2) + "\n")
+print(json.dumps({"contents": contents, "passed_smoke_cases": len(smoke["cases"])}))

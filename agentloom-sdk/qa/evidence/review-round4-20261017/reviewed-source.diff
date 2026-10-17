@@ -1,0 +1,1285 @@
+diff --git a/agentloom-sdk/README.md b/agentloom-sdk/README.md
+index 4750a1c..58523cf 100644
+--- a/agentloom-sdk/README.md
++++ b/agentloom-sdk/README.md
+@@ -204,6 +204,8 @@ definition = AgentDefinition(
+ 
+ 恢复沿用原 Task、Operation、Attempt 和截止时间。已经保存的模型／工具结果只续后置处理；外部调用开始后却没有可靠结果时记录 `CALL_OUTCOME_UNKNOWN`，不盲目重发可能产生副作用的调用。
+ 
++模型完整响应和 MCP 已知结果在关闭连接前持久化，关闭阶段超时不会触发重复业务调用；关闭失败诊断独立保留。停止／截止仍阻止成功交付，失权仍拒绝旧 owner 写入。自定义能力若在方法内部关闭资源，可在关闭前通过 `context.report_completion(tool_result)` 固定结果，详细合同见[能力接口](../docs/sdk/capabilities.md)。通用模型 usage 事件与 completed 的计数按字段合并，不因空值丢失已知用量。
++
+ Runtime 关闭会停止本机推进并保留检查点，不等同于用户停止；注入的 store、HTTP 客户端和其他共享依赖仍由调用者关闭。临时目录在根执行终态后由独立 CleanupService 清理，失败单独重试；`persistent_sandbox=True` 保留会话文件，并使旧执行句柄失效。
+ 
+ 后台停止收束与清理按 Run 隔离故障。撤权失败时保持 `stopping`，按 `cleanup_retry_seconds` 重试，继续处理其他 Run；同一存储的新 Runtime 也会遵守已保存的重试时间。`handle.snapshot()` 或 `runtime.runs.get()` 的 `maintenance` 字段按阶段提供最近错误、累计失败次数、失败时间、下次重试时间和恢复时间；普通文件删除错误仍在 `cleanup_error` 中。无法访问存储时输出不含原始异常文本的日志，后续扫描继续尝试。
+diff --git a/agentloom-sdk/src/agentloom/capabilities/contracts.py b/agentloom-sdk/src/agentloom/capabilities/contracts.py
+index e42fc48..fa72f09 100644
+--- a/agentloom-sdk/src/agentloom/capabilities/contracts.py
++++ b/agentloom-sdk/src/agentloom/capabilities/contracts.py
+@@ -20,6 +20,15 @@ class CapabilityRequest:
+ 
+ @dataclass(frozen=True)
+ class ToolInvocationContext:
++    """Bound attempt services, valid only during this invocation.
++
++    report_completion, when supplied by the runtime, accepts a returned ToolResult
++    (or error=AgentLoomError) synchronously before adapter-owned resource teardown.
++    It validates and commits the outcome under the current lease. It does not
++    authorize further work or change stop/deadline semantics; errors propagate.
++    The first saved outcome is fixed and the callback expires when dispatch ends.
++    """
++
+     content_scope_ref: object
+     run_id: str
+     graph_execution_id: str
+@@ -41,6 +50,7 @@ class ToolInvocationContext:
+     check_active: object = field(repr=False)
+     spec: object = field(default=None, repr=False)
+     report_diagnostic: object = field(default=None, repr=False)
++    report_completion: object = field(default=None, repr=False)
+ 
+     def __post_init__(self):
+         for key in (
+@@ -138,6 +148,7 @@ class ValueToolAdapter:
+     """Bridge SDK adapters' existing value-returning implementation to ToolResult."""
+ 
+     async def invoke_once(self, request, context):
+-        return ToolResult.from_value(
+-            await self.invoke(request.capability_key, request.arguments, context)
+-        )
++        from .invocation import result_from_value
++
++        value = await self.invoke(request.capability_key, request.arguments, context)
++        return result_from_value(value)
+diff --git a/agentloom-sdk/src/agentloom/capabilities/invocation.py b/agentloom-sdk/src/agentloom/capabilities/invocation.py
+index d36c570..2bb2502 100644
+--- a/agentloom-sdk/src/agentloom/capabilities/invocation.py
++++ b/agentloom-sdk/src/agentloom/capabilities/invocation.py
+@@ -11,6 +11,37 @@ def invalid(code="CAPABILITY_RESULT_INVALID"):
+     return AgentLoomError(code, category="protocol", external_outcome="known")
+ 
+ 
++def result_from_value(value):
++    """Wrap only after a value-returning function has completed successfully."""
++    try:
++        return ToolResult.from_value(value)
++    except ConfigurationError as exc:
++        error = invalid()
++        error.execution_fact = "completed"
++        raise error from exc
++
++
++def report_completion(context, *, value=None, error=None):
++    """Fix a value adapter's known response before closing its transport.
++
++    The host callback performs the same result/Schema validation as the ordinary
++    return path and commits under the active lease. Callback failures propagate;
++    a storage failure must never be downgraded to a transport diagnostic.
++    """
++    report = getattr(context, "report_completion", None)
++    if report is None:
++        return
++    if error is not None:
++        report(error=error)
++        return
++    try:
++        result = result_from_value(value)
++    except AgentLoomError as exc:
++        report(error=exc)
++        raise
++    report(result)
++
++
+ @dataclass(frozen=True)
+ class ToolOutcome:
+     value: object
+@@ -40,9 +71,13 @@ async def invoke_adapter(adapter, request, context):
+     else:
+         # Compatibility for pre-contract user adapters. Returned dicts are values,
+         # even when they contain status/error/content business fields.
+-        result = ToolResult.from_value(
+-            await adapter.invoke(request.capability_key, request.arguments, context)
+-        )
++        value = await adapter.invoke(request.capability_key, request.arguments, context)
++        result = result_from_value(value)
++    return normalize_completion(result)
++
++
++def normalize_completion(result):
++    """Normalize an already returned envelope, retaining its completion evidence."""
+     try:
+         return normalize_result(result)
+     except AgentLoomError as exc:
+diff --git a/agentloom-sdk/src/agentloom/capabilities/mcp.py b/agentloom-sdk/src/agentloom/capabilities/mcp.py
+index b42d379..9c2688e 100644
+--- a/agentloom-sdk/src/agentloom/capabilities/mcp.py
++++ b/agentloom-sdk/src/agentloom/capabilities/mcp.py
+@@ -6,6 +6,7 @@ from ..configuration import digest, json_copy
+ from ..errors import AgentLoomError, ConfigurationError
+ from ..resources import managed_resource
+ from .contracts import ValueToolAdapter
++from .invocation import report_completion
+ 
+ 
+ class McpToolAdapter(ValueToolAdapter):
+@@ -108,14 +109,25 @@ class McpToolAdapter(ValueToolAdapter):
+                 result = await session.call_tool(
+                     spec.name, arguments, meta={"agentloom/operation_id": context.operation_id}
+                 )
+-                value = result.model_dump(mode="json", exclude_none=True)
++                try:
++                    value = json_copy(result.model_dump(mode="json", exclude_none=True))
++                except ConfigurationError as exc:
++                    error = AgentLoomError(
++                        "MCP_PROTOCOL_ERROR", category="protocol", external_outcome="known"
++                    )
++                    error.execution_fact = "completed"
++                    report_completion(context, error=error)
++                    raise error from exc
+                 if result.isError:
+                     error = AgentLoomError(
+                         "MCP_TOOL_ERROR", category="business", external_outcome="known"
+                     )
+                     error.result_material = value
++                    report_completion(context, error=error)
+                     raise error
+-                return value.get("structuredContent", {"content": value.get("content", [])})
++                value = value.get("structuredContent", {"content": value.get("content", [])})
++                report_completion(context, value=value)
++                return value
+         except Exception as exc:
+             raise _transport_error(exc) from exc
+ 
+diff --git a/agentloom-sdk/src/agentloom/configuration/properties.py b/agentloom-sdk/src/agentloom/configuration/properties.py
+index 2e9ce45..6f3f789 100644
+--- a/agentloom-sdk/src/agentloom/configuration/properties.py
++++ b/agentloom-sdk/src/agentloom/configuration/properties.py
+@@ -20,14 +20,15 @@ UNSET = _Unset()
+ 
+ 
+ def store_lock_timeout(value):
+-    if (
+-        isinstance(value, bool)
+-        or not isinstance(value, (int, float))
+-        or not math.isfinite(value)
+-        or value < 0
+-    ):
++    if isinstance(value, bool) or not isinstance(value, (int, float)) or value < 0:
+         raise ConfigurationError("STORE_LOCK_TIMEOUT_INVALID")
+-    return float(value)
++    try:
++        converted = float(value)
++    except (OverflowError, TypeError, ValueError) as exc:
++        raise ConfigurationError("STORE_LOCK_TIMEOUT_INVALID") from exc
++    if not math.isfinite(converted):
++        raise ConfigurationError("STORE_LOCK_TIMEOUT_INVALID")
++    return converted
+ 
+ 
+ @dataclass(frozen=True, kw_only=True)
+diff --git a/agentloom-sdk/src/agentloom/models/material.py b/agentloom-sdk/src/agentloom/models/material.py
+index dd8d257..d8156e8 100644
+--- a/agentloom-sdk/src/agentloom/models/material.py
++++ b/agentloom-sdk/src/agentloom/models/material.py
+@@ -3,6 +3,7 @@
+ import time
+ 
+ from ..configuration import json_copy
++from ..configuration.json_values import MAX_JSON_INTEGER
+ from ..errors import AgentLoomError
+ from .limits import MAX_MODEL_RESPONSE_BYTES
+ 
+@@ -25,8 +26,8 @@ def validate_usage(usage):
+         raise protocol_error("Model usage must be an object or null")
+     for key in ("input_tokens", "output_tokens"):
+         count = usage.get(key)
+-        if count is not None and (type(count) is not int or count < 0):
+-            raise protocol_error("Model token counts must be nonnegative integers or null")
++        if count is not None and (type(count) is not int or not 0 <= count <= MAX_JSON_INTEGER):
++            raise protocol_error("Model token counts must be safe nonnegative integers or null")
+ 
+ 
+ def normalize_usage(value, input_key="input_tokens", output_key="output_tokens"):
+diff --git a/agentloom-sdk/src/agentloom/runtime/calls.py b/agentloom-sdk/src/agentloom/runtime/calls.py
+index a17b7d3..de4b7e8 100644
+--- a/agentloom-sdk/src/agentloom/runtime/calls.py
++++ b/agentloom-sdk/src/agentloom/runtime/calls.py
+@@ -11,26 +11,12 @@ from ..configuration import digest
+ from ..context import CompactionService, estimate, materialize
+ from ..errors import AgentLoomError, InfrastructureError, error_record
+ from ..types import CallStageEvent
++from .completion import AttemptCompletion, failed_result, failure, success
+ from .handlers import AttemptContext, BusinessEvent
+ from .usage import account_model_usage
+ from .validation import validate_action
+ 
+ 
+-def success(result):
+-    return {"status": "succeeded", "result": result, "error": None, "execution_fact": "completed"}
+-
+-
+-def failure(error, *, blocked=False):
+-    return {
+-        "status": "blocked" if blocked else "failed",
+-        "result": None,
+-        "error": error,
+-        "execution_fact": "not_started"
+-        if blocked or error.get("external_outcome") == "not_started"
+-        else "unknown",
+-    }
+-
+-
+ class CallDriver:
+     def __init__(self, runner):
+         self.runner = runner
+@@ -244,6 +230,7 @@ class CallDriver:
+                     await self.compaction.prepare(op_id)
+                 await self._permit(op_id)
+                 await self._attempts(op_id)
++        runner.check_active()
+         op = runner.operation(op_id)
+         after = await self._stage(op_id, "response")
+         response = runner.operation(op_id)["response"]
+@@ -371,8 +358,20 @@ class CallDriver:
+                     s["usage"]["token_counts_complete"] = False
+ 
+             runner.commit(f"attempt-start:{op_id}:{index}", start)
++            diagnostics = []
++            completion = AttemptCompletion(
++                lambda raw, aid=attempt_id, notes=diagnostics: self._save_attempt(
++                    op_id, raw, None, diagnostics=notes, expected_attempt_id=aid
++                )
++            )
+             ctx = AttemptContext(
+-                op_id, attempt_id, index, runner.lease.epoch, runner.state()["deadline_at"]
++                op_id,
++                attempt_id,
++                index,
++                runner.lease.epoch,
++                runner.state()["deadline_at"],
++                diagnostics,
++                completion,
+             )
+             partial = None
+             try:
+@@ -384,6 +383,9 @@ class CallDriver:
+                         value = await runner.bus.request(event, ctx)
+                 raw = value.raw_result() if isinstance(value, ToolOutcome) else success(value)
+             except asyncio.CancelledError as exc:
++                if completion.saved:
++                    self._close_diagnostic(ctx, "RESOURCE_CLOSE_CANCELLED", "cancelled")
++                    raise
+                 if getattr(exc, "partial_material", None):
+                     partial = {
+                         **exc.partial_material,
+@@ -413,22 +415,16 @@ class CallDriver:
+             except InfrastructureError:
+                 raise
+             except TimeoutError:
+-                raw = failure(
+-                    AgentLoomError(
+-                        "TOOL_TIMEOUT", category="timeout", external_outcome="unknown"
+-                    ).to_dict()
+-                )
++                if completion.saved:
++                    self._close_diagnostic(ctx, "RESOURCE_CLOSE_TIMEOUT", "timeout")
++                else:
++                    raw = failure(
++                        AgentLoomError(
++                            "TOOL_TIMEOUT", category="timeout", external_outcome="unknown"
++                        ).to_dict()
++                    )
+             except Exception as exc:
+-                raw = failure(error_record(exc))
+-                if hasattr(exc, "result_material"):
+-                    raw["result"] = exc.result_material
+-                    raw["execution_fact"] = getattr(exc, "execution_fact", "completed")
+-                elif hasattr(exc, "execution_fact"):
+-                    raw["execution_fact"] = exc.execution_fact
+-                if hasattr(exc, "tool_result"):
+-                    raw["tool_result"] = exc.tool_result
+-                if hasattr(exc, "invalid_tool_result"):
+-                    raw["invalid_tool_result"] = exc.invalid_tool_result
++                raw = failed_result(exc)
+                 if getattr(exc, "partial_material", None):
+                     partial = {
+                         **exc.partial_material,
+@@ -436,9 +432,36 @@ class CallDriver:
+                         "operation_id": op_id,
+                         "error": raw["error"],
+                     }
+-            self._save_attempt(op_id, raw, partial, diagnostics=ctx.diagnostics)
++            finally:
++                completion.close()
++                if completion.saved and ctx.diagnostics:
++                    self._save_diagnostics(op_id, attempt_id, ctx.diagnostics)
++            if not completion.saved:
++                self._save_attempt(
++                    op_id, raw, partial, diagnostics=ctx.diagnostics, expected_attempt_id=attempt_id
++                )
+ 
+-    def _save_attempt(self, op_id, raw, partial, *, force_final=False, diagnostics=()):
++    @staticmethod
++    def _close_diagnostic(context, code, category):
++        context.diagnostics.append(
++            {
++                "phase": "resource_close",
++                "error": AgentLoomError(code, category=category, phase="after").to_dict(),
++            }
++        )
++
++    def _save_diagnostics(self, op_id, attempt_id, diagnostics):
++        def save(state):
++            attempt = state["operations"][op_id]["attempts"][-1]
++            if attempt["attempt_id"] != attempt_id:
++                raise InfrastructureError("ATTEMPT_ID_MISMATCH")
++            attempt["diagnostics"] = copy.deepcopy(diagnostics)
++
++        self.runner.commit("attempt-diagnostics:" + attempt_id, save)
++
++    def _save_attempt(
++        self, op_id, raw, partial, *, force_final=False, diagnostics=(), expected_attempt_id=None
++    ):
+         runner = self.runner
+         op = runner.operation(op_id)
+         index = len(op["attempts"])
+@@ -446,6 +469,7 @@ class CallDriver:
+         error = raw["error"]
+         retrying = bool(
+             not force_final
++            and raw["execution_fact"] != "completed"
+             and error
+             and retry.enabled
+             and index < retry.max_attempts
+@@ -461,6 +485,8 @@ class CallDriver:
+         def save(s):
+             current = s["operations"][op_id]
+             attempt = current["attempts"][-1]
++            if expected_attempt_id is not None and attempt["attempt_id"] != expected_attempt_id:
++                raise InfrastructureError("ATTEMPT_ID_MISMATCH")
+             saved_raw = copy.deepcopy(raw)
+             envelope = saved_raw.pop("tool_result", None)
+             invalid_envelope = saved_raw.pop("invalid_tool_result", None)
+diff --git a/agentloom-sdk/src/agentloom/runtime/handlers.py b/agentloom-sdk/src/agentloom/runtime/handlers.py
+index 4aa7313..e0b34a7 100644
+--- a/agentloom-sdk/src/agentloom/runtime/handlers.py
++++ b/agentloom-sdk/src/agentloom/runtime/handlers.py
+@@ -6,12 +6,19 @@ from dataclasses import dataclass, field
+ from uuid import NAMESPACE_URL, uuid5
+ 
+ from ..capabilities import CapabilityRequest, ToolInvocationContext, WorkspaceService
+-from ..capabilities.invocation import invoke_adapter
++from ..capabilities.invocation import invoke_adapter, normalize_completion
+ from ..configuration import digest, validate_schema
+-from ..errors import AgentLoomError
+-from ..models.material import PartialMaterial, protocol_error, validate_response, validate_usage
++from ..errors import AgentLoomError, InfrastructureError
++from ..models.material import (
++    PartialMaterial,
++    merge_usage,
++    normalize_usage,
++    protocol_error,
++    validate_response,
++)
+ from ..resources import close_resource
+ from ..types import ModelRequest, ProviderEvent
++from .completion import failed_result, success
+ 
+ 
+ @dataclass(frozen=True)
+@@ -29,6 +36,7 @@ class AttemptContext:
+     lease_epoch: int
+     deadline_at: float
+     diagnostics: list = field(default_factory=list, compare=False)
++    completion: object = field(default=None, compare=False, repr=False)
+ 
+ 
+ class ModelHandler:
+@@ -54,6 +62,7 @@ class ModelHandler:
+         policy = runner.program.execution_policy
+         started, last_output, received = time.monotonic(), None, False
+         partial = PartialMaterial()
++        usage = None
+         primary = None
+         try:
+             while True:
+@@ -95,9 +104,10 @@ class ModelHandler:
+                     raise protocol_error("Model adapter must yield ProviderEvent")
+                 partial.add(frame)
+                 if frame.kind == "usage":
+-                    validate_usage(frame.data)
++                    usage = merge_usage(usage, normalize_usage(frame.data))
+                 if frame.kind == "completed":
+                     response = validate_response(frame.data)
++                    response["usage"] = merge_usage(usage, normalize_usage(response.get("usage")))
+                     for ordinal, call in enumerate(response["tool_calls"]):
+                         call["provider_call_id"] = call["call_id"]
+                         call["call_id"] = str(
+@@ -118,6 +128,7 @@ class ModelHandler:
+                 if frame.kind == "error":
+                     raise AgentLoomError("MODEL_PROVIDER_ERROR")
+                 if frame.kind == "completed":
++                    attempt.completion.record(success(response))
+                     return response
+         except BaseException as exc:
+             # The call driver persists these as audit material, never as a decision.
+@@ -165,6 +176,19 @@ class ToolHandler:
+         if op["request_hash"] != digest(event.payload):
+             raise AgentLoomError("CAPABILITY_REQUEST_MISMATCH", external_outcome="not_started")
+         scope = {"run_id": runner.run_id, "task_id": op["task_id"]}
++
++        def complete(result=None, *, error=None):
++            try:
++                if error is not None:
++                    raise error
++                outcome = self._validate_output(normalize_completion(result), entry)
++            except InfrastructureError:
++                raise
++            except AgentLoomError as exc:
++                attempt.completion.record(failed_result(exc))
++                raise
++            attempt.completion.record(outcome.raw_result())
++
+         context = ToolInvocationContext(
+             content_scope_ref=scope,
+             run_id=runner.run_id,
+@@ -198,6 +222,7 @@ class ToolHandler:
+             check_active=runner.check_active,
+             spec=entry.spec,
+             report_diagnostic=attempt.diagnostics.append,
++            report_completion=complete,
+         )
+         request = CapabilityRequest(
+             op["operation_id"],
+@@ -206,6 +231,10 @@ class ToolHandler:
+             arguments,
+         )
+         outcome = await invoke_adapter(entry.registration.adapter, request, context)
++        return self._validate_output(outcome, entry)
++
++    @staticmethod
++    def _validate_output(outcome, entry):
+         value = outcome.value
+         if outcome.envelope["status"] != "succeeded":
+             return outcome
+diff --git a/docs/sdk/capabilities.md b/docs/sdk/capabilities.md
+index aba812c..ca96606 100644
+--- a/docs/sdk/capabilities.md
++++ b/docs/sdk/capabilities.md
+@@ -61,6 +61,10 @@ class ModelHandler:
+ 8. receipt 持久化失败视为必要存储故障：停止进一步业务交付，关闭连接，已有片段只作未完成材料；不能继续工具调用。
+ 9. complete 后须保存 raw，再完成后置链与 effective；等待者只读已提交最终响应。客户端没有 ProviderEvent 或 token outbox。
+ 
++当前 Python ModelHandler 在合法 completed 事件到达后、关闭流之前提交完整响应和用量。通用 usage 事件按 Attempt 聚合，与 completed 中的累计计数逐字段合并；null／缺字段不清除已知值，0 可以更新已有值，所有入口共用安全整数上界。新 Attempt／Operation 不继承前一次的临时聚合器。
++
++资源关闭仍在原调用任务中执行。关闭的普通异常、超时和取消诊断独立于已保存 raw；单纯关闭超时不得覆盖已完成结果或触发再次业务调用。根停止／截止及失权照常中断交付；有效租约下保留已取得事实，旧 owner 不能提交迟到结果。进程在关闭期间丢失后，接管者从已提交 raw 继续后处理。
++
+ 取消、deadline、LEASE_LOST 不可自动重试；HTTP 429、502/503/504、明确 reset／暂时连接超时按调用协议分类。网络结果 unknown 不等于协议失败可无条件重发。后置 Hook 拒绝或故障不重新调用供应商。
+ 
+ `generate_once` 若返回完整响应之后提交失败，重试的是原 raw 保存命令；已持久 raw 的恢复只做后处理。如果进程丢失且无 raw，保留外部结果 unknown，再按明确异常类别与冻结 RetryPolicy 决定，不能因“没有结果”自动重发。
+@@ -106,6 +110,10 @@ NodeDriver 在同一提交中保存反馈及下一 prepare_context 阶段；该
+ 
+ SDK 内置适配器已提供 `invoke_once`。旧用户适配器的 `invoke(member, arguments, context)` 仍由兼容桥调用一次，其返回 JSON 按业务值包装，不猜测其中的 `status/error` 是 ToolResult 信封。同时定义两个方法时优先调用 `invoke_once`，异常后不回退到另一个方法。`ToolInvocationContext` 的绑定配置和 scope 引用不可变，`cancellation()`／`check_active()` 是单机实现的同步控制检查，异步取消仍通过调用任务传播；这些运行期对象不进入检查点。旧 `config/task_id` 属性分别映射到 `binding_config/node_task_id`。
+ 
++拥有内部资源关闭步骤的适配器可在取得响应后同步调用 `context.report_completion(tool_result)`；已知失败也可使用 `context.report_completion(error=error)`。Runtime 注入的此回调使用与正常返回相同的结果／输出 Schema 校验和租约保护，保存首个完成事实；校验或持久化失败必须向上传播。MCP 已接入该路径，成功与业务失败均在关闭会话前保存。普通直接返回仍有效；回调仅在当前 Attempt 派发期间有效，结束后调用返回 `ATTEMPT_COMPLETION_CLOSED`，不能用于后台补发结果。
++
++值返回桥接在函数正常返回后统一包装结果；非法 JSON 值产生 `protocol / CAPABILITY_RESULT_INVALID` 并保留 `execution_fact=completed`，不能将 NaN 等非规范值写入检查点。函数执行期间直接抛出的异常不因此被标为 completed。
++
+ SDK 生成的对象 input_schema 默认 additionalProperties=false；MCP schema 保留其声明扩展语义。导入收拢许可本地 `$ref`，拒绝外部网络 `$ref`；运行校验不得顺带出网取 schema。
+ 
+ `OperationError` 复用[调用协议的唯一 DTO 定义](event-bus.md#21-范围信封和响应)，不另定义精简枚举。Adapter 通常填 connect／send／receive／execute，调用方阶段驱动器还可产生 prepare／after 阶段错误。成功没有 error；unknown 必须有 error 且 external_outcome=unknown。
+diff --git a/docs/sdk/implementation.md b/docs/sdk/implementation.md
+index a72300e..0a3eb82 100644
+--- a/docs/sdk/implementation.md
++++ b/docs/sdk/implementation.md
+@@ -17,6 +17,25 @@
+ 
+ 源码按 `public`、`configuration`、`runtime`、`events`、`context`、`capabilities`、`environment`、`models`、`storage` 分包。安装、完整构造参数、调用和能力绑定见 [SDK README](../../agentloom-sdk/README.md)。
+ 
++## 第三轮边界问题修复
++
++以 `84b3355` 为基线，修复第三轮 QA 确认的四类问题。`runtime.completion` 单独管理完成结果投影和 Attempt 完成回执；调用驱动继续负责事务、重试和控制，资源关闭仍在原调用任务中执行，没有分离到失去生命周期约束的后台任务。
++
++| 问题 | 修复及边界 |
++| --- | --- |
++| 关闭阶段覆盖完成事实 | 模型 completed 和 MCP 已知响应在流／会话关闭前提交；关闭诊断单独保存，已完成结果不进入重试。停止、根截止、失权继续生效；恢复只续已提交结果的后处理。完成回调绑定 Attempt、执行租约及有效期，不能由旧回调写入新尝试；提交／回执异常按基础设施故障传播，不能降级为业务错误后继续交付 |
++| usage 事件被丢弃／越界漏检 | 通用 ModelHandler 按 Attempt 合并累计计数，completed 的缺字段／null 不清除已知值，0 保持合法；usage 事件、完整响应共用 `2**53-1` 上界，运行汇总继续使用原原子计量合同 |
++| 值返回适配器丢失完成事实 | FunctionToolAdapter 与旧 invoke 桥共用已返回值的包装边界；非法结果归协议失败并记录 completed，函数执行中抛错仍保留原失败事实。原生信封和提前报告的结果共用归一与输出 Schema 校验 |
++| 极端文件锁参数泄漏异常 | RuntimeProperties 和 FileRuntimeStore 共用安全数值转换；超大整数等非法值在 I/O 前归一为 STORE_LOCK_TIMEOUT_INVALID，0 仍表示不等待 |
++
++第三轮原测试保持断言不变；另补充双后端停止／截止／关闭恢复、失权前后结果提交、提交前后故障与幂等恢复、业务／Schema 错误与关闭超时竞争、回调过期、值桥接、usage 字段／上界及三个真实进程退出场景。旧审查报告和失败证据保留，不据本次修复推定 Workflow 或其他未完成目标已验收。
++
++完整回归 **813 passed in 251.51s**：SDK 635 项、原 QA 110 项、复审 QA 24 项、第三轮 QA 44 项，无失败或跳过；本轮新增 71 项边界验证。Ruff lint／format 通过，127 个 Python 文件格式一致。最终回归期间 120 个源码与测试文件摘要未变化。
++
++离线 wheel 构建和独立目录安装通过，79 个源码模块与安装包逐字节一致。安装后的模型完成、MCP 成功和 MCP 业务失败三个真实进程退出场景均可从文件检查点恢复，已完成调用不重复，用量不重复累计。文档构建及内部链接检查通过。验证使用本地确定性模型和协议替身，不包含付费模型、远端 MCP 或 Workflow。
++
++[完整回归日志](../../agentloom-sdk/qa/evidence/round3-fixes-20261017/regression.txt)与[命令、安装包及源码摘要](../../agentloom-sdk/qa/evidence/round3-fixes-20261017/summary.json)独立保存；首轮完整回归发现的两项提交异常传播失败及新增测试的初始夹具错误也保留在本轮证据目录，最终结果基于修正后的完整重跑。
++
+ ## PropertiesConfig 统一参数入口
+ 
+ `PropertiesConfig` 汇总 `runtime`、`defaults`、`services`，通过 `async with AgentLoom(properties) as app` 开启宿主，再用 `app.build(agent_def)` 构建 Agent。`configuration.properties` 管理纯值参数及校验；`public.properties` 管理参数组合、服务引用和跨组校验；`public.application` 负责宿主生命周期，继续复用 AgentBuilder 和 RuntimeEngine。
+diff --git a/agentloom-sdk/src/agentloom/runtime/completion.py b/agentloom-sdk/src/agentloom/runtime/completion.py
+new file mode 100644
+index 0000000..b01df7a
+--- /dev/null
++++ b/agentloom-sdk/src/agentloom/runtime/completion.py
+@@ -0,0 +1,66 @@
++"""Attempt outcomes and synchronous completion receipts, independent of teardown."""
++
++from ..errors import AgentLoomError, InfrastructureError, error_record
++
++
++def success(result):
++    return {"status": "succeeded", "result": result, "error": None, "execution_fact": "completed"}
++
++
++def failure(error, *, blocked=False):
++    return {
++        "status": "blocked" if blocked else "failed",
++        "result": None,
++        "error": error,
++        "execution_fact": "not_started"
++        if blocked or error.get("external_outcome") == "not_started"
++        else "unknown",
++    }
++
++
++def failed_result(exc):
++    """Preserve established execution facts without accepting malformed JSON."""
++    raw = failure(error_record(exc))
++    if hasattr(exc, "result_material"):
++        raw["result"] = exc.result_material
++        raw["execution_fact"] = getattr(exc, "execution_fact", "completed")
++    elif hasattr(exc, "execution_fact"):
++        raw["execution_fact"] = exc.execution_fact
++    for field in ("tool_result", "invalid_tool_result"):
++        if hasattr(exc, field):
++            raw[field] = getattr(exc, field)
++    return raw
++
++
++class AttemptCompletion:
++    """Save a known outcome once, under the attempt's original lease and identity.
++
++    A receipt becomes saved only after the durable callback returns. It expires
++    when dispatch exits, so a retained adapter callback cannot write a later
++    attempt. Resource cleanup is still performed in the calling task.
++    """
++
++    def __init__(self, persist):
++        self._persist = persist
++        self.saved = False
++        self._closed = False
++
++    def record(self, raw):
++        if self._closed:
++            raise AgentLoomError("ATTEMPT_COMPLETION_CLOSED", category="protocol")
++        if not self.saved:
++            try:
++                self._persist(raw)
++            except InfrastructureError:
++                raise
++            except Exception as exc:
++                # This callback is host persistence, not adapter execution. A
++                # failed acknowledgement/observer must stop delivery even if the
++                # transaction committed; recovery resolves the saved receipt.
++                raise InfrastructureError(
++                    "ATTEMPT_COMPLETION_COMMIT_FAILED", type(exc).__name__
++                ) from exc
++            self.saved = True
++
++    def close(self):
++        self._closed = True
+diff --git a/agentloom-sdk/tests/support/completion_process.py b/agentloom-sdk/tests/support/completion_process.py
+new file mode 100644
+index 0000000..b693d13
+--- /dev/null
++++ b/agentloom-sdk/tests/support/completion_process.py
+@@ -0,0 +1,121 @@
++"""Exit inside resource teardown, after a response but before invoke returns."""
++
++import asyncio
++import json
++import os
++import sys
++from contextlib import asynccontextmanager
++from pathlib import Path
++from types import SimpleNamespace
++
++from agentloom import (
++    AgentDefinition,
++    CapabilityBinding,
++    CapabilityRegistration,
++    CapabilityRegistry,
++    CapabilitySpec,
++    ExecutionPolicy,
++    FileRuntimeStore,
++    McpToolAdapter,
++    ModelDescriptor,
++    ModelResponse,
++    ProviderEvent,
++    ReactAgent,
++    RuntimeEngine,
++    ScriptedModel,
++    ToolCall,
++    WorkspaceBinding,
++)
++
++
++async def main():
++    root, kind, phase = Path(sys.argv[1]), sys.argv[2], sys.argv[3]
++
++    def audit(value):
++        with (root / "audit").open("a") as file:
++            file.write(value + "\n")
++            file.flush()
++            os.fsync(file.fileno())
++
++    def close():
++        if phase == "crash":
++            os._exit(74)
++
++    class Model:
++        descriptor = ModelDescriptor("completion-process", 32768)
++
++        async def stream_once(self, request, context):
++            audit("model")
++            try:
++                yield ProviderEvent("usage", {"input_tokens": 3, "output_tokens": 2})
++                yield ProviderEvent("completed", ModelResponse("saved").to_dict())
++            finally:
++                close()
++
++    class Mcp(McpToolAdapter):
++        @asynccontextmanager
++        async def _session(self):
++            try:
++                yield self
++            finally:
++                close()
++
++        async def list_tools(self, cursor=None):
++            return SimpleNamespace(
++                nextCursor=None,
++                tools=[
++                    SimpleNamespace(name="work", inputSchema={"type": "object"}, outputSchema=None)
++                ],
++            )
++
++        async def call_tool(self, name, arguments, meta=None):
++            audit("tool")
++            return SimpleNamespace(
++                isError=kind == "mcp-error",
++                model_dump=lambda **kwargs: {
++                    "structuredContent": {"receipt": "saved"},
++                    "isError": kind == "mcp-error",
++                },
++            )
++
++    def model(request):
++        audit("model")
++        return (
++            ModelResponse("done")
++            if any(item["role"] == "tool" for item in request.messages)
++            else ModelResponse(tool_calls=(ToolCall("work", {}),))
++        )
++
++    options = {"definition": AgentDefinition("test", "SYSTEM"), "model": Model()}
++    if kind != "model":
++        options = {
++            "definition": AgentDefinition(
++                "test", "SYSTEM", capabilities=(CapabilityBinding("work", "mcp", "work", "a"),)
++            ),
++            "model": ScriptedModel(model),
++            "capabilities": CapabilityRegistry(
++                tools=(
++                    CapabilityRegistration(
++                        "a",
++                        Mcp(url="https://example.invalid/mcp"),
++                        (CapabilitySpec("work", "work", kind="mcp"),),
++                    ),
++                )
++            ),
++        }
++    store = FileRuntimeStore(root / "state")
++    try:
++        async with RuntimeEngine(store=store, lease_seconds=0.3) as runtime:
++            agent = ReactAgent(
++                **options,
++                workspace=WorkspaceBinding(root / "workspace"),
++                runtime_engine=runtime,
++                execution_policy=ExecutionPolicy(run_timeout_seconds=15),
++            )
++            result = await agent.ainvoke("go" if phase == "crash" else None, run_id="fixed")
++            print(json.dumps({"status": result.status, "output": result.output.value}))
++    finally:
++        store.close()
++
++
++asyncio.run(main())
+diff --git a/agentloom-sdk/tests/test_attempt_completion.py b/agentloom-sdk/tests/test_attempt_completion.py
+new file mode 100644
+index 0000000..529a6d9
+--- /dev/null
++++ b/agentloom-sdk/tests/test_attempt_completion.py
+@@ -0,0 +1,383 @@
++"""Completion precedes teardown; control and lease fencing still govern delivery."""
++
++import asyncio
++from contextlib import asynccontextmanager
++from types import SimpleNamespace
++
++import pytest
++from conftest import assert_finished
++
++from agentloom import (
++    AgentDefinition,
++    AgentLoomError,
++    CapabilityBinding,
++    CapabilityRegistration,
++    CapabilityRegistry,
++    CapabilitySpec,
++    ExecutionPolicy,
++    FunctionToolAdapter,
++    InfrastructureError,
++    McpToolAdapter,
++    ModelDescriptor,
++    ModelResponse,
++    ProviderEvent,
++    RetryPolicy,
++    RuntimeEngine,
++    ToolCall,
++    ToolResult,
++)
++from agentloom.errors import LeaseLost
++from agentloom.runtime.recovery import validate_recovery
++from agentloom.storage.commit import CommitCoordinator
++
++
++class ClosingModel:
++    descriptor = ModelDescriptor("closing-model", 32768)
++
++    def __init__(self):
++        self.closing, self.release = asyncio.Event(), asyncio.Event()
++        self.calls = 0
++
++    async def stream_once(self, request, context):
++        self.calls += 1
++        try:
++            yield ProviderEvent("usage", {"input_tokens": 3, "output_tokens": 2})
++            yield ProviderEvent("completed", ModelResponse("saved").to_dict())
++        finally:
++            self.closing.set()
++            await self.release.wait()
++
++
++class ClosingMcp(McpToolAdapter):
++    def __init__(self, *, business_error=False, output_schema=None):
++        super().__init__(url="https://example.invalid/mcp")
++        self.closing, self.release = asyncio.Event(), asyncio.Event()
++        self.business_error, self.output_schema = business_error, output_schema
++        self.calls = 0
++
++    @asynccontextmanager
++    async def _session(self):
++        try:
++            yield self
++        finally:
++            self.closing.set()
++            await self.release.wait()
++
++    async def list_tools(self, cursor=None):
++        return SimpleNamespace(
++            nextCursor=None,
++            tools=[
++                SimpleNamespace(
++                    name="work", inputSchema={"type": "object"}, outputSchema=self.output_schema
++                )
++            ],
++        )
++
++    async def call_tool(self, name, arguments, meta=None):
++        self.calls += 1
++        return SimpleNamespace(
++            isError=self.business_error,
++            model_dump=lambda **kwargs: {
++                "structuredContent": {"receipt": "saved"},
++                "isError": self.business_error,
++            },
++        )
++
++
++def tool_options(adapter, *, kind="mcp"):
++    return {
++        "definition": AgentDefinition(
++            "with-tool", "SYSTEM", capabilities=(CapabilityBinding("work", kind, "work", "a"),)
++        ),
++        "capabilities": CapabilityRegistry(
++            tools=(
++                CapabilityRegistration(
++                    "a",
++                    adapter,
++                    (
++                        CapabilitySpec(
++                            "work",
++                            "work",
++                            kind=kind,
++                            output_schema=getattr(adapter, "output_schema", None),
++                        ),
++                    ),
++                ),
++            )
++        ),
++    }
++
++
++def tool_model(request):
++    return (
++        ModelResponse("done")
++        if any(item["role"] == "tool" for item in request.messages)
++        else ModelResponse(tool_calls=(ToolCall("work", {}),))
++    )
++
++
++def operation(state, kind):
++    return next(op for op in state["operations"].values() if op["event_type"] == kind)
++
++
++@pytest.mark.parametrize("kind", ["model", "mcp"])
++@pytest.mark.parametrize("control", ["stop", "deadline", "shutdown"])
++async def test_completion_is_durable_before_close_and_control_still_wins(
++    runtime_store, build, kind, control
++):
++    adapter = ClosingModel() if kind == "model" else ClosingMcp()
++    options = {"model": adapter} if kind == "model" else tool_options(adapter)
++    policy = ExecutionPolicy(run_timeout_seconds=1 if control == "deadline" else 10)
++    event_type = "model.generate" if kind == "model" else "capability.invoke"
++    async with RuntimeEngine(store=runtime_store) as runtime:
++        handle = await build(runtime, tool_model, execution_policy=policy, **options).start("go")
++        await asyncio.wait_for(adapter.closing.wait(), 2)
++        state = runtime._load(handle.run_id)
++        saved = operation(state, event_type)
++        assert saved["raw"]["execution_fact"] == "completed"
++        assert saved["phase"] == "after" and saved["status"] == "pending"
++        validate_recovery(state)
++        if control == "stop":
++            await handle.stop(command_id="during-close")
++        if control == "shutdown":
++            await runtime.aclose()
++            state = runtime_store.load("default", handle.run_id)
++            assert state["status"] == "running" and state["terminal_seq"] is None
++        else:
++            result = await handle.wait(timeout_s=3)
++            state = assert_finished(
++                runtime, handle.run_id, "cancelled" if control == "stop" else "timed_out"
++            )
++            assert result.output is None
++            assert operation(state, event_type)["response"]["execution_fact"] == "completed"
++        attempt = operation(state, event_type)["attempts"][0]
++        assert attempt["diagnostics"][-1]["error"]["code"] == "RESOURCE_CLOSE_CANCELLED"
++        assert adapter.calls == 1
++        if kind == "model":
++            assert state["usage"]["input_tokens"] == 3 and state["usage"]["output_tokens"] == 2
++        validate_recovery(state)
++    if control == "shutdown":
++        adapter.release.set()
++        async with RuntimeEngine(store=runtime_store) as runtime:
++            result = await build(runtime, tool_model, execution_policy=policy, **options).ainvoke(
++                run_id=handle.run_id
++            )
++            assert_finished(runtime, handle.run_id, "succeeded")
++            assert result.output.value == ("saved" if kind == "model" else "done")
++            assert adapter.calls == 1
++
++
++@pytest.mark.parametrize("receipt_saved", [False, True])
++async def test_lost_owner_cannot_publish_completion_or_teardown_diagnostics(
++    runtime_store, build, receipt_saved
++):
++    ready, release = asyncio.Event(), asyncio.Event()
++
++    class Model:
++        descriptor = ModelDescriptor("fenced-completion", 32768)
++
++        async def stream_once(self, request, context):
++            if not receipt_saved:
++                ready.set()
++                await release.wait()
++            try:
++                yield ProviderEvent("completed", ModelResponse("saved").to_dict())
++            finally:
++                if receipt_saved:
++                    ready.set()
++                    await release.wait()
++
++    async with RuntimeEngine(store=runtime_store) as runtime:
++        handle = await build(runtime, None, model=Model()).start("go")
++        await asyncio.wait_for(ready.wait(), 2)
++        with runtime_store.transaction("default") as tx:
++            state = tx.get("runs", handle.run_id)
++            state["lease"].update(worker_id="new-owner", epoch=state["lease"]["epoch"] + 1)
++            tx.put("runs", handle.run_id, state)
++        before = runtime._load(handle.run_id)
++        release.set()
++        with pytest.raises(LeaseLost):
++            await handle.wait(timeout_s=2)
++        after = runtime._load(handle.run_id)
++        assert after["operations"] == before["operations"]
++        assert after["usage"] == before["usage"] and after["terminal_seq"] is None
++        assert (operation(after, "model.generate")["raw"] is not None) is receipt_saved
++
++
++@pytest.mark.parametrize("kind", ["model", "mcp"])
++@pytest.mark.parametrize("committed", [False, True], ids=["before-commit", "after-commit"])
++async def test_completion_commit_fault_stops_delivery_and_recovers_from_durable_facts(
++    runtime_store, build, monkeypatch, kind, committed
++):
++    adapter = ClosingModel() if kind == "model" else ClosingMcp()
++    adapter.release.set()
++    options = {"model": adapter} if kind == "model" else tool_options(adapter)
++    event_type = "model.generate" if kind == "model" else "capability.invoke"
++    original = CommitCoordinator.commit
++
++    def interrupt(coordinator, command, change, **kwargs):
++        if command.startswith("attempt-result:"):
++            state = coordinator.store.load(coordinator.namespace, coordinator.lease.run_id)
++            op = state["operations"][command.split(":")[1]]
++            if op["event_type"] == event_type:
++                if committed:
++                    original(coordinator, command, change, **kwargs)
++                raise OSError("persistence interrupted")
++        return original(coordinator, command, change, **kwargs)
++
++    with monkeypatch.context() as patch:
++        patch.setattr(CommitCoordinator, "commit", interrupt)
++        async with RuntimeEngine(store=runtime_store) as runtime:
++            handle = await build(runtime, tool_model, **options).start("go")
++            with pytest.raises(InfrastructureError, match="ATTEMPT_COMPLETION_COMMIT_FAILED"):
++                await handle.wait(timeout_s=2)
++            state = runtime._load(handle.run_id)
++            assert state["status"] == "running" and state["terminal_seq"] is None
++            assert (operation(state, event_type)["raw"] is not None) is committed
++            assert adapter.calls == 1
++            validate_recovery(state)
++
++    async with RuntimeEngine(store=runtime_store) as recovered:
++        result = await build(recovered, tool_model, **options).ainvoke(run_id=handle.run_id)
++        state = assert_finished(
++            recovered, handle.run_id, "failed" if kind == "model" and not committed else "succeeded"
++        )
++        op = operation(state, event_type)
++        assert adapter.calls == len(op["attempts"]) == 1
++        if committed:
++            assert op["raw"]["execution_fact"] == "completed"
++            assert result.output.value == ("saved" if kind == "model" else "done")
++        else:
++            assert op["raw"]["execution_fact"] == "unknown"
++            assert op["raw"]["error"]["code"] == "CALL_OUTCOME_UNKNOWN"
++        if kind == "model":
++            assert state["usage"]["input_tokens"] == (3 if committed else None)
++            assert state["usage"]["output_tokens"] == (2 if committed else None)
++        validate_recovery(state)
++
++
++@pytest.mark.parametrize("business_error,schema", [(True, None), (False, {"type": "string"})])
++async def test_failed_completed_mcp_result_survives_timeout_with_original_error(
++    runtime_store, build, business_error, schema
++):
++    adapter = ClosingMcp(business_error=business_error, output_schema=schema)
++    policy = ExecutionPolicy(
++        tool_timeout_seconds=1, retry=RetryPolicy(enabled=True, max_attempts=2, delay_seconds=0)
++    )
++    async with RuntimeEngine(store=runtime_store) as runtime:
++        result = await build(
++            runtime, tool_model, execution_policy=policy, **tool_options(adapter)
++        ).ainvoke("go")
++        state = assert_finished(runtime, result.run_id, "succeeded")
++        op = operation(state, "capability.invoke")
++        assert adapter.calls == len(op["attempts"]) == 1
++        assert op["raw"]["execution_fact"] == "completed"
++        assert op["raw"]["error"]["code"] == (
++            "MCP_TOOL_ERROR" if business_error else "MCP_OUTPUT_SCHEMA_INVALID"
++        )
++        assert op["attempts"][0]["diagnostics"][-1]["error"]["code"] == "RESOURCE_CLOSE_TIMEOUT"
++
++
++@pytest.mark.parametrize("kind", ["sync", "async", "legacy"])
++async def test_value_bridges_only_mark_returned_values_as_completed(runtime_store, build, kind):
++    calls = []
++
++    def invalid(arguments, context):
++        calls.append(1)
++        return object()
++
++    async def invalid_async(arguments, context):
++        return invalid(arguments, context)
++
++    class Legacy:
++        async def invoke(self, member, arguments, context):
++            return invalid(arguments, context)
++
++    adapter = (
++        Legacy()
++        if kind == "legacy"
++        else FunctionToolAdapter(invalid_async if kind == "async" else invalid)
++    )
++    async with RuntimeEngine(store=runtime_store) as runtime:
++        result = await build(runtime, tool_model, **tool_options(adapter, kind="tool")).ainvoke(
++            "go"
++        )
++        op = operation(assert_finished(runtime, result.run_id, "succeeded"), "capability.invoke")
++        assert calls == [1] and len(op["attempts"]) == 1
++        assert op["raw"]["execution_fact"] == "completed"
++        assert op["raw"]["error"]["code"] == "CAPABILITY_RESULT_INVALID"
++        assert op["raw"]["error"]["category"] == "protocol"
++
++
++async def test_function_throwing_before_return_is_not_marked_completed(runtime_store, build):
++    def failed(arguments, context):
++        raise AgentLoomError("BUSINESS_FAILED")
++
++    async with RuntimeEngine(store=runtime_store) as runtime:
++        result = await build(
++            runtime, tool_model, **tool_options(FunctionToolAdapter(failed), kind="tool")
++        ).ainvoke("go")
++        op = operation(assert_finished(runtime, result.run_id, "succeeded"), "capability.invoke")
++        assert op["raw"]["execution_fact"] == "unknown"
++        assert op["raw"]["error"]["code"] == "BUSINESS_FAILED"
++
++
++async def test_native_completion_callback_expires_and_does_not_repeat_attempt(runtime_store, build):
++    callbacks, calls = [], []
++
++    class Native:
++        async def invoke_once(self, request, context):
++            calls.append(request)
++            callbacks.append(context.report_completion)
++            result = ToolResult.from_value({"receipt": "saved"})
++            context.report_completion(result)
++            context.report_completion(result)
++            await asyncio.Event().wait()
++
++    async with RuntimeEngine(store=runtime_store) as runtime:
++        result = await build(
++            runtime,
++            tool_model,
++            execution_policy=ExecutionPolicy(
++                tool_timeout_seconds=1,
++                retry=RetryPolicy(enabled=True, max_attempts=2, delay_seconds=0),
++            ),
++            **tool_options(Native(), kind="tool"),
++        ).ainvoke("go")
++        before = assert_finished(runtime, result.run_id, "succeeded")
++        op = operation(before, "capability.invoke")
++        assert len(calls) == len(op["attempts"]) == 1
++        assert op["raw"]["result"] == {"receipt": "saved"}
++        with pytest.raises(AgentLoomError, match="ATTEMPT_COMPLETION_CLOSED"):
++            callbacks[0](ToolResult.from_value("late"))
++        after = runtime._load(result.run_id)
++        assert after["operations"] == before["operations"]
++        assert after["usage"] == before["usage"]
++
++
++@pytest.mark.parametrize("business_error", [False, True])
++async def test_noncanonical_mcp_response_remains_a_completed_protocol_failure(
++    runtime_store, build, business_error
++):
++    class InvalidMcp(ClosingMcp):
++        async def call_tool(self, name, arguments, meta=None):
++            result = await super().call_tool(name, arguments, meta)
++            result.model_dump = lambda **kwargs: {"structuredContent": float("nan")}
++            return result
++
++    adapter = InvalidMcp(business_error=business_error)
++    policy = ExecutionPolicy(
++        tool_timeout_seconds=1, retry=RetryPolicy(enabled=True, max_attempts=2, delay_seconds=0)
++    )
++    async with RuntimeEngine(store=runtime_store) as runtime:
++        result = await build(
++            runtime, tool_model, execution_policy=policy, **tool_options(adapter)
++        ).ainvoke("go")
++        state = assert_finished(runtime, result.run_id, "succeeded")
++        op = operation(state, "capability.invoke")
++        assert adapter.calls == len(op["attempts"]) == 1
++        assert op["raw"]["execution_fact"] == "completed"
++        assert op["raw"]["error"]["code"] == "MCP_PROTOCOL_ERROR"
++        assert op["raw"]["error"]["category"] == "protocol"
++        assert op["raw"]["result"] is None
++        validate_recovery(state)
+diff --git a/agentloom-sdk/tests/test_completion_recovery.py b/agentloom-sdk/tests/test_completion_recovery.py
+new file mode 100644
+index 0000000..c52dbf7
+--- /dev/null
++++ b/agentloom-sdk/tests/test_completion_recovery.py
+@@ -0,0 +1,59 @@
++"""A process lost during teardown resumes the already committed outcome."""
++
++import json
++import os
++import subprocess
++import sys
++import time
++from pathlib import Path
++
++import pytest
++
++from agentloom import FileRuntimeStore
++from agentloom.runtime.recovery import validate_recovery
++
++
++@pytest.mark.parametrize("kind", ["model", "mcp", "mcp-error"])
++def test_process_exit_during_close_preserves_completion(tmp_path, kind):
++    env = {**os.environ, "PYTHONPATH": str(Path(__file__).parents[1] / "src")}
++    worker = Path(__file__).parent / "support" / "completion_process.py"
++    first = subprocess.run(
++        [sys.executable, str(worker), str(tmp_path), kind, "crash"],
++        env=env,
++        capture_output=True,
++        text=True,
++        timeout=15,
++    )
++    assert first.returncode == 74, first.stderr
++    store = FileRuntimeStore(tmp_path / "state")
++    state = store.load("default", "fixed")
++    target = "model.generate" if kind == "model" else "capability.invoke"
++    op = next(op for op in state["operations"].values() if op["event_type"] == target)
++    assert op["raw"]["execution_fact"] == "completed"
++    assert op["phase"] == "after" and len(op["attempts"]) == 1
++    validate_recovery(state)
++    store.close()
++    time.sleep(0.35)
++    second = subprocess.run(
++        [sys.executable, str(worker), str(tmp_path), kind, "resume"],
++        env=env,
++        capture_output=True,
++        text=True,
++        timeout=15,
++    )
++    assert second.returncode == 0, second.stderr
++    assert json.loads(second.stdout) == {
++        "status": "succeeded",
++        "output": "saved" if kind == "model" else "done",
++    }
++    audit = (tmp_path / "audit").read_text().splitlines()
++    assert audit.count("model") == (1 if kind == "model" else 2)
++    assert audit.count("tool") == (0 if kind == "model" else 1)
++    store = FileRuntimeStore(tmp_path / "state")
++    state = store.load("default", "fixed")
++    validate_recovery(state)
++    assert state["status"] == "succeeded" and state["usage"]["loops_reserved"] == 0
++    assert len([event for event in state["events"] if event["type"] == "run.completed"]) == 1
++    if kind == "model":
++        assert state["usage"]["input_tokens"] == 3 and state["usage"]["output_tokens"] == 2
++    store.close()
+diff --git a/agentloom-sdk/tests/test_usage_events.py b/agentloom-sdk/tests/test_usage_events.py
+new file mode 100644
+index 0000000..4798749
+--- /dev/null
++++ b/agentloom-sdk/tests/test_usage_events.py
+@@ -0,0 +1,107 @@
++"""All adapters share cumulative usage validation at the model event boundary."""
++
++import pytest
++from conftest import assert_finished, binding, tool
++
++from agentloom import (
++    AgentDefinition,
++    CapabilityRegistry,
++    ModelDescriptor,
++    ModelResponse,
++    ProviderEvent,
++    RuntimeEngine,
++    ToolCall,
++)
++from agentloom.configuration.json_values import MAX_JSON_INTEGER
++from agentloom.runtime.recovery import validate_recovery
++
++
++@pytest.mark.parametrize(
++    "frames,final,expected,complete",
++    [
++        ([{"input_tokens": 9}, {"output_tokens": 5}, {}, None], {"input_tokens": 0}, (0, 5), True),
++        ([{"input_tokens": 0}], {}, (0, None), False),
++        ([{"output_tokens": 0}], None, (None, 0), False),
++        ([{"input_tokens": 2, "output_tokens": 3}, {"output_tokens": 4}], {}, (2, 4), True),
++    ],
++)
++async def test_usage_merges_cumulative_fields_and_preserves_unknowns(
++    runtime_store, build, frames, final, expected, complete
++):
++    class Model:
++        descriptor = ModelDescriptor("usage-merge", 32768)
++
++        async def stream_once(self, request, context):
++            for frame in frames:
++                yield ProviderEvent("usage", frame)
++            yield ProviderEvent("completed", ModelResponse("done", usage=final).to_dict())
++
++    async with RuntimeEngine(store=runtime_store) as runtime:
++        result = await build(runtime, None, model=Model()).ainvoke("go")
++        state = assert_finished(runtime, result.run_id, "succeeded")
++        assert (result.usage.input_tokens, result.usage.output_tokens) == expected
++        assert result.usage.token_counts_complete is complete
++        validate_recovery(state)
++
++
++@pytest.mark.parametrize("channel", ["usage", "completed"])
++@pytest.mark.parametrize("field", ["input_tokens", "output_tokens"])
++@pytest.mark.parametrize("overflow", [False, True])
++async def test_each_usage_channel_enforces_same_safe_integer_boundary(
++    runtime_store, build, channel, field, overflow
++):
++    count = MAX_JSON_INTEGER + int(overflow)
++
++    class Model:
++        descriptor = ModelDescriptor("usage-boundary", 32768)
++
++        async def stream_once(self, request, context):
++            statistics = {"input_tokens": 0, "output_tokens": 0, field: count}
++            response = ModelResponse("done").to_dict()
++            if channel == "usage":
++                yield ProviderEvent("usage", statistics)
++            else:
++                response["usage"] = statistics
++            yield ProviderEvent("completed", response)
++
++    async with RuntimeEngine(store=runtime_store) as runtime:
++        result = await build(runtime, None, model=Model()).ainvoke("go")
++        state = assert_finished(runtime, result.run_id, "failed" if overflow else "succeeded")
++        if overflow:
++            assert result.error["code"] == "MODEL_PROTOCOL_ERROR"
++        else:
++            assert getattr(result.usage, field) == count
++            assert result.usage.token_counts_complete
++        validate_recovery(state)
++
++
++async def test_new_model_operation_does_not_inherit_prior_usage_events(runtime_store, build):
++    class Model:
++        descriptor = ModelDescriptor("usage-scope", 32768)
++
++        async def stream_once(self, request, context):
++            if any(item["role"] == "tool" for item in request.messages):
++                yield ProviderEvent("completed", ModelResponse("done").to_dict())
++            else:
++                yield ProviderEvent("usage", {"input_tokens": 3, "output_tokens": 2})
++                yield ProviderEvent(
++                    "completed", ModelResponse(tool_calls=(ToolCall("echo", {}),)).to_dict()
++                )
++
++    async with RuntimeEngine(store=runtime_store) as runtime:
++        result = await build(
++            runtime,
++            None,
++            model=Model(),
++            definition=AgentDefinition("test", "SYSTEM", capabilities=(binding(),)),
++            capabilities=CapabilityRegistry(tools=(tool(lambda a, c: "ok"),)),
++        ).ainvoke("go")
++        state = assert_finished(runtime, result.run_id, "succeeded")
++        assert (result.usage.input_tokens, result.usage.output_tokens) == (3, 2)
++        assert not result.usage.token_counts_complete
++        model_ops = [
++            op for op in state["operations"].values() if op["event_type"] == "model.generate"
++        ]
++        final = next(op for op in model_ops if op["raw"]["result"]["text"] == "done")
++        assert final["raw"]["result"]["usage"] is None
++        validate_recovery(state)

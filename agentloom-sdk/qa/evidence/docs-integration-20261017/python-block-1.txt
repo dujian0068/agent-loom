@@ -1,0 +1,41 @@
+import asyncio
+from uuid import uuid4
+
+from agentloom import (
+    AgentDefinition,
+    AgentLoom,
+    AgentProperties,
+    ModelResponse,
+    PropertiesConfig,
+    RuntimeProperties,
+    ScriptedModel,
+    ServiceProperties,
+    WorkspaceBinding,
+)
+
+
+async def main():
+    model = ScriptedModel(lambda request: ModelResponse("接入成功"))
+    definition = AgentDefinition("assistant", "准确回答用户的问题。")
+    properties = PropertiesConfig(
+        runtime=RuntimeProperties(namespace="integration-demo"),
+        defaults=AgentProperties(workspace=WorkspaceBinding(".agentloom/work")),
+        services=ServiceProperties(model=model),
+    )
+    run_id, input_id, session_id = (str(uuid4()) for _ in range(3))
+
+    async with AgentLoom(properties) as app:
+        agent = app.build(definition)
+        handle = await agent.start(
+            "检查接入", run_id=run_id, input_id=input_id, session_id=session_id
+        )
+        result = await handle.wait()
+        print(result.run_id, result.status)
+        print(result.output.value if result.output else result.error)
+
+    async with AgentLoom(properties) as reopened:
+        result = await reopened.build(definition).ainvoke(run_id=run_id)
+        print("重开结果：", result.status, "模型调用次数：", len(model.requests))
+
+
+asyncio.run(main())

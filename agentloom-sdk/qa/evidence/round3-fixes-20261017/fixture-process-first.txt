@@ -1,0 +1,16 @@
+...........................FF                                            [100%]
+=================================== FAILURES ===================================
+___________ test_process_exit_during_close_preserves_completion[mcp] ___________
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/tests/test_completion_recovery.py:32: in test_process_exit_during_close_preserves_completion
+    assert op["raw"]["execution_fact"] == "completed"
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   TypeError: 'NoneType' object is not subscriptable
+________ test_process_exit_during_close_preserves_completion[mcp-error] ________
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/tests/test_completion_recovery.py:32: in test_process_exit_during_close_preserves_completion
+    assert op["raw"]["execution_fact"] == "completed"
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   TypeError: 'NoneType' object is not subscriptable
+=========================== short test summary info ============================
+FAILED agentloom-sdk/tests/test_completion_recovery.py::test_process_exit_during_close_preserves_completion[mcp]
+FAILED agentloom-sdk/tests/test_completion_recovery.py::test_process_exit_during_close_preserves_completion[mcp-error]
+2 failed, 27 passed in 2.16s

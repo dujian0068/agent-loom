@@ -1,0 +1,11 @@
+from dataclasses import replace
+from agentloom import ExecutionPolicy
+
+# 派生单个 Agent 的策略；启动默认值不变。
+limited = app.builder.with_options(execution_policy=ExecutionPolicy(loop_max=10))
+agent = limited.build(definition)
+
+# 修改参数组中的字段，再整组替换；新宿主使用这份配置。
+other_properties = properties.with_options(
+    runtime=replace(properties.runtime, namespace="another-app"),
+)

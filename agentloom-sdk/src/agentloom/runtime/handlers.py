@@ -6,12 +6,23 @@ from dataclasses import dataclass, field
 from uuid import NAMESPACE_URL, uuid5
 
 from ..capabilities import CapabilityRequest, ToolInvocationContext, WorkspaceService
-from ..capabilities.invocation import invoke_adapter
+from ..capabilities.invocation import (
+    invoke_adapter,
+    normalize_completion,
+    normalize_error_completion,
+)
 from ..configuration import digest, validate_schema
-from ..errors import AgentLoomError
-from ..models.material import PartialMaterial, protocol_error, validate_response, validate_usage
+from ..errors import AgentLoomError, InfrastructureError
+from ..models.material import (
+    PartialMaterial,
+    merge_usage,
+    normalize_usage,
+    protocol_error,
+    validate_response,
+)
 from ..resources import close_resource
 from ..types import ModelRequest, ProviderEvent
+from .completion import failed_result, success
 
 
 @dataclass(frozen=True)
@@ -29,6 +40,7 @@ class AttemptContext:
     lease_epoch: int
     deadline_at: float
     diagnostics: list = field(default_factory=list, compare=False)
+    completion: object = field(default=None, compare=False, repr=False)
 
 
 class ModelHandler:
@@ -54,6 +66,7 @@ class ModelHandler:
         policy = runner.program.execution_policy
         started, last_output, received = time.monotonic(), None, False
         partial = PartialMaterial()
+        usage = None
         primary = None
         try:
             while True:
@@ -95,9 +108,10 @@ class ModelHandler:
                     raise protocol_error("Model adapter must yield ProviderEvent")
                 partial.add(frame)
                 if frame.kind == "usage":
-                    validate_usage(frame.data)
+                    usage = merge_usage(usage, normalize_usage(frame.data))
                 if frame.kind == "completed":
                     response = validate_response(frame.data)
+                    response["usage"] = merge_usage(usage, normalize_usage(response.get("usage")))
                     for ordinal, call in enumerate(response["tool_calls"]):
                         call["provider_call_id"] = call["call_id"]
                         call["call_id"] = str(
@@ -118,6 +132,7 @@ class ModelHandler:
                 if frame.kind == "error":
                     raise AgentLoomError("MODEL_PROVIDER_ERROR")
                 if frame.kind == "completed":
+                    attempt.completion.record(success(response))
                     return response
         except BaseException as exc:
             # The call driver persists these as audit material, never as a decision.
@@ -165,6 +180,24 @@ class ToolHandler:
         if op["request_hash"] != digest(event.payload):
             raise AgentLoomError("CAPABILITY_REQUEST_MISMATCH", external_outcome="not_started")
         scope = {"run_id": runner.run_id, "task_id": op["task_id"]}
+
+        def complete(result=None, *, error=None):
+            try:
+                outcome = (
+                    normalize_error_completion(error)
+                    if error is not None
+                    else normalize_completion(result)
+                )
+                outcome = self._validate_output(outcome, entry)
+            except InfrastructureError:
+                raise
+            except AgentLoomError as exc:
+                attempt.completion.record(failed_result(exc))
+                raise
+            attempt.completion.record(outcome.raw_result())
+            if error is not None:
+                raise error
+
         context = ToolInvocationContext(
             content_scope_ref=scope,
             run_id=runner.run_id,
@@ -198,6 +231,7 @@ class ToolHandler:
             check_active=runner.check_active,
             spec=entry.spec,
             report_diagnostic=attempt.diagnostics.append,
+            report_completion=complete,
         )
         request = CapabilityRequest(
             op["operation_id"],
@@ -206,6 +240,10 @@ class ToolHandler:
             arguments,
         )
         outcome = await invoke_adapter(entry.registration.adapter, request, context)
+        return self._validate_output(outcome, entry)
+
+    @staticmethod
+    def _validate_output(outcome, entry):
         value = outcome.value
         if outcome.envelope["status"] != "succeeded":
             return outcome

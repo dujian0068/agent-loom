@@ -1,0 +1,135 @@
+{
+  "review": "SDK round 4",
+  "generated_at": "2026-10-17T22:23:46.827502+08:00",
+  "base_head": "84b3355b2c59539cae4c4d1bece2e35d1ca22bf2",
+  "head_at_finish": "84b3355b2c59539cae4c4d1bece2e35d1ca22bf2",
+  "revision_note": "Review targets the uncommitted workspace on top of 84b3355, not the unchanged Git commit alone. reviewed-source.diff also includes the five newly added implementation/test files captured before the run.",
+  "baseline_file_count": 137,
+  "python": "3.12.14 (main, Aug 25 2026, 13:50:33) [Clang 22.1.3 ]",
+  "platform": "macOS-26.7-arm64-arm-64bit",
+  "versions": {
+    "pytest": "8.4.2",
+    "pytest-asyncio": "1.4.0",
+    "ruff": "0.16.9",
+    "httpx": "0.28.1",
+    "mcp": "1.30.0"
+  },
+  "commands": [
+    ".venv/bin/python -m pytest -q agentloom-sdk/tests agentloom-sdk/qa/test_sdk_audit.py agentloom-sdk/qa/test_sdk_rereview.py agentloom-sdk/qa/test_sdk_review_round3.py --tb=short --junitxml=/tmp/agentloom-review4-20261017/regression.junit.xml",
+    ".venv/bin/python -m pytest -q agentloom-sdk/qa/test_sdk_review_round4.py --tb=short --junitxml=/tmp/agentloom-review4-20261017/boundaries-final.junit.xml",
+    ".venv/bin/python -m ruff check agentloom-sdk/src agentloom-sdk/tests agentloom-sdk/qa/test_sdk*.py",
+    ".venv/bin/python -m ruff format --check agentloom-sdk/src agentloom-sdk/tests agentloom-sdk/qa/test_sdk*.py"
+  ],
+  "results": {
+    "baseline": {
+      "name": "pytest",
+      "errors": "0",
+      "failures": "0",
+      "skipped": "0",
+      "tests": "813",
+      "time": "251.417",
+      "timestamp": "2026-10-17T22:19:06.828195+08:00",
+      "hostname": "bmilk",
+      "passed": 813,
+      "classes": {
+        "tests.test_attempt_completion": 42,
+        "tests.test_builder_contract": 31,
+        "tests.test_capability_public_contract": 30,
+        "tests.test_completion_cleanup": 15,
+        "tests.test_completion_recovery": 3,
+        "tests.test_control_and_history": 7,
+        "tests.test_control_reconciliation": 40,
+        "tests.test_design_alignment": 15,
+        "tests.test_environment_contract": 4,
+        "tests.test_execution_contract": 34,
+        "tests.test_file_store_contract": 19,
+        "tests.test_followup_review": 54,
+        "tests.test_history_execution_facts": 2,
+        "tests.test_hook_context_contract": 9,
+        "tests.test_hook_public_contract": 10,
+        "tests.test_maintenance_contract": 17,
+        "tests.test_mcp_protocol": 3,
+        "tests.test_mcp_retry_contract": 12,
+        "tests.test_model_material": 60,
+        "tests.test_model_protocols": 11,
+        "tests.test_persistence_contract": 17,
+        "tests.test_properties_contract": 38,
+        "tests.test_public_result_projection": 8,
+        "tests.test_public_validation": 28,
+        "tests.test_recovery_invariants": 16,
+        "tests.test_result_and_scope_contract": 4,
+        "tests.test_review_regressions": 34,
+        "tests.test_schema_contract": 21,
+        "tests.test_skill_profile_contract": 13,
+        "tests.test_usage_accounting": 12,
+        "tests.test_usage_events": 26,
+        "qa.test_sdk_audit": 110,
+        "qa.test_sdk_rereview": 24,
+        "qa.test_sdk_review_round3": 44
+      },
+      "failed_cases": []
+    },
+    "boundaries": {
+      "name": "pytest",
+      "errors": "0",
+      "failures": "22",
+      "skipped": "0",
+      "tests": "56",
+      "time": "4.497",
+      "timestamp": "2026-10-17T22:22:32.487252+08:00",
+      "hostname": "bmilk",
+      "passed": 34,
+      "classes": {
+        "qa.test_sdk_review_round4": 56
+      },
+      "failed_cases": [
+        "test_known_error_completion_has_same_fact_and_retry_behavior_as_result[memory-known-business-error-callback]",
+        "test_known_error_completion_has_same_fact_and_retry_behavior_as_result[memory-known-transport-error-callback]",
+        "test_known_error_completion_has_same_fact_and_retry_behavior_as_result[file-known-business-error-callback]",
+        "test_known_error_completion_has_same_fact_and_retry_behavior_as_result[file-known-transport-error-callback]",
+        "test_error_completion_validates_error_dto_before_persistence[memory-empty-code-error-callback]",
+        "test_error_completion_validates_error_dto_before_persistence[memory-bad-category-error-callback]",
+        "test_error_completion_validates_error_dto_before_persistence[memory-nan-retry-after-error-callback]",
+        "test_error_completion_validates_error_dto_before_persistence[file-empty-code-error-callback]",
+        "test_error_completion_validates_error_dto_before_persistence[file-bad-category-error-callback]",
+        "test_error_completion_validates_error_dto_before_persistence[file-nan-retry-after-error-callback]",
+        "test_non_json_returned_container_keeps_completed_protocol_fact[memory-cycle-list-function]",
+        "test_non_json_returned_container_keeps_completed_protocol_fact[memory-cycle-list-legacy]",
+        "test_non_json_returned_container_keeps_completed_protocol_fact[memory-cycle-list-native]",
+        "test_non_json_returned_container_keeps_completed_protocol_fact[memory-cycle-dict-function]",
+        "test_non_json_returned_container_keeps_completed_protocol_fact[memory-cycle-dict-legacy]",
+        "test_non_json_returned_container_keeps_completed_protocol_fact[memory-cycle-dict-native]",
+        "test_non_json_returned_container_keeps_completed_protocol_fact[file-cycle-list-function]",
+        "test_non_json_returned_container_keeps_completed_protocol_fact[file-cycle-list-legacy]",
+        "test_non_json_returned_container_keeps_completed_protocol_fact[file-cycle-list-native]",
+        "test_non_json_returned_container_keeps_completed_protocol_fact[file-cycle-dict-function]",
+        "test_non_json_returned_container_keeps_completed_protocol_fact[file-cycle-dict-legacy]",
+        "test_non_json_returned_container_keeps_completed_protocol_fact[file-cycle-dict-native]"
+      ]
+    }
+  },
+  "findings": {
+    "R4-01": {
+      "priority": "P1",
+      "failed_cases": 10,
+      "topic": "error= completion bypasses result normalization: known outcome may retry; invalid error DTOs accepted or strand the Run"
+    },
+    "R4-02": {
+      "priority": "P2",
+      "failed_cases": 12,
+      "topic": "Cyclic returned containers escape JSON validation as RecursionError and lose completed execution fact"
+    }
+  },
+  "production_code_changed_by_reviewer": false,
+  "scope": "SDK excluding Workflow, default tools/SPI and Platform; existing whole-suite tests run as regression.",
+  "external_calls": "Fourth-round probes use deterministic local adapters and do not call external model/MCP services.",
+  "baseline_files_changed_during_test_run": [],
+  "delivery_captured_at": "2026-10-17T22:26:16.878726+08:00",
+  "documentation_changes_after_test_capture": [
+    "agentloom-sdk/README.md",
+    "docs/sdk/implementation.md",
+    "docs/sdk/index.md"
+  ],
+  "code_or_test_changes_after_test_capture": [],
+  "delivery_note": "Documentation was updated after the successful test-end hash comparison. Original before/after snapshots and the reviewed patch remain unchanged. source-delivery.json records the later documentation changes; SDK implementation, tests and capabilities contract are unchanged."
+}

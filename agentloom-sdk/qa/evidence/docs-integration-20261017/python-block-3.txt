@@ -1,0 +1,13 @@
+import os
+from dataclasses import replace
+from agentloom import OpenAIResponsesAdapter
+
+model = OpenAIResponsesAdapter(
+    model=os.environ["AGENTLOOM_MODEL"],
+    api_key=os.environ["OPENAI_API_KEY"],
+    context_window_tokens=int(os.environ["AGENTLOOM_CONTEXT_WINDOW"]),
+    base_url=os.environ.get("AGENTLOOM_BASE_URL", "https://api.openai.com/v1"),
+)
+properties = properties.with_options(
+    services=replace(properties.services, model=model),
+)

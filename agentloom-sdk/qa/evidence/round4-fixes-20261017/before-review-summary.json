@@ -1,0 +1,61 @@
+{
+  "evidence": "/private/tmp/agentloom-round4-verification-zi_7vtyl",
+  "exit_code": 1,
+  "suite": {
+    "name": "pytest",
+    "errors": "0",
+    "failures": "22",
+    "skipped": "0",
+    "tests": "56",
+    "time": "4.298",
+    "timestamp": "2026-10-17T22:29:14.424785+08:00",
+    "hostname": "bmilk"
+  },
+  "failed_cases": [
+    "test_known_error_completion_has_same_fact_and_retry_behavior_as_result[memory-known-business-error-callback]",
+    "test_known_error_completion_has_same_fact_and_retry_behavior_as_result[memory-known-transport-error-callback]",
+    "test_known_error_completion_has_same_fact_and_retry_behavior_as_result[file-known-business-error-callback]",
+    "test_known_error_completion_has_same_fact_and_retry_behavior_as_result[file-known-transport-error-callback]",
+    "test_error_completion_validates_error_dto_before_persistence[memory-empty-code-error-callback]",
+    "test_error_completion_validates_error_dto_before_persistence[memory-bad-category-error-callback]",
+    "test_error_completion_validates_error_dto_before_persistence[memory-nan-retry-after-error-callback]",
+    "test_error_completion_validates_error_dto_before_persistence[file-empty-code-error-callback]",
+    "test_error_completion_validates_error_dto_before_persistence[file-bad-category-error-callback]",
+    "test_error_completion_validates_error_dto_before_persistence[file-nan-retry-after-error-callback]",
+    "test_non_json_returned_container_keeps_completed_protocol_fact[memory-cycle-list-function]",
+    "test_non_json_returned_container_keeps_completed_protocol_fact[memory-cycle-list-legacy]",
+    "test_non_json_returned_container_keeps_completed_protocol_fact[memory-cycle-list-native]",
+    "test_non_json_returned_container_keeps_completed_protocol_fact[memory-cycle-dict-function]",
+    "test_non_json_returned_container_keeps_completed_protocol_fact[memory-cycle-dict-legacy]",
+    "test_non_json_returned_container_keeps_completed_protocol_fact[memory-cycle-dict-native]",
+    "test_non_json_returned_container_keeps_completed_protocol_fact[file-cycle-list-function]",
+    "test_non_json_returned_container_keeps_completed_protocol_fact[file-cycle-list-legacy]",
+    "test_non_json_returned_container_keeps_completed_protocol_fact[file-cycle-list-native]",
+    "test_non_json_returned_container_keeps_completed_protocol_fact[file-cycle-dict-function]",
+    "test_non_json_returned_container_keeps_completed_protocol_fact[file-cycle-dict-legacy]",
+    "test_non_json_returned_container_keeps_completed_protocol_fact[file-cycle-dict-native]"
+  ],
+  "snapshot_changed_files": [
+    "agentloom-sdk/README.md",
+    "docs/sdk/implementation.md",
+    "docs/sdk/index.md"
+  ],
+  "same_failure_set_as_report": true,
+  "original_snapshot_common_files": 137,
+  "original_snapshot_changed_common_files": [],
+  "original_snapshot_new_files": [
+    "agentloom-sdk/qa/test_sdk_review_round4.py"
+  ],
+  "current_source_and_test_hash_differences": [],
+  "original_regression_xml": {
+    "name": "pytest",
+    "errors": "0",
+    "failures": "0",
+    "skipped": "0",
+    "tests": "813",
+    "time": "251.417",
+    "timestamp": "2026-10-17T22:19:06.828195+08:00",
+    "hostname": "bmilk"
+  },
+  "production_files_modified_by_this_verification": false
+}

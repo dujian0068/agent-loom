@@ -13,6 +13,8 @@ MAX_JSON_INTEGER = 2**53 - 1
 
 
 def json_copy(value):
+    ancestors = set()
+
     def check(v):
         if isinstance(v, int) and abs(v) > MAX_JSON_INTEGER:
             raise ConfigurationError(
@@ -29,18 +31,28 @@ def json_copy(value):
             return
         if isinstance(v, float) and math.isfinite(v):
             return
-        if isinstance(v, (list, tuple)):
-            for item in v:
-                check(item)
-            return
-        if isinstance(v, Mapping) and all(isinstance(k, str) for k in v):
-            for key, item in v.items():
-                check(key)
-                check(item)
+        if isinstance(v, (list, tuple, Mapping)):
+            identity = id(v)
+            if identity in ancestors:
+                raise ConfigurationError("INVALID_JSON", "Circular containers are not JSON values")
+            ancestors.add(identity)
+            try:
+                if isinstance(v, Mapping):
+                    for key, item in v.items():
+                        if not isinstance(key, str):
+                            raise ConfigurationError(
+                                "INVALID_JSON", "JSON object keys must be strings"
+                            )
+                        check(key)
+                        check(item)
+                else:
+                    for item in v:
+                        check(item)
+            finally:
+                # Shared children in separate branches are valid JSON values.
+                ancestors.remove(identity)
             return
         raise ConfigurationError("INVALID_JSON", "Only finite JSON values are accepted")
-
-    check(value)
 
     def plain(item):
         if isinstance(item, Mapping):
@@ -49,13 +61,19 @@ def json_copy(value):
             return [plain(child) for child in item]
         return item
 
-    return json.loads(json.dumps(plain(value), ensure_ascii=False, allow_nan=False))
+    try:
+        check(value)
+        return json.loads(json.dumps(plain(value), ensure_ascii=False, allow_nan=False))
+    except RecursionError as exc:
+        raise ConfigurationError(
+            "INVALID_JSON", "JSON nesting exceeds the supported depth"
+        ) from exc
 
 
 def canonical(value):
     try:
         return rfc8785.dumps(json_copy(value)).decode("utf-8")
-    except (rfc8785.CanonicalizationError, UnicodeError) as exc:
+    except (rfc8785.CanonicalizationError, UnicodeError, RecursionError) as exc:
         raise ConfigurationError(
             "INVALID_CANONICAL_JSON", "Values must fit the RFC 8785 JSON profile"
         ) from exc
@@ -83,7 +101,12 @@ def freeze(value):
             return tuple(walk(child) for child in item)
         return item
 
-    return walk(value)
+    try:
+        return walk(value)
+    except RecursionError as exc:
+        raise ConfigurationError(
+            "INVALID_JSON", "JSON nesting exceeds the supported depth"
+        ) from exc
 
 
 def digest(value):

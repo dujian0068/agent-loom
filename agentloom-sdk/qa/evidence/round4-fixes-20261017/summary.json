@@ -1,0 +1,90 @@
+{
+  "base_head": "84b3355b2c59539cae4c4d1bece2e35d1ca22bf2",
+  "scope": "SDK fourth-round completion/JSON boundary fixes; Workflow excluded; filesystem remains the default backend",
+  "worktree_changes_committed": false,
+  "issues_fixed": {
+    "R4-01": "Normalize error= completion through the ToolResult boundary; honor explicit outcome, validate error/material before persistence, retain control and storage exception propagation",
+    "R4-02": "Reject circular containers with ConfigurationError and preserve completed protocol failures at returned-value boundaries; shared children remain valid; execution exceptions remain distinct"
+  },
+  "full_regression": {
+    "passed": 948,
+    "failed": 0,
+    "errors": 0,
+    "skipped": 0,
+    "pytest_reported_seconds": 270.43,
+    "suites": {
+      "sdk": 714,
+      "qa_audit": 110,
+      "qa_rereview": 24,
+      "qa_round3": 44,
+      "qa_round4": 56
+    },
+    "log": "regression.txt",
+    "junit": "regression.junit.xml",
+    "commands_and_classes": "regression-summary.json"
+  },
+  "focused_regression": {
+    "passed": 180,
+    "seconds": 30.521,
+    "log": "focused-final.txt"
+  },
+  "added_sdk_test_cases": {
+    "total": 79,
+    "new_test_json_value_boundaries": 14,
+    "new_test_completion_boundaries": 53,
+    "extended_attempt_completion": 10,
+    "extended_process_recovery": 2
+  },
+  "original_qa_unchanged": true,
+  "original_qa_sha256": {
+    "agentloom-sdk/qa/test_sdk_audit.py": "44f1e6ed269d47250c2f88783f78f3c7913f259d5040def5e744c6986d733941",
+    "agentloom-sdk/qa/test_sdk_rereview.py": "df17cc4ec0f09b09d3e2f6e8f0d885520bb53bdfbeaeedb49d8edf138f742873",
+    "agentloom-sdk/qa/test_sdk_review_round3.py": "adc6b442ae71512491056a47e0c96f0b917d0dfa07960f14969510a582272c55",
+    "agentloom-sdk/qa/test_sdk_review_round4.py": "152b2a8de031055e5c94db660d8d714bb63786a22bd4b8219b9ca76819683dfe"
+  },
+  "source": {
+    "fingerprints": "run-source-sha256.json",
+    "files": 124,
+    "unchanged_during_regression_and_packaging": true,
+    "changed_existing_files": [
+      "agentloom-sdk/src/agentloom/capabilities/contracts.py",
+      "agentloom-sdk/src/agentloom/capabilities/invocation.py",
+      "agentloom-sdk/src/agentloom/configuration/json_values.py",
+      "agentloom-sdk/src/agentloom/runtime/handlers.py",
+      "agentloom-sdk/tests/support/completion_process.py",
+      "agentloom-sdk/tests/test_attempt_completion.py",
+      "agentloom-sdk/tests/test_completion_recovery.py"
+    ],
+    "new_test_files": [
+      "agentloom-sdk/tests/test_completion_boundaries.py",
+      "agentloom-sdk/tests/test_json_value_boundaries.py"
+    ]
+  },
+  "ruff": {
+    "lint": "passed",
+    "format": "passed",
+    "python_files": 123,
+    "logs": [
+      "ruff.txt",
+      "ruff-format.txt"
+    ]
+  },
+  "wheel": {
+    "summary": "wheel-summary.json",
+    "source_modules": 79,
+    "source_and_install_byte_equal": true,
+    "installed_package_process_recovery_cases": 5
+  },
+  "preserved_first_run": {
+    "log": "focused-first.txt",
+    "passed": 175,
+    "failed": 4,
+    "cause": "New test reused an already bound Agent for its second session turn; fixed the fixture to construct a new Agent, preserving the existing instance-binding contract."
+  },
+  "documentation": {
+    "build_log": "docs-build.txt",
+    "check_log": "docs-check.txt",
+    "asset_build_note": "The first final link check ran before summary.json existed in the build input; rebuild after creating the referenced artifact. Logs retained as docs-*-before-summary.txt."
+  },
+  "environment": "verification-environment.json"
+}

@@ -1,0 +1,205 @@
+.F.F.F.FFFFFF.FFF...F..FF.F...........FFFF..                             [100%]
+=================================== FAILURES ===================================
+_ test_completed_mcp_call_is_not_repeated_when_only_teardown_times_out[memory-success-close-timeout] _
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round3.py:135: in test_completed_mcp_call_is_not_repeated_when_only_teardown_times_out
+    assert adapter.calls == 1, (
+E   AssertionError: Teardown after a known response must not repeat the business call
+E   assert 2 == 1
+E    +  where 2 = <test_sdk_review_round3.DelayedCloseMcp object at 0x10b660710>.calls
+----------------------------- Captured stdout call -----------------------------
+{"calls": 2, "raw": {"status": "failed", "result": null, "error": {"code": "TOOL_TIMEOUT", "message": "TOOL_TIMEOUT", "category": "timeout", "phase": "execute", "external_outcome": "unknown", "retryable_transport": false, "field_path": null}, "execution_fact": "unknown"}, "attempts": 2}
+_ test_completed_mcp_call_is_not_repeated_when_only_teardown_times_out[memory-business-error-close-timeout] _
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round3.py:135: in test_completed_mcp_call_is_not_repeated_when_only_teardown_times_out
+    assert adapter.calls == 1, (
+E   AssertionError: Teardown after a known response must not repeat the business call
+E   assert 2 == 1
+E    +  where 2 = <test_sdk_review_round3.DelayedCloseMcp object at 0x10b6a23c0>.calls
+----------------------------- Captured stdout call -----------------------------
+{"calls": 2, "raw": {"status": "failed", "result": null, "error": {"code": "TOOL_TIMEOUT", "message": "TOOL_TIMEOUT", "category": "timeout", "phase": "execute", "external_outcome": "unknown", "retryable_transport": false, "field_path": null}, "execution_fact": "unknown"}, "attempts": 2}
+_ test_completed_mcp_call_is_not_repeated_when_only_teardown_times_out[file-success-close-timeout] _
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round3.py:135: in test_completed_mcp_call_is_not_repeated_when_only_teardown_times_out
+    assert adapter.calls == 1, (
+E   AssertionError: Teardown after a known response must not repeat the business call
+E   assert 2 == 1
+E    +  where 2 = <test_sdk_review_round3.DelayedCloseMcp object at 0x10b765460>.calls
+----------------------------- Captured stdout call -----------------------------
+{"calls": 2, "raw": {"error": {"category": "timeout", "code": "TOOL_TIMEOUT", "external_outcome": "unknown", "field_path": null, "message": "TOOL_TIMEOUT", "phase": "execute", "retryable_transport": false}, "execution_fact": "unknown", "result": null, "status": "failed"}, "attempts": 2}
+_ test_completed_mcp_call_is_not_repeated_when_only_teardown_times_out[file-business-error-close-timeout] _
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round3.py:135: in test_completed_mcp_call_is_not_repeated_when_only_teardown_times_out
+    assert adapter.calls == 1, (
+E   AssertionError: Teardown after a known response must not repeat the business call
+E   assert 2 == 1
+E    +  where 2 = <test_sdk_review_round3.DelayedCloseMcp object at 0x10b73bc80>.calls
+----------------------------- Captured stdout call -----------------------------
+{"calls": 2, "raw": {"error": {"category": "timeout", "code": "TOOL_TIMEOUT", "external_outcome": "unknown", "field_path": null, "message": "TOOL_TIMEOUT", "phase": "execute", "retryable_transport": false}, "execution_fact": "unknown", "result": null, "status": "failed"}, "attempts": 2}
+__ test_stop_during_model_close_preserves_already_received_completion[memory] __
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round3.py:170: in test_stop_during_model_close_preserves_already_received_completion
+    assert op["raw"] is not None, (
+E   AssertionError: A received complete response must survive cancellation during close
+E   assert None is not None
+----------------------------- Captured stdout call -----------------------------
+{"status": "cancelled", "raw": null, "response": {"status": "failed", "result": null, "error": {"code": "RUN_STOPPED", "message": "RUN_STOPPED", "category": "cancelled", "phase": "execute", "external_outcome": "known", "retryable_transport": false, "field_path": null}, "execution_fact": "unknown", "operation_id": "0cce0bf5-073a-57a1-863d-b96f8b308f8d"}}
+___ test_stop_during_model_close_preserves_already_received_completion[file] ___
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round3.py:170: in test_stop_during_model_close_preserves_already_received_completion
+    assert op["raw"] is not None, (
+E   AssertionError: A received complete response must survive cancellation during close
+E   assert None is not None
+----------------------------- Captured stdout call -----------------------------
+{"status": "cancelled", "raw": null, "response": {"error": {"category": "cancelled", "code": "RUN_STOPPED", "external_outcome": "known", "field_path": null, "message": "RUN_STOPPED", "phase": "execute", "retryable_transport": false}, "execution_fact": "unknown", "operation_id": "e78dbda1-85b5-57e3-883f-60de1255dd5a", "result": null, "status": "failed"}}
+_ test_known_usage_events_survive_missing_counters_in_completion[memory-null] __
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round3.py:202: in test_known_usage_events_survive_missing_counters_in_completion
+    assert actual == expected
+E   assert (None, None) == (3, 2)
+E     
+E     At index 0 diff: None != 3
+E     Use -v to get more diff
+----------------------------- Captured stdout call -----------------------------
+{"final_usage": null, "actual": [null, null], "expected": [3, 2]}
+_ test_known_usage_events_survive_missing_counters_in_completion[memory-empty] _
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round3.py:202: in test_known_usage_events_survive_missing_counters_in_completion
+    assert actual == expected
+E   assert (None, None) == (3, 2)
+E     
+E     At index 0 diff: None != 3
+E     Use -v to get more diff
+----------------------------- Captured stdout call -----------------------------
+{"final_usage": {}, "actual": [null, null], "expected": [3, 2]}
+_ test_known_usage_events_survive_missing_counters_in_completion[memory-partial] _
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round3.py:202: in test_known_usage_events_survive_missing_counters_in_completion
+    assert actual == expected
+E   assert (None, 5) == (3, 5)
+E     
+E     At index 0 diff: None != 3
+E     Use -v to get more diff
+----------------------------- Captured stdout call -----------------------------
+{"final_usage": {"input_tokens": null, "output_tokens": 5}, "actual": [null, 5], "expected": [3, 5]}
+__ test_known_usage_events_survive_missing_counters_in_completion[file-null] ___
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round3.py:202: in test_known_usage_events_survive_missing_counters_in_completion
+    assert actual == expected
+E   assert (None, None) == (3, 2)
+E     
+E     At index 0 diff: None != 3
+E     Use -v to get more diff
+----------------------------- Captured stdout call -----------------------------
+{"final_usage": null, "actual": [null, null], "expected": [3, 2]}
+__ test_known_usage_events_survive_missing_counters_in_completion[file-empty] __
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round3.py:202: in test_known_usage_events_survive_missing_counters_in_completion
+    assert actual == expected
+E   assert (None, None) == (3, 2)
+E     
+E     At index 0 diff: None != 3
+E     Use -v to get more diff
+----------------------------- Captured stdout call -----------------------------
+{"final_usage": {}, "actual": [null, null], "expected": [3, 2]}
+_ test_known_usage_events_survive_missing_counters_in_completion[file-partial] _
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round3.py:202: in test_known_usage_events_survive_missing_counters_in_completion
+    assert actual == expected
+E   assert (None, 5) == (3, 5)
+E     
+E     At index 0 diff: None != 3
+E     Use -v to get more diff
+----------------------------- Captured stdout call -----------------------------
+{"final_usage": {"input_tokens": null, "output_tokens": 5}, "actual": [null, 5], "expected": [3, 5]}
+_ test_usage_event_counter_is_validated_before_completion[memory-over-canonical-limit] _
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round3.py:222: in test_usage_event_counter_is_validated_before_completion
+    assert result.status == "failed"
+E   AssertionError: assert 'succeeded' == 'failed'
+E     
+E     - failed
+E     + succeeded
+----------------------------- Captured stdout call -----------------------------
+{"count": 9007199254740992, "status": "succeeded", "error": null}
+_ test_usage_event_counter_is_validated_before_completion[file-over-canonical-limit] _
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round3.py:222: in test_usage_event_counter_is_validated_before_completion
+    assert result.status == "failed"
+E   AssertionError: assert 'succeeded' == 'failed'
+E     
+E     - failed
+E     + succeeded
+----------------------------- Captured stdout call -----------------------------
+{"count": 9007199254740992, "status": "succeeded", "error": null}
+_ test_invalid_returned_value_keeps_completed_execution_fact[memory-function-adapter] _
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round3.py:255: in test_invalid_returned_value_keeps_completed_execution_fact
+    assert op["raw"]["execution_fact"] == "completed"
+E   AssertionError: assert 'unknown' == 'completed'
+E     
+E     - completed
+E     + unknown
+----------------------------- Captured stdout call -----------------------------
+{"kind": "value", "raw": {"status": "failed", "result": null, "error": {"code": "INVALID_JSON", "message": "Only finite JSON values are accepted", "category": "business", "phase": "execute", "external_outcome": "known", "retryable_transport": false, "field_path": null}, "execution_fact": "unknown"}}
+_ test_invalid_returned_value_keeps_completed_execution_fact[file-function-adapter] _
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round3.py:255: in test_invalid_returned_value_keeps_completed_execution_fact
+    assert op["raw"]["execution_fact"] == "completed"
+E   AssertionError: assert 'unknown' == 'completed'
+E     
+E     - completed
+E     + unknown
+----------------------------- Captured stdout call -----------------------------
+{"kind": "value", "raw": {"error": {"category": "business", "code": "INVALID_JSON", "external_outcome": "known", "field_path": null, "message": "Only finite JSON values are accepted", "phase": "execute", "retryable_transport": false}, "execution_fact": "unknown", "result": null, "status": "failed"}}
+_ test_invalid_storage_wait_limit_raises_configuration_error_before_io[huge-positive-properties] _
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round3.py:269: in test_invalid_storage_wait_limit_raises_configuration_error_before_io
+    RuntimeProperties(state_directory=path, store_lock_timeout_seconds=value)
+<string>:8: in __init__
+    ???
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/configuration/properties.py:61: in __post_init__
+    self, "store_lock_timeout_seconds", store_lock_timeout(self.store_lock_timeout_seconds)
+                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/configuration/properties.py:26: in store_lock_timeout
+    or not math.isfinite(value)
+           ^^^^^^^^^^^^^^^^^^^^
+E   OverflowError: int too large to convert to float
+_ test_invalid_storage_wait_limit_raises_configuration_error_before_io[huge-positive-file-store] _
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round3.py:271: in test_invalid_storage_wait_limit_raises_configuration_error_before_io
+    FileRuntimeStore(path, lock_timeout_s=value)
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/storage/filesystem.py:136: in __init__
+    self.lock_timeout_s = store_lock_timeout(lock_timeout_s)
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/configuration/properties.py:26: in store_lock_timeout
+    or not math.isfinite(value)
+           ^^^^^^^^^^^^^^^^^^^^
+E   OverflowError: int too large to convert to float
+_ test_invalid_storage_wait_limit_raises_configuration_error_before_io[huge-negative-properties] _
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round3.py:269: in test_invalid_storage_wait_limit_raises_configuration_error_before_io
+    RuntimeProperties(state_directory=path, store_lock_timeout_seconds=value)
+<string>:8: in __init__
+    ???
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/configuration/properties.py:61: in __post_init__
+    self, "store_lock_timeout_seconds", store_lock_timeout(self.store_lock_timeout_seconds)
+                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/configuration/properties.py:26: in store_lock_timeout
+    or not math.isfinite(value)
+           ^^^^^^^^^^^^^^^^^^^^
+E   OverflowError: int too large to convert to float
+_ test_invalid_storage_wait_limit_raises_configuration_error_before_io[huge-negative-file-store] _
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round3.py:271: in test_invalid_storage_wait_limit_raises_configuration_error_before_io
+    FileRuntimeStore(path, lock_timeout_s=value)
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/storage/filesystem.py:136: in __init__
+    self.lock_timeout_s = store_lock_timeout(lock_timeout_s)
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/configuration/properties.py:26: in store_lock_timeout
+    or not math.isfinite(value)
+           ^^^^^^^^^^^^^^^^^^^^
+E   OverflowError: int too large to convert to float
+-- generated xml file: /tmp/agentloom-review3-20261017/probes-final.junit.xml --
+=========================== short test summary info ============================
+FAILED agentloom-sdk/qa/test_sdk_review_round3.py::test_completed_mcp_call_is_not_repeated_when_only_teardown_times_out[memory-success-close-timeout]
+FAILED agentloom-sdk/qa/test_sdk_review_round3.py::test_completed_mcp_call_is_not_repeated_when_only_teardown_times_out[memory-business-error-close-timeout]
+FAILED agentloom-sdk/qa/test_sdk_review_round3.py::test_completed_mcp_call_is_not_repeated_when_only_teardown_times_out[file-success-close-timeout]
+FAILED agentloom-sdk/qa/test_sdk_review_round3.py::test_completed_mcp_call_is_not_repeated_when_only_teardown_times_out[file-business-error-close-timeout]
+FAILED agentloom-sdk/qa/test_sdk_review_round3.py::test_stop_during_model_close_preserves_already_received_completion[memory]
+FAILED agentloom-sdk/qa/test_sdk_review_round3.py::test_stop_during_model_close_preserves_already_received_completion[file]
+FAILED agentloom-sdk/qa/test_sdk_review_round3.py::test_known_usage_events_survive_missing_counters_in_completion[memory-null]
+FAILED agentloom-sdk/qa/test_sdk_review_round3.py::test_known_usage_events_survive_missing_counters_in_completion[memory-empty]
+FAILED agentloom-sdk/qa/test_sdk_review_round3.py::test_known_usage_events_survive_missing_counters_in_completion[memory-partial]
+FAILED agentloom-sdk/qa/test_sdk_review_round3.py::test_known_usage_events_survive_missing_counters_in_completion[file-null]
+FAILED agentloom-sdk/qa/test_sdk_review_round3.py::test_known_usage_events_survive_missing_counters_in_completion[file-empty]
+FAILED agentloom-sdk/qa/test_sdk_review_round3.py::test_known_usage_events_survive_missing_counters_in_completion[file-partial]
+FAILED agentloom-sdk/qa/test_sdk_review_round3.py::test_usage_event_counter_is_validated_before_completion[memory-over-canonical-limit]
+FAILED agentloom-sdk/qa/test_sdk_review_round3.py::test_usage_event_counter_is_validated_before_completion[file-over-canonical-limit]
+FAILED agentloom-sdk/qa/test_sdk_review_round3.py::test_invalid_returned_value_keeps_completed_execution_fact[memory-function-adapter]
+FAILED agentloom-sdk/qa/test_sdk_review_round3.py::test_invalid_returned_value_keeps_completed_execution_fact[file-function-adapter]
+FAILED agentloom-sdk/qa/test_sdk_review_round3.py::test_invalid_storage_wait_limit_raises_configuration_error_before_io[huge-positive-properties]
+FAILED agentloom-sdk/qa/test_sdk_review_round3.py::test_invalid_storage_wait_limit_raises_configuration_error_before_io[huge-positive-file-store]
+FAILED agentloom-sdk/qa/test_sdk_review_round3.py::test_invalid_storage_wait_limit_raises_configuration_error_before_io[huge-negative-properties]
+FAILED agentloom-sdk/qa/test_sdk_review_round3.py::test_invalid_storage_wait_limit_raises_configuration_error_before_io[huge-negative-file-store]
+20 failed, 24 passed in 9.79s

@@ -1,0 +1,4 @@
+WARNING: The directory '/Users/bmilk/Library/Caches/pip' or its parent directory is not owned or is not writable by the current user. The cache has been disabled. Check the permissions and owner of that directory. If executing pip with sudo, you should use sudo's -H flag.
+Processing /private/tmp/agentloom-round4-package-t5nstcao/wheels/agentloom_sdk-0.1.0a1-py3-none-any.whl
+Installing collected packages: agentloom-sdk
+Successfully installed agentloom-sdk-0.1.0a1

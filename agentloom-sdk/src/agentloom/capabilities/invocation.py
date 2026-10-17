@@ -3,12 +3,43 @@
 from dataclasses import dataclass
 
 from ..configuration import json_copy
-from ..errors import AgentLoomError, ConfigurationError
+from ..errors import AgentLoomError, ConfigurationError, InfrastructureError
 from .contracts import ToolResult
 
 
 def invalid(code="CAPABILITY_RESULT_INVALID"):
     return AgentLoomError(code, category="protocol", external_outcome="known")
+
+
+def result_from_value(value):
+    """Wrap only after a value-returning function has completed successfully."""
+    try:
+        return ToolResult.from_value(value)
+    except ConfigurationError as exc:
+        error = invalid()
+        error.execution_fact = "completed"
+        raise error from exc
+
+
+def report_completion(context, *, value=None, error=None):
+    """Fix a value adapter's known response before closing its transport.
+
+    The host callback performs the same result/Schema validation as the ordinary
+    return path and commits under the active lease. Callback failures propagate;
+    a storage failure must never be downgraded to a transport diagnostic.
+    """
+    report = getattr(context, "report_completion", None)
+    if report is None:
+        return
+    if error is not None:
+        report(error=error)
+        return
+    try:
+        result = result_from_value(value)
+    except AgentLoomError as exc:
+        report(error=exc)
+        raise
+    report(result)
 
 
 @dataclass(frozen=True)
@@ -40,9 +71,13 @@ async def invoke_adapter(adapter, request, context):
     else:
         # Compatibility for pre-contract user adapters. Returned dicts are values,
         # even when they contain status/error/content business fields.
-        result = ToolResult.from_value(
-            await adapter.invoke(request.capability_key, request.arguments, context)
-        )
+        value = await adapter.invoke(request.capability_key, request.arguments, context)
+        result = result_from_value(value)
+    return normalize_completion(result)
+
+
+def normalize_completion(result):
+    """Normalize an already returned envelope, retaining its completion evidence."""
     try:
         return normalize_result(result)
     except AgentLoomError as exc:
@@ -56,6 +91,34 @@ async def invoke_adapter(adapter, request, context):
         except ConfigurationError:
             pass
         raise
+
+
+def normalize_error_completion(error):
+    """Validate a reported failure through the returned ToolResult boundary.
+
+    Reporting an error is distinct from raising one during adapter execution.
+    Its explicit external outcome determines the execution fact; private error
+    attributes must not override that fact or bypass canonical JSON validation.
+    """
+    if isinstance(error, InfrastructureError) or (
+        isinstance(error, BaseException) and not isinstance(error, Exception)
+    ):
+        raise error
+    value = getattr(error, "result_material", None)
+    block = (
+        {"type": "text", "text": value}
+        if isinstance(value, str)
+        else {"type": "json", "json_ref": {"kind": "inline", "value": value}}
+    )
+    return normalize_completion(
+        {
+            "status": "failed",
+            "error": error.to_dict() if isinstance(error, AgentLoomError) else None,
+            "content": [block],
+            "artifacts": [],
+            "metadata": {},
+        }
+    )
 
 
 def normalize_result(result):
@@ -85,6 +148,13 @@ def normalize_result(result):
         ):
             raise invalid()
         if type(error.get("retryable_transport", False)) is not bool:
+            raise invalid()
+        if error.get("retry_after_at") is not None and type(error["retry_after_at"]) not in (
+            int,
+            float,
+        ):
+            raise invalid()
+        if error.get("field_path") is not None and not isinstance(error["field_path"], str):
             raise invalid()
         if error["external_outcome"] not in {"not_started", "known", "unknown"}:
             raise invalid()

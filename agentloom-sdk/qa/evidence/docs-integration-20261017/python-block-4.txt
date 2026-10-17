@@ -1,0 +1,6 @@
+from agentloom import AgentDefinition
+
+planner = AgentDefinition("planner", "委派适合的任务并汇总结果。")
+reviewer = AgentDefinition("reviewer", "检查收到的材料。", description="审查事实与结论")
+plan = app.build(planner, executors={"review": reviewer})
+result = await plan.ainvoke("检查方案中的风险")

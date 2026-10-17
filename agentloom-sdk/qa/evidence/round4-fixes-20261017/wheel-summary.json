@@ -1,0 +1,99 @@
+{
+  "commands": [
+    [
+      "/Users/bmilk/code/project/agent-loom/.venv/bin/python",
+      "-m",
+      "pip",
+      "wheel",
+      "--no-index",
+      "--no-deps",
+      "--no-build-isolation",
+      "--no-cache-dir",
+      "/Users/bmilk/code/project/agent-loom/agentloom-sdk",
+      "-w",
+      "/private/tmp/agentloom-round4-package-t5nstcao/wheels"
+    ],
+    [
+      "/Users/bmilk/code/project/agent-loom/.venv/bin/python",
+      "-m",
+      "pip",
+      "install",
+      "--no-index",
+      "--no-deps",
+      "--no-compile",
+      "--target",
+      "/private/tmp/agentloom-round4-package-t5nstcao/install",
+      "/private/tmp/agentloom-round4-package-t5nstcao/wheels/agentloom_sdk-0.1.0a1-py3-none-any.whl"
+    ]
+  ],
+  "wheel": "/private/tmp/agentloom-round4-package-t5nstcao/wheels/agentloom_sdk-0.1.0a1-py3-none-any.whl",
+  "sha256": "ba692681e18b35c654e147e1c18a28a8b9274fb3b2b1dfc30e6e01076bf2a7e4",
+  "source_modules": 79,
+  "byte_equal_to_source_and_install": true,
+  "import_path": "/private/tmp/agentloom-round4-package-t5nstcao/install/agentloom/__init__.py",
+  "process_recovery": [
+    {
+      "kind": "model",
+      "first_exit_code": 74,
+      "result": {
+        "status": "succeeded",
+        "output": "saved"
+      },
+      "audit": [
+        "model"
+      ]
+    },
+    {
+      "kind": "mcp",
+      "first_exit_code": 74,
+      "result": {
+        "status": "succeeded",
+        "output": "done"
+      },
+      "audit": [
+        "model",
+        "tool",
+        "model"
+      ]
+    },
+    {
+      "kind": "mcp-error",
+      "first_exit_code": 74,
+      "result": {
+        "status": "succeeded",
+        "output": "done"
+      },
+      "audit": [
+        "model",
+        "tool",
+        "model"
+      ]
+    },
+    {
+      "kind": "native-error",
+      "first_exit_code": 74,
+      "result": {
+        "status": "succeeded",
+        "output": "done"
+      },
+      "audit": [
+        "model",
+        "tool",
+        "model"
+      ]
+    },
+    {
+      "kind": "native-invalid",
+      "first_exit_code": 74,
+      "result": {
+        "status": "succeeded",
+        "output": "done"
+      },
+      "audit": [
+        "model",
+        "tool",
+        "model"
+      ]
+    }
+  ]
+}

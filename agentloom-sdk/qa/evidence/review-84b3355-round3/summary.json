@@ -1,0 +1,96 @@
+{
+  "review": "SDK round 3",
+  "generated_at": "2026-10-17T21:55:57.170498+08:00",
+  "reviewed_head": "84b3355b2c59539cae4c4d1bece2e35d1ca22bf2",
+  "head_at_start": "3450aedb81f527cc1aa0b5922c83b48669bb9d94",
+  "sdk_source_git_tree": "9d66296d64095821c7068d417c935b39334f93bc",
+  "tracked_baseline_files": 131,
+  "baseline_files_changed_during_review": [],
+  "head_note": "The user committed previously staged code during this run. All 131 captured baseline files remained byte-identical throughout the review.",
+  "python": "3.12.14 (main, Aug 25 2026, 13:50:33) [Clang 22.1.3 ]",
+  "platform": "macOS-26.7-arm64-arm-64bit",
+  "versions": {
+    "pytest": "8.4.2",
+    "pytest-asyncio": "1.4.0",
+    "ruff": "0.16.9",
+    "httpx": "0.28.1",
+    "mcp": "1.30.0"
+  },
+  "commands": [
+    ".venv/bin/python -m pytest -q agentloom-sdk/tests agentloom-sdk/qa/test_sdk_audit.py agentloom-sdk/qa/test_sdk_rereview.py --tb=short --junitxml=/tmp/agentloom-review3-20261017/regression.junit.xml",
+    ".venv/bin/python -m pytest -q agentloom-sdk/qa/test_sdk_review_round3.py --tb=short --junitxml=/tmp/agentloom-review3-20261017/probes-final.junit.xml",
+    ".venv/bin/python -m ruff check agentloom-sdk/src agentloom-sdk/tests agentloom-sdk/qa/test_sdk*.py",
+    ".venv/bin/python -m ruff format --check agentloom-sdk/src agentloom-sdk/tests agentloom-sdk/qa/test_sdk*.py"
+  ],
+  "results": {
+    "baseline": {
+      "name": "pytest",
+      "errors": "0",
+      "failures": "0",
+      "skipped": "0",
+      "tests": "698",
+      "time": "223.284",
+      "timestamp": "2026-10-17T21:50:56.840609+08:00",
+      "hostname": "bmilk",
+      "passed": 698,
+      "failed_cases": []
+    },
+    "boundaries": {
+      "name": "pytest",
+      "errors": "0",
+      "failures": "20",
+      "skipped": "0",
+      "tests": "44",
+      "time": "9.787",
+      "timestamp": "2026-10-17T21:55:19.787917+08:00",
+      "hostname": "bmilk",
+      "passed": 24,
+      "failed_cases": [
+        "test_completed_mcp_call_is_not_repeated_when_only_teardown_times_out[memory-success-close-timeout]",
+        "test_completed_mcp_call_is_not_repeated_when_only_teardown_times_out[memory-business-error-close-timeout]",
+        "test_completed_mcp_call_is_not_repeated_when_only_teardown_times_out[file-success-close-timeout]",
+        "test_completed_mcp_call_is_not_repeated_when_only_teardown_times_out[file-business-error-close-timeout]",
+        "test_stop_during_model_close_preserves_already_received_completion[memory]",
+        "test_stop_during_model_close_preserves_already_received_completion[file]",
+        "test_known_usage_events_survive_missing_counters_in_completion[memory-null]",
+        "test_known_usage_events_survive_missing_counters_in_completion[memory-empty]",
+        "test_known_usage_events_survive_missing_counters_in_completion[memory-partial]",
+        "test_known_usage_events_survive_missing_counters_in_completion[file-null]",
+        "test_known_usage_events_survive_missing_counters_in_completion[file-empty]",
+        "test_known_usage_events_survive_missing_counters_in_completion[file-partial]",
+        "test_usage_event_counter_is_validated_before_completion[memory-over-canonical-limit]",
+        "test_usage_event_counter_is_validated_before_completion[file-over-canonical-limit]",
+        "test_invalid_returned_value_keeps_completed_execution_fact[memory-function-adapter]",
+        "test_invalid_returned_value_keeps_completed_execution_fact[file-function-adapter]",
+        "test_invalid_storage_wait_limit_raises_configuration_error_before_io[huge-positive-properties]",
+        "test_invalid_storage_wait_limit_raises_configuration_error_before_io[huge-positive-file-store]",
+        "test_invalid_storage_wait_limit_raises_configuration_error_before_io[huge-negative-properties]",
+        "test_invalid_storage_wait_limit_raises_configuration_error_before_io[huge-negative-file-store]"
+      ]
+    }
+  },
+  "findings": {
+    "R3-01": {
+      "priority": "P1",
+      "failed_cases": 6,
+      "topic": "Known model/MCP completion lost during cancelled teardown; MCP call repeats"
+    },
+    "R3-02": {
+      "priority": "P2",
+      "failed_cases": 8,
+      "topic": "Generic model usage events discarded; oversized usage event accepted"
+    },
+    "R3-03": {
+      "priority": "P2",
+      "failed_cases": 2,
+      "topic": "Value adapter result normalization loses completed execution fact"
+    },
+    "R3-04": {
+      "priority": "P3",
+      "failed_cases": 4,
+      "topic": "Huge storage wait limits raise unclassified OverflowError"
+    }
+  },
+  "production_code_changed_by_reviewer": false,
+  "external_services": "No real paid model or remote MCP calls; third-round probes use local deterministic adapters and MCP session doubles."
+}

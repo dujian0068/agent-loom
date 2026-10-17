@@ -1,0 +1,72 @@
+F..F..                                                                   [100%]
+=================================== FAILURES ===================================
+_ test_complete_model_crash_boundaries_resume_without_new_attempt[memory-attempt-result:] _
+
+runtime_store = <agentloom.storage.memory.MemoryRuntimeStore object at 0x10962da90>
+build = <function build.<locals>.factory at 0x109694360>
+cut = 'attempt-result:'
+
+    @pytest.mark.parametrize("cut", ["attempt-result:", "complete:", "decision:"])
+    async def test_complete_model_crash_boundaries_resume_without_new_attempt(
+        runtime_store, build, cut
+    ):
+        class Cut(Exception):
+            pass
+    
+        def checkpoint(command, state):
+            if command.startswith(cut):
+                raise Cut()
+    
+        async with RuntimeEngine(store=runtime_store, checkpoint_callback=checkpoint) as first:
+            h = await build(
+                first,
+                lambda r: ModelResponse(
+                    "saved",
+                    usage={
+                        "input_tokens": 2,
+                        "output_tokens": 3,
+                    },
+                ),
+            ).start("question", run_id="resume")
+>           with pytest.raises(InfrastructureError):
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E           Failed: DID NOT RAISE <class 'agentloom.errors.InfrastructureError'>
+
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/tests/test_recovery_invariants.py:77: Failed
+_ test_complete_model_crash_boundaries_resume_without_new_attempt[file-attempt-result:] _
+
+runtime_store = <agentloom.storage.filesystem.FileRuntimeStore object at 0x109705520>
+build = <function build.<locals>.factory at 0x109696ac0>
+cut = 'attempt-result:'
+
+    @pytest.mark.parametrize("cut", ["attempt-result:", "complete:", "decision:"])
+    async def test_complete_model_crash_boundaries_resume_without_new_attempt(
+        runtime_store, build, cut
+    ):
+        class Cut(Exception):
+            pass
+    
+        def checkpoint(command, state):
+            if command.startswith(cut):
+                raise Cut()
+    
+        async with RuntimeEngine(store=runtime_store, checkpoint_callback=checkpoint) as first:
+            h = await build(
+                first,
+                lambda r: ModelResponse(
+                    "saved",
+                    usage={
+                        "input_tokens": 2,
+                        "output_tokens": 3,
+                    },
+                ),
+            ).start("question", run_id="resume")
+>           with pytest.raises(InfrastructureError):
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E           Failed: DID NOT RAISE <class 'agentloom.errors.InfrastructureError'>
+
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/tests/test_recovery_invariants.py:77: Failed
+=========================== short test summary info ============================
+FAILED agentloom-sdk/tests/test_recovery_invariants.py::test_complete_model_crash_boundaries_resume_without_new_attempt[memory-attempt-result:]
+FAILED agentloom-sdk/tests/test_recovery_invariants.py::test_complete_model_crash_boundaries_resume_without_new_attempt[file-attempt-result:]
+2 failed, 4 passed, 10 deselected in 0.37s
