@@ -64,6 +64,7 @@ export default defineConfig({
             { text: "EventBus、Handler 与 Hook", link: "/sdk/event-bus" },
             { text: "上下文、历史与压缩", link: "/sdk/context" },
             { text: "模型、能力与环境", link: "/sdk/capabilities" },
+            { text: "默认工具与 SPI 扩展", link: "/sdk/builtin-tools-spi" },
             { text: "检查点与故障接管", link: "/sdk/checkpoints" },
             { text: "Workflow 与双引擎适配", link: "/sdk/workflow" },
             { text: "实施与验收", link: "/sdk/verification" },

@@ -4,6 +4,8 @@
 
 公共类型见[定义](definitions.md)；Operation／Attempt／Hook 只有[事件总线](event-bus.md)一套实现；上下文算法见[上下文](context.md)。
 
+2026-10-17 补充：[默认工具与 SPI](builtin-tools-spi.md)统一工具清单、扩展接口和存储／脚本可见性。本文保留模型、文件与沙箱的详细行为合同；POSIX 锁与原子替换属于对应后端实现，不再要求通用 WorkspaceService 依赖本地驱动。共享文件系统、对象存储及独立执行服务按各自合同接入，不是使用 SDK 的前置依赖。
+
 ## 1. 模型适配、首输出与完整响应
 
 ### 1.1 冻结绑定及单次调用接口
@@ -162,7 +164,9 @@ Loop／节点驱动器按冻结路由直接发出一个 Skill 请求，**不先�
 
 资源挂载为 `/skills/<name>` 只读，references／assets 按需读取。执行脚本必须单独调用 exec，例如 `argv=["python3","/skills/report/scripts/build.py","--output","/work/report.md"]`；skill.read 不执行脚本、不建业务 NodeTask。
 
-exec 走 `capability.invoke → ToolHandler → ScriptToolAdapter → SandboxGateway`，不交 SkillHandler。FileToolAdapter 则通过 WorkspaceService 读取授权文件视图；它与 SkillLoader 复用底层路径和只读挂载约束，不互相调用、也不复制 Skill 的模板处理。普通 read 读到 SKILL.md 只返回文件内容，不能隐式激活 Hook、扩大工具授权或运行脚本。
+exec 走 `capability.invoke → ToolHandler → ScriptToolAdapter → SandboxGateway`，不交 SkillHandler。FileToolAdapter 则通过 WorkspaceService 读取授权文件视图，实际 I/O 委派给注入的 WorkspaceBackend；它与 SkillLoader 复用逻辑路径和只读挂载约束，不互相调用、也不复制 Skill 的模板处理。普通 read 读到 SKILL.md 只返回文件内容，不能隐式激活 Hook、扩大工具授权或运行脚本。
+
+文件工具与 exec 必须看到同一工作区及资源挂载。对象存储后端还需由 EnvironmentProvider 提供满足合同的挂载网关或版本化物化／同步协议；仅有对象读取接口不能据此开放脚本执行。可见性、同步失败及能力拒绝规则见[文件与脚本一致性](builtin-tools-spi.md#6-文件工具与脚本必须看到同一份文件)。
 
 解释器和依赖来自冻结 image_digest；不存在时返回 `EXEC_DEPENDENCY_MISSING`，不得在 SDK 宿主进程 pip install。普通脚本文件访问不逐次发 Hook，外层 exec 负责唯一 Operation 和输出审计。
 
@@ -268,11 +272,11 @@ EnvironmentProvider 提供受限端口 `cleanup(request:CleanupRequest, scope:Sy
 
 ### 6.1 路径、编码与版本
 
-首版文件适配器目标为 Linux/NFSv4 POSIX，开发可用同契约的本地 POSIX。路径输入仅允许 UTF-8 `/work/...` 或相对 `/work` 的路径；读取另可接受明确获准只读挂载。拒绝 NUL、越根 `..`、设备节点、魔术链接和未授权 mount；规范化不是授权判断。
+文件工具统一面向 WorkspaceService 和 WorkspaceBackend SPI；默认提供本地 POSIX 实现，Linux/NFSv4 共享后端与对象存储属于可选适配。后端声明并实现其支持的操作，未满足合同的工具绑定明确拒绝，见[文件存储 SPI](builtin-tools-spi.md#4-文件存储-spi-的合同)。路径输入仅允许 UTF-8 `/work/...` 或相对 `/work` 的路径；读取另可接受明确获准只读挂载。拒绝 NUL、越根 `..`、设备节点、魔术链接和未授权 mount；规范化不是授权判断。
 
 Linux 文件 driver 以授权根 dirfd 使用 openat2 的 beneath/no-magic-links 约束，禁止越界符号链接；递归 list/glob/grep 不跟随目录符号链接。写操作拒绝符号链接目标及父路径中的符号链接，防止校验后换链。开发 driver 用逐段 dirfd+O_NOFOLLOW 保持同规则；不能只检查字符串前缀。
 
-`FileVersion` 为 `path,kind:file|directory,etag,size,sha256?,modified_at`。普通文件 etag=`sha256(canonical(kind,size,content_sha256))`；目录 etag 为排序直属条目的 `(name,kind,etag)` 的 digest；递归删除检查事务前取得的整棵树 manifest digest。
+`FileVersion` 为 `path,kind:file|directory,etag,size,sha256?,modified_at`。etag 是后端提供的不透明版本条件，上层不解析其格式，后端必须保证版本检查与条件提交的语义。POSIX 参考实现可用 `sha256(canonical(kind,size,content_sha256))` 作为文件 etag，目录 etag 使用排序直属条目的 `(name,kind,etag)` digest；递归删除检查取得的整棵树 manifest digest。对象存储可封装其有效版本／条件请求标识，不能把任意内容摘要当作后端已经支持原子条件写入的证据。
 
 `FileSlice` 为 `path,etag,offset,end_offset,next_offset?,total_bytes,text`，offset／limit 是 UTF-8 字节；offset 非边界报错，limit 向前收敛到边界。默认 limit=16384，最大65536；检测二进制或无效 UTF-8 返回 `BINARY_FILE`，以 artifact 方式读，不能忽略解码错误。
 
@@ -291,13 +295,15 @@ Linux 文件 driver 以授权根 dirfd 使用 openat2 的 beneath/no-magic-links
 | `fs.move{source,destination,if_match}` | `FileVersion` | 只限当前/work分区，目标须不存在；源版本匹配；不覆盖目标、不跨挂载、不移动分区根 |
 | `fs.delete{path,if_match,recursive=false}` | `deleted_path,previous_etag` | 文件须匹配；非空目录recursive必须true并校验树manifest；根与只读资源禁止删除 |
 
-`WorkspaceService.read/write/apply_patch` 实现上述相同语义；ToolHandler 只转译 schema，不另写一套文件行为。fs.write/edit/patch 的 content 限制为20MiB；更大材料通过脚本生成文件并返回 artifact，不把无限正文塞入工具 JSON。
+FileToolAdapter 将工具参数映射到 WorkspaceService；公共文件层组织上述语义，WorkspaceBackend 负责底层 I/O 与条件提交。edit／patch 可复用固定版本 read 加条件 write，不要求每种介质重写文本替换或补丁算法。ToolHandler 负责调用校验与路由，不另写一套文件行为。fs.write/edit/patch 的 content 限制为20MiB；更大材料通过已授权的脚本或外部准备流程生成文件并返回 artifact，不把无限正文塞入工具 JSON。
 
 每个调用输入先经 schema／scope 校验，再进入文件服务；路径不存在为 not_found，版本或匹配数量冲突为 conflict，越界／只读根为 permission，NFS错误保留发生阶段与外部结果。错误反馈含逻辑相对路径，不包含宿主路径。
 
 ### 6.3 并发、原子替换与幂等
 
-WorkspaceService 在 scope 的服务私有 `.locks` 目录使用稳定路径键锁；锁文件不在模型挂载视图内。单文件读写均取得该规范路径的 advisory lock；多路径操作先按规范 UTF-8 路径排序取锁，避免 move 对向死锁。
+本节是支持 POSIX 文件系统的后端参考设计，mutation journal 等生产能力属于目标合同，不能据本设计视为已实现。对象存储使用其条件请求等机制达到同一声明合同，不照搬本地文件锁；不满足的原子 move／目录操作不能通过复制删除静默替代。
+
+POSIX WorkspaceBackend 在 scope 的服务私有 `.locks` 目录使用稳定路径键锁；锁文件不在模型挂载视图内。单文件读写均取得该规范路径的 advisory lock；多路径操作先按规范 UTF-8 路径排序取锁，避免 move 对向死锁。WorkspaceService 不直接操作这些锁或 import 后端私有路径函数。
 
 每个操作先取得工作区树锁：普通文件读写取共享，目录创建／删除／移动取排他；随后取得相关文件锁。文件锁只约束经服务的调用，脚本普通 POSIX 写不会自动遵守；脚本与编辑并行时仍可能产生冲突或未知结果，不能宣称全局可串行化。
 
@@ -342,7 +348,7 @@ Exec 的请求级 deadline=`min(开始时间+timeout_ms,根截止,Invocation截�
 
 ### 7.2 可实现的驱动命令
 
-生产执行服务实现独立 `agentloom-execd`，通过 mTLS 的控制 API 接收结构化命令；SDK 宿主不在自己的进程执行用户脚本，也不给容器数据库连接。
+下面给出一个可选的生产执行服务参考实现：独立 `agentloom-execd` 通过 mTLS 的控制 API 接收结构化命令。SDK 依赖 SandboxGateway 合同，不强制使用该服务；其他沙箱实现必须保持执行、挂载、终止及撤权语义。SDK 宿主不在自己的进程执行用户脚本，也不给容器数据库连接。
 
 | 驱动命令 | 输入 | 输出和失效规则 |
 | --- | --- | --- |

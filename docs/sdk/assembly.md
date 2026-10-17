@@ -191,6 +191,8 @@ Prompt 变量值属于本次输入的一部分，随请求固定并参与幂等�
 
 开发者提供资源目录，每份 AgentDefinition 通过 capabilities 从目录中选择。**注册可用资源不等于授权所有 Agent 使用。** 同一 Plan 的 Planner 与 Executor 分别解析自己的选择，目录构造为纯本地操作，执行期间不可增删。
 
+内置与用户扩展工具使用相同的 CapabilityRegistration／CapabilityAdapter；默认工具与三个扩展点见[工具 SPI](builtin-tools-spi.md)。EnvironmentProvider 装配 WorkspaceBackend 及可选 SandboxGateway，构造时通过已准备的能力描述校验所选文件／脚本工具是否可用；不能边构造边联网发现，不能静默换成宿主目录或 shell。共享基础设施由调用方显式注入，首版不引入插件自动扫描。
+
 ```python
 class CapabilityRegistry:
     def __init__(

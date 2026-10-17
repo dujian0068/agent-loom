@@ -34,6 +34,7 @@ SDK 接收构造参数和运行依赖，自行执行、管理上下文、保存�
 4. [Agent 执行](runtime.md)：Loop、安全点、并行、预算和恢复。
 5. [事件总线与 Hook](event-bus.md)：状态机、DTO、调用与一致提交。
 6. [上下文与模型](context.md)、[能力与环境](capabilities.md)：模型实际看到什么、文件如何隔离。
+   默认工具范围、文件后端与命令执行的替换方式见[默认工具与 SPI](builtin-tools-spi.md)。
 7. [检查点与存储](checkpoints.md)、[Workflow 与双引擎](workflow.md)：分别保存现场和可靠衔接。
 8. [SDK 验收](verification.md)：独立运行及故障注入。
 

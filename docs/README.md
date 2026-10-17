@@ -8,6 +8,7 @@
 | [SDK 对象 UML](sdk/object-collaboration.md) | Agent、Node、EventBus、Hook、Skill 协作 |
 | [SDK 构造与绑定](sdk/assembly.md) | 构造参数、资源／Hook 注册、对象生命周期 |
 | [SDK 公共 API](sdk/public-api.md) | start、ainvoke、RunHandle、输入、停止和恢复 |
+| [SDK 默认工具与 SPI](sdk/builtin-tools-spi.md) | 默认工具、文件存储与沙箱扩展、事件调用和验收 |
 | [Platform 总览](platform/index.md) | 配置化平台设计入口 |
 | [阅读指南](reading-guide.md) | 按角色选择阅读顺序 |
 | [整理复核记录](reorganization-review.md) | 已修正的不一致及尚未闭合的详细设计 |

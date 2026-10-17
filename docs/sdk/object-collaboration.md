@@ -708,30 +708,55 @@ SkillRegistration 将 SkillPackage 与 SkillLoader 关联。SkillHandler 按当�
 
 ### 6.3 工具适配器与文件执行环境
 
+默认工具清单和 SPI 合同见[默认工具与 SPI](builtin-tools-spi.md)。新增业务工具实现 CapabilityAdapter；更换文件介质实现 WorkspaceBackend；更换命令环境实现 SandboxGateway。内置与用户工具使用相同的注册和调用路径。
+
+文件工具与存储的关系：
+
 ```mermaid
 classDiagram
-    direction LR
+    direction TB
     class CapabilityAdapter {
       <<interface>>
       +invoke_once()
     }
     class FileToolAdapter
-    class ScriptToolAdapter
-    class McpToolAdapter
-    class FunctionToolAdapter
     class WorkspaceService
-    class SandboxGateway
+    class WorkspaceBackend {
+      <<interface>>
+      受限读写与版本条件
+    }
     CapabilityAdapter <|.. FileToolAdapter
-    CapabilityAdapter <|.. ScriptToolAdapter
-    CapabilityAdapter <|.. McpToolAdapter
-    CapabilityAdapter <|.. FunctionToolAdapter
-    FileToolAdapter --> WorkspaceService : 授权文件视图
-    ScriptToolAdapter --> SandboxGateway : 受限脚本执行
+    FileToolAdapter --> WorkspaceService : 受限访问
+    WorkspaceService --> WorkspaceBackend : 存储操作
 ```
+
+脚本工具与环境装配的关系：
+
+```mermaid
+classDiagram
+    direction TB
+    class ScriptToolAdapter
+    class WorkspaceBackend {
+      <<interface>>
+    }
+    class SandboxGateway {
+      <<interface>>
+    }
+    class EnvironmentProvider {
+      <<interface>>
+    }
+    EnvironmentProvider --> WorkspaceBackend : 装配
+    EnvironmentProvider --> SandboxGateway : 装配
+    ScriptToolAdapter --> SandboxGateway : 执行命令
+```
+
+ScriptToolAdapter、McpToolAdapter、FunctionToolAdapter 均实现第一张图中的 CapabilityAdapter；两张图的 WorkspaceBackend 是同一接口。分图分别说明访问与装配，不新增另一套执行环境或工具调度器。
 
 ScriptToolAdapter 使用只读 `/skills/<name>` 资源挂载及授权 `/work` 工作目录；Planner／Executor 可共享该工作目录，消息上下文仍各自独立。解释器与挂载来自已配置环境，模型不能传入宿主目录替代它们。
 
 SkillLoader 只读资源，文件工具通过 WorkspaceService 访问文件。即使 read 工具读取的是 `/skills` 下的文件，也必须遵守同一只读挂载和路径授权；普通文件读取不隐式执行 Skill 模板、脚本或 Hook。脚本内部每次文件系统操作不会生成新的业务 Operation，外层 exec 调用负责该脚本的执行记录和结果。
+
+WorkspaceService 承担公共路径、访问范围和挂载路由，Backend 承担真实 I/O、版本条件及声明的原子操作。EnvironmentProvider 使文件工具和脚本看到同一逻辑挂载；对象存储若没有合格的执行挂载／同步实现，就不能仅凭支持 read/write 开放 exec。检查点仍走独立 RuntimeStore，不由文件工具读写。
 
 ### 6.4 对象作用域与结果归属
 
@@ -742,7 +767,9 @@ SkillLoader 只读资源，文件工具通过 WorkspaceService 访问文件。�
 | SkillHandler／ToolHandler | 当前 ExecutionRunner 的事件处理服务 | 每次处理显式携带可信 scope，不保存共享的角色消息或当前 Skill 全局变量 |
 | SkillLoader | 调用方注入的只读资源接口 | 可跨执行复用；每次读取校验范围和固定 manifest，不负责事件路由、Hook、循环或上下文提交 |
 | CapabilityAdapter 及其具体实现 | 已装配的单次调用接口与客户端 | 不拥有图或任务生命周期；并发安全的实现可复用，每次使用独立调用参数 |
-| WorkspaceService／SandboxGateway | 受限环境中的文件服务／脚本执行网关 | 按 workspace scope、execution_view_key、epoch 限定访问；失权后不能继续写 |
+| WorkspaceService | 当前调用的受限文件视图 | 按 scope、角色及挂载校验逻辑路径，不持有全局 current_session；更换后端不改变工具合同 |
+| WorkspaceBackend／SandboxGateway | 注入的存储／脚本执行实现 | 可共享并发安全客户端；每次使用受限句柄与有效执行权，失权后不能继续写；不负责保存 Agent 消息 |
+| EnvironmentProvider | 调用方注入的环境服务 | 装配后端、只读资源和沙箱，保证同一工作区视图，按根执行的生命周期撤权与清理 |
 | SkillReadResult／ToolResult | 一次逻辑读取或执行的结果 | 原始结果和 Hook 后有效结果分别保存；只进入发起 Agent 的上下文，恢复复用已提交结果 |
 
 读取 Skill、执行脚本和调用 MCP 都不会创建新的 Agent／图实例。是否把一次能力调用放进 Workflow 的 CapabilityNode，由外层编排决定；Executor 委派仍走 GraphExecutionHandler，不能因为任务提及 Skill 就自动创建 Executor。

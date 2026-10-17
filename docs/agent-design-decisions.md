@@ -28,6 +28,8 @@ RuntimeEngine 组织共享基础设施、托管执行、装配本次现场并协
 
 Skill 的运行时入口按同一事件模型设计：SkillHandler 处理目录、入口与附属文件读取；ToolHandler 处理脚本、普通文件工具、MCP 和函数工具。SkillPackage 是只读资源，SkillLoader 是 SkillHandler 使用的读取接口，均不承担 Agent Loop 或上下文写入。能力由各自 AgentDefinition 选择；读取结果经后置阶段后才由原 Loop 接入其私有上下文，脚本使用获准的共享工作目录。对象与交互见[Skill 与能力对象](sdk/object-collaboration.md#6-skill-与能力对象)。
 
+2026-10-17 确认工具扩展方向：SDK 提供基础文件、Skill、受限 exec 和大结果读取入口，按 Agent 配置授权。内置工具与用户扩展共用工具执行 SPI；文件存储后端及沙箱执行分别可替换，检查点使用独立 RuntimeStore。文件工具和脚本必须看到同一获准工作区；对象存储不能静默模拟不支持的文件操作。Python 首版使用 Protocol 和显式注入，具体设计及当前差异见[默认工具与 SPI](sdk/builtin-tools-spi.md)。
+
 2026-10-17 审查修订：Skill首版没有持续使用实例，allowed-tools／disallowed-tools明确拒绝，不能承诺未定义的动态工具限制；原始参数串与参数数组按固定规则区分。graph调用在前置允许后纯准备计划，目标、父关联和许可同事务提交；CallBatch仅来自模型决策。终态清理由独立CleanupLease推进，不重启Agent。完整修订及适用范围见[审查修订记录](reorganization-review.md#11-sdk-独立审查修订2026-10-17)。
 
 模型／工具调用的前后阶段由 ReactAgent Loop 经 NodeDriver 发出业务事件，告知“准备调用什么／调用已结束”；发送方不调用 Hook 专用方法，也不判断是否配置 Hook。EventBus 只按注册表路由，ModelHandler／ToolHandler 只处理实际业务调用，不代发外围 before／after。需要修改或拒绝的阶段必须等待 StageResult，再继续执行或交付；普通观察订阅不改变执行。原始结果先保存，再由 Loop 发 after，且模型完整流式响应只发一次，不逐 token 发送。调用设施保留 Attempt 超时和配置允许的重试，阶段恢复由原 Loop／节点驱动器负责，不另设 InvocationPipeline。HookHandler 沿用原 Operation 保存决定、有效修改及游标，修改进入授权范围的有效上下文；不生成另一套执行、额度或检查点设施。接口关系与类型合同见[对象 UML](sdk/object-collaboration.md#4-eventbushandlerregistry-与-eventhandler)和[调用设计](sdk/event-bus.md#10-三个接口与组合关系)。
@@ -45,6 +47,7 @@ Skill 的运行时入口按同一事件模型设计：SkillHandler 处理目录�
 | Hook修改／拒绝及失败放行 | [事件总线与调用](sdk/event-bus.md) |
 | 最近 N 轮、原始记录、有效上下文、Loop内压缩 | [上下文](sdk/context.md) |
 | Skill、MCP、文件工具、共享工作区与沙箱 | [能力与环境](sdk/capabilities.md) |
+| 默认工具清单、工具 SPI、存储与脚本环境扩展 | [默认工具与 SPI](sdk/builtin-tools-spi.md) |
 | 原子检查点、故障接管、执行权与结果去重 | [检查点](sdk/checkpoints.md) |
 | 模型Key、文件夹／Git导入、应用创建与发布 | [平台配置](platform/configuration.md) |
 | 发布停止旧ExecutionRecord、删除应用及文件、暂不过期 | [平台存储与生命周期](platform/storage-lifecycle.md) |
