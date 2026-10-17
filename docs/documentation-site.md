@@ -72,6 +72,7 @@ AGENTLOOM_DOCS_BASE=/agent-loom/ npm run docs:preview
 - 原有显式 `<a id="...">` 锚点保留；更名标题前检查入站章节链接。
 - 搜索在浏览器本地运行，支持中文分词。SDK 页面搜索 SDK 与公共文档，Platform 页面搜索 Platform 与公共文档；首页与公共页面搜索全站。不把搜索词发送到外部搜索服务。旧使用说明已删除；保留的在审设计需标明 SDK / Platform 边界调整状态，不能当成已实现接口。
 - Mermaid 代码块在浏览器渲染为 SVG；当前图表直接维护在设计正文，不保留已过时的独立配图或生成脚本。
+- 正文二至六级章节支持点击标题折叠，默认展开；页首可全部展开或收起。子章节随父章节隐藏，目录、搜索和锚点链接会自动展开目标所在章节。手写的 `<details>` 折叠区保持原有结构。
 - VitePress 的生产构建会检查页面链接，不要用忽略所有死链的选项掩盖错误。
 
 框架参考：[VitePress](https://vitepress.dev/guide/getting-started)、[本地搜索](https://vitepress.dev/reference/default-theme-search)、[Mermaid](https://mermaid.js.org/config/usage.html)、[GitHub Pages 工作流](https://docs.github.com/en/pages/getting-started-with-github-pages/using-custom-workflows-with-github-pages)。

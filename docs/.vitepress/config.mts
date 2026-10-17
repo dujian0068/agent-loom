@@ -2,6 +2,7 @@ import { defineConfig } from "vitepress";
 import { existsSync, statSync, readFileSync, writeFileSync, mkdirSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { collapsibleSections } from "./collapsible-sections";
 
 const docsRoot = path.resolve(fileURLToPath(new URL("..", import.meta.url)));
 const repoRoot = path.dirname(docsRoot);
@@ -206,6 +207,7 @@ export default defineConfig({
           .replace(/\s/g, "-"),
     },
     config(md) {
+      md.use(collapsibleSections);
       // Retain repository-relative Markdown for GitHub while giving the site valid source links.
       md.core.ruler.after("inline", "repository-links", (state) => {
         const current = state.env.path || path.join(docsRoot, "index.md");

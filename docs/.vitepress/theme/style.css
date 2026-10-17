@@ -91,6 +91,34 @@
 .VPDocFooter .pager-link { border-radius: 10px; background: var(--loom-surface); transition: border-color 0.2s, background 0.2s; }
 .VPDocFooter .pager-link:hover { background: var(--vp-c-brand-soft); }
 
+/* Native disclosures retain heading anchors and keyboard access. */
+.loom-section-tools { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding-bottom: 16px; margin-bottom: 24px; border-bottom: 1px solid var(--vp-c-divider); font-size: 11px; color: var(--vp-c-text-3); }
+.loom-section-tools > div { display: flex; gap: 8px; flex-shrink: 0; }
+.loom-section-tools button { padding: 4px 9px; border: 1px solid var(--vp-c-divider); border-radius: 5px; color: var(--vp-c-brand-1); background: var(--loom-surface); cursor: pointer; }
+.loom-section-tools button:hover { background: var(--vp-c-brand-soft); }
+.vp-doc details.loom-section { margin: 28px 0 0; border-top: 1px solid var(--vp-c-divider); }
+.vp-doc .loom-section-summary { display: flex; align-items: baseline; gap: 10px; margin: 0; padding: 20px 4px; cursor: pointer; list-style: none; border-radius: 6px; }
+.vp-doc .loom-section-summary::-webkit-details-marker { display: none; }
+.vp-doc .loom-section-summary::before { content: ""; flex-shrink: 0; width: 7px; height: 7px; border-right: 1.5px solid var(--vp-c-text-3); border-bottom: 1.5px solid var(--vp-c-text-3); transform: rotate(-45deg); align-self: center; transition: transform 0.15s; }
+.vp-doc .loom-section[open] > .loom-section-summary::before { transform: rotate(45deg) translateY(-2px); }
+.vp-doc .loom-section-summary:hover { background: var(--vp-c-brand-soft); }
+.vp-doc .loom-section-summary > :is(h2,h3,h4,h5,h6) { display: inline; margin: 0; padding: 0; border: 0; min-width: 0; line-height: 1.6; }
+.vp-doc .loom-section-summary .header-anchor { position: static; margin-left: 8px; font-size: 0.85em; }
+.vp-doc .loom-section-body { display: flow-root; }
+.vp-doc .loom-section-body > :first-child { margin-top: 0; }
+.vp-doc .loom-section-body > .loom-section { margin-top: 16px; border-top-style: dashed; }
+.vp-doc .loom-section-body > .loom-section > .loom-section-summary { padding-top: 14px; padding-bottom: 14px; }
+.vp-doc details.loom-section:not([open]) { margin-top: 0; }
+.vp-doc .loom-section:not([open]) > .loom-section-summary { padding-top: 12px; padding-bottom: 12px; }
+.loom-section-summary:focus-visible, .loom-section-tools button:focus-visible { outline: 2px solid var(--vp-c-brand-1); outline-offset: 3px; }
+@media (max-width: 639px) {
+  .loom-section-tools { font-size: 10px; gap: 8px; }
+  .loom-section-tools button { padding: 4px 7px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .vp-doc .loom-section-summary::before { transition: none; }
+}
+
 /* A compact landing page, with two independent reading paths. */
 .VPHome:has(.loom-home) { margin-bottom: 0; }
 .loom-home { max-width: 1200px; margin: 0 auto; padding: 62px 40px 0; }
