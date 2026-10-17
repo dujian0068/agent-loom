@@ -13,7 +13,7 @@ AgentLoom 重新划分为两个独立交付物，暂时保留在同一个 Git �
 
 2026-10-15 已移除旧前后端、Runtime、图模块、工具 SDK、业务测试、部署脚本及对应旧使用说明。
 
-**当前两个交付目录只有结构与职责说明，还没有可运行的 SDK 或平台。** 不提供旧服务启动命令，也不把空目录或接口草案当成已实现功能。测试服务器和数据库未在本次清理中修改。
+SDK 已提供可安装的 `agentloom-sdk` 包，实现独立 ReAct / Plan–Executor、能力调用、Hook、上下文、工作空间与单机持久恢复。安装及接口见 [SDK README](agentloom-sdk/README.md)，验证及实现限制见 [实现记录](docs/sdk/implementation.md)。Workflow 暂不接入，Platform 仍为设计与目录结构。
 
 ## 从这里继续
 
@@ -40,4 +40,4 @@ npm run docs:check
 
 根目录 Node.js 依赖只服务于文档站。发布流程见[文档站维护](docs/documentation-site.md)，线上地址为 [doc.agentloom.bmilk.cn](https://doc.agentloom.bmilk.cn/)；线上内容随 GitHub Pages 发布更新。
 
-`.env`、本地数据和未提交的示例素材不属于这次旧源码删除范围，不会被加入 Git。独立运行的 ReAct、Plan–Executor、Workflow 示例将在 SDK 实现后交付。
+`.env`、本地数据和未提交的示例素材不属于 SDK 包。当前使用说明放在 SDK README 中，没有恢复此前删除的示例目录。

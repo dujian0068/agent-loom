@@ -193,7 +193,7 @@ async def activate(task_ref, lease):
 3. 以 `(task_id,"context-prepare",role_loop_index+1,source_revision,input_watermark)` 形成准备键，提交 projection_ref/context revision/水位和 phase=prepare_model。准备期间新到补充留下一轮；不能补写到已经冻结请求。
 4. 新模型 Operation 的 purpose_key 固定 `business-model:{role_loop_index+1}`。不存在时在 Progress 同事务保存 prepared Operation 意图、递增角色序号、写 model_operation_id；存在则复用，不递增。压缩 Operation 使用不同 purpose，不增加此序号。
 5. 调用 `NodeDriver.prepare_business_model(op_ref, scope) -> PreparedModelRequest | FinalResponseRef`，由 Loop 显式发 model.generate.before 并等待已提交 StageResult；Operation 仍保持 before_call，等待模型执行许可。该方法是 NodeDriver 内部方法，不是总线隐藏调用 Hook。前置 deny 作为模型失败按角色范围处理；Hook 自身错误按调用规范 fail-open。请求与 context 的有效 revision 必须一致，不允许 Driver 从原 projection 覆盖 Hook 结果。
-6. ContextHandler 用 Hook 后有效请求计算软阈值和硬窗口。触发压缩则创建/复用 `compaction:{model_operation_id}` 的 CompactionEpisode，保存 compaction_ref，Progress 到 compact_context；不触发则到 call_model。没有工具调用、网络等待或 Hook 在数据库锁内发生。
+6. ContextHandler 用 Hook 后有效请求计算软阈值和硬窗口。触发压缩则创建/复用 `compaction:{model_operation_id}` 的 CompactionEpisode，保存 compaction_ref，Progress 到 compact_context；不触发则到 call_model。没有工具调用、网络等待或 Hook 在存储提交锁内发生。
 
 ### 4.2 compact_context 与 call_model
 
@@ -379,7 +379,7 @@ class BudgetService(Protocol):
 ```python
 def validate_and_reserve(tx, task, op, lease):
     root, local = lock_and_read_root_invocation(tx, task)   # 所有后续锁遵守第 9 节
-    validate_lease(root, lease, tx.database_now)
+    validate_lease(root, lease, tx.now)
     old = lookup_ticket(op.operation_id)
     if old is not None:
         return old                                       # 既有事实；执行仍另查 control/permit
@@ -398,7 +398,7 @@ def validate_and_reserve(tx, task, op, lease):
     return ticket
 ```
 
-`now()` 在整笔事务使用同一个 database_now；同准入点根错误优先于局部错误。consume 仅允许 reserved→consumed，递减 reserved、递增 consumed，business_loop_no 取根 consumed 的新值；release 仅 reserved→released。终态票据重复同 outcome 返回原 receipt；consume↔release 冲突报 `LOOP_TICKET_STATE_CONFLICT`，禁止重新分配。始终断言两级 `0<=consumed+reserved<=limit`。
+`now()` 在整笔事务使用存储后端提供的同一个 `tx.now`；本地文件后端在取得文件锁后采样宿主时钟，数据库适配器可使用数据库时钟。同准入点根错误优先于局部错误。consume 仅允许 reserved→consumed，递减 reserved、递增 consumed，business_loop_no 取根 consumed 的新值；release 仅 reserved→released。终态票据重复同 outcome 返回原 receipt；consume↔release 冲突报 `LOOP_TICKET_STATE_CONFLICT`，禁止重新分配。始终断言两级 `0<=consumed+reserved<=limit`。
 
 | 情况 | 票据与关联事实 | 控制结果 |
 | --- | --- | --- |
@@ -485,7 +485,7 @@ async def recover_run(run_id, new_lease):
 
 事务总序为 `Session（仅触及会话时）→root ExecutionRecord→Invocation 按 ID→Graph 按 ID→NodeTask 按 ID→Operation 按 ID→Context 按 ID→子记录按类型/ID`。通常 RuntimeCommit 从 ExecutionRecord 开始；终态/补充交接必须预先声明 Session，禁止拿 ExecutionRecord 后临时补锁 Session。跨图、父子任务、父反馈 Context 均先收集完整集合再按序加锁。平台发布和删除任务只通过公共控制接口请求停止，不参与 SDK 提交事务。
 
-所有下表提交都额外读最新 lease/epoch/数据库时钟/control，写 ScopeCommit 与所需 outbox；表内“读”含 expected_revision 和相应引用归属。“任务终态”同时结束 Activation，state/result/next intent 不得拆开。纯映射和 schema 在锁外基于冻结版本计算；锁内只重验版本、约束和写事实，不等待 LLM、工具、Hook、文件 IO。
+所有下表提交都额外读最新 lease/epoch/存储后端时钟/control，写 ScopeCommit 与所需 outbox；表内“读”含 expected_revision 和相应引用归属。“任务终态”同时结束 Activation，state/result/next intent 不得拆开。纯映射和 schema 在锁外基于冻结版本计算；锁内只重验版本、约束和写事实，不等待 LLM、工具、Hook 或业务工作文件 IO；存储后端自身的读写与同步在提交边界内完成。
 
 | RuntimeCommit 场景 | 事务读集合 | 原子写集合 | 稳定幂等键 |
 | --- | --- | --- | --- |

@@ -1,6 +1,6 @@
 # agentloom-sdk
 
-SDK 是可独立引入的 Python 执行底座，提供 ReAct、Plan–Executor 和 Workflow。本文及本目录是 **2026-10-16 目标设计**，当前尚无可运行实现。公共入口名称是接口草案，不表示已经发布 Python 包。
+SDK 是可独立引入的 Python 执行底座。本目录保留 **2026-10-16 目标设计**；当前 `agentloom-sdk 0.1.0a1` 已实现独立 ReAct / Plan–Executor 及单机恢复链路，Workflow 暂不接入。实际接口、适配范围与尚未交付的设计项以 [实现记录](implementation.md) 和 [SDK 使用说明](../../agentloom-sdk/README.md) 为准，不能将本文的全部目标接口视为已发布能力。
 
 ## 1. 职责与依赖
 
@@ -24,7 +24,7 @@ SDK 接收构造参数和运行依赖，自行执行、管理上下文、保存�
 | 能力与环境适配器 | 模型、Tool、MCP、Skill、文件和脚本访问 | 资源商城、上传 UI、平台权限目录 |
 | RuntimeStore / CommitCoordinator | 执行事实的一致提交、检查点、接管 | 平台发布与应用删除策略 |
 
-依赖只指向 SDK 内的协议和调用方注入的适配器。内存后端支持演示；需要进程故障恢复时必须配置具备相应一致性保证的持久后端。PostgreSQL 是可选的参考适配，不是导入 SDK 的前提。
+依赖只指向 SDK 内的协议和调用方注入的适配器。默认使用 `FileRuntimeStore(".agentloom/state")`，直接通过本地 JSON 文件保存运行状态、检查点与提交回执；纯内存运行须显式注入 `MemoryRuntimeStore`。SDK 不要求数据库。
 
 ## 2. 阅读顺序
 
@@ -37,6 +37,7 @@ SDK 接收构造参数和运行依赖，自行执行、管理上下文、保存�
    默认工具范围、文件后端与命令执行的替换方式见[默认工具与 SPI](builtin-tools-spi.md)。
 7. [检查点与存储](checkpoints.md)、[Workflow 与双引擎](workflow.md)：分别保存现场和可靠衔接。
 8. [SDK 验收](verification.md)：独立运行及故障注入。
+9. [当前实现与验证记录](implementation.md)：本轮实际交付、分包、运行证据和边界。
 
 ## 3. 对平台的保证
 

@@ -16,6 +16,7 @@ build/
 .ruff_cache/
 .idea/
 .openai/
+.agentloom/
 
 # Generated documentation site
 docs/.vitepress/cache/

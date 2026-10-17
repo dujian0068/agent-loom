@@ -136,7 +136,7 @@ class PlanAgent(Agent):
     ) -> None: ...
 ```
 
-所有依赖通过关键字传入。暂不叠加 Builder、全局默认 RuntimeEngine、自动平台查询三套装配入口；便利工厂可以后续包装相同构造合同。空能力和空 Hook 分别使用 `CapabilityRegistry(tools=(), skills=())`、`HookSet(bindings=(), handlers={})`。内存适配器可以独立运行，持久恢复则注入满足合同的后端。
+所有依赖通过关键字传入。暂不叠加 Builder、全局默认 RuntimeEngine、自动平台查询三套装配入口；便利工厂可以后续包装相同构造合同。空能力和空 Hook 分别使用 `CapabilityRegistry(tools=(), skills=())`、`HookSet(bindings=(), handlers={})`。RuntimeEngine 省略 store 时创建 `FileRuntimeStore(".agentloom/state")`，也可注入自定义文件目录；纯内存运行需要显式注入内存适配器。
 
 execution_policy／context_policy／model_options 省略时，构造阶段按[默认值](requirements.md)及已提供的模型元信息解析为固定策略；缺必需模型窗口仍须报错，不能猜测。context_policy 是处理规则，运行中的 agent.context 才是私有 AgentContext。executors=None 等同空映射，不创建默认执行器。ReactAgent 没有 executors 参数；执行模式由具体构造类型确定，AgentDefinition 不再声明 mode。
 

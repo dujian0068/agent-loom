@@ -1,6 +1,6 @@
 # SDK 模型、Skill、Tool、MCP 与执行环境
 
-状态：详细设计，尚未实现。SDK 接收已解析的模型适配器、能力绑定、只读 Skill 包及工作空间授权。Key 管理、Git／文件夹导入、共享目录和应用文件根分配见[平台配置](../platform/configuration.md)；SDK 不提供管理端 CRUD。
+状态：目标详细设计，部分能力已有单机实现，实际范围见[实现记录](implementation.md)。SDK 接收已解析的模型适配器、能力绑定、只读 Skill 包及工作空间授权。Key 管理、Git／文件夹导入、共享目录和应用文件根分配见[平台配置](../platform/configuration.md)；SDK 不提供管理端 CRUD。
 
 公共类型见[定义](definitions.md)；Operation／Attempt／Hook 只有[事件总线](event-bus.md)一套实现；上下文算法见[上下文](context.md)。
 

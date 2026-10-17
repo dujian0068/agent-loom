@@ -55,6 +55,7 @@ export default defineConfig({
           text: "SDK 设计",
           items: [
             { text: "SDK 总览", link: "/sdk/" },
+            { text: "当前实现与验证", link: "/sdk/implementation" },
             { text: "行为约定与默认值", link: "/sdk/requirements" },
             { text: "定义、节点与运行实体", link: "/sdk/definitions" },
             { text: "对象协作 UML 与时序", link: "/sdk/object-collaboration" },

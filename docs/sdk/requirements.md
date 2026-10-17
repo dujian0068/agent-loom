@@ -1,6 +1,6 @@
 # SDK 行为约定与默认值
 
-状态：已确认行为与工程设计分列，待实现。每个完整 Agent 可独立配置行为与执行策略；一次 ExecutionRecord 使用构造时固定的配置。AgentDefinition 统一描述单个 Agent 的行为，策略由构造参数注入；Plan 的 Planner／Executor 各有定义，共用所属完整 Agent 的模型和策略。平台如何编辑、发布和选择配置见[平台配置](../platform/configuration.md)。
+状态：已确认行为与工程设计分列；当前实现与核对结果见[实现记录](implementation.md)。每个完整 Agent 可独立配置行为与执行策略；一次 ExecutionRecord 使用构造时固定的配置。AgentDefinition 统一描述单个 Agent 的行为，策略由构造参数注入；Plan 的 Planner／Executor 各有定义，共用所属完整 Agent 的模型和策略。平台如何编辑、发布和选择配置见[平台配置](../platform/configuration.md)。
 
 ## 1. 产品能力与运行模式
 
@@ -68,6 +68,8 @@ Skill 使用 SKILL.md、目录元数据、按需阅读和受限脚本。目录�
 模型连接内部流式接收；完整响应后才发布一次调用结果，不逐 token 发 EventBus 事件。单次模型完成不代表 Agent 完成；ExecutionRecord 最终收束后才交付最终答案。结构化输出不合规交模型修正，仍共享总 Loop，无额外修正额度。
 
 ## 6. 文件、停止与恢复
+
+2026-10-17 确认：SDK 默认走文件系统，运行状态目录为当前工作目录的 `.agentloom/state`，可注入自定义文件目录；内存后端仅供显式选择，不要求数据库。运行状态目录独立于可清理的工作文件目录。
 
 持久沙箱保留工作文件；非持久工作文件在整个 ExecutionRecord 收束后删除。会话记录、调用事实及检查点独立于工作文件。Planner 和 Executor 共用授权工作目录，Session 之间由基础文件工具隔离，不依赖 LLM 自觉选路径。
 
