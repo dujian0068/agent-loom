@@ -11,6 +11,7 @@ class AgentLoomError(Exception):
         phase="execute",
         external_outcome="known",
         retryable_transport=False,
+        retry_after_at=None,
         field_path=None,
     ):
         self.code = code
@@ -19,11 +20,12 @@ class AgentLoomError(Exception):
         self.phase = phase
         self.external_outcome = external_outcome
         self.retryable_transport = retryable_transport
+        self.retry_after_at = retry_after_at
         self.field_path = field_path
         super().__init__(f"{code}: {self.message}")
 
     def to_dict(self):
-        return {
+        result = {
             "code": self.code,
             "message": self.message,
             "category": self.category,
@@ -32,6 +34,9 @@ class AgentLoomError(Exception):
             "retryable_transport": self.retryable_transport,
             "field_path": self.field_path,
         }
+        if self.retry_after_at is not None:
+            result["retry_after_at"] = self.retry_after_at
+        return result
 
 
 class ConfigurationError(AgentLoomError):

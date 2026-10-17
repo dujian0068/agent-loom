@@ -6,6 +6,7 @@ from ..errors import AgentLoomError
 from ..storage import CommitCoordinator, claim
 from ..types import new_id
 from .calls import failure
+from .maintenance import maintenance_due, maintenance_failed, maintenance_recovered
 
 
 def emit(state, event_type, payload=None):
@@ -86,6 +87,7 @@ def finalize_run(runtime, lease, status, *, output=None, error=None):
             "next_retry_at": 0,
             "error": None,
         }
+        maintenance_recovered(s, "stop", time.time())
         emit(
             s,
             "run.completed",
@@ -103,16 +105,32 @@ def settle_orphaned_stops(runtime):
         ids = [
             s["run_id"]
             for s in tx.list("runs")
-            if s["status"] == "stopping" and (s["lease"] or {}).get("expires_at", 0) <= tx.now
+            if s["status"] == "stopping"
+            and (s["lease"] or {}).get("expires_at", 0) <= tx.now
+            and maintenance_due(s, "stop", tx.now)
         ]
     for run_id in ids:
-        lease = claim(
-            runtime.store, runtime.namespace, run_id, runtime.worker_id, runtime.lease_seconds
-        )
-        if lease:
-            try:
+        lease = None
+        try:
+            lease = claim(
+                runtime.store,
+                runtime.namespace,
+                run_id,
+                runtime.worker_id,
+                runtime.lease_seconds,
+                eligible=lambda state, now: (
+                    state["status"] == "stopping" and maintenance_due(state, "stop", now)
+                ),
+            )
+            if lease:
                 finalize_run(
                     runtime, lease, "cancelled", error=AgentLoomError("RUN_STOPPED").to_dict()
                 )
-            finally:
-                CommitCoordinator(runtime.store, runtime.namespace, lease).release()
+        except Exception as exc:
+            maintenance_failed(runtime, "stop", exc, run_id=run_id)
+        finally:
+            if lease:
+                try:
+                    CommitCoordinator(runtime.store, runtime.namespace, lease).release()
+                except Exception as exc:
+                    maintenance_failed(runtime, "stop", exc, run_id=run_id)

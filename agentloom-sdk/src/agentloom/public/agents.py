@@ -18,6 +18,8 @@ from ..events import HookSet
 
 
 class ReactAgent:
+    """Immutable Agent assembly; the first accepted start binds it to one Run."""
+
     mode = "react"
 
     def __setattr__(self, name, value):
@@ -95,6 +97,35 @@ class ReactAgent:
         return await AgentLoop(self, node_context).run()
 
     async def start(self, input=None, *, session_id=None, run_id=None, input_id=None):
+        """Accept or reopen a Run and return its observation/control RunHandle.
+
+        Args:
+            input: Nonempty text or AgentInput matching the definition's schema
+                and variables. Omit only when reopening an existing run_id.
+            session_id: Conversation identity; omitted for a new isolated session,
+                or inferred from an existing Run. One active Run per session.
+            run_id: Durable execution identity. Omit to generate a new identity;
+                reuse it to resume matching work or read its terminal result.
+            input_id: Initial input deduplication identity. Requires both input
+                and run_id; generated when omitted for a new Run.
+
+        Returns:
+            RunHandle after durable acceptance, without waiting for execution.
+            A terminal Run is observed without invoking the model again.
+
+        Raises:
+            RequestError: Invalid input/IDs, a busy session, conflicting replay
+                or recovery bindings, input schema/variable validation failure,
+                or reuse of this instance for another Run.
+            ConfigurationError: Input material cannot be represented as finite,
+                canonical JSON.
+            InfrastructureError: Runtime is closed/on another event loop, or
+                durable storage is unavailable.
+
+        After the first successful call, this instance requires the same explicit
+        run_id on every call, including after completion. Create a fresh Agent
+        for each new Run. A reopened nonterminal Run requires its original assembly.
+        """
         async with self._binding_lock:
             if self._bound_run is not None and (run_id is None or str(run_id) != self._bound_run):
                 raise RequestError("AGENT_INSTANCE_BOUND")
@@ -105,9 +136,48 @@ class ReactAgent:
             return handle
 
     async def ainvoke(self, input=None, **ids):
+        """Start/reopen and wait for a RunResult, including failed business outcomes.
+
+        Args:
+            input: Text or AgentInput, or None when reopening an existing Run.
+            **ids: session_id, run_id and input_id, with the contracts in start().
+
+        Returns:
+            RunResult once business execution is terminal; file cleanup may still
+            be pending. Inspect status/error for business failure, stop or deadline.
+
+        Raises:
+            RequestError, ConfigurationError, InfrastructureError: As in start()
+                or RunHandle.wait(). Cancellation of this coroutine cancels only
+                the local wait, not the accepted Run.
+
+        Uses the same instance binding as start(). There is no local wait timeout;
+        use start() then handle.wait(timeout_s=...) to bound observation time. The
+        Run's execution deadline remains governed by ExecutionPolicy.
+        """
         return await (await self.start(input, **ids)).wait()
 
     async def astream(self, input=None, *, after_seq=0, **ids):
+        """Yield committed RunEvents in sequence through the durable terminal event.
+
+        Args:
+            input: Text or AgentInput, or None when reopening an existing Run.
+            after_seq: Exclusive nonnegative event cursor; 0 replays from the start.
+            **ids: session_id, run_id and input_id, with the contracts in start().
+
+        Yields:
+            RunEvent records, not provider token deltas. A terminal Run can be
+            replayed without executing the model again.
+
+        Raises:
+            RequestError: Invalid/ahead cursor, or a start() admission error.
+            ConfigurationError, InfrastructureError: As in start(), or a runtime,
+                storage or local execution-driver failure while observing.
+
+        Acceptance begins on first iteration and binds this Agent as start() does.
+        Ending/cancelling iteration does not stop the Run. Use RunHandle.stop() for
+        that; this stream has no independent observation timeout.
+        """
         handle = await self.start(input, **ids)
         async for event in handle.events(after_seq=after_seq):
             yield event

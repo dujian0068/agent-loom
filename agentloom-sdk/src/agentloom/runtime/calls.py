@@ -2,6 +2,7 @@
 
 import asyncio
 import copy
+import math
 import time
 from uuid import NAMESPACE_URL, uuid5
 
@@ -334,8 +335,11 @@ class CallDriver:
                 ).to_dict()
                 self._save_attempt(op_id, failure(error), None, force_final=True)
                 continue
-            if op["next_attempt_at"]:
-                await asyncio.sleep(max(0, op["next_attempt_at"] - time.time()))
+            while op["next_attempt_at"] and op["next_attempt_at"] > time.time():
+                # The persisted timestamp, not a process-local timer, is authoritative.
+                await asyncio.sleep(min(0.2, max(0, op["next_attempt_at"] - time.time())))
+                runner.check_active()
+                op = runner.operation(op_id)
             runner.check_active()
             index = len(op["attempts"]) + 1
             attempt_id = str(uuid5(NAMESPACE_URL, op_id + ":attempt:" + str(index)))
@@ -429,7 +433,12 @@ class CallDriver:
             if partial:
                 s["partial_results"].append(partial)
             if retrying:
-                current["next_attempt_at"] = time.time() + retry.delay_seconds
+                next_attempt_at = time.time() + retry.delay_seconds
+                server_deadline = error.get("retry_after_at")
+                if type(server_deadline) in (int, float) and math.isfinite(server_deadline):
+                    next_attempt_at = max(next_attempt_at, server_deadline)
+                current["next_attempt_at"] = next_attempt_at
+                attempt["next_attempt_at"] = next_attempt_at
             else:
                 current.update(
                     raw=raw, response=copy.deepcopy(raw), phase="after", next_attempt_at=None

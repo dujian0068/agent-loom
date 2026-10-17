@@ -1,14 +1,39 @@
 """Transport framing shared by explicit protocol adapters, with no automatic retries."""
 
 import json
+import math
+import time
+from datetime import timezone
+from email.utils import parsedate_to_datetime
 
 import httpx
 
 from ..configuration import json_copy
 from ..errors import AgentLoomError
+from .limits import MAX_MODEL_RESPONSE_BYTES
 
 
-def http_error(status):
+def retry_after_deadline(value):
+    """Convert Retry-After to an absolute deadline once, when headers arrive."""
+    if value is None:
+        return None
+    try:
+        seconds = float(value)
+    except ValueError:
+        try:
+            date = parsedate_to_datetime(value)
+            # The obsolete HTTP asctime format has no explicit GMT suffix.
+            deadline = date.replace(tzinfo=date.tzinfo or timezone.utc).timestamp()
+        except (ValueError, TypeError, OverflowError):
+            return None
+    else:
+        if not math.isfinite(seconds) or seconds < 0:
+            return None
+        deadline = time.time() + seconds
+    return deadline if math.isfinite(deadline) else None
+
+
+def http_error(status, headers=None):
     retry = status in {429, 502, 503, 504}
     return AgentLoomError(
         "HTTP_" + str(status),
@@ -16,19 +41,20 @@ def http_error(status):
         retryable_transport=retry,
         phase="receive",
         external_outcome="unknown",
+        retry_after_at=retry_after_deadline((headers or {}).get("retry-after")),
     )
 
 
 async def sse_data(response):
     if response.status_code >= 400:
-        raise http_error(response.status_code)
+        raise http_error(response.status_code, response.headers)
     if "text/event-stream" not in response.headers.get("content-type", ""):
         raise AgentLoomError("MODEL_PROTOCOL_ERROR", "Expected a server-sent event stream")
     lines, size = [], 0
     try:
         async for line in response.aiter_lines():
             size += len(line.encode())
-            if size > 20 * 1024 * 1024:
+            if size > MAX_MODEL_RESPONSE_BYTES:
                 raise AgentLoomError("MODEL_RESPONSE_TOO_LARGE")
             if not line:
                 if lines:

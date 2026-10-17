@@ -1,6 +1,7 @@
 import inspect
 from dataclasses import dataclass
 
+from ..environment.limits import MAX_FILE_READ_BYTES
 from ..errors import AgentLoomError
 from .registry import CapabilityRegistration, CapabilitySpec
 
@@ -114,7 +115,7 @@ def file_tools(adapter_key="files"):
             {
                 "path": string,
                 "offset": {"type": "integer", "minimum": 0},
-                "limit": {"type": "integer", "minimum": 1, "maximum": 65536},
+                "limit": {"type": "integer", "minimum": 1, "maximum": MAX_FILE_READ_BYTES},
             },
             ["path"],
         ),

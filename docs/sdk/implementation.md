@@ -46,9 +46,23 @@
 | 超窗 Hook 修改未放行 | 在提交候选前完整计量不可压缩记录、工具 Schema 和模型参数。固定材料超窗则拒绝本项全部修改、保存诊断，后续 Hook／模型继续看到原值；可压缩结果变长仍走正常压缩 |
 | 转交补充排在新问题后 | 输入按 session_seq 保存和投影，根任务统一在 prepare 中插入保护输入。结束转交、初始化和历史排序不再依赖 inputs[0] 是初始问题；跨两轮转交保持 ID、顺序、送达状态及去重 |
 
+## 基于 ef31404 的复审修复
+
+本轮覆盖复审提出的 3 项 P2 行为偏差和 2 项 P3 编码规范问题；不扩展 Workflow 或文末尚未实现的目标能力。按 [阿里巴巴开发规范](https://alibaba.github.io/Alibaba-Java-Coding-Guidelines/)中适用于 Python 的通用要求补充接口契约，并按职责组织常量。
+
+| 复审项 | 修复与验证边界 |
+| --- | --- |
+| 撤权异常中止维护 | 停止收束、终态清理按 Run 捕获异常；两类扫描各自隔离发现阶段故障。撤权失败保留 stopping，不生成虚假终态；维护诊断与下次重试时间写入文件／内存后端，重启后仍生效，成功恢复保留最近错误。领取租约时原子复查重试条件，避免使用旧扫描结果提前重试；存储不可用时记录脱敏诊断并继续扫描 |
+| 非法委派 Hook patch 被接受 | 原始调用、Hook 修改和子任务启动共用 validate_action，完整校验参数 Schema、无 Schema 时非空文本、变量和目标权限；非法 patch 连同 context_patch 整体丢弃，后续 Hook、Executor 与有效调用记录继续使用原值。显式 JSON Schema 允许的 null 仍合法；非法补丁不撤销合法 deny |
+| HTTP 429 忽略 Retry-After | Chat / Responses 共用 HTTP 层解析秒数和 HTTP 日期，将服务端绝对时间纳入结构化错误；按 max(配置间隔, 服务端剩余等待) 保存 next_attempt_at。恢复不重算完整等待、不提前发起 Attempt；保留同一 Operation 和一次前后 Hook，停止／总截止照常阻止新发送 |
+| 公开 API 契约不足 | start、ainvoke、astream 和 RunHandle 的观察／控制方法补充参数、返回、异常与实例绑定约定，区分本地等待超时、Run 截止和停止，说明流提前结束不会取消业务执行 |
+| 重复大小字面量 | environment.limits 管理完整文件和读取分片大小，工具 Schema 与实际 I/O 共用；models.limits 管理模型响应大小，HTTP 与 ModelHandler 共用；Hook 的 result.read 限制引用 context.results 的同一预览常量 |
+
+新增 `test_followup_review.py` 的 54 项测试覆盖两种后端、双 HTTP 协议、重启接续与非法输入边界；同时单独运行工作区已有 `qa/test_sdk_audit.py` 中与本轮委派及限流问题对应的 14 项。该 QA 文件及历史报告保持原样，其余审查项未纳入本轮通过结论。
+
 ## 验证环境与证据
 
-- 基础提交：`5e32dd2b8027ccb3bea0c651495747dd6741121a`，实现位于本轮工作区变更中，尚未创建提交。
+- 初始实现基于 `5e32dd2b8027ccb3bea0c651495747dd6741121a`；上轮实现与六项修复已提交为 `ef31404d71f4abbf3d9c9db80ddf25b06dcf6183`，本轮复审修复以此为基线。
 - 环境：macOS 26.7 / arm64、Python 3.12.14；项目 `.venv`，默认本地 JSON 文件目录；只有显式内存场景使用内存后端。
 - 独立进程测试以 `os._exit(73)` 在真实提交回执后退出，再启动第二进程；持久化后端不是 mock。测试会断言任务和操作数量、调用次数、Hook 次数、Loop 用量、终态和清理状态。
 - 模型协议使用 `httpx.MockTransport` 与分片 SSE 字节流；MCP stdio 使用真实子进程及官方客户端。没有真实付费模型调用、远程 MCP 服务或跨机器测试。
@@ -66,6 +80,7 @@
 | `test_result_and_scope_contract.py` | 64 KiB 有效预览、分片读取、Executor 私有引用拒绝、目录游标、UTF-8 边界、过期 owner 的自动接管 |
 | `test_design_alignment.py` | 默认文件重开与资源所有权、Planner 只读现场、并发准入、无 Attempt 的本地拒绝、失败计票、Hook 校验、首输出送达、恢复绑定、压缩终止、最终截止与目录／MCP 游标 |
 | `test_review_regressions.py` | 审查的 14 次双后端复现，加并行改参、Hook 保存／应用后接续、超窗修改原子拒绝、可压缩修改、idle 重试、根截止、预占额度等待、连续补充转交，共 34 项 |
+| `test_followup_review.py` | 撤权和维护异常隔离、持久诊断及重启退避，委派非法参数整体放行与合法 Schema／deny，Chat／Responses 的 Retry-After、配置间隔、非法值、重启时间和根控制，共 54 项 |
 
 运行命令：
 
@@ -78,7 +93,7 @@ npm run docs:build
 npm run docs:check
 ```
 
-本轮最终验证结果：
+上轮（`ef31404`）验证结果：
 
 | 检查 | 实际结果 |
 | --- | --- |
@@ -88,6 +103,16 @@ npm run docs:check
 | wheel 独立导入 | 仓库外两个独立 Python 进程直接从 wheel 导入；第一个使用 `RuntimeEngine()` 的默认文件存储完成执行，第二个重开同 run_id 读取原结果，模型未重调，未加载 SQLite 或 Platform |
 | 文档构建 | 通过；打包器提示部分前端 chunk 大于 500 kB，不影响构建成功 |
 | 文档链接 | 56 个 HTML 页面、1240 条内部链接、430 个锚点、239 个资源引用检查通过 |
+
+本轮复审修复验证结果（2026-10-17）：
+
+| 检查 | 实际结果 |
+| --- | --- |
+| 完整 SDK 测试 | **202 passed in 155.77s**；上轮 148 项及新增 54 项全部通过 |
+| 定向复测 | **68 passed in 23.86s**；新增 54 项加已有 QA 中本轮相关的 14 项，另 96 项 QA 未在本命令执行 |
+| Ruff lint / format | 通过，66 个 Python 文件格式一致 |
+| 安装包与进程隔离 | 离线 wheel 构建成功；仓库外两个独立进程从该 wheel 导入，默认文件后端执行与重开成功，未再次调用模型，未加载 SQLite／Platform |
+| 文档 | 构建成功；56 个页面、1241 条内部链接、431 个锚点、239 个资源引用检查通过；仍有前端 chunk 大于 500 kB 的非阻断提示 |
 
 ## 与完整目标设计的差异
 

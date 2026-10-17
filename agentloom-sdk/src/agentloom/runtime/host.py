@@ -12,6 +12,7 @@ from ..storage import TERMINAL, CommitCoordinator, FileRuntimeStore, claim
 from ..types import AgentInput, RunUsage, new_id
 from .cleanup import CleanupService
 from .control import emit, settle_orphaned_stops
+from .maintenance import maintenance_failed
 from .runner import ExecutionRunner
 from .services import (
     EventService,
@@ -298,8 +299,15 @@ class RuntimeEngine:
         cleanup = CleanupService(self)
 
         def scan():
-            settle_orphaned_stops(self)
-            cleanup.scan_once()
+            for phase, action in (
+                ("stop_scan", lambda: settle_orphaned_stops(self)),
+                ("cleanup_scan", cleanup.scan_once),
+            ):
+                try:
+                    action()
+                except Exception as exc:
+                    # Discovery/storage failures in one scan must not suppress the other.
+                    maintenance_failed(self, phase, exc)
 
         while True:
             work = asyncio.create_task(asyncio.to_thread(scan))
@@ -307,10 +315,8 @@ class RuntimeEngine:
                 await asyncio.shield(work)
             except asyncio.CancelledError:
                 # No store/file worker is left running after aclose returns.
-                await work
+                await asyncio.gather(work, return_exceptions=True)
                 raise
-            except InfrastructureError:
-                # A later scan reconciles committed cleanup jobs. Business waiters
-                # independently read the store and receive infrastructure failures.
-                pass
+            except Exception as exc:
+                maintenance_failed(self, "scan_worker", exc)
             await asyncio.sleep(0.05)

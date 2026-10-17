@@ -18,6 +18,7 @@ from pathlib import Path, PurePosixPath
 
 from ..configuration import digest
 from ..errors import AgentLoomError, LeaseLost
+from .limits import DEFAULT_FILE_READ_BYTES, MAX_FILE_BYTES, MAX_FILE_READ_BYTES
 from .mutations import FileMutations
 
 
@@ -189,8 +190,8 @@ class LocalEnvironment(FileMutations):
             before = os.fstat(fp.fileno())
             if not stat.S_ISREG(before.st_mode):
                 raise AgentLoomError("FILE_TYPE_FORBIDDEN")
-            data = fp.read(20 * 1024 * 1024 + 1)
-            if len(data) > 20 * 1024 * 1024:
+            data = fp.read(MAX_FILE_BYTES + 1)
+            if len(data) > MAX_FILE_BYTES:
                 raise AgentLoomError("FILE_TOO_LARGE")
             after = os.fstat(fp.fileno())
 
@@ -212,12 +213,12 @@ class LocalEnvironment(FileMutations):
             "etag": digest({"kind": "file", "size": len(data), "sha256": sha}),
         }
 
-    def read(self, scope, path, guard=lambda: None, *, offset=0, limit=16384):
+    def read(self, scope, path, guard=lambda: None, *, offset=0, limit=DEFAULT_FILE_READ_BYTES):
         if (
             type(offset) is not int
             or offset < 0
             or type(limit) is not int
-            or not 1 <= limit <= 65536
+            or not 1 <= limit <= MAX_FILE_READ_BYTES
         ):
             raise AgentLoomError("FILE_SLICE_INVALID")
         with self._lock(scope):
@@ -254,7 +255,7 @@ class LocalEnvironment(FileMutations):
     def write(self, scope, path, content, guard=lambda: None, *, mode="create_only", if_match=None):
         if mode not in ("create_only", "replace") or (mode == "replace") != (if_match is not None):
             raise AgentLoomError("INVALID_WRITE_MODE")
-        if not isinstance(content, str) or len(content.encode()) > 20 * 1024 * 1024:
+        if not isinstance(content, str) or len(content.encode()) > MAX_FILE_BYTES:
             raise AgentLoomError("FILE_TOO_LARGE")
         data = content.encode()
         with self._lock(scope):

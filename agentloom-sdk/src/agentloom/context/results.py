@@ -5,7 +5,7 @@ import hashlib
 from ..configuration import canonical, digest
 from ..errors import AgentLoomError
 
-PREVIEW_BYTES = 65536
+PREVIEW_BYTES = 64 * 1024
 
 
 def result_bytes(value):

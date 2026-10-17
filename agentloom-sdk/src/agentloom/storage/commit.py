@@ -14,10 +14,12 @@ def verify_lease(state, lease, now):
         raise LeaseLost()
 
 
-def claim(store, namespace, run_id, worker_id, ttl):
+def claim(store, namespace, run_id, worker_id, ttl, *, eligible=None):
     with store.transaction(namespace) as tx:
         state = tx.get("runs", run_id)
         if not state or state["status"] in TERMINAL:
+            return None
+        if eligible is not None and not eligible(state, tx.now):
             return None
         old = state.get("lease") or {}
         if old.get("expires_at", 0) > tx.now:

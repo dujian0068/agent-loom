@@ -11,6 +11,7 @@ from types import MappingProxyType
 from ..configuration import freeze, json_copy, number, validate_schema
 from ..context.budget import estimate
 from ..context.records import materialize, revise_call_arguments
+from ..context.results import PREVIEW_BYTES
 from ..errors import AgentLoomError, ConfigurationError, InfrastructureError, error_record
 from ..types import CallStageEvent
 from .bus import EventBusImpl, HandlerBinding
@@ -439,11 +440,9 @@ class HookHandler(EventBusImpl):
                     raise AgentLoomError("CAPABILITY_NOT_FOUND")
                 validate_schema(arguments, entry.spec.input_schema)
             if route == "executor.delegate":
-                definition = self.runner.program.executors.get(original.get("executor"))
-                if definition is None:
-                    raise AgentLoomError("EXECUTOR_NOT_FOUND")
-                validate_schema(arguments.get("task"), definition.input_schema)
-                definition.render(arguments.get("variables"))
+                from ..runtime.validation import validate_action
+
+                validate_action(self.runner, op["role_key"], payload["name"], arguments)
         if "result" in patch:
             result, original = patch["result"], payload["result"]
             if op["event_type"] == "model.generate":
@@ -495,7 +494,10 @@ class HookHandler(EventBusImpl):
                     k: v for k, v in original.items() if k != "text"
                 }:
                     raise AgentLoomError("HOOK_PATCH_FORBIDDEN")
-                if op["event_type"] == "result.read" and len(result["text"].encode()) > 65536:
+                if (
+                    op["event_type"] == "result.read"
+                    and len(result["text"].encode()) > PREVIEW_BYTES
+                ):
                     raise AgentLoomError("HOOK_RESULT_TOO_LARGE")
         payload.update(patch)
         if "arguments" in patch:

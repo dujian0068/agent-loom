@@ -8,6 +8,7 @@ from uuid import NAMESPACE_URL, uuid5
 from ..capabilities import CapabilityContext, WorkspaceService
 from ..configuration import json_copy, validate_schema
 from ..errors import AgentLoomError
+from ..models.limits import MAX_MODEL_RESPONSE_BYTES
 from ..types import ModelRequest
 
 
@@ -123,7 +124,7 @@ class ModelHandler:
                         received = True
                 if frame.kind == "text_delta":
                     partial += frame.data
-                    if len(partial.encode()) > 20 * 1024 * 1024:
+                    if len(partial.encode()) > MAX_MODEL_RESPONSE_BYTES:
                         raise AgentLoomError("MODEL_RESPONSE_TOO_LARGE")
                 if frame.kind == "error":
                     raise AgentLoomError("MODEL_PROVIDER_ERROR")

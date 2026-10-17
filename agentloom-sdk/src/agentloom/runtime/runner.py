@@ -3,7 +3,7 @@
 import asyncio
 import time
 
-from ..configuration import canonical, digest, validate_schema
+from ..configuration import canonical, digest
 from ..context import history_records, record
 from ..context.results import RESULT_READ_TOOL, ResultReadHandler
 from ..errors import AgentLoomError, InfrastructureError
@@ -144,27 +144,14 @@ class ExecutionRunner:
         self.commit("first-output:" + attempt_id, receive)
 
     async def delegate(self, op_id):
+        from .validation import validate_action
+
         op = self.operation(op_id)
         try:
             arguments = op["request"]["arguments"]
-            if (
-                op["role_key"] != "planner"
-                or not isinstance(arguments, dict)
-                or set(arguments) - {"executor", "task", "variables"}
-            ):
-                raise AgentLoomError("DELEGATION_NOT_ALLOWED", category="permission")
-            key = arguments.get("executor")
-            definition = self.program.executors.get(key)
-            if definition is None:
-                raise AgentLoomError("EXECUTOR_NOT_FOUND")
-            if "task" not in arguments:
-                raise AgentLoomError("EXECUTOR_INPUT_INVALID")
-            validate_schema(arguments["task"], definition.input_schema)
-            if definition.input_schema is None and (
-                not isinstance(arguments["task"], str) or not arguments["task"].strip()
-            ):
-                raise AgentLoomError("EXECUTOR_INPUT_INVALID")
-            definition.render(arguments.get("variables"))
+            validate_action(self, op["role_key"], op["request"]["name"], arguments)
+            key = arguments["executor"]
+            definition = self.program.executors[key]
         except AgentLoomError as exc:
             return failure(exc.to_dict())
         # Only live Executor work owns a slot; response hooks run after it is released.

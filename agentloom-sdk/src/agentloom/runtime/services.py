@@ -51,6 +51,7 @@ class RunService:
         return {
             **{key: state[key] for key in keys},
             "cleanup_error": state["cleanup_job"]["error"] if state["cleanup_job"] else None,
+            "maintenance": state.get("maintenance", {}),
             "tasks": [
                 {k: task[k] for k in ("task_id", "role_key", "parent_operation", "status", "stage")}
                 for task in state["tasks"].values()

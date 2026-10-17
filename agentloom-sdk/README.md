@@ -67,6 +67,8 @@ asyncio.run(main())
 
 重试保持同一 Operation，增加 Attempt；模型重新决定、输出格式纠正消耗新 Loop；压缩模型请求单独计量。第 100 次可正常完成，只有需要第 101 次时才耗尽。Provider 真实 token 用量缺失时返回未知，不使用估算值冒充用量。
 
+HTTP 限流重试取配置间隔与合法 `Retry-After` 剩余时间的较大值，支持有限非负秒和 HTTP 日期；非法值忽略。服务端时间与最终 `next_attempt_at` 随 Attempt 持久化，重开 Runtime 沿用原时间，等待期间仍受停止和总截止控制。
+
 `AgentInput(content=..., variables=...)` 支持结构化输入；`AgentDefinition.input_schema/output_schema` 使用 JSON Schema 2020-12，仅允许本地 `$ref`。`VariableSpec` 声明必填项、类型及默认值，Prompt 只替换声明的 `{{name}}`，不执行模板代码。
 
 ## Plan 与能力分配
@@ -129,6 +131,8 @@ definition = AgentDefinition(
 恢复沿用原 Task、Operation、Attempt 和截止时间。已经保存的模型／工具结果只续后置处理；外部调用开始后却没有可靠结果时记录 `CALL_OUTCOME_UNKNOWN`，不盲目重发可能产生副作用的调用。
 
 Runtime 关闭会停止本机推进并保留检查点，不等同于用户停止；注入的 store、HTTP 客户端和其他共享依赖仍由调用者关闭。临时目录在根执行终态后由独立 CleanupService 清理，失败单独重试；`persistent_sandbox=True` 保留会话文件，并使旧执行句柄失效。
+
+后台停止收束与清理按 Run 隔离故障。撤权失败时保持 `stopping`，按 `cleanup_retry_seconds` 重试，继续处理其他 Run；同一存储的新 Runtime 也会遵守已保存的重试时间。`handle.snapshot()` 或 `runtime.runs.get()` 的 `maintenance` 字段按阶段提供最近错误、累计失败次数、失败时间、下次重试时间和恢复时间；普通文件删除错误仍在 `cleanup_error` 中。无法访问存储时输出不含原始异常文本的日志，后续扫描继续尝试。
 
 公开查询入口包括 `runtime.runs/tasks/operations/events/sessions`。`runtime.records.delete(run_id, command_id=...)` 只删除已清理的终态记录；有后续历史引用时须先删除依赖记录，删除后原 run_id 保持关闭。
 
