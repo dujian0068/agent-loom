@@ -11,6 +11,26 @@ if (!base.startsWith("/") || !base.endsWith("/")) {
   throw new Error("AGENTLOOM_DOCS_BASE 必须以 / 开始和结束，例如 /agent-loom/");
 }
 
+const sharedReading = {
+  text: "公共文档",
+  items: [
+    { text: "文档首页", link: "/" },
+    { text: "职责边界", link: "/sdk-platform-boundary" },
+    { text: "Agent 设计约定", link: "/agent-design-decisions" },
+    { text: "阅读指南", link: "/reading-guide" },
+  ],
+};
+const sharedMaintenance = {
+  text: "文档维护",
+  collapsed: true,
+  items: [
+    { text: "目录规划", link: "/directory-plan" },
+    { text: "完整索引", link: "/README" },
+    { text: "整理复核记录", link: "/reorganization-review" },
+    { text: "维护文档站", link: "/documentation-site" },
+  ],
+};
+
 export default defineConfig({
   lang: "zh-CN",
   title: "AgentLoom",
@@ -30,6 +50,7 @@ export default defineConfig({
     socialLinks: [{ icon: "github", link: repository }],
     sidebar: {
       "/sdk/": [
+        sharedReading,
         {
           text: "SDK 设计",
           items: [
@@ -48,8 +69,10 @@ export default defineConfig({
             { text: "实施与验收", link: "/sdk/verification" },
           ],
         },
+        sharedMaintenance,
       ],
       "/platform/": [
+        sharedReading,
         {
           text: "Platform 设计",
           items: [
@@ -62,28 +85,9 @@ export default defineConfig({
             { text: "API 集成验收", link: "/platform/verification" },
           ],
         },
+        sharedMaintenance,
       ],
-      "/": [
-        {
-          text: "开始阅读",
-          items: [
-            { text: "文档首页", link: "/" },
-            { text: "职责边界", link: "/sdk-platform-boundary" },
-            { text: "Agent 设计约定", link: "/agent-design-decisions" },
-            { text: "阅读指南", link: "/reading-guide" },
-          ],
-        },
-        {
-          text: "文档维护",
-          collapsed: true,
-          items: [
-            { text: "目录规划", link: "/directory-plan" },
-            { text: "完整索引", link: "/README" },
-            { text: "整理复核记录", link: "/reorganization-review" },
-            { text: "维护文档站", link: "/documentation-site" },
-          ],
-        },
-      ],
+      "/": [sharedReading, sharedMaintenance],
     },
     outline: { level: [2, 3], label: "本页目录" },
     docFooter: { prev: "上一篇", next: "下一篇" },
@@ -132,8 +136,9 @@ export default defineConfig({
             filter: (result: { id: string }) => {
               if (typeof window === "undefined") return true;
               const section = window.location.pathname.match(/\/(sdk|platform)\//)?.[1];
-              return !section || new URL(result.id, window.location.origin)
-                .pathname.includes(`/${section}/`);
+              const resultSection = new URL(result.id, window.location.origin)
+                .pathname.match(/\/(sdk|platform)\//)?.[1];
+              return !section || !resultSection || resultSection === section;
             },
             boostDocument: (id: string) => {
               if (/\/(sdk|platform)\//.test(id)) return 3;

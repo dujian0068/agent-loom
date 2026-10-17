@@ -66,11 +66,11 @@ AGENTLOOM_DOCS_BASE=/agent-loom/ npm run docs:preview
 
 ## 维护规则
 
-- 首页提供 SDK 设计和 Platform 设计两个入口。两组文档使用各自的侧栏和上一篇／下一篇导航；新增文档后在 `docs/.vitepress/config.mts` 对应的 `/sdk/` 或 `/platform/` 侧栏中添加条目，并更新文档索引。
+- 首页提供 SDK 设计和 Platform 设计两个入口。两组侧栏均保留设计约定、阅读指南、职责边界等公共文档和文档维护入口，并只列出当前模块的专属文档；新增文档后在 `docs/.vitepress/config.mts` 对应的 `/sdk/` 或 `/platform/` 侧栏中添加条目，并更新文档索引。
 - 正文继续写相对 Markdown 链接，例如 `sdk/object-collaboration.md`；构建时自动转换成站内地址。
 - 指向仓库中实际存在文件的相对链接由文档插件转到 GitHub `master` 的 blob/tree 地址，不会把源码复制进站点；不要继续链接已删除的旧业务代码。
 - 原有显式 `<a id="...">` 锚点保留；更名标题前检查入站章节链接。
-- 搜索在浏览器本地运行，支持中文分词。SDK 页面只搜索 SDK 文档，Platform 页面只搜索 Platform 文档；首页与公共页面搜索全站。不把搜索词发送到外部搜索服务。旧使用说明已删除；保留的在审设计需标明 SDK / Platform 边界调整状态，不能当成已实现接口。
+- 搜索在浏览器本地运行，支持中文分词。SDK 页面搜索 SDK 与公共文档，Platform 页面搜索 Platform 与公共文档；首页与公共页面搜索全站。不把搜索词发送到外部搜索服务。旧使用说明已删除；保留的在审设计需标明 SDK / Platform 边界调整状态，不能当成已实现接口。
 - Mermaid 代码块在浏览器渲染为 SVG；当前图表直接维护在设计正文，不保留已过时的独立配图或生成脚本。
 - VitePress 的生产构建会检查页面链接，不要用忽略所有死链的选项掩盖错误。
 
