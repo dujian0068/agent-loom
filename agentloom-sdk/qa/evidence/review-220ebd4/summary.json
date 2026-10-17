@@ -1,0 +1,136 @@
+{
+  "reviewed_sdk_commit": "220ebd4e584967a86a341510675eeb98b8b4dd06",
+  "ending_head": "3450aedb81f527cc1aa0b5922c83b48669bb9d94",
+  "source_tree": "5235633296e01753a171e1d7b53ba8e8fe9d1cfe",
+  "ending_source_tree": "5235633296e01753a171e1d7b53ba8e8fe9d1cfe",
+  "python": "3.12.14",
+  "environment": "macOS-26.7-arm64-arm-64bit",
+  "dependencies": {
+    "pytest": "8.4.2",
+    "pytest-asyncio": "1.4.0",
+    "httpx": "0.28.1",
+    "jsonschema": "4.26.0",
+    "referencing": "0.37.0",
+    "mcp": "1.30.0",
+    "rfc8785": "0.1.4"
+  },
+  "suite_results": {
+    "regression": {
+      "name": "pytest",
+      "errors": "0",
+      "failures": "0",
+      "skipped": "0",
+      "tests": "447",
+      "time": "185.508",
+      "timestamp": "2026-10-17T15:43:39.279771+08:00",
+      "hostname": "bmilk",
+      "passed": 447,
+      "groups": {
+        "tests": 337,
+        "qa": 110
+      },
+      "failed_tests": []
+    },
+    "followup": {
+      "name": "pytest",
+      "errors": "0",
+      "failures": "13",
+      "skipped": "0",
+      "tests": "24",
+      "time": "13.581",
+      "timestamp": "2026-10-17T15:48:17.359794+08:00",
+      "hostname": "bmilk",
+      "passed": 11,
+      "groups": {
+        "qa": 24
+      },
+      "failed_tests": [
+        "test_empty_usage_after_known_usage_preserves_counts[memory-empty-object]",
+        "test_empty_usage_after_known_usage_preserves_counts[memory-null-counters]",
+        "test_empty_usage_after_known_usage_preserves_counts[file-empty-object]",
+        "test_empty_usage_after_known_usage_preserves_counts[file-null-counters]",
+        "test_orphan_finalizes_when_revocation_exceeds_lease[memory-slow-revoke-stop]",
+        "test_orphan_finalizes_when_revocation_exceeds_lease[memory-slow-revoke-deadline]",
+        "test_orphan_finalizes_when_revocation_exceeds_lease[file-slow-revoke-stop]",
+        "test_orphan_finalizes_when_revocation_exceeds_lease[file-slow-revoke-deadline]",
+        "test_usage_aggregation_at_canonical_integer_boundary_does_not_strand_run[memory-overflow-total]",
+        "test_responses_explicit_context_error_mapping_in_both_event_shapes[memory-error]",
+        "test_responses_explicit_context_error_mapping_in_both_event_shapes[file-error]",
+        "test_prepared_skill_rejects_unsupported_body_like_directory_import[Dynamic !`echo example`]",
+        "test_prepared_skill_rejects_unsupported_body_like_directory_import[Session ${CLAUDE_SESSION_ID}]"
+      ]
+    },
+    "before-empty-usage": {
+      "name": "pytest",
+      "errors": "0",
+      "failures": "0",
+      "skipped": "0",
+      "tests": "2",
+      "time": "0.139",
+      "timestamp": "2026-10-17T15:48:21.610807+08:00",
+      "hostname": "bmilk",
+      "passed": 2,
+      "groups": {
+        "qa": 2
+      },
+      "failed_tests": []
+    }
+  },
+  "test_sha256": {
+    "agentloom-sdk/qa/test_sdk_audit.py": "44f1e6ed269d47250c2f88783f78f3c7913f259d5040def5e744c6986d733941",
+    "agentloom-sdk/qa/test_sdk_rereview.py": "df17cc4ec0f09b09d3e2f6e8f0d885520bb53bdfbeaeedb49d8edf138f742873"
+  },
+  "production_code_modified": false,
+  "scope_exclusions": [
+    "workflow",
+    "default tools and associated SPI",
+    "platform"
+  ],
+  "comparison": {
+    "before_commit": "ec1c93dde6f63d6aa0f1272059221e7149b9d8cf",
+    "selection": "empty_usage and empty-object",
+    "method": "git archive of prior source in temporary directory; pytest pythonpath override; same follow-up test file"
+  },
+  "commands": {
+    "regression": ".venv/bin/python -m pytest -q agentloom-sdk/tests agentloom-sdk/qa/test_sdk_audit.py --tb=short --junitxml=/tmp/agentloom-rereview-220ebd4/regression.junit.xml",
+    "followup": ".venv/bin/python -m pytest -q agentloom-sdk/qa/test_sdk_rereview.py --tb=short -o junit_logging=all --junitxml=/tmp/agentloom-rereview-220ebd4/followup.junit.xml",
+    "before-empty-usage": ".venv/bin/python -m pytest -q agentloom-sdk/qa/test_sdk_rereview.py -o pythonpath=/tmp/agentloom-rereview-220ebd4/before/agentloom-sdk/src -k 'empty_usage and empty-object' --tb=short -o junit_logging=all --junitxml=/tmp/agentloom-rereview-220ebd4/before-empty-usage.junit.xml"
+  },
+  "static_checks": {
+    "ruff_check": "All checks passed!",
+    "ruff_format": "88 files already formatted",
+    "report_local_links": "all resolved"
+  },
+  "findings": [
+    {
+      "id": "R01",
+      "priority": "P1",
+      "failed_cases": 4,
+      "title": "Slow orphan revocation outlives unrenewed business lease"
+    },
+    {
+      "id": "R02",
+      "priority": "P2",
+      "failed_cases": 4,
+      "title": "Empty later usage overwrites previously known counters"
+    },
+    {
+      "id": "R03",
+      "priority": "P2",
+      "failed_cases": 2,
+      "title": "Responses top-level error code is not mapped"
+    },
+    {
+      "id": "R04",
+      "priority": "P2",
+      "failed_cases": 2,
+      "title": "Prepared Skill body bypasses unsupported syntax validation"
+    },
+    {
+      "id": "R05",
+      "priority": "P2",
+      "failed_cases": 1,
+      "title": "Token aggregation overflow poisons MemoryRuntimeStore state"
+    }
+  ]
+}

@@ -1,0 +1,11 @@
+{
+  "path": "/private/tmp/agentloom-builder-wheels/agentloom_sdk-0.1.0a1-py3-none-any.whl",
+  "sha256": "41b0a6e2925d4f821429ae2ae23f55e599f34ec8ec00df4e3fb1f82cdd4068e1",
+  "modules_verified": 75,
+  "new_modules": [
+    "agentloom/public/builder.py",
+    "agentloom/public/assembly.py"
+  ],
+  "install_root": "/private/var/folders/g6/378nmc5541n9wkbyb0nj9x9r0000gn/T/agentloom-builder-wheel-5wdmi261",
+  "py_typed": true
+}

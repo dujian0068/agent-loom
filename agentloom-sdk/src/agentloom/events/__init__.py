@@ -23,5 +23,11 @@ __all__ = [
     "HookHandler",
     "HookMatcher",
     "HookReadPort",
+    "HookInput",
+    "HookContext",
+    "HookRecordView",
+    "HookRecordPage",
     "HookSet",
 ]
+
+from .hook_views import HookContext, HookInput, HookRecordPage, HookRecordView

@@ -1,0 +1,15 @@
+{
+  "wheel": "agentloom_sdk-0.1.0a1-py3-none-any.whl",
+  "verified_modules": [
+    "resources.py",
+    "runtime/leases.py",
+    "runtime/recovery.py",
+    "runtime/usage.py",
+    "events/control.py",
+    "events/patches.py",
+    "events/patch_contract.py",
+    "configuration/actions.py",
+    "context/history_facts.py",
+    "py.typed"
+  ]
+}

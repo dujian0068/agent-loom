@@ -1,0 +1,49 @@
+import asyncio
+import json
+import sys
+from pathlib import Path
+
+import agentloom
+from agentloom import (
+    AgentDefinition, AgentLoom, AgentProperties, FileRuntimeStore, ModelResponse,
+    PropertiesConfig, RuntimeProperties, ScriptedModel, ServiceProperties, WorkspaceBinding,
+)
+
+
+async def main():
+    assert Path(agentloom.__file__).resolve().is_relative_to(Path(sys.argv[2]).resolve())
+    model = ScriptedModel(lambda request: ModelResponse("built:" + request.role_key))
+    properties = PropertiesConfig(
+        runtime=RuntimeProperties(namespace="properties-smoke"),
+        defaults=AgentProperties(workspace=WorkspaceBinding("work")),
+        services=ServiceProperties(model=model),
+    )
+    app = AgentLoom(properties)
+    async with app:
+        assert isinstance(app.runtime.store, FileRuntimeStore)
+        assert app.runtime.properties is properties.runtime
+        assert app.builder.properties is properties.defaults
+        results = []
+        for mode in ("react", "plan"):
+            agent = app.build(AgentDefinition("assistant", "SYSTEM"), mode=mode)
+            assert agent.properties is properties.defaults
+            result = await agent.ainvoke(
+                "question" if sys.argv[1] == "first" else None, run_id=mode,
+            )
+            assert result.status == "succeeded"
+            assert result.output.value == "built:" + ("react" if mode == "react" else "planner")
+            results.append({"mode": mode, "status": result.status, "run_id": result.run_id})
+        assert len(model.requests) == (2 if sys.argv[1] == "first" else 0)
+        assert properties.runtime.state_directory == Path.cwd() / ".agentloom/state"
+        assert properties.runtime.state_directory.is_dir()
+    await app.aclose()
+    assert not any(name.startswith(("sqlite3", "agentloom_platform")) for name in sys.modules)
+    print(json.dumps({
+        "phase": sys.argv[1], "module": agentloom.__file__,
+        "store": type(app.runtime.store).__name__, "config": type(properties).__name__,
+        "state_directory": str(properties.runtime.state_directory),
+        "calls": len(model.requests), "results": results,
+    }))
+
+
+asyncio.run(main())

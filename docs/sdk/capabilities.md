@@ -39,6 +39,8 @@ class ModelHandler:
 
 归一后的 `usage` 只接受对象或 null；`input_tokens`／`output_tokens` 可以缺失或为 null，已提供的计数必须是非负整数，不接受布尔值。缺失统计按未知处理；非对象 usage 或非法计数归为 `protocol / MODEL_PROTOCOL_ERROR`，在 Attempt 结果提交前拒绝，按模型失败收束角色，不能在持久事务中泄漏属性访问异常。已经解析出的已知统计不因后续帧的空 usage 被清空。
 
+计数与持久汇总须处于规范 JSON 整数范围（最大 `2**53-1`）。单次合法但累加超出范围时，按 `protocol / MODEL_USAGE_OVERFLOW` 结束该响应，保留完整返回材料与此前已知部分汇总，`token_counts_complete=false`；不得截断、饱和或写入无法重新加载的执行记录。只提供一个计数字段时可以保留该字段的已知部分，但不能据此将整次统计标为完整。
+
 失败 Attempt 的文本、reasoning 和不完整工具调用均保留独立审计材料，绑定原 attempt_id／operation_id；有提供方索引或调用 ID 时保留关联，无法关联的片段不能猜测合并。总材料受模型响应大小限制，超限时保留已接收的限额内材料并标记截断。停止时，在租约仍有效的前提下提交已收到的材料；这些材料不进入后续 Attempt 的消息或工具执行。
 
 首版只有 `OpenAIChatAdapter` 和 `OpenAIResponsesAdapter` 两种协议实现；供应商 preset 显式固定协议、API／Coding Plan 地址、feature 映射、错误和完成帧映射版本。本文不猜测 GLM、Aliyun、DeepSeek、MiniMax 的 Think 字段或窗口。适配 profile 未实现某项配置时构造返回 `MODEL_FEATURE_UNSUPPORTED`，不得忽略参数后宣称已启用。
@@ -99,6 +101,10 @@ NodeDriver 在同一提交中保存反馈及下一 prepare_context 阶段；该�
 每份 AgentDefinition 声明自己的能力选择，NodeBinding 将定义装配到 react／planner／Executor key 对应的位置。上述 for_role 的 role_key 仅定位这个绑定位置，不指向独立的角色配置实体。注册描述、绑定配置和不可变视图的装配过程见[能力注册](assembly.md#4-能力如何注册和绑定)。binding_config 是通过注册 Schema 校验的固定配置，由可信 ExecutionBindingRef 解析，不从 LLM 参数中接收；同一适配器服务多个角色时不得把它缓存成全局可变状态。
 
 `CapabilityAdapter.invoke_once(request,context)->ToolResult` 只执行一次；ToolHandler 校验调用可信范围、最终 schema、凭据撤销及执行许可，再调用原 Adapter 并规范化为 RawResult。ToolHandler 实现总线的 EventHandler，CapabilityAdapter 只负责一次具体能力调用。Skill 的目录和资源读取由 SkillHandler 处理，入口见第 3 节。Hook allow 不扩大目录。普通工具不创建新 NodeTask；Planner 委派 action 由图运行负责，不能交给普通 handler_ref。
+
+当前 Python 可直接实现 `invoke_once(CapabilityRequest, ToolInvocationContext)`，返回 `ToolResult` 或字段完全一致的 JSON 对象。`ContentBlock(type="text", text=...)` 和 `ContentBlock(type="json", json_ref={"kind":"inline","value":...})` 可以交付；blob／artifact 引用尚无完整内容授权服务，明确拒绝，不将引用或宿主路径当作已获准内容。原始 ToolResult（含 metadata）仅存 Attempt 审计，模型获得按内容归一和后置 Hook 修改后的有效结果。failed／unknown 保留明确错误与执行事实，不能因为 Adapter 正常返回就记为成功；非法结果按协议失败收束，能够规范化的原始材料单独留审计。
+
+SDK 内置适配器已提供 `invoke_once`。旧用户适配器的 `invoke(member, arguments, context)` 仍由兼容桥调用一次，其返回 JSON 按业务值包装，不猜测其中的 `status/error` 是 ToolResult 信封。同时定义两个方法时优先调用 `invoke_once`，异常后不回退到另一个方法。`ToolInvocationContext` 的绑定配置和 scope 引用不可变，`cancellation()`／`check_active()` 是单机实现的同步控制检查，异步取消仍通过调用任务传播；这些运行期对象不进入检查点。旧 `config/task_id` 属性分别映射到 `binding_config/node_task_id`。
 
 SDK 生成的对象 input_schema 默认 additionalProperties=false；MCP schema 保留其声明扩展语义。导入收拢许可本地 `$ref`，拒绝外部网络 `$ref`；运行校验不得顺带出网取 schema。
 

@@ -6,9 +6,10 @@ import httpx
 
 from ..configuration import json_copy, number
 from ..errors import AgentLoomError, ConfigurationError
+from ..resources import managed_resource
 from ..types import ModelDescriptor, ModelResponse, ProviderEvent, ToolCall
 from .http import frame_json, sse_data, tool_arguments
-from .material import normalize_usage
+from .material import merge_usage, normalize_usage
 from .provider_errors import provider_error
 from .responses import response_inputs
 
@@ -49,6 +50,23 @@ class _OpenAIAdapter:
     def _headers(self):
         return {"Authorization": "Bearer " + self._api_key, "Accept": "text/event-stream"}
 
+    @asynccontextmanager
+    async def _stream(self, path, body, context):
+        diagnostics = getattr(context, "diagnostics", None)
+        report = diagnostics.append if diagnostics is not None else None
+        async with managed_resource(self._connection(), report) as client:
+            async with managed_resource(
+                client.stream(
+                    "POST",
+                    self.base_url + path,
+                    json=body,
+                    headers=self._headers(),
+                    timeout=None,
+                ),
+                report,
+            ) as response:
+                yield response
+
 
 class OpenAIChatAdapter(_OpenAIAdapter):
     """Chat Completions profile: finish frame AND [DONE] are required."""
@@ -71,99 +89,83 @@ class OpenAIChatAdapter(_OpenAIAdapter):
             body["tools"] = [{"type": "function", "function": t} for t in request.tools]
         text, calls, usage, finish, identity = "", {}, None, None, None
         try:
-            async with self._connection() as client:
-                async with client.stream(
-                    "POST",
-                    self.base_url + "/chat/completions",
-                    json=body,
-                    headers=self._headers(),
-                    timeout=None,
-                ) as response:
-                    async for raw in sse_data(response):
-                        if raw == "[DONE]":
-                            if finish is None:
-                                raise AgentLoomError(
-                                    "MODEL_PROTOCOL_ERROR",
-                                    "Completion terminator preceded finish frame",
-                                )
-                            if finish not in {"stop", "tool_calls"}:
-                                raise AgentLoomError(
-                                    "MODEL_RESPONSE_INCOMPLETE",
-                                    "Completion ended without a complete answer",
-                                )
-                            assembled = []
-                            for index in sorted(calls):
-                                call = calls[index]
-                                if not call["name"] or not call["id"]:
-                                    raise AgentLoomError(
-                                        "MODEL_PROTOCOL_ERROR", "Incomplete function identity"
-                                    )
-                                args = tool_arguments(call["arguments"])
-                                assembled.append(ToolCall(call["name"], args, call["id"]))
-                            yield ProviderEvent(
-                                "completed",
-                                ModelResponse(text, tuple(assembled), usage, finish).to_dict(),
+            async with self._stream("/chat/completions", body, context) as response:
+                async for raw in sse_data(response):
+                    if raw == "[DONE]":
+                        if finish is None:
+                            raise AgentLoomError(
+                                "MODEL_PROTOCOL_ERROR",
+                                "Completion terminator preceded finish frame",
                             )
-                            return
-                        frame = frame_json(raw)
-                        if "error" in frame:
-                            raise provider_error(frame, AgentLoomError("MODEL_PROVIDER_ERROR"))
-                        if frame.get("id"):
-                            if identity is not None and identity != frame["id"]:
-                                raise AgentLoomError(
-                                    "MODEL_PROTOCOL_ERROR", "Stream identity changed"
-                                )
-                            identity = frame["id"]
-                        if "usage" in frame:
-                            statistics = normalize_usage(
-                                frame["usage"], "prompt_tokens", "completion_tokens"
+                        if finish not in {"stop", "tool_calls"}:
+                            raise AgentLoomError(
+                                "MODEL_RESPONSE_INCOMPLETE",
+                                "Completion ended without a complete answer",
                             )
-                            if statistics is not None:
-                                usage = statistics
-                        for choice in frame.get("choices", []):
-                            if choice.get("index", 0) != 0:
+                        assembled = []
+                        for index in sorted(calls):
+                            call = calls[index]
+                            if not call["name"] or not call["id"]:
                                 raise AgentLoomError(
-                                    "MODEL_PROTOCOL_ERROR", "Only one completion is supported"
+                                    "MODEL_PROTOCOL_ERROR", "Incomplete function identity"
                                 )
-                            delta = choice.get("delta", {})
-                            if finish is not None and any(
-                                delta.get(k)
-                                for k in ("content", "tool_calls", "reasoning_content", "refusal")
-                            ):
-                                raise AgentLoomError(
-                                    "MODEL_PROTOCOL_ERROR", "Content after completion"
-                                )
-                            if delta.get("content"):
-                                text += delta["content"]
-                                yield ProviderEvent("text_delta", delta["content"])
-                            if delta.get("refusal"):
-                                text += delta["refusal"]
-                                yield ProviderEvent("text_delta", delta["refusal"])
-                            if delta.get("reasoning_content"):
-                                yield ProviderEvent("reasoning_delta", delta["reasoning_content"])
-                            for item in delta.get("tool_calls", []):
-                                index = item.get("index")
-                                if type(index) is not int or index < 0:
+                            args = tool_arguments(call["arguments"])
+                            assembled.append(ToolCall(call["name"], args, call["id"]))
+                        yield ProviderEvent(
+                            "completed",
+                            ModelResponse(text, tuple(assembled), usage, finish).to_dict(),
+                        )
+                        return
+                    frame = frame_json(raw)
+                    if "error" in frame:
+                        raise provider_error(frame, AgentLoomError("MODEL_PROVIDER_ERROR"))
+                    if frame.get("id"):
+                        if identity is not None and identity != frame["id"]:
+                            raise AgentLoomError("MODEL_PROTOCOL_ERROR", "Stream identity changed")
+                        identity = frame["id"]
+                    if "usage" in frame:
+                        statistics = normalize_usage(
+                            frame["usage"], "prompt_tokens", "completion_tokens"
+                        )
+                        usage = merge_usage(usage, statistics)
+                    for choice in frame.get("choices", []):
+                        if choice.get("index", 0) != 0:
+                            raise AgentLoomError(
+                                "MODEL_PROTOCOL_ERROR", "Only one completion is supported"
+                            )
+                        delta = choice.get("delta", {})
+                        if finish is not None and any(
+                            delta.get(k)
+                            for k in ("content", "tool_calls", "reasoning_content", "refusal")
+                        ):
+                            raise AgentLoomError("MODEL_PROTOCOL_ERROR", "Content after completion")
+                        if delta.get("content"):
+                            text += delta["content"]
+                            yield ProviderEvent("text_delta", delta["content"])
+                        if delta.get("refusal"):
+                            text += delta["refusal"]
+                            yield ProviderEvent("text_delta", delta["refusal"])
+                        if delta.get("reasoning_content"):
+                            yield ProviderEvent("reasoning_delta", delta["reasoning_content"])
+                        for item in delta.get("tool_calls", []):
+                            index = item.get("index")
+                            if type(index) is not int or index < 0:
+                                raise AgentLoomError("MODEL_PROTOCOL_ERROR")
+                            call = calls.setdefault(index, {"id": "", "name": "", "arguments": ""})
+                            if item.get("id"):
+                                if call["id"] and call["id"] != item["id"]:
                                     raise AgentLoomError("MODEL_PROTOCOL_ERROR")
-                                call = calls.setdefault(
-                                    index, {"id": "", "name": "", "arguments": ""}
-                                )
-                                if item.get("id"):
-                                    if call["id"] and call["id"] != item["id"]:
-                                        raise AgentLoomError("MODEL_PROTOCOL_ERROR")
-                                    call["id"] = item["id"]
-                                fn = item.get("function", {})
-                                for key, kind in (
-                                    ("name", "tool_name_delta"),
-                                    ("arguments", "tool_arguments_delta"),
-                                ):
-                                    if fn.get(key):
-                                        call[key] += fn[key]
-                                        yield ProviderEvent(
-                                            kind, fn[key], index, call["id"] or None
-                                        )
-                            if choice.get("finish_reason") is not None:
-                                finish = choice["finish_reason"]
+                                call["id"] = item["id"]
+                            fn = item.get("function", {})
+                            for key, kind in (
+                                ("name", "tool_name_delta"),
+                                ("arguments", "tool_arguments_delta"),
+                            ):
+                                if fn.get(key):
+                                    call[key] += fn[key]
+                                    yield ProviderEvent(kind, fn[key], index, call["id"] or None)
+                        if choice.get("finish_reason") is not None:
+                            finish = choice["finish_reason"]
         except httpx.TransportError as exc:
             raise AgentLoomError(
                 "MODEL_CONNECTION_FAILED",
@@ -196,87 +198,80 @@ class OpenAIResponsesAdapter(_OpenAIAdapter):
         }
         identity, call_ids = None, {}
         try:
-            async with self._connection() as client:
-                async with client.stream(
-                    "POST",
-                    self.base_url + "/responses",
-                    json=body,
-                    headers=self._headers(),
-                    timeout=None,
-                ) as response:
-                    async for raw in sse_data(response):
-                        frame = frame_json(raw)
-                        kind = frame.get("type")
-                        if kind == "response.created":
-                            identity = frame["response"]["id"]
-                        elif kind in {"response.failed", "response.incomplete", "error"}:
-                            raise provider_error(
-                                frame.get("response", frame),
-                                AgentLoomError(
-                                    "MODEL_RESPONSE_INCOMPLETE"
-                                    if kind == "response.incomplete"
-                                    else "MODEL_PROVIDER_ERROR"
-                                ),
-                            )
-                        elif kind == "response.output_text.delta":
-                            yield ProviderEvent("text_delta", frame.get("delta", ""))
-                        elif kind == "response.function_call_arguments.delta":
-                            yield ProviderEvent(
-                                "tool_arguments_delta",
-                                frame.get("delta", ""),
-                                frame.get("output_index"),
-                                call_ids.get(frame.get("output_index")),
-                            )
-                        elif kind == "response.reasoning_summary_text.delta":
-                            yield ProviderEvent("reasoning_delta", frame.get("delta", ""))
-                        elif (
-                            kind == "response.output_item.added"
-                            and frame.get("item", {}).get("type") == "function_call"
+            async with self._stream("/responses", body, context) as response:
+                async for raw in sse_data(response):
+                    frame = frame_json(raw)
+                    kind = frame.get("type")
+                    if kind == "response.created":
+                        identity = frame["response"]["id"]
+                    elif kind in {"response.failed", "response.incomplete", "error"}:
+                        raise provider_error(
+                            frame.get("response", frame),
+                            AgentLoomError(
+                                "MODEL_RESPONSE_INCOMPLETE"
+                                if kind == "response.incomplete"
+                                else "MODEL_PROVIDER_ERROR"
+                            ),
+                        )
+                    elif kind == "response.output_text.delta":
+                        yield ProviderEvent("text_delta", frame.get("delta", ""))
+                    elif kind == "response.function_call_arguments.delta":
+                        yield ProviderEvent(
+                            "tool_arguments_delta",
+                            frame.get("delta", ""),
+                            frame.get("output_index"),
+                            call_ids.get(frame.get("output_index")),
+                        )
+                    elif kind == "response.reasoning_summary_text.delta":
+                        yield ProviderEvent("reasoning_delta", frame.get("delta", ""))
+                    elif (
+                        kind == "response.output_item.added"
+                        and frame.get("item", {}).get("type") == "function_call"
+                    ):
+                        index = frame.get("output_index")
+                        call_ids[index] = frame["item"].get("call_id")
+                        yield ProviderEvent(
+                            "tool_name_delta",
+                            frame["item"].get("name", ""),
+                            index,
+                            call_ids[index],
+                        )
+                    elif kind == "response.completed":
+                        result = frame["response"]
+                        if (
+                            result.get("status") != "completed"
+                            or identity is not None
+                            and identity != result.get("id")
                         ):
-                            index = frame.get("output_index")
-                            call_ids[index] = frame["item"].get("call_id")
-                            yield ProviderEvent(
-                                "tool_name_delta",
-                                frame["item"].get("name", ""),
-                                index,
-                                call_ids[index],
-                            )
-                        elif kind == "response.completed":
-                            result = frame["response"]
-                            if (
-                                result.get("status") != "completed"
-                                or identity is not None
-                                and identity != result.get("id")
-                            ):
-                                raise AgentLoomError("MODEL_PROTOCOL_ERROR")
-                            texts, calls = [], []
-                            for item in result.get("output", []):
-                                if item["type"] == "message":
-                                    texts.extend(
-                                        c["text"] if c["type"] == "output_text" else c["refusal"]
-                                        for c in item["content"]
-                                        if c["type"] in {"output_text", "refusal"}
-                                    )
-                                elif item["type"] == "function_call":
-                                    arguments = tool_arguments(item["arguments"])
-                                    calls.append(ToolCall(item["name"], arguments, item["call_id"]))
-                                elif item["type"] != "reasoning":
-                                    raise AgentLoomError("MODEL_OUTPUT_TYPE_UNSUPPORTED")
-                            usage = normalize_usage(result.get("usage"))
-                            yield ProviderEvent(
-                                "completed",
-                                ModelResponse(
-                                    "".join(texts),
-                                    tuple(calls),
-                                    usage,
-                                    "stop",
-                                    {
-                                        "protocol": "openai.responses",
-                                        "output": result.get("output", []),
-                                    },
-                                ).to_dict(),
-                            )
-                            return
+                            raise AgentLoomError("MODEL_PROTOCOL_ERROR")
+                        texts, calls = [], []
+                        for item in result.get("output", []):
+                            if item["type"] == "message":
+                                texts.extend(
+                                    c["text"] if c["type"] == "output_text" else c["refusal"]
+                                    for c in item["content"]
+                                    if c["type"] in {"output_text", "refusal"}
+                                )
+                            elif item["type"] == "function_call":
+                                arguments = tool_arguments(item["arguments"])
+                                calls.append(ToolCall(item["name"], arguments, item["call_id"]))
+                            elif item["type"] != "reasoning":
+                                raise AgentLoomError("MODEL_OUTPUT_TYPE_UNSUPPORTED")
+                        usage = normalize_usage(result.get("usage"))
+                        yield ProviderEvent(
+                            "completed",
+                            ModelResponse(
+                                "".join(texts),
+                                tuple(calls),
+                                usage,
+                                "stop",
+                                {
+                                    "protocol": "openai.responses",
+                                    "output": result.get("output", []),
+                                },
+                            ).to_dict(),
+                        )
+                        return
         except httpx.TransportError as exc:
             raise AgentLoomError(
                 "MODEL_CONNECTION_FAILED",

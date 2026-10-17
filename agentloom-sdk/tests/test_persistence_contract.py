@@ -11,12 +11,38 @@ import pytest
 from agentloom import ModelResponse, RuntimeEngine
 
 
-@pytest.mark.parametrize("cut", ["raw", "hook_result", "hook_apply", "child", "batch", "terminal"])
-def test_process_death_resumes_committed_work_exactly_once(tmp_path, cut, durable_store_factory):
+@pytest.mark.parametrize(
+    "cut,first_assembly,second_assembly",
+    [
+        (cut, "direct", "direct")
+        for cut in [
+            "raw",
+            "tool_permit",
+            "tool_raw",
+            "hook_result",
+            "hook_apply",
+            "child",
+            "batch",
+            "terminal",
+        ]
+    ]
+    + [
+        ("tool_raw", "builder", "direct"),
+        ("hook_apply", "direct", "builder"),
+        ("terminal", "builder", "builder"),
+        ("tool_permit", "properties", "direct"),
+        ("tool_raw", "direct", "properties"),
+        ("hook_apply", "builder", "properties"),
+        ("child", "properties", "properties"),
+    ],
+)
+def test_process_death_resumes_committed_work_exactly_once(
+    tmp_path, cut, first_assembly, second_assembly, durable_store_factory
+):
     env = {**os.environ, "PYTHONPATH": str(Path(__file__).parents[1] / "src")}
     worker = Path(__file__).parent / "support" / "crash_process.py"
     first = subprocess.run(
-        [sys.executable, str(worker), str(tmp_path), cut],
+        [sys.executable, str(worker), str(tmp_path), cut, first_assembly],
         env=env,
         capture_output=True,
         text=True,
@@ -25,7 +51,7 @@ def test_process_death_resumes_committed_work_exactly_once(tmp_path, cut, durabl
     assert first.returncode == 73, first.stderr
     time.sleep(0.45)
     second = subprocess.run(
-        [sys.executable, str(worker), str(tmp_path), "none"],
+        [sys.executable, str(worker), str(tmp_path), "none", second_assembly],
         env=env,
         capture_output=True,
         text=True,

@@ -3,6 +3,7 @@ import threading
 import time
 from contextlib import contextmanager
 
+from ..configuration import json_copy
 from .base import StoreQueries
 
 
@@ -17,7 +18,7 @@ class _MemoryTransaction:
         return copy.deepcopy(self.pending.get(key, self.data.get(key)))
 
     def put(self, kind, key, value):
-        self.pending[(kind, key)] = copy.deepcopy(value)
+        self.pending[(kind, key)] = json_copy(value)
 
     def delete(self, kind, key):
         self.pending[(kind, key)] = None

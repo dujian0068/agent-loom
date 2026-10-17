@@ -6,11 +6,13 @@ import math
 import time
 from uuid import NAMESPACE_URL, uuid5
 
+from ..capabilities.invocation import ToolOutcome
 from ..configuration import digest
 from ..context import CompactionService, estimate, materialize
 from ..errors import AgentLoomError, InfrastructureError, error_record
 from ..types import CallStageEvent
 from .handlers import AttemptContext, BusinessEvent
+from .usage import account_model_usage
 from .validation import validate_action
 
 
@@ -380,7 +382,7 @@ class CallDriver:
                 else:
                     async with asyncio.timeout(policy.tool_timeout_seconds):
                         value = await runner.bus.request(event, ctx)
-                raw = success(value)
+                raw = value.raw_result() if isinstance(value, ToolOutcome) else success(value)
             except asyncio.CancelledError as exc:
                 if getattr(exc, "partial_material", None):
                     partial = {
@@ -394,12 +396,17 @@ class CallDriver:
                         ).to_dict(),
                     }
 
+                if partial or ctx.diagnostics:
+
                     def save_partial(state):
                         current = state["operations"][op_id]["attempts"][-1]
                         if current["attempt_id"] != attempt_id:
                             raise InfrastructureError("ATTEMPT_ID_MISMATCH")
-                        current["partial"] = copy.deepcopy(partial)
-                        state["partial_results"].append(partial)
+                        if partial:
+                            current["partial"] = copy.deepcopy(partial)
+                            state["partial_results"].append(partial)
+                        if ctx.diagnostics:
+                            current["diagnostics"] = copy.deepcopy(ctx.diagnostics)
 
                     runner.commit("attempt-partial:" + attempt_id, save_partial)
                 raise
@@ -416,6 +423,12 @@ class CallDriver:
                 if hasattr(exc, "result_material"):
                     raw["result"] = exc.result_material
                     raw["execution_fact"] = getattr(exc, "execution_fact", "completed")
+                elif hasattr(exc, "execution_fact"):
+                    raw["execution_fact"] = exc.execution_fact
+                if hasattr(exc, "tool_result"):
+                    raw["tool_result"] = exc.tool_result
+                if hasattr(exc, "invalid_tool_result"):
+                    raw["invalid_tool_result"] = exc.invalid_tool_result
                 if getattr(exc, "partial_material", None):
                     partial = {
                         **exc.partial_material,
@@ -423,9 +436,9 @@ class CallDriver:
                         "operation_id": op_id,
                         "error": raw["error"],
                     }
-            self._save_attempt(op_id, raw, partial)
+            self._save_attempt(op_id, raw, partial, diagnostics=ctx.diagnostics)
 
-    def _save_attempt(self, op_id, raw, partial, *, force_final=False):
+    def _save_attempt(self, op_id, raw, partial, *, force_final=False, diagnostics=()):
         runner = self.runner
         op = runner.operation(op_id)
         index = len(op["attempts"])
@@ -448,12 +461,27 @@ class CallDriver:
         def save(s):
             current = s["operations"][op_id]
             attempt = current["attempts"][-1]
+            saved_raw = copy.deepcopy(raw)
+            envelope = saved_raw.pop("tool_result", None)
+            invalid_envelope = saved_raw.pop("invalid_tool_result", None)
+            if invalid_envelope is not None:
+                attempt["invalid_tool_result"] = invalid_envelope["value"]
+            if envelope is not None:
+                # Retain the adapter envelope for audit, outside effective Hook
+                # inputs/model feedback; a patched result must not leak its raw copy.
+                attempt["tool_result"] = envelope
+            if current["event_type"] == "model.generate":
+                saved_raw, attempt["usage_accounted"] = account_model_usage(s, saved_raw)
             attempt.update(
-                status="unknown" if force_final else raw["status"],
-                error=error,
+                status="unknown"
+                if force_final or envelope is not None and envelope["status"] == "unknown"
+                else saved_raw["status"],
+                error=saved_raw["error"],
                 ended_at=time.time(),
-                result=copy.deepcopy(raw),
+                result=copy.deepcopy(saved_raw),
             )
+            if diagnostics:
+                attempt["diagnostics"] = copy.deepcopy(list(diagnostics))
             if partial:
                 attempt["partial"] = copy.deepcopy(partial)
                 s["partial_results"].append(partial)
@@ -466,26 +494,11 @@ class CallDriver:
                 attempt["next_attempt_at"] = next_attempt_at
             else:
                 current.update(
-                    raw=raw, response=copy.deepcopy(raw), phase="after", next_attempt_at=None
+                    raw=saved_raw,
+                    response=copy.deepcopy(saved_raw),
+                    phase="after",
+                    next_attempt_at=None,
                 )
-            if current["event_type"] == "model.generate":
-                usage = (raw["result"] or {}).get("usage")
-                known = bool(
-                    isinstance(usage, dict)
-                    and all(
-                        type(usage.get(k)) is int and usage[k] >= 0
-                        for k in ("input_tokens", "output_tokens")
-                    )
-                )
-                u = s["usage"]
-                if known:
-                    for key in ("input_tokens", "output_tokens"):
-                        u[key] = (u[key] or 0) + usage[key]
-                attempts = u["business_model_attempts"] + u["compaction_model_attempts"]
-                s["token_usage_known_attempts"] = s.get("token_usage_known_attempts", 0) + int(
-                    known
-                )
-                u["token_counts_complete"] = s["token_usage_known_attempts"] == attempts
 
         runner.commit(f"attempt-result:{op_id}:{index}", save)
 

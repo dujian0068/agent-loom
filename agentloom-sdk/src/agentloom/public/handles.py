@@ -3,22 +3,8 @@ import math
 
 from ..errors import RequestError, WaitTimeout
 from ..storage import TERMINAL
-from ..types import FinalOutput, RunEvent, RunResult, RunUsage
-
-
-def result_from(state):
-    return RunResult(
-        state["run_id"],
-        state["session_id"],
-        state["status"],
-        FinalOutput(**state["output"]) if state["output"] else None,
-        state["error"],
-        tuple(state["partial_results"]),
-        RunUsage(**state["usage"]),
-        state["started_at"],
-        state["ended_at"],
-        state["cleanup_state"],
-    )
+from ..types import RunEvent
+from .projections import result_from
 
 
 class RunHandle:

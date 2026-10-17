@@ -1,0 +1,3 @@
+..                                                                       [100%]
+- generated xml file: /tmp/agentloom-rereview-220ebd4/before-empty-usage.junit.xml -
+2 passed, 22 deselected in 0.14s

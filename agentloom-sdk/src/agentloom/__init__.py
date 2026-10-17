@@ -4,24 +4,31 @@ from .capabilities import (
     CapabilityContext,
     CapabilityRegistration,
     CapabilityRegistry,
+    CapabilityRequest,
     CapabilitySpec,
+    ContentBlock,
     DirectorySkillLoader,
     FileToolAdapter,
     FunctionToolAdapter,
     McpToolAdapter,
+    ResolvedCatalog,
     ScriptToolAdapter,
     SkillPackage,
     SkillRegistration,
+    ToolInvocationContext,
+    ToolResult,
     WorkspaceService,
     file_tools,
 )
 from .configuration import (
     AgentDefinition,
+    AgentProperties,
     CapabilityBinding,
     ContextPolicy,
     ExecutionPolicy,
     ModelOptions,
     RetryPolicy,
+    RuntimeProperties,
     VariableSpec,
     WorkspaceBinding,
 )
@@ -42,13 +49,28 @@ from .events import (
     HandlerBinding,
     HandlerRegistry,
     HookBinding,
+    HookCallContext,
+    HookContext,
     HookDecision,
     HookHandler,
+    HookInput,
     HookMatcher,
+    HookReadPort,
+    HookRecordPage,
+    HookRecordView,
     HookSet,
 )
 from .models import OpenAIChatAdapter, OpenAIResponsesAdapter, ScriptedModel
-from .public import AgentNode, PlanAgent, ReactAgent, RunHandle
+from .public import (
+    AgentBuilder,
+    AgentLoom,
+    AgentNode,
+    PlanAgent,
+    PropertiesConfig,
+    ReactAgent,
+    RunHandle,
+    ServiceProperties,
+)
 from .runtime import RuntimeEngine
 from .storage import FileRuntimeStore, MemoryRuntimeStore, RuntimeStore
 from .types import (

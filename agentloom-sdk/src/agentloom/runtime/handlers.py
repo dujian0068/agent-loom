@@ -2,13 +2,15 @@
 
 import asyncio
 import time
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from uuid import NAMESPACE_URL, uuid5
 
-from ..capabilities import CapabilityContext, WorkspaceService
-from ..configuration import json_copy, validate_schema
+from ..capabilities import CapabilityRequest, ToolInvocationContext, WorkspaceService
+from ..capabilities.invocation import invoke_adapter
+from ..configuration import digest, validate_schema
 from ..errors import AgentLoomError
 from ..models.material import PartialMaterial, protocol_error, validate_response, validate_usage
+from ..resources import close_resource
 from ..types import ModelRequest, ProviderEvent
 
 
@@ -26,6 +28,7 @@ class AttemptContext:
     attempt_no: int
     lease_epoch: int
     deadline_at: float
+    diagnostics: list = field(default_factory=list, compare=False)
 
 
 class ModelHandler:
@@ -51,6 +54,7 @@ class ModelHandler:
         policy = runner.program.execution_policy
         started, last_output, received = time.monotonic(), None, False
         partial = PartialMaterial()
+        primary = None
         try:
             while True:
                 runner.check_active()
@@ -118,11 +122,12 @@ class ModelHandler:
         except BaseException as exc:
             # The call driver persists these as audit material, never as a decision.
             exc.partial_material = partial.snapshot()
+            primary = exc
             raise
         finally:
             close = getattr(iterator, "aclose", None)
             if close:
-                await close()
+                await close_resource(close, attempt.diagnostics.append, primary=primary)
 
 
 class ToolHandler:
@@ -150,21 +155,60 @@ class ToolHandler:
             runner.check_active,
             entry.binding.access_scope,
         )
-        context = CapabilityContext(
+        state = runner.state()
+        runner.check_active()
+        # The frozen request permit survives takeover. The current attempt is
+        # admitted under the new lease; requiring the old permit's epoch would
+        # reject a valid crash between permit commit and the first dispatch.
+        if not op["permit"] or attempt.lease_epoch != runner.lease.epoch:
+            raise AgentLoomError("CAPABILITY_PERMIT_REQUIRED", external_outcome="not_started")
+        if op["request_hash"] != digest(event.payload):
+            raise AgentLoomError("CAPABILITY_REQUEST_MISMATCH", external_outcome="not_started")
+        scope = {"run_id": runner.run_id, "task_id": op["task_id"]}
+        context = ToolInvocationContext(
+            content_scope_ref=scope,
+            run_id=runner.run_id,
+            graph_execution_id=state["graph_id"],
+            node_task_id=op["task_id"],
+            invocation_id=state["invocation_id"],
+            session_id=state["session_id"],
+            role_key=op["role_key"],
+            execution_binding_ref={
+                "program_key": runner.program.program_key,
+                "binding_key": op["role_key"],
+                "capability_binding_key": entry.binding.binding_key,
+            },
+            binding_config=entry.binding.config,
+            workspace_scope_ref={"run_id": runner.run_id, "lease_epoch": runner.lease.epoch},
+            operation_id=op["operation_id"],
+            attempt_id=attempt.attempt_id,
+            attempt_no=attempt.attempt_no,
+            lease_epoch=attempt.lease_epoch,
+            deadline_at=min(
+                attempt.deadline_at,
+                time.time() + runner.program.execution_policy.tool_timeout_seconds,
+            ),
+            authorization_ref={
+                **scope,
+                "binding_key": entry.binding.binding_key,
+                "access_scope": entry.binding.access_scope,
+            },
+            cancellation=runner.check_active,
+            workspace=workspace,
+            check_active=runner.check_active,
+            spec=entry.spec,
+            report_diagnostic=attempt.diagnostics.append,
+        )
+        request = CapabilityRequest(
             op["operation_id"],
-            attempt.attempt_id,
-            runner.run_id,
-            op["task_id"],
-            op["role_key"],
-            workspace,
-            entry.binding.config,
-            runner.check_active,
-            entry.spec,
+            entry.spec.resource_key or entry.registration.adapter_key,
+            entry.spec.capability_key,
+            arguments,
         )
-        result = await entry.registration.adapter.invoke(
-            entry.spec.capability_key, arguments, context
-        )
-        value = json_copy(result)
+        outcome = await invoke_adapter(entry.registration.adapter, request, context)
+        value = outcome.value
+        if outcome.envelope["status"] != "succeeded":
+            return outcome
         try:
             validate_schema(
                 value,
@@ -176,11 +220,12 @@ class ToolHandler:
         except AgentLoomError as exc:
             # The invocation completed even though its returned value is invalid.
             exc.result_material = value
+            exc.tool_result = outcome.envelope
             exc.execution_fact = "completed"
             exc.category = "protocol"
             exc.external_outcome = "known"
             raise
-        return value
+        return outcome
 
 
 class SkillHandler:

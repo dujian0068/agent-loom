@@ -1,0 +1,25 @@
+import asyncio
+import json
+import sys
+from pathlib import Path
+import agentloom
+from agentloom import AgentBuilder, AgentDefinition, FileRuntimeStore, ModelResponse, RuntimeEngine, ScriptedModel, WorkspaceBinding
+
+async def main():
+    assert Path(agentloom.__file__).resolve().is_relative_to(Path(sys.argv[2]).resolve())
+    model = ScriptedModel(lambda request: ModelResponse("built:" + request.role_key))
+    definition = AgentDefinition("assistant", "SYSTEM")
+    async with RuntimeEngine(namespace="builder-smoke") as runtime:
+        assert isinstance(runtime.store, FileRuntimeStore)
+        builder = AgentBuilder(model=model, workspace=WorkspaceBinding("work"), runtime_engine=runtime)
+        results = []
+        for mode in ("react", "plan"):
+            agent = builder.build(definition, mode=mode)
+            result = await agent.ainvoke("question" if sys.argv[1] == "first" else None, run_id=mode)
+            assert result.status == "succeeded"
+            assert result.output.value == "built:" + ("react" if mode == "react" else "planner")
+            results.append({"mode": mode, "status": result.status, "run_id": result.run_id})
+        assert len(model.requests) == (2 if sys.argv[1] == "first" else 0)
+        print(json.dumps({"module": agentloom.__file__, "store": type(runtime.store).__name__, "calls": len(model.requests), "results": results}))
+
+asyncio.run(main())

@@ -286,7 +286,8 @@ async def test_stream_timeouts_and_incomplete_material(build, mode, code):
         )
         assert result.error["code"] == code and result.output is None
         if mode == "partial":
-            assert result.partial_results[0]["text"] == "incomplete"
+            assert result.partial_results == ()
+            assert runtime._load(result.run_id)["partial_results"][0]["text"] == "incomplete"
 
 
 async def test_first_output_removes_only_first_output_timer(build):

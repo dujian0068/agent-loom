@@ -1,0 +1,7 @@
+
+> docs:check
+> python3 docs/.vitepress/check-site.py
+
+FAILED: 1 error(s):
+  sdk/implementation.html:21: a[href]='../../agentloom-sdk/qa/evidence/properties-config-20261017/summary.json': missing built file for '/agentloom-sdk/qa/evidence/properties-config-20261017/summary.json'
+Checked 56 HTML pages, 1254 internal links, 443 anchors and 239 asset references; ignored 119 external/special URLs.

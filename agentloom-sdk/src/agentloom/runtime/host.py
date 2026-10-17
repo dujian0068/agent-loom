@@ -3,10 +3,11 @@
 import asyncio
 from dataclasses import asdict
 
-from ..configuration import canonical, digest, json_copy, number, validate_schema
+from ..configuration import RuntimeProperties, canonical, digest, json_copy, validate_schema
 from ..configuration.assembly import recovery_manifest
+from ..configuration.properties import UNSET, resolve_properties
 from ..environment import LocalEnvironment
-from ..errors import ConfigurationError, InfrastructureError, RequestError
+from ..errors import InfrastructureError, RequestError
 from ..public.handles import RunHandle
 from ..public.validation import identity
 from ..storage import TERMINAL, CommitCoordinator, FileRuntimeStore, claim
@@ -31,25 +32,37 @@ class RuntimeEngine:
     def __init__(
         self,
         *,
+        properties=None,
         store=None,
-        namespace="default",
+        namespace=UNSET,
         environment=None,
-        lease_seconds=30,
-        cleanup_retry_seconds=30,
+        lease_seconds=UNSET,
+        cleanup_retry_seconds=UNSET,
         checkpoint_callback=None,
     ):
-        if not isinstance(namespace, str) or not namespace.strip():
-            raise ConfigurationError("STORAGE_NAMESPACE_INVALID")
-        number(lease_seconds, "lease_seconds", 0, 3600, open_low=True)
-        number(cleanup_retry_seconds, "cleanup_retry_seconds", 0, 3600, open_low=True)
-        self._owns_store = store is None
-        self.store = store if store is not None else FileRuntimeStore()
-        self.environment = environment if environment is not None else LocalEnvironment()
-        self.namespace, self.lease_seconds, self.cleanup_retry_seconds = (
-            namespace,
-            lease_seconds,
-            cleanup_retry_seconds,
+        """Create a host from RuntimeProperties or the compatible legacy keywords.
+
+        Mixing properties with namespace/lease_seconds/cleanup_retry_seconds is
+        rejected. Injected store/environment/callback remain separate borrowed
+        services; only an internally created file store is closed by this host.
+        """
+        self._properties = resolve_properties(
+            properties,
+            RuntimeProperties,
+            namespace=namespace,
+            lease_seconds=lease_seconds,
+            cleanup_retry_seconds=cleanup_retry_seconds,
         )
+        self._owns_store = store is None
+        self.store = (
+            store
+            if store is not None
+            else FileRuntimeStore(
+                self.properties.state_directory,
+                lock_timeout_s=self.properties.store_lock_timeout_seconds,
+            )
+        )
+        self.environment = environment if environment is not None else LocalEnvironment()
         self.checkpoint_callback, self.worker_id = checkpoint_callback, new_id()
         self.runs, self.inputs = RunService(self), InputCommands(self)
         self.tasks, self.operations = QueryServices(self, "tasks"), OperationService(self)
@@ -61,6 +74,23 @@ class RuntimeEngine:
         self._status, self._loop = "created", None
         self._workers, self._failures = {}, {}
         self._cleanup = None
+
+    @property
+    def properties(self):
+        """The sole immutable source for host parameters."""
+        return self._properties
+
+    @property
+    def namespace(self):
+        return self.properties.namespace
+
+    @property
+    def lease_seconds(self):
+        return self.properties.lease_seconds
+
+    @property
+    def cleanup_retry_seconds(self):
+        return self.properties.cleanup_retry_seconds
 
     async def __aenter__(self):
         if self._status != "created":
@@ -275,6 +305,9 @@ class RuntimeEngine:
                 # lease expires. It never dispatches while that owner is valid.
                 await asyncio.sleep(min(0.2, self.lease_seconds / 3))
             coordinator = CommitCoordinator(self.store, self.namespace, lease)
+            from .recovery import validate_recovery
+
+            validate_recovery(self._load(run_id))
             runner = ExecutionRunner(self, program, lease)
             await runner.run()
         except asyncio.CancelledError:

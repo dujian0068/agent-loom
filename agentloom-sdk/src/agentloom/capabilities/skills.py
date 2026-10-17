@@ -10,7 +10,7 @@ import yaml
 
 from ..configuration import digest, freeze
 from ..errors import AgentLoomError, ConfigurationError
-from .skill_profile import validate_metadata
+from .skill_profile import validate_body, validate_metadata
 
 
 def parse_arguments(raw_arguments=None, arguments=None):
@@ -64,8 +64,7 @@ class SkillPackage:
                 raise ConfigurationError("SKILL_METADATA_INVALID")
             metadata = yaml.safe_load(match[1])
             validate_metadata(metadata)
-            if re.search(r"!`|\$\{(?:CLAUDE|CODEX)", text):
-                raise ConfigurationError("SKILL_PROFILE_UNSUPPORTED")
+            validate_body(text)
             manifest = {}
             for path in sorted(root.rglob("*")):
                 if path.is_symlink():
@@ -119,6 +118,8 @@ class DirectorySkillLoader:
             text = data.decode("utf-8")
         except UnicodeDecodeError:
             text = None
+        if path == "SKILL.md":
+            validate_body(text)
         return {
             "text": text,
             "resource_key": package.package_key,

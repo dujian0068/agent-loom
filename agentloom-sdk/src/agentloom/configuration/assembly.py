@@ -17,7 +17,10 @@ def recovery_manifest(program):
             "hooks": [asdict(binding) for binding in program.hooks.bindings],
             "capabilities": {
                 role: {
-                    "tools": {name: asdict(entry.spec) for name, entry in catalog.tools.items()},
+                    "tools": {
+                        name: capability_manifest(entry.spec)
+                        for name, entry in catalog.tools.items()
+                    },
                     "skills": {
                         name: {
                             "package_key": entry.registration.package.package_key,
@@ -33,3 +36,12 @@ def recovery_manifest(program):
             "workspace_root": str(program.workspace.root),
         }
     )
+
+
+def capability_manifest(spec):
+    """Keep original value-adapter checkpoints readable; fingerprint new explicit fields."""
+    result = asdict(spec)
+    for key in ("resource_key", "model_name", "handler_ref", "credential_binding_ref"):
+        if result[key] is None:
+            del result[key]
+    return result

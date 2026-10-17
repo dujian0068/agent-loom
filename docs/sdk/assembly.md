@@ -7,6 +7,8 @@
 | 层次 | 对象 | 谁创建 | 可以跨 ExecutionRecord 复用吗 | 是否进入检查点 |
 | --- | --- | --- | --- | --- |
 | 配置 | AgentDefinition、ExecutionPolicy、ContextPolicy、ModelOptions、WorkspaceBinding、HookBinding | 调用者 | 可以，构造后不可变 | 保存执行所需的值或引用；不保存平台发布关系 |
+| 参数入口 | PropertiesConfig：RuntimeProperties、AgentProperties、ServiceProperties | 调用者在启动时注入 | 固定配置可复用；服务引用遵守并发和所有权合同 | 只持久化原有恢复合同中的固定值，不序列化整个参数入口 |
+| 装配入口 | AgentBuilder | 调用者注入共享依赖 | 可以，每次 build 创建新 Agent | 不保存 Builder；Agent 使用与直接构造相同的恢复清单 |
 | Agent 对象 | ReactAgent、PlanAgent | SDK 构造；图中按绑定创建 | 活动实例不跨任务复用，固定配置与依赖可以复用 | 保存上下文与进度的持久投影，不序列化对象或服务引用 |
 | 工作流程序 | Workflow | SDK 编译 | 编译结构可以复用，节点执行实例按任务创建 | 保存绑定 key 与各次执行现场，不序列化编译对象 |
 | 宿主服务 | RuntimeEngine、ModelAdapter、CapabilityRegistry、存储和环境适配器 | 调用者装配 | 可以，必须遵守并发契约 | 连接、函数、锁、协程不保存 |
@@ -136,7 +138,7 @@ class PlanAgent(Agent):
     ) -> None: ...
 ```
 
-所有依赖通过关键字传入。暂不叠加 Builder、全局默认 RuntimeEngine、自动平台查询三套装配入口；便利工厂可以后续包装相同构造合同。空能力和空 Hook 分别使用 `CapabilityRegistry(tools=(), skills=())`、`HookSet(bindings=(), handlers={})`。RuntimeEngine 省略 store 时创建 `FileRuntimeStore(".agentloom/state")`，也可注入自定义文件目录；纯内存运行需要显式注入内存适配器。
+所有依赖通过关键字传入。`AgentBuilder` 在相同构造合同上提供可复用的便利装配，见[从定义构建](#23-从定义构建-agentbuilder)。`AgentLoom(PropertiesConfig(...))` 提供统一参数和宿主生命周期入口，见[统一参数配置](#24-统一参数配置-propertiesconfig)；独立使用 Builder 时仍显式注入运行时。空能力和空 Hook 分别使用 `CapabilityRegistry(tools=(), skills=())`、`HookSet(bindings=(), handlers={})`。RuntimeEngine 省略 store 时创建 `FileRuntimeStore(".agentloom/state")`，也可注入自定义文件目录；纯内存运行需要显式注入内存适配器。
 
 execution_policy／context_policy／model_options 省略时，构造阶段按[默认值](requirements.md)及已提供的模型元信息解析为固定策略；缺必需模型窗口仍须报错，不能猜测。context_policy 是处理规则，运行中的 agent.context 才是私有 AgentContext。executors=None 等同空映射，不创建默认执行器。ReactAgent 没有 executors 参数；执行模式由具体构造类型确定，AgentDefinition 不再声明 mode。
 
@@ -173,6 +175,93 @@ Schema 检查包括本地引用目标的可解析性，并按 Schema 所处的�
 不得在构造中调用模型、MCP initialize／tools/list、运行 Hook、读取历史或领取租约。导入／发现远端工具是调用方显式准备步骤；远端内容未准备好不能用一个占位平台 ID 通过构造。
 
 调用者后来修改原 dict 不影响已构造对象。适配器实例本身不深拷贝；调用者负责其连接有效性与并发安全，SDK 负责每次传入正确 scope。更改行为应重新构造程序，不能热改运行中的定义。
+
+### 2.3 从定义构建 AgentBuilder
+
+`AgentBuilder` 已实现，位于 `agentloom.public.builder`，也可从 `agentloom` 导入。它保存不可变装配配置与借用的依赖，不保存活动 Agent、锁、上下文、会话或 Run。`public.assembly` 负责共享依赖校验，具体 Agent 构造器负责定义、角色能力和 Hook 匹配校验；Builder 不另行维护执行循环或恢复协议。
+
+```python
+builder = AgentBuilder(
+    model=model,
+    workspace=workspace,
+    runtime_engine=runtime,
+    capabilities=registry,
+    hooks=hooks,
+    execution_policy=execution_policy,
+    context_policy=context_policy,
+    model_options=model_options,
+)
+react = builder.build(agent_def)
+plan = builder.build(planner_def, executors={"research": research_def})
+empty_plan = builder.build(planner_def, mode="plan")
+limited = builder.with_options(execution_policy=ExecutionPolicy(loop_max=10))
+another_react = limited.build(agent_def)
+```
+
+Builder 的必需依赖为 `model`、`runtime_engine`；参数可整体使用 `properties=AgentProperties(workspace=...)`，或使用原 `workspace` 及各策略关键字，两个来源不能混传。其余可省略，默认值与直接构造相同。构造／派生阶段校验组合后的模型窗口、请求选项和策略，`build` 阶段完成 Definition、Executor、能力和 Hook 绑定校验。错误保持原稳定错误码；构建失败不改变 Builder 或已有 Agent。
+
+| build 参数 | 创建结果 |
+| --- | --- |
+| `build(definition)`，或 `mode="react"` 且 executors 为 None | 新 ReactAgent |
+| `build(definition, executors=mapping)`，mode 省略 | 新 PlanAgent；空映射仍选择 Plan |
+| `build(definition, mode="plan", executors=None)` | 无 Executor 的新 PlanAgent，无 delegate_task |
+| `mode="react"` 且提供任何 Executor 映射 | `EXECUTORS_UNSUPPORTED` |
+| 未知 mode / 非映射 Executor 表 | `AGENT_MODE_INVALID` / `EXECUTORS_INVALID` |
+
+每次 `build` 都创建独立实例；同配置只共享恢复指纹，不共享运行身份或上下文。构建没有文件、网络或执行副作用，不生成 RuntimeEngine、读取平台配置、自动 discovery 或展开全部目录权限。Executor 表在构造时复制，Planner／Executor 继续按各自 Definition 授权；模型和策略遵循 Plan 的原有继承合同。
+
+`with_options(**overrides)` 创建新 Builder，仅接受构造函数的依赖关键字。未提供的值继承；提供的值整体替换，不合并资源目录、Hook 或策略。可选参数显式 `None` 恢复对应 SDK 默认值，必需依赖传 None 报配置错误，未知关键字报 TypeError。模型、适配器和 RuntimeEngine 不深拷贝、不自动开启／关闭；调用方负责其生命周期及并发安全。
+
+Builder 只是装配入口。同一份定义和依赖通过 Builder 或直接构造所得恢复清单一致；接续使用原配置重新 build，并显式传原 `run_id`。更改配置不会规避原有恢复一致性检查。`AgentDefinition` 不新增 mode、依赖对象或活动输入；输入与变量仍交给 `start/ainvoke/astream`。
+
+### 2.4 统一参数配置 PropertiesConfig
+
+统一入口命名为 **PropertiesConfig**，已实现且从 `agentloom` 导出。`configuration.properties` 提供纯值参数组，`public.properties` 聚合服务引用与参数，`public.application.AgentLoom` 负责启动和关闭；执行仍由 RuntimeEngine 和现有 Agent 图完成。
+
+```python
+properties = PropertiesConfig(
+    runtime=RuntimeProperties(
+        namespace="my-app",
+        state_directory=".agentloom/state",
+        store_lock_timeout_seconds=10,
+        lease_seconds=30,
+        cleanup_retry_seconds=30,
+    ),
+    defaults=AgentProperties(
+        workspace=workspace,
+        execution_policy=execution_policy,
+        context_policy=context_policy,
+        model_options=model_options,
+    ),
+    services=ServiceProperties(
+        model=model, capabilities=registry, hooks=hooks,
+        store=store, environment=environment,
+    ),
+)
+async with AgentLoom(properties) as app:
+    agent = app.build(agent_def)
+    plan = app.build(planner_def, executors={"research": research_def})
+    limited = app.builder.with_options(execution_policy=ExecutionPolicy(loop_max=10))
+    result = await limited.build(agent_def).ainvoke("分析需求")
+```
+
+`runtime` 可省略；defaults／services 必须显式提供，分别要求 WorkspaceBinding 和 ModelAdapter。参数组复用已有 ExecutionPolicy／ContextPolicy／ModelOptions，默认值和校验只有一个来源。配置构造时验证类型、数值、路径及模型窗口／选项组合并冻结；只检查本地元信息，不读取远端目录或执行 Hook。ServiceProperties 的 store／environment 可省略，启动时使用默认文件后端／本地环境；显式注入仍遵守原有所有权合同。checkpoint_callback 可注入同步检查点回调，异步回调在参数校验阶段拒绝。
+
+| 读取范围 | 唯一来源 |
+| --- | --- |
+| 当前实例的全部启动参数 | `app.properties`，无全局注册或单例 |
+| 宿主 namespace、租约、清理重试、默认文件参数 | `app.runtime.properties`，与启动参数的 runtime 是同一对象 |
+| Agent／Planner／Executor 的固定参数 | `agent.properties`；未覆盖时与 defaults 是同一对象 |
+| 当前角色的能力与 Hook | 通过 Builder 装配的绑定目录与 HookSet；注册不自动授权 |
+| 用户输入、变量、身份、消息、截止与租约现场 | 原 AgentInput／Run／Task／Context，独立于启动参数 |
+
+RuntimeEngine 与 Agent 的旧参数属性变为只读转发，不保存独立副本。各模块依赖对应参数组和受限服务，不能用整个启动容器绕过角色授权。恢复清单保持原字段和格式；服务实例与 PropertiesConfig 对象不进入检查点，同配置可在统一入口、Builder、直接构造之间接续。
+
+覆盖规则：`app.build(..., properties=custom)` 整体替换该 Agent 的参数组；`app.builder.with_options(...)` 派生单项覆盖，其余值继承。`properties.with_options(...)` 则整组替换启动参数，组内修改使用 `dataclasses.replace()`。覆盖重新校验并冻结，不影响先前实例；可选策略显式 None 使用 SDK 默认。根参数组与必需依赖不能置空。直接构造同时提供 properties 和旧形式的对应参数时返回 `PARAMETERS_CONFLICT`，不会静默选择优先级。
+
+`AgentLoom(properties)` 构造只保存配置，不创建文件目录或后台任务。进入 async with 创建并开启一个 RuntimeEngine；启动失败关闭本次已创建的宿主资源，保留原异常，附带清理失败类型，可再次调用 aclose 重试清理。退出或 aclose 暂停本机推进而不发用户停止命令，只关闭宿主创建的文件存储；注入的存储、模型、Hook、能力和环境继续归调用方所有。build／builder 在宿主未打开或关闭后返回 `RUNTIME_CLOSED`；一个门面只开启一次，重开需新建门面。查询控制通过 `app.runtime` 的现有服务完成。
+
+默认文件目录与锁等待参数只作用于宿主创建的 FileRuntimeStore；注入的 store 使用自身参数。相对路径在参数构造时固定为绝对路径，不受稍后 chdir 影响。Workflow 不在本入口本轮实现范围。
 
 ## 3. 角色、公开输入和格式的归属
 
@@ -227,6 +316,8 @@ CapabilitySpec.model_name 是资源提供的建议名称，AgentDefinition.capab
 
 Registry 的 `for_role / for_node_binding` 面向**已绑定视图**：Agent 构造时把每份定义的能力选择解析好；组装根执行程序时关联 program_key。role_key 只定位 react／planner／某个 Executor key 对应的节点绑定，不表示另一个配置实体。注册表本体不因开始某个 ExecutionRecord 而原地修改。查询返回只读 ResolvedCatalog，不产生 I/O。
 
+当前 Python 实现通过 `agent.program_key` 与 `agent.capabilities` 暴露这个绑定视图。例如 `agent.capabilities.for_role(agent.program_key, "planner")`。传入构造函数的原注册表保持未绑定，可以继续用于其他 Agent；显式本地装配也可调用 `registry.bind_program(program_key, definitions)` 获得新视图。直接 Agent 的 node binding key 使用 `react`／`planner`／Executor key。未知程序或角色明确拒绝，`resolve` 不接受其他注册表的目录，也不将 Skill 固定入口当作普通工具解析。配置、Schema 和授权范围深度不可变。
+
 ## 5. HookSet 与 HookBinding
 
 这里只冻结已设计的 **Operation 请求／响应挂点**。ExecutionRecord／节点生命周期 Hook 需要另一种输入和控制合同，尚未开放；不能拿 operation_id=null 冒充调用型 Hook。
@@ -270,6 +361,8 @@ class HookReadPort(Protocol):
 read_payload 读取固定 HookInput 的有效 payload；read_context 只接受 input.context_refs 中的精确版本，limit 为 1..256。返回 `HookRecordPage{records:tuple[HookRecordView,...],next_seq:int|null}`；记录按 context_seq 升序，`HookRecordView{record_id,context_seq,role,message_kind,effective_payload:JsonValue,visible_fields:tuple[str,...]}` 仅物化获准字段。next_seq 是下页 after_seq，无更多记录则 null。
 
 读取过程复查授权及来源可用性，不能切到最新上下文或读取其他 Executor。返回值不可原地修改；变更只能通过 HookDecision 提案提交。端口随本次 Hook 结束而失效，不保存到检查点。脚本 Hook 通过受限适配器获得同样的输入和读取视图，不获得宿主 ContentStore 连接。
+
+当前 Python 的 `HookInput`、`HookContext`、`HookRecordView`、`HookRecordPage` 均为公开不可变类型；记录和分页同时支持属性及键读取。`read_context` 按持久 `context_seq` 返回有效字段，不返回 raw 或供应商内部续传状态。链中后一项读取前一项已提交的新修订，先前返回的快照保持不变。旧 Python 调用方式 `event.payload / operation_id / role_key / purpose`、`reader.ref / messages()` 保留为同一固定视图的兼容访问；新 Hook 应使用 `HookInput` 的引用、`context.metadata` 与异步读取端口。单机实现暂以 inline PayloadRef 交付 Hook 输入；独立 BlobStore 和脚本 Hook 仍见实现记录中的缺口。
 
 `capability_binding_keys` 适用于 capability.invoke、skill.read、skill.resource.read，使用 SDK 根据当前授权目录解析并冻结的资源绑定；不适用于一次列出多个入口的 skill.list。role_keys 匹配 react／planner／Executor key 这些固定装配位置，值来自 NodeBinding，不从 AgentDefinition.name 推导。没有 Agent 的纯能力节点不适用此字段。不适用字段、未知事件／阶段或未注册挂点在构造时明确报错。某次调用没有 matcher 所要求的元数据则不匹配，不以空值通配。
 

@@ -9,10 +9,12 @@ import rfc8785
 
 from ..errors import ConfigurationError
 
+MAX_JSON_INTEGER = 2**53 - 1
+
 
 def json_copy(value):
     def check(v):
-        if isinstance(v, int) and abs(v) > 9007199254740991:
+        if isinstance(v, int) and abs(v) > MAX_JSON_INTEGER:
             raise ConfigurationError(
                 "INVALID_CANONICAL_JSON", "Integer exceeds the interoperable RFC 8785 range"
             )
@@ -32,7 +34,8 @@ def json_copy(value):
                 check(item)
             return
         if isinstance(v, Mapping) and all(isinstance(k, str) for k in v):
-            for item in v.values():
+            for key, item in v.items():
+                check(key)
                 check(item)
             return
         raise ConfigurationError("INVALID_JSON", "Only finite JSON values are accepted")

@@ -1,5 +1,6 @@
 """One Skill metadata contract for prepared packages and directory imports."""
 
+import re
 from collections.abc import Mapping
 
 from ..errors import ConfigurationError
@@ -29,3 +30,11 @@ def validate_metadata(metadata):
     for key in ("user-invocable", "disable-model-invocation"):
         if key in metadata and type(metadata[key]) is not bool:
             raise ConfigurationError("SKILL_METADATA_INVALID")
+
+
+def validate_body(text):
+    """Validate source before argument substitution, including prepared packages."""
+    if not isinstance(text, str):
+        raise ConfigurationError("SKILL_CONTENT_INVALID")
+    if re.search(r"!`|\$\{(?:CLAUDE|CODEX)", text):
+        raise ConfigurationError("SKILL_PROFILE_UNSUPPORTED")

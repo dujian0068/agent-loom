@@ -5,7 +5,7 @@ import hashlib
 import pytest
 import yaml
 
-from agentloom import ConfigurationError, SkillPackage
+from agentloom import ConfigurationError, DirectorySkillLoader, SkillPackage
 
 
 @pytest.mark.parametrize(
@@ -41,3 +41,30 @@ def test_supported_prepared_package_is_frozen(tmp_path):
     metadata["allowed-tools"] = "read"
     assert "allowed-tools" not in package.metadata
     assert package.metadata["user-invocable"] is False
+
+
+@pytest.mark.parametrize(
+    "body", ["Dynamic !`echo value`", "Session ${CLAUDE_SESSION_ID}", "${CODEX_ROOT}"]
+)
+def test_prepared_skill_body_is_validated_at_read_boundary(tmp_path, body):
+    metadata = {"name": "test", "description": "test"}
+    text = "---\n" + yaml.safe_dump(metadata) + "---\n" + body
+    (tmp_path / "SKILL.md").write_text(text)
+    package = SkillPackage(
+        tmp_path, metadata, {"SKILL.md": hashlib.sha256(text.encode()).hexdigest()}, "test"
+    )
+    with pytest.raises(ConfigurationError, match="SKILL_PROFILE_UNSUPPORTED"):
+        SkillPackage.from_directory(tmp_path)
+    with pytest.raises(ConfigurationError, match="SKILL_PROFILE_UNSUPPORTED"):
+        DirectorySkillLoader().read_entry(package)
+    with pytest.raises(ConfigurationError, match="SKILL_PROFILE_UNSUPPORTED"):
+        DirectorySkillLoader().read_resource(package, "SKILL.md")
+
+
+def test_argument_values_are_literal_after_source_validation(tmp_path):
+    text = "---\nname: test\ndescription: test\n---\n$ARGUMENTS"
+    (tmp_path / "SKILL.md").write_text(text)
+    package = SkillPackage.from_directory(tmp_path)
+    arguments = "!`echo ignored` ${CLAUDE_SESSION_ID} $ARGUMENTS"
+    rendered = DirectorySkillLoader().read_entry(package, raw_arguments=arguments)
+    assert rendered["text"].endswith(arguments)

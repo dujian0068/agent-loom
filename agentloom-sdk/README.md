@@ -20,22 +20,24 @@ python -m pip install -e './agentloom-sdk[test,mcp]'
 import asyncio
 import os
 from agentloom import (
-    AgentDefinition, OpenAIResponsesAdapter, ReactAgent,
-    RuntimeEngine, WorkspaceBinding,
+    AgentDefinition, AgentLoom, AgentProperties, OpenAIResponsesAdapter,
+    PropertiesConfig, RuntimeProperties, ServiceProperties, WorkspaceBinding,
 )
 
 async def main():
-    async with RuntimeEngine(namespace="my-app") as runtime:
-        agent = ReactAgent(
-            definition=AgentDefinition("assistant", "准确回答用户的问题。"),
+    properties = PropertiesConfig(
+        runtime=RuntimeProperties(namespace="my-app"),
+        defaults=AgentProperties(workspace=WorkspaceBinding(".agentloom/work")),
+        services=ServiceProperties(
             model=OpenAIResponsesAdapter(
                 model=os.environ["AGENTLOOM_MODEL"],
                 api_key=os.environ["OPENAI_API_KEY"],
                 context_window_tokens=int(os.environ["AGENTLOOM_CONTEXT_WINDOW"]),
             ),
-            workspace=WorkspaceBinding(".agentloom/work"),
-            runtime_engine=runtime,
-        )
+        ),
+    )
+    async with AgentLoom(properties) as app:
+        agent = app.build(AgentDefinition("assistant", "准确回答用户的问题。"))
         handle = await agent.start("说明你的任务", session_id="conversation-1")
         print(handle.run_id)  # 保存此 ID；重启后以原配置 start(run_id=...) 接续
         result = await handle.wait()
@@ -46,9 +48,81 @@ asyncio.run(main())
 
 `ScriptedModel` 可用于无凭据的确定性开发；它与真实适配器走相同的运行、Hook 和持久化路径。没有调用方提供的凭据时，测试不会发起付费模型请求。
 
+## 统一参数配置
+
+启动参数统一由 `PropertiesConfig` 注入，并按职责分为三组：
+
+| 分组 | 类型与内容 |
+| --- | --- |
+| `runtime` | `RuntimeProperties`：namespace、默认文件状态目录、文件锁等待、租约、清理重试 |
+| `defaults` | `AgentProperties`：WorkspaceBinding、ExecutionPolicy、ContextPolicy、ModelOptions |
+| `services` | `ServiceProperties`：模型、能力目录、Hook、显式存储、环境、检查点回调 |
+
+`defaults` 和 `services` 必须提供，工作区与模型各有唯一归属；`runtime` 可省略，保持默认文件存储。所有配置在构造时校验并冻结；相对路径按构造时的工作目录固定。模型选项与窗口预算也在启动前校验。`AgentLoom(properties)` 构造没有文件／网络副作用，进入 `async with` 才创建并开启 Runtime，之后用 `app.build(agent_def)` 构建 Agent，用 `app.runtime.runs/inputs/...` 查询和控制。
+
+`runtime.state_directory` 默认 `.agentloom/state`，`store_lock_timeout_seconds` 默认 10；这两项只用于宿主创建的 FileRuntimeStore。显式传 `services.store` 时使用该存储自身配置，并由调用方负责关闭。模型、Hook、能力适配器与环境也是借用的实例，不复制或自动关闭。退出 AgentLoom 只暂停本机推进并保留恢复现场；不会发送用户停止命令。每个 AgentLoom 实例只开启一次，重启使用同参数的新实例。
+
+每个 Runtime／Agent 都读取自己的只读参数组，不依赖全局配置。Agent 的显式覆盖优先于启动默认值，并在构造时冻结：
+
+```python
+from dataclasses import replace
+from agentloom import ExecutionPolicy
+
+# app 处于 async with 中；只替换这个 Agent 的运行策略。
+limited = app.builder.with_options(execution_policy=ExecutionPolicy(loop_max=10))
+agent = limited.build(agent_def)
+
+# 也可以传入完整的参数组；未改字段沿用原对象。
+custom = replace(properties.defaults, execution_policy=ExecutionPolicy(loop_max=20))
+another = app.build(agent_def, properties=custom)
+
+# 派生另一份启动参数，不修改已启动的宿主。
+other_properties = properties.with_options(
+    runtime=replace(properties.runtime, namespace="another-app"),
+)
+```
+
+`PropertiesConfig.with_options()` 整组替换 runtime／defaults／services；使用 `dataclasses.replace()` 修改组内字段。Builder 的 `with_options()` 支持逐项覆盖，参数组和旧形式的单项参数不能混传，冲突返回 `PARAMETERS_CONFLICT`。配置不包含 `run_id`、用户输入、消息、租约现场或活动上下文；检查点继续只保存原恢复合同要求的固定值，不序列化服务对象。
+
+## 从已有定义构建
+
+已有 `AgentDefinition` 时，统一入口直接使用 `app.build(agent_def)`。需要自行管理 Runtime 时，仍可使用 `AgentBuilder`；支持 `properties=AgentProperties(...)`，也保留原关键字构造方式。`model`、`runtime`、`registry` 是调用方已准备的依赖；执行时 RuntimeEngine 需要处于打开状态。
+
+```python
+from agentloom import AgentBuilder, ExecutionPolicy, WorkspaceBinding
+
+builder = AgentBuilder(
+    model=model,
+    workspace=WorkspaceBinding(".agentloom/work"),
+    runtime_engine=runtime,
+    capabilities=registry,  # 无工具/Skill 时可省略
+)
+agent = builder.build(agent_def)
+result = await agent.ainvoke("分析需求")
+
+# 每次 build 都是新实例，可继续同一会话的新一轮。
+next_agent = builder.build(agent_def)
+next_result = await next_agent.ainvoke("补充验收条件", session_id=result.session_id)
+
+# 传入 Executor 定义表，构建 PlanAgent。
+plan = builder.build(planner_def, executors={"review": reviewer_def})
+
+# 派生独立配置，不修改 builder 或已构建的 Agent。
+limited = builder.with_options(execution_policy=ExecutionPolicy(loop_max=10))
+limited_agent = limited.build(agent_def)
+```
+
+模式规则：省略 `mode` 和 `executors` 创建 ReAct；提供 `executors` 映射（包括 `{}`）创建 Plan。也可以显式 `mode="plan"` 创建无 Executor 的 Plan；`mode="react"` 与任何 Executor 表组合都会报错。Definition 继续只描述行为，不包含模型连接或运行状态。
+
+`with_options()` 接收与 Builder 构造函数相同的依赖关键字，未提供的值继承，提供的值整体替换。可选参数显式传 `None` 恢复 SDK 默认值，例如 `hooks=None` 清空 Hook、`capabilities=None` 清空资源目录；不会把新旧权限合并。必需的模型、工作区和运行时不能清空。
+
+Builder 和直接构造共用本地校验、角色授权及恢复清单。构建不会创建 Run、调用远端发现或自动打开 Runtime；共享适配器和宿主仍由调用方管理。重启后用原配置重新 build，再 `await agent.start(run_id=...)` 即可接续原执行，原构造方式与 Builder 可以互相接续。
+
 ## 配置与调用
 
 构造 Agent 只做本地校验，不调用模型、MCP、Hook 或创建工作目录。配置冻结后不可重新赋值。一个活动 Agent 对象只绑定一个 `run_id`；同一会话的新问题需要用相同配置构造新对象。
+
+旧的 `agent.workspace/execution_policy/context_policy/model_options` 和 `runtime.namespace/lease_seconds/cleanup_retry_seconds` 继续可读，实际均转发到相应 `.properties` 参数组，没有另一套可变副本。`RuntimeEngine(properties=RuntimeProperties(...))` 与原 namespace／租约／清理关键字择一使用；ReactAgent／PlanAgent／AgentBuilder 的 AgentProperties 与原工作区／策略关键字也择一使用。
 
 本机取得执行权并激活角色后，`agent.context` 提供所属根角色的只读现场：`messages`、`revision`、`progress` 和 `snapshot()`。PlanAgent 对应 Planner，Executor 的私有上下文不合并到其中；实际执行循环由各 ReactAgent 持有，角色图引擎只负责创建和激活任务实例。只附着其他宿主或已终态执行时不创建活动上下文，使用 RunHandle 查询。
 

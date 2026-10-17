@@ -224,11 +224,12 @@ async def test_partial_size_limit_includes_nontext_material(runtime_store, build
         assert "x" * 30 not in json.dumps(partial)
 
 
-async def test_chat_null_usage_frame_does_not_erase_known_counts(runtime_store, build):
+@pytest.mark.parametrize("empty", [None, {}, {"prompt_tokens": None, "completion_tokens": None}])
+async def test_chat_empty_usage_frame_does_not_erase_known_counts(runtime_store, build, empty):
     frames = [
         chat({"content": "done"}),
         {"choices": [], "usage": {"prompt_tokens": 3, "completion_tokens": 2}},
-        {**chat(finish="stop"), "usage": None},
+        {**chat(finish="stop"), "usage": empty},
         "[DONE]",
     ]
     async with httpx.AsyncClient(
@@ -241,6 +242,66 @@ async def test_chat_null_usage_frame_does_not_erase_known_counts(runtime_store, 
             result = await build(runtime, None, model=model).ainvoke("question")
             assert result.status == "succeeded" and result.usage.token_counts_complete
             assert (result.usage.input_tokens, result.usage.output_tokens) == (3, 2)
+
+
+async def test_chat_partial_usage_frames_merge_cumulative_fields(runtime_store, build):
+    frames = [
+        chat({"content": "done"}),
+        {"choices": [], "usage": {"prompt_tokens": 3}},
+        {"choices": [], "usage": {"prompt_tokens": None, "completion_tokens": 2}},
+        chat(finish="stop"),
+        "[DONE]",
+    ]
+    async with httpx.AsyncClient(
+        transport=httpx.MockTransport(lambda request: sse(frames))
+    ) as client:
+        async with RuntimeEngine(store=runtime_store) as runtime:
+            model = OpenAIChatAdapter(
+                model="test", api_key="test", context_window_tokens=32768, client=client
+            )
+            result = await build(runtime, None, model=model).ainvoke("question")
+            assert result.status == "succeeded" and result.usage.token_counts_complete
+            assert (result.usage.input_tokens, result.usage.output_tokens) == (3, 2)
+
+
+@pytest.mark.parametrize(
+    "event,expected",
+    [
+        ({"type": "error", "code": "context_length_exceeded"}, "MODEL_CONTEXT_LENGTH_EXCEEDED"),
+        (
+            {"type": "response.failed", "response": {"error": {"code": "context_length_exceeded"}}},
+            "MODEL_CONTEXT_LENGTH_EXCEEDED",
+        ),
+        (
+            {"type": "error", "code": "unrelated", "message": "context_length_exceeded"},
+            "MODEL_PROVIDER_ERROR",
+        ),
+    ],
+)
+async def test_responses_error_shapes_preserve_explicit_provider_code(
+    runtime_store, build, event, expected
+):
+    calls = []
+
+    def server(request):
+        calls.append(request)
+        return sse([event])
+
+    async with httpx.AsyncClient(transport=httpx.MockTransport(server)) as client:
+        async with RuntimeEngine(store=runtime_store) as runtime:
+            model = OpenAIResponsesAdapter(
+                model="test", api_key="test", context_window_tokens=32768, client=client
+            )
+            result = await build(
+                runtime,
+                None,
+                model=model,
+                execution_policy=ExecutionPolicy(
+                    retry=RetryPolicy(enabled=True, max_attempts=2, delay_seconds=0),
+                ),
+            ).ainvoke("question")
+            assert result.status == "failed" and result.error["code"] == expected
+            assert len(calls) == 1
 
 
 @pytest.mark.parametrize("value", [{"receipt": "side-effect"}, None, {"receipt": "凭证🙂"}])

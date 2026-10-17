@@ -1,0 +1,3 @@
+............                                                             [100%]
+- generated xml file: /Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/evidence/api-contract-fixes-20261017/review.junit.xml -
+12 passed, 1 deselected in 0.55s

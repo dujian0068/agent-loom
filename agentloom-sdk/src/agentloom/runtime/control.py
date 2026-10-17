@@ -1,12 +1,17 @@
 """Root control is independent of models, user hooks and graph scheduling."""
 
+import copy
 import time
 
+from ..context.history_facts import execution_fact
 from ..errors import AgentLoomError
+from ..events.control import settle_saved_hooks
 from ..storage import TERMINAL, CommitCoordinator, claim
 from ..types import new_id
 from .calls import failure
+from .leases import LeaseHeartbeat
 from .maintenance import maintenance_due, maintenance_failed, maintenance_recovered
+from .recovery import validate_recovery
 
 
 def emit(state, event_type, payload=None):
@@ -49,10 +54,19 @@ def request_stop(tx, run_id, error):
 
 
 def finalize_run(runtime, lease, status, *, output=None, error=None):
-    state = runtime._load(lease.run_id)
-    scope = state["workspace"]
-    if scope:
-        runtime.environment.revoke(scope)
+    coordinator = CommitCoordinator(
+        runtime.store, runtime.namespace, lease, runtime.checkpoint_callback
+    )
+    with LeaseHeartbeat(
+        lambda: coordinator.renew(runtime.lease_seconds),
+        runtime.lease_seconds,
+        name="agentloom-revocation-lease",
+    ):
+        state = runtime._load(lease.run_id)
+        validate_recovery(state)
+        scope = state["workspace"]
+        if scope:
+            runtime.environment.revoke(scope)
 
     def finish(s):
         final_status, final_output, final_error = status, output, error
@@ -73,10 +87,38 @@ def finalize_run(runtime, lease, status, *, output=None, error=None):
             if op["ticket"] == "reserved":
                 op["ticket"] = "released"
             if op["status"] == "pending":
+                control_error = final_error or AgentLoomError("RUN_ENDED").to_dict()
+                denied = settle_saved_hooks(s, op, control_error)
+                fact = execution_fact(op)
+                if op["response"] is not None:
+                    op["effective_before_control"] = copy.deepcopy(op["response"])
+                response = failure(
+                    AgentLoomError(
+                        "HOOK_DENIED",
+                        phase="prepare" if denied == "request" else "after",
+                        external_outcome="known" if fact == "completed" else fact,
+                    ).to_dict()
+                    if denied
+                    else {**control_error, "category": "cancelled"},
+                    blocked=bool(denied),
+                )
+                response.update(execution_fact=fact, operation_id=op["operation_id"])
                 op.update(
-                    status="failed",
+                    status=response["status"],
                     phase="completed",
-                    response=failure(final_error or AgentLoomError("RUN_ENDED").to_dict()),
+                    response=response,
+                    next_attempt_at=None,
+                )
+                emit(
+                    s,
+                    "operation.completed",
+                    {
+                        "operation_id": op["operation_id"],
+                        "task_id": op["task_id"],
+                        "role_key": op["role_key"],
+                        "event_type": op["event_type"],
+                        "status": op["status"],
+                    },
                 )
             for attempt in op["attempts"]:
                 if attempt["status"] == "started":
@@ -111,9 +153,7 @@ def finalize_run(runtime, lease, status, *, output=None, error=None):
         )
         s["terminal_seq"] = len(s["events"])
 
-    return CommitCoordinator(
-        runtime.store, runtime.namespace, lease, runtime.checkpoint_callback
-    ).commit("terminal", finish)
+    return coordinator.commit("terminal", finish)
 
 
 def settle_orphaned_stops(runtime):

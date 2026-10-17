@@ -1,0 +1,3 @@
+..                                                                       [100%]
+- generated xml file: /Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/evidence/recovery-fixes-20261017/legacy.junit.xml -
+2 passed, 38 deselected in 0.16s

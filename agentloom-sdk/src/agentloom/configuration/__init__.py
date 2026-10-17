@@ -10,10 +10,13 @@ from .models import (
     WorkspaceBinding,
     number,
 )
+from .properties import AgentProperties, RuntimeProperties
 from .schemas import check_schema, validate_schema
 
 __all__ = [
     "AgentDefinition",
+    "AgentProperties",
+    "RuntimeProperties",
     "CapabilityBinding",
     "ContextPolicy",
     "ExecutionPolicy",

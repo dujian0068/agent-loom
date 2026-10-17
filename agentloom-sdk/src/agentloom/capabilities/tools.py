@@ -3,6 +3,7 @@ from dataclasses import dataclass
 
 from ..environment.limits import MAX_FILE_READ_BYTES
 from ..errors import AgentLoomError
+from .contracts import ValueToolAdapter
 from .registry import CapabilityRegistration, CapabilitySpec
 
 
@@ -17,9 +18,10 @@ class CapabilityContext:
     config: object
     check_active: object
     spec: CapabilitySpec | None = None
+    report_diagnostic: object = None
 
 
-class FunctionToolAdapter:
+class FunctionToolAdapter(ValueToolAdapter):
     """Trusted cooperative functions. CPU/blocking functions should use an isolated adapter."""
 
     def __init__(self, function):
@@ -103,7 +105,7 @@ class WorkspaceService:
         return self._environment.glob(self._scope, pattern, root, self._guard, **kwargs)
 
 
-class FileToolAdapter:
+class FileToolAdapter(ValueToolAdapter):
     async def invoke(self, member, arguments, context):
         return getattr(context.workspace, member)(**arguments)
 
@@ -199,7 +201,7 @@ def file_tools(adapter_key="files"):
     )
 
 
-class ScriptToolAdapter:
+class ScriptToolAdapter(ValueToolAdapter):
     """Delegates to an explicitly supplied isolation/fencing backend, never to a host shell."""
 
     def __init__(self, gateway):

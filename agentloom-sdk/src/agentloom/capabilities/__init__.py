@@ -17,6 +17,12 @@ from .tools import (
 
 __all__ = [
     "CapabilityRegistry",
+    "CapabilityAdapter",
+    "CapabilityRequest",
+    "ContentBlock",
+    "ResolvedCatalog",
+    "ToolInvocationContext",
+    "ToolResult",
     "CapabilityRegistration",
     "CapabilitySpec",
     "SkillRegistration",
@@ -30,4 +36,11 @@ __all__ = [
     "file_tools",
     "McpToolAdapter",
 ]
+from .contracts import (
+    CapabilityAdapter,
+    CapabilityRequest,
+    ContentBlock,
+    ToolInvocationContext,
+    ToolResult,
+)
 from .mcp import McpToolAdapter

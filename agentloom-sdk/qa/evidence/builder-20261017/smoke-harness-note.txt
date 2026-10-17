@@ -1,0 +1,1 @@
+Initial smoke harness stopped before opening RuntimeEngine: its import path assertion compared resolved /private/var/folders against unresolved /var/folders. Verified both identify the installed wheel, normalized both paths, then reran both smoke processes. No SDK source changed.

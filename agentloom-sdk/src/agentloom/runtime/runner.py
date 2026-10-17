@@ -32,6 +32,8 @@ def new_task(
     records.extend(history)
     if include_input:
         records.append(record({"role": "user", "content": text}, protected=True, fixed=True))
+    for sequence, entry in enumerate(records, 1):
+        entry["context_seq"] = sequence
     return {
         "task_id": task_id,
         "role_key": role_key,
@@ -285,7 +287,8 @@ class ExecutionRunner:
             work.cancel()
             monitor.cancel()
             await asyncio.gather(work, monitor, return_exceptions=True)
-            self.runtime.environment.revoke(scope)
+            if self.state()["status"] not in TERMINAL:
+                self.runtime.environment.revoke(scope)
 
     def finalize(self, status, *, output=None, error=None):
         return finalize_run(self.runtime, self.lease, status, output=output, error=error)

@@ -39,6 +39,16 @@ def normalize_usage(value, input_key="input_tokens", output_key="output_tokens")
     return usage
 
 
+def merge_usage(previous, current):
+    """Merge cumulative provider counters without erasing earlier known values."""
+    if current is None:
+        return previous
+    return {
+        key: current.get(key) if current.get(key) is not None else (previous or {}).get(key)
+        for key in ("input_tokens", "output_tokens")
+    }
+
+
 def validate_response(value):
     try:
         response = json_copy(value)

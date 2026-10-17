@@ -1,0 +1,12 @@
+{
+  "modules_verified": 73,
+  "py_typed": true,
+  "new_modules": [
+    "agentloom/capabilities/catalog.py",
+    "agentloom/capabilities/contracts.py",
+    "agentloom/capabilities/invocation.py",
+    "agentloom/events/hook_reads.py",
+    "agentloom/events/hook_views.py",
+    "agentloom/public/projections.py"
+  ]
+}

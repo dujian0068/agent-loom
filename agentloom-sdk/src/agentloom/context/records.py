@@ -18,6 +18,7 @@ def record(message, *, protected=False, fixed=False, kind="message", record_id=N
 
 def append(context, message, **kwargs):
     entry = record(message, **kwargs)
+    entry["context_seq"] = len(context["records"]) + 1
     context["records"].append(entry)
     context["revision"] += 1
     return entry
@@ -111,14 +112,14 @@ def history_records(runs, recent_n, current_inputs=()):
             pending = []
             for message in messages:
                 if message["role"] != "tool" and pending:
-                    repaired.extend(_missing_results(pending, run["status"]))
+                    repaired.extend(_missing_results(pending, run))
                     pending = []
                 repaired.append(message)
                 if message["role"] == "assistant":
                     pending = [c["id"] for c in message.get("tool_calls", [])]
                 elif message["role"] == "tool" and message["tool_call_id"] in pending:
                     pending.remove(message["tool_call_id"])
-            repaired.extend(_missing_results(pending, run["status"]))
+            repaired.extend(_missing_results(pending, run))
             for message in repaired:
                 result.append(record(message, protected=message["role"] == "user", kind="history"))
         else:
@@ -146,16 +147,14 @@ def history_records(runs, recent_n, current_inputs=()):
     return result
 
 
-def _missing_results(ids, status):
-    from ..configuration import canonical
+def _missing_results(ids, run):
+    from .history_facts import interrupted_call
 
     return [
         {
             "role": "tool",
             "tool_call_id": call_id,
-            "content": canonical(
-                {"status": status, "executed": "unknown", "explanation": "No committed tool result"}
-            ),
+            "content": canonical(interrupted_call(run, call_id)),
         }
         for call_id in ids
     ]

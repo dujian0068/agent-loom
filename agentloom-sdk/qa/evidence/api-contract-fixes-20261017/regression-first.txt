@@ -1,0 +1,25 @@
+........................................................................ [ 11%]
+........................................................................ [ 23%]
+........................................................................ [ 34%]
+.................................................FF..................... [ 46%]
+........................................................................ [ 57%]
+........................................................................ [ 69%]
+........................................................................ [ 81%]
+........................................................................ [ 92%]
+.............................................                            [100%]
+=================================== FAILURES ===================================
+___________ test_mcp_retry_deadline_survives_runtime_restart[memory] ___________
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/tests/test_mcp_retry_contract.py:153: in test_mcp_retry_deadline_survives_runtime_restart
+    assert due <= adapter.calls[1] < due + 0.4
+                  ^^^^^^^^^^^^^^^^
+E   IndexError: list index out of range
+____________ test_mcp_retry_deadline_survives_runtime_restart[file] ____________
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/tests/test_mcp_retry_contract.py:153: in test_mcp_retry_deadline_survives_runtime_restart
+    assert due <= adapter.calls[1] < due + 0.4
+                  ^^^^^^^^^^^^^^^^
+E   IndexError: list index out of range
+- generated xml file: /Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/evidence/api-contract-fixes-20261017/regression.junit.xml -
+=========================== short test summary info ============================
+FAILED agentloom-sdk/tests/test_mcp_retry_contract.py::test_mcp_retry_deadline_survives_runtime_restart[memory]
+FAILED agentloom-sdk/tests/test_mcp_retry_contract.py::test_mcp_retry_deadline_survives_runtime_restart[file]
+2 failed, 619 passed in 210.05s (0:03:30)

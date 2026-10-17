@@ -6,6 +6,7 @@ from dataclasses import asdict, dataclass, field
 from typing import Any, Callable, Protocol, runtime_checkable
 from uuid import uuid4
 
+from .capabilities.contracts import CapabilityAdapter as CapabilityAdapter
 from .configuration import freeze, number
 from .errors import ConfigurationError, RequestError
 
@@ -228,8 +229,3 @@ class ModelAdapter(Protocol):
     descriptor: ModelDescriptor
 
     def stream_once(self, request, context): ...
-
-
-@runtime_checkable
-class CapabilityAdapter(Protocol):
-    async def invoke(self, member, arguments, context): ...

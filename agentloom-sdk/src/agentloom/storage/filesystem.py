@@ -3,13 +3,17 @@
 import copy
 import hashlib
 import json
-import math
 import os
 import re
 import time
 from contextlib import ExitStack, contextmanager
 
 from ..configuration import canonical
+from ..configuration.properties import (
+    DEFAULT_STATE_DIRECTORY,
+    DEFAULT_STORE_LOCK_TIMEOUT_SECONDS,
+    store_lock_timeout,
+)
 from ..errors import ConfigurationError, InfrastructureError
 from . import _files
 from .base import StoreQueries
@@ -126,15 +130,10 @@ class FileRuntimeStore(StoreQueries):
     is not supported. RuntimeEngine does not close injected stores.
     """
 
-    def __init__(self, path=".agentloom/state", *, lock_timeout_s=10.0):
-        if (
-            isinstance(lock_timeout_s, bool)
-            or not isinstance(lock_timeout_s, (int, float))
-            or not math.isfinite(lock_timeout_s)
-            or lock_timeout_s < 0
-        ):
-            raise ConfigurationError("STORE_LOCK_TIMEOUT_INVALID")
-        self.lock_timeout_s = float(lock_timeout_s)
+    def __init__(
+        self, path=DEFAULT_STATE_DIRECTORY, *, lock_timeout_s=DEFAULT_STORE_LOCK_TIMEOUT_SECONDS
+    ):
+        self.lock_timeout_s = store_lock_timeout(lock_timeout_s)
         self._closed = False
         try:
             self.path = _files.prepare_root(path)

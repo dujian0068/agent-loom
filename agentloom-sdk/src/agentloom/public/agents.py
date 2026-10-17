@@ -2,22 +2,16 @@
 
 import asyncio
 import re
+from collections.abc import Mapping
 from types import MappingProxyType
 
-from ..capabilities import CapabilityRegistry
-from ..configuration import (
-    AgentDefinition,
-    ContextPolicy,
-    ExecutionPolicy,
-    ModelOptions,
-    WorkspaceBinding,
-)
-from ..context import ContextBudget
+from ..configuration import AgentDefinition
+from ..configuration.properties import UNSET
 from ..errors import ConfigurationError, RequestError
-from ..events import HookSet
+from .assembly import AgentAssembly, AgentParameterView
 
 
-class ReactAgent:
+class ReactAgent(AgentParameterView):
     """Immutable Agent assembly; the first accepted start binds it to one Run."""
 
     mode = "react"
@@ -32,55 +26,38 @@ class ReactAgent:
         *,
         definition,
         model,
-        workspace,
         runtime_engine,
+        properties=None,
+        workspace=UNSET,
         capabilities=None,
         hooks=None,
-        execution_policy=None,
-        context_policy=None,
-        model_options=None,
+        execution_policy=UNSET,
+        context_policy=UNSET,
+        model_options=UNSET,
     ):
         if not isinstance(definition, AgentDefinition):
             raise ConfigurationError("DEFINITION_REQUIRED")
-        if not callable(getattr(model, "stream_once", None)) or not hasattr(model, "descriptor"):
-            raise ConfigurationError("MODEL_ADAPTER_INVALID")
-        if not isinstance(workspace, WorkspaceBinding):
-            raise ConfigurationError("WORKSPACE_BINDING_REQUIRED")
-        if not callable(getattr(runtime_engine, "open_run", None)):
-            raise ConfigurationError("RUNTIME_ENGINE_REQUIRED")
-        for value, expected in (
-            (capabilities, CapabilityRegistry),
-            (hooks, HookSet),
-            (execution_policy, ExecutionPolicy),
-            (context_policy, ContextPolicy),
-            (model_options, ModelOptions),
-        ):
-            if value is not None and not isinstance(value, expected):
-                raise ConfigurationError("INVALID_CONFIGURATION", field_path=expected.__name__)
-        self.definition, self.model, self.workspace, self.runtime_engine = (
-            definition,
-            model,
-            workspace,
-            runtime_engine,
+        assembly = AgentAssembly(
+            model=model,
+            properties=properties,
+            workspace=workspace,
+            runtime_engine=runtime_engine,
+            capabilities=capabilities,
+            hooks=hooks,
+            execution_policy=execution_policy,
+            context_policy=context_policy,
+            model_options=model_options,
         )
-        self.capabilities = capabilities or CapabilityRegistry()
-        original_hooks = hooks or HookSet()
-        self.hooks = HookSet(original_hooks.bindings, original_hooks.handlers)
-        self.execution_policy = execution_policy or ExecutionPolicy()
-        self.context_policy = context_policy or ContextPolicy()
-        self.model_options = model_options or ModelOptions()
-        self.budget = ContextBudget.resolve(
-            model.descriptor, self.context_policy, self.model_options
-        )
-        if hasattr(model, "validate_options"):
-            model.validate_options(self.model_options)
-        elif self.model_options.parameters:
-            raise ConfigurationError("MODEL_FEATURE_UNSUPPORTED")
+        self.definition = definition
+        for name, value in assembly._constructor_kwargs().items():
+            setattr(self, name, value)
+        self.budget = assembly.budget
         self.executors = MappingProxyType({})
         role = "planner" if self.mode == "plan" else "react"
         self.definitions = MappingProxyType({role: definition})
         self.catalogs = MappingProxyType({role: self.capabilities.resolve_definition(definition)})
         if self.mode == "react":
+            self._bind_capabilities()
             self._validate_hook_matchers()
         self._bound_run = None
         self._binding_lock = asyncio.Lock()
@@ -191,16 +168,27 @@ class ReactAgent:
         agent = ReactAgent(
             definition=definition,
             model=self.model,
-            workspace=self.workspace,
+            properties=self.properties,
             runtime_engine=self.runtime_engine,
             capabilities=self.capabilities,
-            execution_policy=self.execution_policy,
-            context_policy=self.context_policy,
-            model_options=self.model_options,
         )
         # Plan matchers are validated against the entire role catalog once.
         object.__setattr__(agent, "hooks", self.hooks)
         return agent
+
+    def _bind_capabilities(self):
+        from ..configuration import digest
+        from ..configuration.assembly import recovery_manifest
+
+        key = digest(recovery_manifest(self))
+        registry = self.capabilities.bind_program(key, self.definitions)
+        object.__setattr__(self, "program_key", key)
+        object.__setattr__(self, "capabilities", registry)
+        object.__setattr__(
+            self,
+            "catalogs",
+            MappingProxyType({role: registry.for_role(key, role) for role in self.definitions}),
+        )
 
     def _validate_hook_matchers(self):
         keys = {
@@ -223,7 +211,9 @@ class PlanAgent(ReactAgent):
 
     def __init__(self, *, executors=None, **kwargs):
         super().__init__(**kwargs)
-        executors = dict(executors or {})
+        if executors is not None and not isinstance(executors, Mapping):
+            raise ConfigurationError("EXECUTORS_INVALID", field_path="executors")
+        executors = dict(executors) if executors is not None else {}
         for key, definition in executors.items():
             if (
                 not isinstance(key, str)
@@ -251,6 +241,7 @@ class PlanAgent(ReactAgent):
                 }
             ),
         )
+        self._bind_capabilities()
         self._validate_hook_matchers()
 
 

@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="0" skipped="0" tests="2" time="0.139" timestamp="2026-10-17T15:48:21.610807+08:00" hostname="bmilk"><testcase classname="qa.test_sdk_rereview" name="test_empty_usage_after_known_usage_preserves_counts[memory-empty-object]" time="0.013"><system-out>--------------------------------- Captured Log ---------------------------------
+
+--------------------------------- Captured Out ---------------------------------
+{"maintenance": {}, "status": "succeeded", "terminal_seq": 4, "usage": {"business_model_attempts": 1, "compaction_model_attempts": 0, "input_tokens": 3, "loops_consumed": 1, "loops_reserved": 0, "output_tokens": 2, "token_counts_complete": true, "tool_attempts": 0}}
+
+</system-out><system-err>--------------------------------- Captured Err ---------------------------------
+
+</system-err></testcase><testcase classname="qa.test_sdk_rereview" name="test_empty_usage_after_known_usage_preserves_counts[file-empty-object]" time="0.051"><system-out>--------------------------------- Captured Log ---------------------------------
+
+--------------------------------- Captured Out ---------------------------------
+{"maintenance": {}, "status": "succeeded", "terminal_seq": 4, "usage": {"business_model_attempts": 1, "compaction_model_attempts": 0, "input_tokens": 3, "loops_consumed": 1, "loops_reserved": 0, "output_tokens": 2, "token_counts_complete": true, "tool_attempts": 0}}
+
+</system-out><system-err>--------------------------------- Captured Err ---------------------------------
+
+</system-err></testcase></testsuite></testsuites>

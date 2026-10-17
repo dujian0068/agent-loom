@@ -4,6 +4,8 @@
 
 ## 1. 调用者看到的最小流程
 
+当前实现提供 `PropertiesConfig` 统一参数配置和 `AgentLoom` 启动入口：`async with AgentLoom(properties) as app` 后，直接 `app.build(agent_def)`，查询与控制通过 `app.runtime`。参数分组、单个 Agent 的覆盖和所有权规则见[统一参数配置](assembly.md#24-统一参数配置-propertiesconfig)。原 RuntimeEngine／AgentBuilder／具体 Agent 构造方式继续兼容，以下仍描述含尚未实现扩展点的目标接口。
+
 ```python
 # store、content_store、environment、model 等均由宿主预先准备。
 # 本例展示目标接口，不是当前可安装包的运行代码。
@@ -86,7 +88,7 @@ classDiagram
     WorkflowNodeAdapter ..> AgentNode : 使用完整Agent调用绑定
 ```
 
-`Agent` 用 Python Protocol 定义统一使用合同；`ReactAgent`、`PlanAgent` 是可构造的具体类。创建通过具体类的构造函数完成，接口不提供 `Agent.create()`，也不负责查找平台配置。平台可以在自己的 AssemblyService 中根据 mode 选择构造函数；未来便利工厂也只能包装同一合同。
+`Agent` 用 Python Protocol 定义统一使用合同；`ReactAgent`、`PlanAgent` 是可构造的具体类。`AgentBuilder` 提供基于已有 AgentDefinition 的便利装配：一次注入共享依赖，之后 `build(definition)` 创建 ReAct，提供 `executors` 映射创建 Plan，也可显式指定 mode。它包装相同构造合同，每次返回独立实例；`with_options()` 派生配置。完整规则见[从定义构建](assembly.md#23-从定义构建-agentbuilder)。统一参数入口 AgentLoom 也调用同一个 Builder。接口不提供 `Agent.create()`，不负责查找平台配置；平台仍可在自己的 AssemblyService 中组织装配。
 
 `Agent` 与 `Node` 是两类职责接口，并非整个 SDK 只有两个协议。Node 的激活方法服务内层调度，外层迁入内核通过 WorkflowNodeAdapter 适配自己的状态／写入合同，不能只因为都叫节点就交换使用。接口实现用虚线空心三角，具体类继承用实线空心三角；组合绑定使用普通引用箭头。
 
@@ -198,6 +200,8 @@ wait 的 timeout_s 只限制本次等待，正数或 null；超时抛 WaitTimeou
 | RunUsage | loops_consumed、loops_reserved、business_model_attempts、compaction_model_attempts、tool_attempts、input_tokens?、output_tokens?、token_counts_complete:bool |
 
 status 仅允许 succeeded／failed／cancelled／timed_out／budget_exhausted。succeeded 必须有 FinalOutput 且 error=null；JSON null 也装在 FinalOutput.value 中，不与“无输出”混淆。其他状态 output=null，必须有 RuntimeErrorRecord，可含已提交且获准展示的 partial_results；未完成内容不能冒充最终答案。
+
+执行账本里的 `PartialModelMaterial` 是内部审计材料，不能直接作为这里的 `partial_results`。当前单机实现尚无发布获准公共部分结果引用的生产者，因此公开该字段为空元组；失败 Attempt 的文本、reasoning、未完成工具参数仍完整保留在原 Attempt 和内部账本中。该规则覆盖 Executor、根角色、压缩调用、成功重试及旧记录重开，不能通过删除审计材料来实现公开过滤。
 
 usage 在根 ExecutionRecord 内按持久身份去重汇总，压缩不计 loops_consumed。没有供应商 token 统计时不能伪造为 0：对应字段为 null，token_counts_complete=false；部分已知时可返回已知合计但仍标 false。预算释放完毕的终态 loops_reserved=0。
 

@@ -467,9 +467,9 @@ async def test_stream_idle_timeout_retries_with_one_stage_chain(tmp_path, store)
         assert result.status == "succeeded" and result.output.value == "done"
         assert result.usage.loops_consumed == 1 and result.usage.business_model_attempts == 2
         assert len(set(attempts)) == 2 and stages == ["request", "response"]
-        assert (
-            len(result.partial_results) == 1 and result.partial_results[0]["text"] == "incomplete"
-        )
+        assert result.partial_results == ()
+        audit = runtime._load(result.run_id)["partial_results"]
+        assert len(audit) == 1 and audit[0]["text"] == "incomplete"
 
 
 @pytest.mark.parametrize("target", ("model", "tool"))

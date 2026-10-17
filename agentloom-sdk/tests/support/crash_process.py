@@ -4,31 +4,62 @@ import asyncio
 import json
 import os
 import sys
+from contextlib import asynccontextmanager
 from pathlib import Path
 
 from agentloom import (
+    AgentBuilder,
     AgentDefinition,
+    AgentLoom,
+    AgentProperties,
     CapabilityBinding,
     CapabilityRegistration,
     CapabilityRegistry,
     CapabilitySpec,
     FileRuntimeStore,
     FunctionHookHandler,
-    FunctionToolAdapter,
     HookBinding,
     HookDecision,
+    HookInput,
     HookSet,
     ModelResponse,
     PlanAgent,
+    PropertiesConfig,
     RuntimeEngine,
+    RuntimeProperties,
     ScriptedModel,
+    ServiceProperties,
     ToolCall,
+    ToolResult,
     WorkspaceBinding,
 )
 
 
 async def main():
     root, cut = Path(sys.argv[1]), sys.argv[2]
+
+    def assemble(**options):
+        if sys.argv[3:] == ["builder"]:
+            definition, executors = options.pop("definition"), options.pop("executors")
+            return AgentBuilder(**options).build(definition, executors=executors)
+        return PlanAgent(**options)
+
+    @asynccontextmanager
+    async def open_agent(store, **options):
+        if sys.argv[3:] == ["properties"]:
+            definition, executors = options.pop("definition"), options.pop("executors")
+            parameters = PropertiesConfig(
+                runtime=RuntimeProperties(state_directory=root / "state", lease_seconds=0.4),
+                defaults=AgentProperties(workspace=options.pop("workspace")),
+                services=ServiceProperties(store=store, checkpoint_callback=checkpoint, **options),
+            )
+            async with AgentLoom(parameters) as app:
+                yield app.runtime, app.build(definition, executors=executors)
+        else:
+            async with RuntimeEngine(
+                store=store, lease_seconds=0.4, checkpoint_callback=checkpoint
+            ) as runtime:
+                yield runtime, assemble(runtime_engine=runtime, **options)
 
     def audit(line):
         with (root / "audit").open("a") as fp:
@@ -40,6 +71,15 @@ async def main():
         match = (
             cut == "raw"
             and command.startswith("attempt-result:")
+            or cut == "tool_permit"
+            and command.startswith("permit:")
+            and state["operations"][command.split(":", 1)[1]]["event_type"] == "capability.invoke"
+            or cut == "tool_raw"
+            and command.startswith("attempt-result:")
+            and any(
+                op["event_type"] == "capability.invoke" and op["raw"] is not None
+                for op in state["operations"].values()
+            )
             or cut == "hook_result"
             and command.startswith("hook-result:")
             or cut == "hook_apply"
@@ -59,12 +99,18 @@ async def main():
             os._exit(73)
 
     async def hook(event, context):
-        audit("hook:" + event.operation_id)
+        assert isinstance(event, HookInput)
+        await context.reader.read_context(event.context_refs[0], limit=1)
+        audit("hook:" + context.metadata.operation_id)
         return HookDecision()
 
     async def marker(arguments, context):
         audit("tool:" + arguments["word"])
         return arguments["word"]
+
+    class MarkerAdapter:
+        async def invoke_once(self, request, context):
+            return ToolResult.from_value(await marker(request.arguments, context))
 
     def model(request):
         audit("model:" + request.role_key)
@@ -90,36 +136,33 @@ async def main():
 
     store = FileRuntimeStore(root / "state")
     try:
-        async with RuntimeEngine(
-            store=store, lease_seconds=0.4, checkpoint_callback=checkpoint
-        ) as runtime:
-            agent = PlanAgent(
-                definition=AgentDefinition("planner", "P"),
-                executors={
-                    "worker": AgentDefinition(
-                        "worker",
-                        "W",
-                        "One task",
-                        capabilities=(CapabilityBinding("mark", "tool", "mark", "marker", "mark"),),
-                    )
-                },
-                model=ScriptedModel(model),
-                workspace=WorkspaceBinding(root / "files"),
-                runtime_engine=runtime,
-                capabilities=CapabilityRegistry(
-                    tools=(
-                        CapabilityRegistration(
-                            "marker",
-                            FunctionToolAdapter(marker),
-                            (CapabilitySpec("mark", "mark", "Write audit", {"type": "object"}),),
-                        ),
-                    )
-                ),
-                hooks=HookSet(
-                    (HookBinding("audit", "model.generate", "request", "audit"),),
-                    {"audit": FunctionHookHandler(hook)},
-                ),
-            )
+        async with open_agent(
+            store,
+            definition=AgentDefinition("planner", "P"),
+            executors={
+                "worker": AgentDefinition(
+                    "worker",
+                    "W",
+                    "One task",
+                    capabilities=(CapabilityBinding("mark", "tool", "mark", "marker", "mark"),),
+                )
+            },
+            model=ScriptedModel(model),
+            workspace=WorkspaceBinding(root / "files"),
+            capabilities=CapabilityRegistry(
+                tools=(
+                    CapabilityRegistration(
+                        "marker",
+                        MarkerAdapter(),
+                        (CapabilitySpec("mark", "mark", "Write audit", {"type": "object"}),),
+                    ),
+                )
+            ),
+            hooks=HookSet(
+                (HookBinding("audit", "model.generate", "request", "audit"),),
+                {"audit": FunctionHookHandler(hook)},
+            ),
+        ) as (runtime, agent):
             handle = await agent.start(
                 None if store.load("default", "run") else "question", run_id="run"
             )

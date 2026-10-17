@@ -4,9 +4,11 @@ from contextlib import asynccontextmanager
 
 from ..configuration import digest, json_copy
 from ..errors import AgentLoomError, ConfigurationError
+from ..resources import managed_resource
+from .contracts import ValueToolAdapter
 
 
-class McpToolAdapter:
+class McpToolAdapter(ValueToolAdapter):
     """One session per attempt prevents shared server state leaking across runs.
 
     The SDK does not auto-discover or authorize tools during Agent construction.
@@ -72,7 +74,9 @@ class McpToolAdapter:
     async def invoke(self, member, arguments, context):
         context.check_active()
         try:
-            async with self._session() as session:
+            async with managed_resource(
+                self._session(), getattr(context, "report_diagnostic", None)
+            ) as session:
                 spec = context.spec
                 if spec is None:
                     raise AgentLoomError("MCP_CATALOG_REQUIRED", external_outcome="not_started")
