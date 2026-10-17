@@ -3,7 +3,8 @@
 from dataclasses import dataclass
 from types import MappingProxyType
 
-from ..configuration import freeze, json_copy
+from ..configuration import json_copy
+from ..configuration.json_documents import freeze_document as freeze
 
 
 @dataclass(frozen=True)

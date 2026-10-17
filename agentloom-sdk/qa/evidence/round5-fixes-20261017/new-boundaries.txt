@@ -1,0 +1,3 @@
+.......................................................................  [100%]
+- generated xml file: /Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/evidence/round5-fixes-20261017/new-boundaries.junit.xml -
+71 passed in 7.95s

@@ -1,0 +1,38 @@
+import os
+import json
+import subprocess
+import sys
+import tempfile
+import time
+from pathlib import Path
+from agentloom import FileRuntimeStore
+from agentloom.runtime.recovery import validate_recovery
+
+repo = Path('/Users/bmilk/code/project/agent-loom')
+worker = repo/'agentloom-sdk/tests/support/completion_process.py'
+root = Path(tempfile.mkdtemp(prefix='agentloom-round5-legacy-', dir='/private/tmp'))
+env = {**os.environ, 'COMPLETION_PROBE_DEPTH': '465', 'PYTHONPATH': '/private/tmp/agentloom-round5-old-src/agentloom-sdk/src'}
+first = subprocess.run([sys.executable, str(worker), str(root), 'native-depth', 'crash'], env=env, capture_output=True, text=True, timeout=20)
+print(json.dumps({'root': str(root), 'old_version_exit': first.returncode, 'old_version_stderr': first.stderr}), flush=True)
+assert first.returncode == 74
+store = FileRuntimeStore(root/'state')
+state = store.load('default', 'fixed')
+op = next(op for op in state['operations'].values() if op['event_type']=='capability.invoke')
+print(json.dumps({'saved_phase': op['phase'], 'saved_raw_status': op['raw']['status'], 'saved_execution_fact': op['raw']['execution_fact']}), flush=True)
+assert op['raw']['status']=='succeeded' and op['raw']['execution_fact']=='completed'
+validate_recovery(state)
+store.close()
+time.sleep(.4)
+env['PYTHONPATH'] = str(repo/'agentloom-sdk/src')
+second = subprocess.run([sys.executable, str(worker), str(root), 'native-depth', 'resume'], env=env, capture_output=True, text=True, timeout=20)
+print(json.dumps({'new_version_exit': second.returncode, 'new_version_stdout': second.stdout, 'new_version_stderr': second.stderr}), flush=True)
+assert second.returncode==0
+assert json.loads(second.stdout)['status']=='succeeded'
+audit=(root/'audit').read_text().splitlines()
+assert audit.count('tool')==1 and audit.count('model')==2
+store=FileRuntimeStore(root/'state')
+state=store.load('default','fixed')
+validate_recovery(state)
+assert state['status']=='succeeded'
+print(json.dumps({'verified': True, 'tool_calls': audit.count('tool'), 'model_calls': audit.count('model')}))
+store.close()

@@ -4,6 +4,7 @@ from dataclasses import dataclass
 
 from ..configuration import json_copy
 from ..errors import AgentLoomError, ConfigurationError, InfrastructureError
+from ..operation_errors import normalize_operation_error
 from .contracts import ToolResult
 
 
@@ -142,36 +143,10 @@ def normalize_result(result):
         if error is not None:
             raise invalid()
     else:
-        if not isinstance(error, dict) or not all(
-            isinstance(error.get(k), str) and error[k]
-            for k in ("code", "message", "category", "phase", "external_outcome")
-        ):
-            raise invalid()
-        if type(error.get("retryable_transport", False)) is not bool:
-            raise invalid()
-        if error.get("retry_after_at") is not None and type(error["retry_after_at"]) not in (
-            int,
-            float,
-        ):
-            raise invalid()
-        if error.get("field_path") is not None and not isinstance(error["field_path"], str):
-            raise invalid()
-        if error["external_outcome"] not in {"not_started", "known", "unknown"}:
-            raise invalid()
-        if error["category"] not in {
-            "validation",
-            "permission",
-            "not_found",
-            "conflict",
-            "transport",
-            "rate_limit",
-            "timeout",
-            "business",
-            "protocol",
-            "cancelled",
-            "unknown",
-        } or error["phase"] not in {"prepare", "connect", "send", "receive", "execute", "after"}:
-            raise invalid()
+        try:
+            envelope["error"] = normalize_operation_error(error)
+        except (ValueError, ConfigurationError) as exc:
+            raise invalid() from exc
         if status == "unknown" and error["external_outcome"] != "unknown":
             raise invalid()
     if envelope["artifacts"]:

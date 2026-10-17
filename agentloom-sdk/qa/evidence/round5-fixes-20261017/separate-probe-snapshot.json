@@ -1,0 +1,5 @@
+{
+  "path": "agentloom-sdk/tests/test_review_whitebox_probe.py",
+  "sha256": "2c59595cd8b8ec79ef482e209e24e6956e6e7e4fdf9319ab591dfdba6a2352d7",
+  "note": "Untracked independent probe; changed externally during the first full run. Preserved, not modified by this fix."
+}

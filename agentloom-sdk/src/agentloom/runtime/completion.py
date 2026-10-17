@@ -1,6 +1,7 @@
 """Attempt outcomes and synchronous completion receipts, independent of teardown."""
 
-from ..errors import AgentLoomError, InfrastructureError, error_record
+from ..configuration import json_copy
+from ..errors import AgentLoomError, ConfigurationError, InfrastructureError, error_record
 
 
 def success(result):
@@ -20,15 +21,39 @@ def failure(error, *, blocked=False):
 
 def failed_result(exc):
     """Preserve established execution facts without accepting malformed JSON."""
+    if isinstance(exc, InfrastructureError) or not isinstance(exc, Exception):
+        raise exc
     raw = failure(error_record(exc))
+    if raw["error"]["code"] == "ADAPTER_ERROR_INVALID":
+        # A rejected DTO cannot establish facts through unchecked sidecars.
+        return raw
+    fact = getattr(exc, "execution_fact", None)
+    if fact in ("completed", "not_started", "unknown"):
+        raw["execution_fact"] = fact
     if hasattr(exc, "result_material"):
-        raw["result"] = exc.result_material
-        raw["execution_fact"] = getattr(exc, "execution_fact", "completed")
-    elif hasattr(exc, "execution_fact"):
-        raw["execution_fact"] = exc.execution_fact
+        try:
+            raw["result"] = json_copy(exc.result_material)
+            if fact is None:
+                raw["execution_fact"] = "completed"
+        except ConfigurationError:
+            # An invalid sidecar cannot poison a checkpoint. Keep an established
+            # completion fact, but expose only a safe protocol failure.
+            raw["error"] = AgentLoomError(
+                "ADAPTER_ERROR_INVALID", category="protocol", external_outcome="unknown"
+            ).to_dict()
     for field in ("tool_result", "invalid_tool_result"):
         if hasattr(exc, field):
-            raw[field] = getattr(exc, field)
+            try:
+                value = getattr(exc, field)
+                raw[field] = (
+                    {"value": json_copy(value["value"])}
+                    if field == "invalid_tool_result"
+                    and isinstance(value, dict)
+                    and set(value) == {"value"}
+                    else json_copy(value)
+                )
+            except ConfigurationError:
+                pass
     return raw
 
 

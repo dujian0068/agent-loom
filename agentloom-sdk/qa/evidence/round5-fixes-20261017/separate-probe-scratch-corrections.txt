@@ -1,0 +1,44 @@
+--- untouched-workspace-probe-snapshot
++++ scratch-only-validation
+@@ -603,6 +603,7 @@
+     """requirements.md §4: compaction fires at the threshold without waiting for the
+     provider to report an overflow, and it inherits the current model."""
+     purposes = []
++    business_calls = 0
+ 
+     class Recording:
+         def __init__(self, inner):
+@@ -618,10 +619,11 @@
+     filler = "x" * 4000
+ 
+     def responder(request):
++        nonlocal business_calls
+         if request.purpose == "compaction":
+             return ModelResponse("SUMMARY")
+-        feedback = [m for m in request.messages if m["role"] == "tool"]
+-        if len(feedback) < 3:
++        business_calls += 1
++        if business_calls <= 3:
+             return ModelResponse(
+                 tool_calls=(ToolCall("echo", {"v": filler}),),
+             )
+@@ -678,7 +680,7 @@
+         run = runtime._load(result.run_id)
+         assert result.status == "succeeded", result.error
+         assert statuses["codes"][0] == ("failed", "CAPABILITY_NOT_FOUND")
+-        assert len(run["operations"]) == 2  # one model call and one real tool
++        assert len(run["operations"]) == 3  # two model calls and one real tool
+         assert [o["event_type"] for o in run["operations"].values()].count("capability.invoke") == 1
+ 
+ 
+@@ -778,7 +780,9 @@
+             executors={"w": _tool_definition("worker", "W", "big", "produces large output")},
+             capabilities=CapabilityRegistry(tools=(tool(produce, "big"),)),
+         )
+-        result = await (await agent.start("q")).wait(timeout_s=15)
++        handle = await agent.start("q")
++        last_run_id.append(handle.run_id)
++        result = await handle.wait(timeout_s=15)
+         run = runtime._load(result.run_id)
+         reads = [o for o in run["operations"].values() if o["event_type"] == "result.read"]
+         assert reads, "the Planner must have attempted result_read"

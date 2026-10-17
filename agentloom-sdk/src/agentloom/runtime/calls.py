@@ -1,13 +1,13 @@
 """Durable logical calls, attempts and explicit before/after stage dispatch."""
 
 import asyncio
-import copy
 import math
 import time
 from uuid import NAMESPACE_URL, uuid5
 
 from ..capabilities.invocation import ToolOutcome
-from ..configuration import digest
+from ..configuration.json_documents import copy_document
+from ..configuration.json_documents import document_digest as digest
 from ..context import CompactionService, estimate, materialize
 from ..errors import AgentLoomError, InfrastructureError, error_record
 from ..types import CallStageEvent
@@ -50,7 +50,7 @@ class CallDriver:
             "purpose_key": key,
             "purpose": purpose,
             "event_type": event_type,
-            "request": copy.deepcopy(request),
+            "request": copy_document(request),
             "request_hash": None,
             "response": None,
             "status": "pending",
@@ -177,7 +177,7 @@ class CallDriver:
                 runner.commit(
                     "delegate-raw:" + op_id,
                     lambda s: s["operations"][op_id].update(
-                        raw=raw, response=copy.deepcopy(raw), phase="after"
+                        raw=raw, response=copy_document(raw), phase="after"
                     ),
                 )
             elif op["event_type"].startswith("skill.") or op["event_type"] == "result.read":
@@ -197,7 +197,7 @@ class CallDriver:
                 runner.commit(
                     "internal-raw:" + op_id,
                     lambda s: s["operations"][op_id].update(
-                        raw=raw, response=copy.deepcopy(raw), phase="after"
+                        raw=raw, response=copy_document(raw), phase="after"
                     ),
                 )
             else:
@@ -405,10 +405,10 @@ class CallDriver:
                         if current["attempt_id"] != attempt_id:
                             raise InfrastructureError("ATTEMPT_ID_MISMATCH")
                         if partial:
-                            current["partial"] = copy.deepcopy(partial)
+                            current["partial"] = copy_document(partial)
                             state["partial_results"].append(partial)
                         if ctx.diagnostics:
-                            current["diagnostics"] = copy.deepcopy(ctx.diagnostics)
+                            current["diagnostics"] = copy_document(ctx.diagnostics)
 
                     runner.commit("attempt-partial:" + attempt_id, save_partial)
                 raise
@@ -455,7 +455,7 @@ class CallDriver:
             attempt = state["operations"][op_id]["attempts"][-1]
             if attempt["attempt_id"] != attempt_id:
                 raise InfrastructureError("ATTEMPT_ID_MISMATCH")
-            attempt["diagnostics"] = copy.deepcopy(diagnostics)
+            attempt["diagnostics"] = copy_document(diagnostics)
 
         self.runner.commit("attempt-diagnostics:" + attempt_id, save)
 
@@ -487,7 +487,7 @@ class CallDriver:
             attempt = current["attempts"][-1]
             if expected_attempt_id is not None and attempt["attempt_id"] != expected_attempt_id:
                 raise InfrastructureError("ATTEMPT_ID_MISMATCH")
-            saved_raw = copy.deepcopy(raw)
+            saved_raw = copy_document(raw)
             envelope = saved_raw.pop("tool_result", None)
             invalid_envelope = saved_raw.pop("invalid_tool_result", None)
             if invalid_envelope is not None:
@@ -504,12 +504,12 @@ class CallDriver:
                 else saved_raw["status"],
                 error=saved_raw["error"],
                 ended_at=time.time(),
-                result=copy.deepcopy(saved_raw),
+                result=copy_document(saved_raw),
             )
             if diagnostics:
-                attempt["diagnostics"] = copy.deepcopy(list(diagnostics))
+                attempt["diagnostics"] = copy_document(list(diagnostics))
             if partial:
-                attempt["partial"] = copy.deepcopy(partial)
+                attempt["partial"] = copy_document(partial)
                 s["partial_results"].append(partial)
             if retrying:
                 next_attempt_at = time.time() + retry.delay_seconds
@@ -521,7 +521,7 @@ class CallDriver:
             else:
                 current.update(
                     raw=saved_raw,
-                    response=copy.deepcopy(saved_raw),
+                    response=copy_document(saved_raw),
                     phase="after",
                     next_attempt_at=None,
                 )

@@ -99,8 +99,10 @@ class ModelRequest:
     parameters: dict = field(default_factory=dict)
 
     def __post_init__(self):
+        from .configuration.json_documents import freeze_document
+
         for name in ("messages", "tools", "parameters"):
-            object.__setattr__(self, name, freeze(getattr(self, name)))
+            object.__setattr__(self, name, freeze_document(getattr(self, name)))
 
 
 @dataclass(frozen=True)
@@ -201,7 +203,9 @@ class AgentContext:
         task = self._reader()
         if task is None or task["context"]["context_id"] != self.context_id:
             raise RequestError("CONTEXT_NOT_FOUND")
-        return freeze(
+        from .configuration.json_documents import freeze_document
+
+        return freeze_document(
             {
                 **task["context"],
                 "task_id": self.task_id,
@@ -211,9 +215,10 @@ class AgentContext:
 
     @property
     def messages(self):
+        from .configuration.json_documents import freeze_document
         from .context.records import materialize
 
-        return freeze([record["message"] for record in materialize(self.snapshot())])
+        return freeze_document([record["message"] for record in materialize(self.snapshot())])
 
     @property
     def revision(self):

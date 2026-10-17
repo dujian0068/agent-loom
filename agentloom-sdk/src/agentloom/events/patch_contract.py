@@ -1,7 +1,8 @@
 """Persist the pure validation inputs needed to settle a saved Hook on stop."""
 
-from ..configuration import ContextPolicy, ModelOptions, digest, json_copy
+from ..configuration import ContextPolicy, ModelOptions, json_copy
 from ..configuration.actions import action_contract
+from ..configuration.json_documents import document_digest as digest
 from ..context.budget import ContextBudget
 from ..errors import AgentLoomError, InfrastructureError, error_record
 from ..types import ModelDescriptor

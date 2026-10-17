@@ -1,0 +1,16 @@
+[
+  {
+    "backend": "memory",
+    "accepted_depth": 512,
+    "rejected_depth": 513,
+    "read_and_list": true,
+    "rejected_write_preserved_previous_value": true
+  },
+  {
+    "backend": "file",
+    "accepted_depth": 512,
+    "rejected_depth": 513,
+    "read_and_list": true,
+    "rejected_write_preserved_previous_value": true
+  }
+]

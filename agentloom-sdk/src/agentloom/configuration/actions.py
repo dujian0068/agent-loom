@@ -3,7 +3,7 @@
 from dataclasses import asdict
 
 from ..errors import AgentLoomError
-from .json_values import json_copy
+from .json_documents import copy_document as json_copy
 from .models import AgentDefinition, VariableSpec
 from .schemas import validate_schema
 

@@ -114,7 +114,11 @@ SDK 内置适配器已提供 `invoke_once`。旧用户适配器的 `invoke(membe
 
 `error=` 接收 AgentLoomError，按 ToolResult 合同验证错误字段及附带材料；合法失败提交后继续抛出原异常。明确的 external_outcome=known 对应 completed，不因 retryable_transport=true 再次执行；unknown／not_started 保留各自事实，仍按既定重试策略处理。非法错误 DTO 在存储前转为 `CAPABILITY_RESULT_INVALID / protocol / completed`，基础设施异常和取消信号继续向上传播。调用方不需要设置私有 execution_fact 属性。
 
-值返回桥接在函数正常返回后统一包装结果；非法 JSON 值产生 `protocol / CAPABILITY_RESULT_INVALID` 并保留 `execution_fact=completed`，不能将 NaN、循环容器等非规范值写入检查点。JSON 校验、复制和冻结中的递归溢出归一为 SDK 错误；同一个子对象出现在不同分支仍是合法值。函数执行期间直接抛出的异常，包括 RecursionError，不因此被标为 completed。
+值返回桥接在函数正常返回后统一包装结果；非法 JSON 值产生 `protocol / CAPABILITY_RESULT_INVALID` 并保留 `execution_fact=completed`，不能将 NaN、循环容器等非规范值写入检查点。同一个子对象出现在不同分支仍是合法值。函数执行期间直接抛出的异常，包括 RecursionError，不因此被标为 completed。
+
+当前实现对边界 JSON 材料规定最多 **128 层容器**：标量为 0，根对象／数组为第 1 层；工具结果按完整 ToolResult 信封计算，因此单个 inline JSON 的信封占 4 层，值本身最多 124 层。四种路径（函数工具、旧 invoke、原生 invoke_once、report_completion）适用同一完整信封上限。超限在首次结果提交前转为上述完成后的协议失败，超限原始信封也不会留入审计。`configuration.json_values` 使用显式栈复制、冻结和规范化；`configuration.json_documents` 为 SDK 的状态／上下文／审计包装保留 512 层文档预算，双存储后端共用，不扩大扩展输入的限额。已接纳结果的后处理和恢复使用文档路径，不再次依赖 Python deepcopy 的递归栈。
+
+直接抛出的 AgentLoomError 与返回／报告的错误共用 `operation_errors.normalize_operation_error` 字段校验。空 code/message、非法枚举、非布尔 retryable_transport、非有限或错误类型的 retry_after_at 等不能写入 OperationError。直接抛错携带非法 DTO 时保存 `ADAPTER_ERROR_INVALID / protocol / unknown`，模型仍可收到正常失败反馈；合法异常保留原重试字段和执行事实。错误字段是否合法与执行是否已完成分别判断，不能因 DTO 校验通过而把执行中异常变成 completed。基础设施异常和取消仍走控制／恢复路径。
 
 SDK 生成的对象 input_schema 默认 additionalProperties=false；MCP schema 保留其声明扩展语义。导入收拢许可本地 `$ref`，拒绝外部网络 `$ref`；运行校验不得顺带出网取 schema。
 

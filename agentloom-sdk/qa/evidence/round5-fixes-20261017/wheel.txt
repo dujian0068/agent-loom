@@ -1,0 +1,62 @@
+{
+  "commands": [
+    [
+      "/Users/bmilk/code/project/agent-loom/.venv/bin/python",
+      "-m",
+      "pip",
+      "wheel",
+      "--no-index",
+      "--no-deps",
+      "--no-build-isolation",
+      "--no-cache-dir",
+      "/Users/bmilk/code/project/agent-loom/agentloom-sdk",
+      "-w",
+      "/private/tmp/agentloom-round5-package-efdic03g/wheels"
+    ],
+    [
+      "/Users/bmilk/code/project/agent-loom/.venv/bin/python",
+      "-m",
+      "pip",
+      "install",
+      "--no-index",
+      "--no-deps",
+      "--no-compile",
+      "--target",
+      "/private/tmp/agentloom-round5-package-efdic03g/install",
+      "/private/tmp/agentloom-round5-package-efdic03g/wheels/agentloom_sdk-0.1.0a1-py3-none-any.whl"
+    ]
+  ],
+  "wheel": "/private/tmp/agentloom-round5-package-efdic03g/wheels/agentloom_sdk-0.1.0a1-py3-none-any.whl",
+  "sha256": "9fd352ccb0fe94797b4557a7b277802b988e98c90d5f3ab9a3b53a9f8a310f6e",
+  "source_modules": 81,
+  "byte_equal_to_source_and_install": true,
+  "import_path": "/private/tmp/agentloom-round5-package-efdic03g/install/agentloom/__init__.py",
+  "process_recovery": [
+    {
+      "kind": "native-depth",
+      "first_exit_code": 74,
+      "result": {
+        "status": "succeeded",
+        "output": "done"
+      },
+      "audit": [
+        "model",
+        "tool",
+        "model"
+      ]
+    },
+    {
+      "kind": "native-depth-invalid",
+      "first_exit_code": 74,
+      "result": {
+        "status": "succeeded",
+        "output": "done"
+      },
+      "audit": [
+        "model",
+        "tool",
+        "model"
+      ]
+    }
+  ]
+}

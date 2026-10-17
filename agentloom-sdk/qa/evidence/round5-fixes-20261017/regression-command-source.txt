@@ -1,0 +1,27 @@
+import hashlib, json, os, platform, subprocess, sys, time
+from pathlib import Path
+import xml.etree.ElementTree as ET
+
+repo=Path('/Users/bmilk/code/project/agent-loom')
+evidence=repo/'agentloom-sdk/qa/evidence/round5-fixes-20261017'
+qa=['test_sdk_audit.py','test_sdk_rereview.py','test_sdk_review_round3.py','test_sdk_review_round4.py','test_sdk_review_round5.py']
+probe='agentloom-sdk/tests/test_review_whitebox_probe.py'
+paths=subprocess.check_output(['rg','--files','agentloom-sdk/src','agentloom-sdk/tests','agentloom-sdk/qa','-g','*.py'],cwd=repo,text=True).splitlines()
+paths=[p for p in paths if p != probe]
+paths += ['agentloom-sdk/pyproject.toml']
+def hashes():
+ return {p:hashlib.sha256((repo/p).read_bytes()).hexdigest() for p in sorted(paths)}
+before=hashes()
+(evidence/'final-source-before.json').write_text(json.dumps(before,indent=2)+'\n')
+command=[sys.executable,'-m','pytest','-q','agentloom-sdk/tests',*[f'agentloom-sdk/qa/{p}' for p in qa],f'--ignore={probe}',f'--junitxml={evidence}/regression-final.junit.xml']
+started=time.monotonic()
+with (evidence/'regression-final.txt').open('w') as log:
+ result=subprocess.run(command,cwd=repo,stdout=log,stderr=subprocess.STDOUT)
+after=hashes()
+(evidence/'final-source-after.json').write_text(json.dumps(after,indent=2)+'\n')
+root=ET.parse(evidence/'regression-final.junit.xml').getroot()
+suite=root.find('testsuite')
+summary={'command':command,'returncode':result.returncode,'elapsed_seconds':time.monotonic()-started,'junit':dict(suite.attrib),'source_file_count':len(before),'sources_unchanged':before==after,'changes':[p for p in before if before[p]!=after[p]],'excluded_untracked_probe':probe,'environment':{'python':sys.version,'platform':platform.platform(),'recursion_limit':sys.getrecursionlimit()},'base_head':subprocess.check_output(['git','rev-parse','HEAD'],cwd=repo,text=True).strip()}
+(evidence/'regression-final-summary.json').write_text(json.dumps(summary,indent=2)+'\n')
+print(json.dumps(summary,indent=2))
+raise SystemExit(result.returncode if before==after else 2)

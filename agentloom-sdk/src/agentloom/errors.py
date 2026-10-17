@@ -62,7 +62,26 @@ class WaitTimeout(TimeoutError):
 
 def error_record(exc):
     if isinstance(exc, AgentLoomError):
-        return exc.to_dict()
+        # Infrastructure errors propagate through the control path. Their host
+        # diagnostics may use infrastructure/commit, outside OperationError.
+        if isinstance(exc, InfrastructureError):
+            return exc.to_dict()
+        # Imported here because JSON validation itself raises ConfigurationError.
+        from .operation_errors import normalize_operation_error
+
+        try:
+            return normalize_operation_error(exc.to_dict())
+        except InfrastructureError:
+            raise
+        except Exception:
+            # Do not serialize invalid fields or provider exception text. An
+            # invalid error supplies no reliable completion or retry evidence.
+            return AgentLoomError(
+                "ADAPTER_ERROR_INVALID",
+                "Adapter exception does not satisfy OperationError",
+                category="protocol",
+                external_outcome="unknown",
+            ).to_dict()
     if isinstance(exc, FileNotFoundError):
         return AgentLoomError("FILE_NOT_FOUND", category="not_found").to_dict()
     if isinstance(exc, FileExistsError):

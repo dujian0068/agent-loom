@@ -1,8 +1,8 @@
 """Root control is independent of models, user hooks and graph scheduling."""
 
-import copy
 import time
 
+from ..configuration.json_documents import copy_document
 from ..context.history_facts import execution_fact
 from ..errors import AgentLoomError
 from ..events.control import settle_saved_hooks
@@ -91,7 +91,7 @@ def finalize_run(runtime, lease, status, *, output=None, error=None):
                 denied = settle_saved_hooks(s, op, control_error)
                 fact = execution_fact(op)
                 if op["response"] is not None:
-                    op["effective_before_control"] = copy.deepcopy(op["response"])
+                    op["effective_before_control"] = copy_document(op["response"])
                 response = failure(
                     AgentLoomError(
                         "HOOK_DENIED",

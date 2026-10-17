@@ -1,4 +1,4 @@
-from ..configuration import digest
+from ..configuration.json_documents import document_digest as digest
 from ..errors import InfrastructureError, LeaseLost, RequestError
 from .base import TERMINAL, ExecutionLease
 

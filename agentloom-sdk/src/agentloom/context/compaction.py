@@ -1,4 +1,5 @@
-from ..configuration import canonical, digest
+from ..configuration.json_documents import canonical_document as canonical
+from ..configuration.json_documents import document_digest as digest
 from ..errors import AgentLoomError
 from .budget import estimate
 from .records import append, materialize

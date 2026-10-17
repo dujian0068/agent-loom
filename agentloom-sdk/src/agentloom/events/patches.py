@@ -1,9 +1,9 @@
 """Pure Hook patch validation and application, independent of user callbacks."""
 
-import copy
-
-from ..configuration import digest, validate_schema
+from ..configuration import validate_schema
 from ..configuration.actions import validate_action_contract
+from ..configuration.json_documents import copy_document
+from ..configuration.json_documents import document_digest as digest
 from ..context.budget import estimate
 from ..context.records import materialize, revise_call_arguments
 from ..context.results import PREVIEW_BYTES
@@ -17,8 +17,8 @@ def apply_saved_hook(state, op_id, key):
     if hook["status"] != "result_saved":
         return
     stage = key.split(":", 1)[0]
-    candidate = copy.deepcopy(state["tasks"][current["task_id"]]["context"])
-    payload = copy.deepcopy(current[stage])
+    candidate = copy_document(state["tasks"][current["task_id"]]["context"])
+    payload = copy_document(current[stage])
     try:
         contract = hook.get("contract") or legacy_patch_contract(state, current)
         PatchValidator(contract).patch(current, stage, hook, candidate, payload)

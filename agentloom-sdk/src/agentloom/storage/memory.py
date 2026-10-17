@@ -1,9 +1,8 @@
-import copy
 import threading
 import time
 from contextlib import contextmanager
 
-from ..configuration import json_copy
+from ..configuration.json_documents import copy_document
 from .base import StoreQueries
 
 
@@ -15,17 +14,17 @@ class _MemoryTransaction:
 
     def get(self, kind, key):
         key = (kind, key)
-        return copy.deepcopy(self.pending.get(key, self.data.get(key)))
+        return copy_document(self.pending.get(key, self.data.get(key)))
 
     def put(self, kind, key, value):
-        self.pending[(kind, key)] = json_copy(value)
+        self.pending[(kind, key)] = copy_document(value)
 
     def delete(self, kind, key):
         self.pending[(kind, key)] = None
 
     def list(self, kind):
         merged = self.data | self.pending
-        return copy.deepcopy([v for (k, _), v in merged.items() if k == kind and v is not None])
+        return [copy_document(v) for (k, _), v in merged.items() if k == kind and v is not None]
 
 
 class MemoryRuntimeStore(StoreQueries):
@@ -57,4 +56,4 @@ class MemoryRuntimeStore(StoreQueries):
                 if value is None:
                     return None
                 value = value.get(key)
-            return copy.deepcopy(value)
+            return copy_document(value)

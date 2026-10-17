@@ -177,8 +177,8 @@ class ReactAgent(AgentParameterView):
         return agent
 
     def _bind_capabilities(self):
-        from ..configuration import digest
         from ..configuration.assembly import recovery_manifest
+        from ..configuration.json_documents import document_digest as digest
 
         key = digest(recovery_manifest(self))
         registry = self.capabilities.bind_program(key, self.definitions)

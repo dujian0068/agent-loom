@@ -3,8 +3,10 @@
 import asyncio
 from dataclasses import asdict
 
-from ..configuration import RuntimeProperties, canonical, digest, json_copy, validate_schema
+from ..configuration import RuntimeProperties, json_copy, validate_schema
 from ..configuration.assembly import recovery_manifest
+from ..configuration.json_documents import canonical_document as canonical
+from ..configuration.json_documents import document_digest as digest
 from ..configuration.properties import UNSET, resolve_properties
 from ..environment import LocalEnvironment
 from ..errors import InfrastructureError, RequestError

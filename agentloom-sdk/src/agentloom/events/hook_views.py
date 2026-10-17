@@ -2,7 +2,7 @@
 
 from dataclasses import InitVar, dataclass
 
-from ..configuration import freeze
+from ..configuration.json_documents import freeze_document as freeze
 from ..configuration.json_values import FrozenDict
 
 

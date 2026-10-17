@@ -1,6 +1,5 @@
 """File-backed transactions: immutable JSON records and one atomic manifest."""
 
-import copy
 import hashlib
 import json
 import os
@@ -8,7 +7,8 @@ import re
 import time
 from contextlib import ExitStack, contextmanager
 
-from ..configuration import canonical
+from ..configuration.json_documents import canonical_document as canonical
+from ..configuration.json_documents import copy_document
 from ..configuration.properties import (
     DEFAULT_STATE_DIRECTORY,
     DEFAULT_STORE_LOCK_TIMEOUT_SECONDS,
@@ -80,7 +80,7 @@ class _FileTransaction:
         return _key(kind), _key(key)
 
     def get(self, kind, key):
-        return copy.deepcopy(self._value(kind, key))
+        return copy_document(self._value(kind, key))
 
     def _value(self, kind, key):
         pair = self._check(kind, key)
@@ -100,7 +100,7 @@ class _FileTransaction:
             if value is None:
                 return None
             value = value.get(part)
-        return copy.deepcopy(value)
+        return copy_document(value)
 
     def put(self, kind, key, value):
         pair = self._check(kind, key)

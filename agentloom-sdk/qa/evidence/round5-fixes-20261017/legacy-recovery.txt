@@ -1,0 +1,4 @@
+{"root": "/private/tmp/agentloom-round5-legacy-1k2xw3z2", "old_version_exit": 74, "old_version_stderr": ""}
+{"saved_phase": "after", "saved_raw_status": "succeeded", "saved_execution_fact": "completed"}
+{"new_version_exit": 0, "new_version_stdout": "{\"status\": \"succeeded\", \"output\": \"done\"}\n", "new_version_stderr": ""}
+{"verified": true, "tool_calls": 1, "model_calls": 2}

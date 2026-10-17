@@ -271,7 +271,7 @@ Runtime 关闭会停止本机推进并保留检查点，不等同于用户停止
 ## 验证
 
 ```sh
-python -m pytest -q agentloom-sdk/tests agentloom-sdk/qa/test_sdk_audit.py agentloom-sdk/qa/test_sdk_rereview.py agentloom-sdk/qa/test_sdk_review_round3.py agentloom-sdk/qa/test_sdk_review_round4.py
+python -m pytest -q agentloom-sdk/tests agentloom-sdk/qa/test_sdk_audit.py agentloom-sdk/qa/test_sdk_rereview.py agentloom-sdk/qa/test_sdk_review_round3.py agentloom-sdk/qa/test_sdk_review_round4.py agentloom-sdk/qa/test_sdk_review_round5.py
 ruff check agentloom-sdk/src agentloom-sdk/tests agentloom-sdk/qa
 ruff format --check agentloom-sdk/src agentloom-sdk/tests agentloom-sdk/qa
 python -m pip wheel ./agentloom-sdk --no-deps -w /tmp/agentloom-wheels
@@ -279,4 +279,4 @@ python -m pip wheel ./agentloom-sdk --no-deps -w /tmp/agentloom-wheels
 
 测试不依赖 Platform 或真实模型凭据。覆盖持久化提交边界的独立进程退出、双宿主租约、并发与额度、Hook、补充及历史、压缩、文件 fence、真实 MCP stdio 子进程和 HTTP SSE 协议分片。
 
-最近第四轮修复的上述回归为 **948 passed**；结果对应[记录中的源码与测试快照](../docs/sdk/implementation.md#第四轮完成回调与-json-边界修复)，不自动涵盖此后新增的 QA 文件或远端服务联调。
+最近第五轮修复的固定范围回归为 **1089 passed**，覆盖既有 SDK、新增修复测试及五轮 QA。另行新增的白盒探针单独记录，未计入该快照；范围、命令与结果见[实现记录](../docs/sdk/implementation.md#第五轮持久化-json-深度与异常记录修复)。此后的新增文件或远端服务联调需另行验证。

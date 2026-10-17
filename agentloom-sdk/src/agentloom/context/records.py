@@ -1,6 +1,6 @@
-import copy
-
-from ..configuration import canonical, digest
+from ..configuration.json_documents import canonical_document as canonical
+from ..configuration.json_documents import copy_document
+from ..configuration.json_documents import document_digest as digest
 from ..errors import AgentLoomError
 from ..types import new_id
 
@@ -8,8 +8,8 @@ from ..types import new_id
 def record(message, *, protected=False, fixed=False, kind="message", record_id=None, raw=None):
     return {
         "record_id": record_id or new_id(),
-        "raw": copy.deepcopy(message if raw is None else raw),
-        "message": copy.deepcopy(message),
+        "raw": copy_document(message if raw is None else raw),
+        "message": copy_document(message),
         "protected": protected,
         "fixed": fixed,
         "kind": kind,
@@ -41,7 +41,7 @@ def materialize(context):
         selected.insert(index, by_id[snapshot["record_id"]])
     else:
         selected = [r for r in records if r["kind"] != "summary"]
-    return copy.deepcopy(selected)
+    return copy_document(selected)
 
 
 def revise_call_arguments(context, original_records, call_id, arguments):
@@ -100,7 +100,7 @@ def history_records(runs, recent_n, current_inputs=()):
                     messages.append(input_message(run, item))
                     projected.add(item["input_id"])
                 else:
-                    messages.append(copy.deepcopy(entry["message"]))
+                    messages.append(copy_document(entry["message"]))
             # Accepted input remains history even if no subsequent model turn ran.
             messages.extend(
                 input_message(run, item)
@@ -126,8 +126,6 @@ def history_records(runs, recent_n, current_inputs=()):
             for item in run["inputs"]:
                 result.append(record(input_message(run, item), protected=True, kind="history"))
             if run["output"]:
-                from ..configuration import canonical
-
                 value = run["output"]["value"]
                 result.append(
                     record(

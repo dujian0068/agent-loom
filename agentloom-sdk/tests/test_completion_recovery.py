@@ -13,7 +13,18 @@ from agentloom import FileRuntimeStore
 from agentloom.runtime.recovery import validate_recovery
 
 
-@pytest.mark.parametrize("kind", ["model", "mcp", "mcp-error", "native-error", "native-invalid"])
+@pytest.mark.parametrize(
+    "kind",
+    [
+        "model",
+        "mcp",
+        "mcp-error",
+        "native-error",
+        "native-invalid",
+        "native-depth",
+        "native-depth-invalid",
+    ],
+)
 def test_process_exit_during_close_preserves_completion(tmp_path, kind):
     env = {**os.environ, "PYTHONPATH": str(Path(__file__).parents[1] / "src")}
     worker = Path(__file__).parent / "support" / "completion_process.py"
@@ -30,9 +41,11 @@ def test_process_exit_during_close_preserves_completion(tmp_path, kind):
     target = "model.generate" if kind == "model" else "capability.invoke"
     op = next(op for op in state["operations"].values() if op["event_type"] == target)
     assert op["raw"]["execution_fact"] == "completed"
-    if kind.startswith("native-"):
+    if kind == "native-depth":
+        assert op["raw"]["status"] == "succeeded" and op["raw"]["error"] is None
+    elif kind.startswith("native-"):
         assert op["raw"]["error"]["code"] == (
-            "CAPABILITY_RESULT_INVALID" if kind == "native-invalid" else "KNOWN_RESPONSE"
+            "CAPABILITY_RESULT_INVALID" if kind.endswith("invalid") else "KNOWN_RESPONSE"
         )
     assert op["phase"] == "after" and len(op["attempts"]) == 1
     validate_recovery(state)

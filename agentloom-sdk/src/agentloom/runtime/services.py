@@ -1,6 +1,6 @@
 """Public read/control facades. Only these trusted commands bypass a business lease."""
 
-from ..configuration import digest
+from ..configuration.json_documents import document_digest as digest
 from ..errors import AgentLoomError, RequestError
 from ..public.handles import RunHandle
 from ..public.validation import identity, pagination

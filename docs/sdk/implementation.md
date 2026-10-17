@@ -2,7 +2,7 @@
 
 日期：2026-10-17。实现版本：`agentloom-sdk 0.1.0a1`。当前推荐入口是 `PropertiesConfig → AgentLoom → build(AgentDefinition)`，默认使用文件系统保存执行状态。安装、可运行代码和接续步骤见 [SDK 接入指南](integration.md)。Workflow 按当前开发范围暂不接入。
 
-本页先说明当前状态与实现职责，再保留各阶段修复及验证记录。最近完成的第三轮修复回归是 **813 passed**，对应[固定源码摘要和测试清单](../../agentloom-sdk/qa/evidence/round3-fixes-20261017/summary.json)；后续新增 QA 文件不自动包含在该结论中。其他 SDK 章节仍含完整目标设计，不能据此推定全部接口已发布。
+本页先说明当前状态与实现职责，再保留各阶段修复及验证记录。第五轮修复处理 JSON 深度与持久化不一致、直接抛错绕过 OperationError 校验两类问题，具体测试快照见[第五轮记录](#第五轮持久化-json-深度与异常记录修复)。其他 SDK 章节仍含完整目标设计，不能据此推定全部接口已发布。
 
 ## 当前接口与交付状态
 
@@ -26,6 +26,7 @@
 | `public.application/properties/builder/assembly` | 启动参数组合、宿主生命周期、从定义 build、统一装配与资源所有权 |
 | `public.agents/handles/projections` | 执行门面、实例绑定、观察／控制和公开结果过滤 |
 | `configuration.properties/models/schemas/actions` | 参数冻结、默认值、数值与 Schema 校验、角色动作权限及恢复清单 |
+| `configuration.json_values/json_documents`、`operation_errors` | 边界 JSON 与内部文档的统一深度、迭代复制／冻结／RFC 8785；共享 OperationError 校验 |
 | `runtime.host/runner/agent_engine/agent_loop` | 本机宿主、每 Run 执行者、角色激活／批次汇合及独立 Agent Loop |
 | `runtime.calls/completion/handlers/usage` | 准入与重试、Attempt 完成回执、单次适配器调用、原子用量计量 |
 | `runtime.recovery/control/maintenance/cleanup/leases` | 恢复账本核验、停止和截止、撤权与清理重试、执行及清理租约 |
@@ -61,7 +62,7 @@ flowchart LR
 
 ## 验证口径
 
-第四轮修复完整回归 **948 passed**：SDK 714 项、原 QA 110 项、复审 QA 24 项、第三轮 QA 44 项、第四轮 QA 56 项；修复边界及证据见[第四轮记录](#第四轮完成回调与-json-边界修复)。第三轮的 813 项及以下各阶段的 698／656／622 等数字属于历史快照，不是当前总数；各轮原始审查报告和失败证据保留。
+第五轮修复完整回归 **1089 passed**：既有 SDK 与新增修复测试 783 项，原 QA 110 项、复审 QA 24 项、第三轮 QA 44 项、第四轮 QA 56 项、第五轮 QA 72 项；对应[固定源码与测试清单](../../agentloom-sdk/qa/evidence/round5-fixes-20261017/summary.json)。工作区另行新增且持续变化的白盒探针单独验证，不计入此范围；详见[探针快照与测试逻辑核对](../../agentloom-sdk/qa/evidence/round5-fixes-20261017/separate-probe-assessment.json)。948／813 等数字属于历史快照，各轮原始审查和失败证据保留。
 
 这些验证使用本地确定性模型、协议替身和已有的 MCP stdio／SSE 测试，没有远端模型、远端 MCP、多机或 Workflow 的验收结论。完整目标尚未实现的部分集中列在[设计差异](#与完整目标设计的差异)。
 
@@ -81,6 +82,27 @@ flowchart LR
 - 独立停止命令与停止前准入关闭，宿主关闭保留现场；终态与 CleanupJob 原子提交，清理独立领取租约、失败重试，不再次激活 Agent。
 
 源码按 `public`、`configuration`、`runtime`、`events`、`context`、`capabilities`、`environment`、`models`、`storage` 分包。具体接入见[接入指南](integration.md)，包安装说明见 [SDK README](../../agentloom-sdk/README.md)。
+
+## 第五轮持久化 JSON 深度与异常记录修复
+
+以 `bfe582a` 为基线，独立复测第五轮原始 72 项用例，得到 **28 failed、44 passed**，两类问题均属实。原第五轮测试与报告保留不变，修复后相同 72 项全部通过。
+
+| 问题 | 修复及职责 |
+| --- | --- |
+| R5-01：已校验结果无法复制／保存／重启读取 | `configuration.json_values` 按完整边界材料限定 128 层容器，以显式栈完成循环检查、复制、冻结和规范化；数值／字符串继续使用 RFC 8785 编码，保留原摘要兼容性。`json_documents` 单独提供 512 层的 SDK 文档预算，供状态、审计、Hook 读取、上下文和恢复使用；内存／文件后端统一，避免在材料外再包装 SDK 字段后重新越界 |
+| R5-02：直接抛出的非法异常绕过错误 DTO 校验 | `operation_errors` 提供共享字段合同，能力结果和 `errors.error_record` 复用；非法直接异常生成安全的 ADAPTER_ERROR_INVALID／protocol／unknown，不把 NaN、非法枚举等交给存储，也不依据非法 retry 字段重试。`runtime.completion` 仅处理事实及受限材料投影，保留存储／控制异常传播 |
+
+超深工具信封及非法原始审计材料在首次结果写入前拒绝，保存 CAPABILITY_RESULT_INVALID／completed，正常进入后处理并释放会话。128 层计算根容器，inline JSON 信封占 4 层，因此单个值允许 124 层；内部 512 层不向扩展方开放更大的输入限额。已保存结果走内部文档路径，避免再次遭遇递归 deepcopy。
+
+新增边界与进程测试覆盖刚好达到上限／超出一层、四种结果入口、双后端、后置 Hook、会话释放、合法错误重试语义、非法异常字段、错误序列化器和附带审计材料；原第五轮及以往所有 QA 断言保持不变。
+
+另外以旧 `bfe582a` 源码真实保存 465 层成功结果，在关闭资源时执行 `os._exit(74)`，新实现直接恢复并正常结束，工具总调用次数仍为 1；不是先把旧结果改成失败再重启。该兼容性验证不构成任意历史格式迁移承诺，详见[旧检查点恢复证据](../../agentloom-sdk/qa/evidence/round5-fixes-20261017/legacy-recovery.txt)。
+
+最终固定源码完整回归 **1089 passed，0 failed，0 skipped**，耗时 288.41 秒；130 个源码／测试／配置文件摘要保持一致。本轮新增 69 项 SDK 测试，另有 72 项原第五轮 QA；新增边界与进程恢复子集为 74 项全部通过。Ruff lint／format 通过；wheel 安装后 81 个源码模块逐字节一致，安装包内上限／超限完成回执均通过真实进程退出恢复。文档构建及链接检查通过。
+
+独立白盒探针的固定快照为 23 passed、3 failed，原因分别为压缩后用工具消息数量充当退出计数、少算最终模型 Operation、未记录 run_id 就读取 Executor 引用；只修正临时测试副本后 3 项均通过，未改动工作区原探针。这些结果及首次探索回归的失败日志单独保留，与第五轮 SDK 缺陷分开记录。
+
+[第五轮原用例复测](../../agentloom-sdk/qa/evidence/round5-fixes-20261017/boundaries.txt)、[新增边界测试](../../agentloom-sdk/qa/evidence/round5-fixes-20261017/new-boundaries-final.txt)与[完整回归日志](../../agentloom-sdk/qa/evidence/round5-fixes-20261017/regression-final.txt)分别保存。Workflow 和此前披露的目标设计缺口不纳入本次实现。
 
 ## 第四轮完成回调与 JSON 边界修复
 

@@ -1,7 +1,7 @@
 import math
 from dataclasses import dataclass
 
-from ..configuration import canonical
+from ..configuration.json_documents import canonical_document as canonical
 from ..errors import ConfigurationError
 
 

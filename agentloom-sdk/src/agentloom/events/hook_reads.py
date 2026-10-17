@@ -1,6 +1,6 @@
 """Version-pinned, role-scoped Hook reads; raw audit fields are never exposed."""
 
-from ..configuration import freeze
+from ..configuration.json_documents import freeze_document as freeze
 from ..errors import AgentLoomError
 from .hook_views import HookRecordPage, HookRecordView
 

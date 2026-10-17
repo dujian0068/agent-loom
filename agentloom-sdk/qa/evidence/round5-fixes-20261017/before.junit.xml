@@ -1,0 +1,1185 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="28" skipped="0" tests="72" time="6.710" timestamp="2026-10-17T23:33:05.063940+08:00" hostname="bmilk"><testcase classname="qa.test_sdk_review_round5" name="test_nested_return_must_finish_or_reject_before_durable_write[memory-0-function]" time="0.038" /><testcase classname="qa.test_sdk_review_round5" name="test_nested_return_must_finish_or_reject_before_durable_write[memory-0-legacy]" time="0.035" /><testcase classname="qa.test_sdk_review_round5" name="test_nested_return_must_finish_or_reject_before_durable_write[memory-0-native]" time="0.034" /><testcase classname="qa.test_sdk_review_round5" name="test_nested_return_must_finish_or_reject_before_durable_write[memory-0-callback]" time="0.034" /><testcase classname="qa.test_sdk_review_round5" name="test_nested_return_must_finish_or_reject_before_durable_write[memory-400-function]" time="0.096" /><testcase classname="qa.test_sdk_review_round5" name="test_nested_return_must_finish_or_reject_before_durable_write[memory-400-legacy]" time="0.094" /><testcase classname="qa.test_sdk_review_round5" name="test_nested_return_must_finish_or_reject_before_durable_write[memory-400-native]" time="0.104" /><testcase classname="qa.test_sdk_review_round5" name="test_nested_return_must_finish_or_reject_before_durable_write[memory-400-callback]" time="0.095" /><testcase classname="qa.test_sdk_review_round5" name="test_nested_return_must_finish_or_reject_before_durable_write[memory-465-function]" time="0.035"><failure message="AssertionError: Accepted nesting must survive persistence and subsequent reads&#10;assert 'EXECUTION_DRIVER_FAILED' is None">store = &lt;agentloom.storage.memory.MemoryRuntimeStore object at 0x10bb75b80&gt;
+kind = 'function', depth = 465
+
+    @pytest.mark.parametrize("kind", ["function", "legacy", "native", "callback"])
+    @pytest.mark.parametrize("depth", [0, 400, 465, 480, 600, 1010])
+    async def test_nested_return_must_finish_or_reject_before_durable_write(store, kind, depth):
+        calls = []
+        async with RuntimeEngine(store=store) as runtime:
+            handle = await build(runtime, nested_adapter(kind, depth, calls)).start("go")
+            error = None
+            result = None
+            try:
+                result = await handle.wait(timeout_s=3)
+            except InfrastructureError as exc:
+                error = exc.code
+            state = runtime._load(handle.run_id)
+            op = operation(runtime, handle.run_id)
+            print(
+                json.dumps(
+                    {
+                        "run_id": handle.run_id,
+                        "operation_id": op["operation_id"],
+                        "depth": depth,
+                        "recursion_limit": sys.getrecursionlimit(),
+                        "kind": kind,
+                        "driver_error": error,
+                        "run_status": state["status"],
+                        "raw": compact_raw(op),
+                        "calls": len(calls),
+                    }
+                )
+            )
+&gt;           assert error is None, "Accepted nesting must survive persistence and subsequent reads"
+E           AssertionError: Accepted nesting must survive persistence and subsequent reads
+E           assert 'EXECUTION_DRIVER_FAILED' is None
+
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round5.py:151: AssertionError</failure></testcase><testcase classname="qa.test_sdk_review_round5" name="test_nested_return_must_finish_or_reject_before_durable_write[memory-465-legacy]" time="0.042"><failure message="AssertionError: Accepted nesting must survive persistence and subsequent reads&#10;assert 'EXECUTION_DRIVER_FAILED' is None">store = &lt;agentloom.storage.memory.MemoryRuntimeStore object at 0x10b44f830&gt;
+kind = 'legacy', depth = 465
+
+    @pytest.mark.parametrize("kind", ["function", "legacy", "native", "callback"])
+    @pytest.mark.parametrize("depth", [0, 400, 465, 480, 600, 1010])
+    async def test_nested_return_must_finish_or_reject_before_durable_write(store, kind, depth):
+        calls = []
+        async with RuntimeEngine(store=store) as runtime:
+            handle = await build(runtime, nested_adapter(kind, depth, calls)).start("go")
+            error = None
+            result = None
+            try:
+                result = await handle.wait(timeout_s=3)
+            except InfrastructureError as exc:
+                error = exc.code
+            state = runtime._load(handle.run_id)
+            op = operation(runtime, handle.run_id)
+            print(
+                json.dumps(
+                    {
+                        "run_id": handle.run_id,
+                        "operation_id": op["operation_id"],
+                        "depth": depth,
+                        "recursion_limit": sys.getrecursionlimit(),
+                        "kind": kind,
+                        "driver_error": error,
+                        "run_status": state["status"],
+                        "raw": compact_raw(op),
+                        "calls": len(calls),
+                    }
+                )
+            )
+&gt;           assert error is None, "Accepted nesting must survive persistence and subsequent reads"
+E           AssertionError: Accepted nesting must survive persistence and subsequent reads
+E           assert 'EXECUTION_DRIVER_FAILED' is None
+
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round5.py:151: AssertionError</failure></testcase><testcase classname="qa.test_sdk_review_round5" name="test_nested_return_must_finish_or_reject_before_durable_write[memory-465-native]" time="0.042"><failure message="AssertionError: Accepted nesting must survive persistence and subsequent reads&#10;assert 'EXECUTION_DRIVER_FAILED' is None">store = &lt;agentloom.storage.memory.MemoryRuntimeStore object at 0x10bb9edb0&gt;
+kind = 'native', depth = 465
+
+    @pytest.mark.parametrize("kind", ["function", "legacy", "native", "callback"])
+    @pytest.mark.parametrize("depth", [0, 400, 465, 480, 600, 1010])
+    async def test_nested_return_must_finish_or_reject_before_durable_write(store, kind, depth):
+        calls = []
+        async with RuntimeEngine(store=store) as runtime:
+            handle = await build(runtime, nested_adapter(kind, depth, calls)).start("go")
+            error = None
+            result = None
+            try:
+                result = await handle.wait(timeout_s=3)
+            except InfrastructureError as exc:
+                error = exc.code
+            state = runtime._load(handle.run_id)
+            op = operation(runtime, handle.run_id)
+            print(
+                json.dumps(
+                    {
+                        "run_id": handle.run_id,
+                        "operation_id": op["operation_id"],
+                        "depth": depth,
+                        "recursion_limit": sys.getrecursionlimit(),
+                        "kind": kind,
+                        "driver_error": error,
+                        "run_status": state["status"],
+                        "raw": compact_raw(op),
+                        "calls": len(calls),
+                    }
+                )
+            )
+&gt;           assert error is None, "Accepted nesting must survive persistence and subsequent reads"
+E           AssertionError: Accepted nesting must survive persistence and subsequent reads
+E           assert 'EXECUTION_DRIVER_FAILED' is None
+
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round5.py:151: AssertionError</failure></testcase><testcase classname="qa.test_sdk_review_round5" name="test_nested_return_must_finish_or_reject_before_durable_write[memory-465-callback]" time="0.034"><failure message="AssertionError: Accepted nesting must survive persistence and subsequent reads&#10;assert 'EXECUTION_DRIVER_FAILED' is None">store = &lt;agentloom.storage.memory.MemoryRuntimeStore object at 0x10bbf6750&gt;
+kind = 'callback', depth = 465
+
+    @pytest.mark.parametrize("kind", ["function", "legacy", "native", "callback"])
+    @pytest.mark.parametrize("depth", [0, 400, 465, 480, 600, 1010])
+    async def test_nested_return_must_finish_or_reject_before_durable_write(store, kind, depth):
+        calls = []
+        async with RuntimeEngine(store=store) as runtime:
+            handle = await build(runtime, nested_adapter(kind, depth, calls)).start("go")
+            error = None
+            result = None
+            try:
+                result = await handle.wait(timeout_s=3)
+            except InfrastructureError as exc:
+                error = exc.code
+            state = runtime._load(handle.run_id)
+            op = operation(runtime, handle.run_id)
+            print(
+                json.dumps(
+                    {
+                        "run_id": handle.run_id,
+                        "operation_id": op["operation_id"],
+                        "depth": depth,
+                        "recursion_limit": sys.getrecursionlimit(),
+                        "kind": kind,
+                        "driver_error": error,
+                        "run_status": state["status"],
+                        "raw": compact_raw(op),
+                        "calls": len(calls),
+                    }
+                )
+            )
+&gt;           assert error is None, "Accepted nesting must survive persistence and subsequent reads"
+E           AssertionError: Accepted nesting must survive persistence and subsequent reads
+E           assert 'EXECUTION_DRIVER_FAILED' is None
+
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round5.py:151: AssertionError</failure></testcase><testcase classname="qa.test_sdk_review_round5" name="test_nested_return_must_finish_or_reject_before_durable_write[memory-480-function]" time="0.044" /><testcase classname="qa.test_sdk_review_round5" name="test_nested_return_must_finish_or_reject_before_durable_write[memory-480-legacy]" time="0.035" /><testcase classname="qa.test_sdk_review_round5" name="test_nested_return_must_finish_or_reject_before_durable_write[memory-480-native]" time="0.025"><failure message="AssertionError: Accepted nesting must survive persistence and subsequent reads&#10;assert 'EXECUTION_DRIVER_FAILED' is None">store = &lt;agentloom.storage.memory.MemoryRuntimeStore object at 0x10bbf4230&gt;
+kind = 'native', depth = 480
+
+    @pytest.mark.parametrize("kind", ["function", "legacy", "native", "callback"])
+    @pytest.mark.parametrize("depth", [0, 400, 465, 480, 600, 1010])
+    async def test_nested_return_must_finish_or_reject_before_durable_write(store, kind, depth):
+        calls = []
+        async with RuntimeEngine(store=store) as runtime:
+            handle = await build(runtime, nested_adapter(kind, depth, calls)).start("go")
+            error = None
+            result = None
+            try:
+                result = await handle.wait(timeout_s=3)
+            except InfrastructureError as exc:
+                error = exc.code
+            state = runtime._load(handle.run_id)
+            op = operation(runtime, handle.run_id)
+            print(
+                json.dumps(
+                    {
+                        "run_id": handle.run_id,
+                        "operation_id": op["operation_id"],
+                        "depth": depth,
+                        "recursion_limit": sys.getrecursionlimit(),
+                        "kind": kind,
+                        "driver_error": error,
+                        "run_status": state["status"],
+                        "raw": compact_raw(op),
+                        "calls": len(calls),
+                    }
+                )
+            )
+&gt;           assert error is None, "Accepted nesting must survive persistence and subsequent reads"
+E           AssertionError: Accepted nesting must survive persistence and subsequent reads
+E           assert 'EXECUTION_DRIVER_FAILED' is None
+
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round5.py:151: AssertionError</failure></testcase><testcase classname="qa.test_sdk_review_round5" name="test_nested_return_must_finish_or_reject_before_durable_write[memory-480-callback]" time="0.026"><failure message="AssertionError: Accepted nesting must survive persistence and subsequent reads&#10;assert 'ATTEMPT_COMPLETION_COMMIT_FAILED' is None">store = &lt;agentloom.storage.memory.MemoryRuntimeStore object at 0x10bb9d280&gt;
+kind = 'callback', depth = 480
+
+    @pytest.mark.parametrize("kind", ["function", "legacy", "native", "callback"])
+    @pytest.mark.parametrize("depth", [0, 400, 465, 480, 600, 1010])
+    async def test_nested_return_must_finish_or_reject_before_durable_write(store, kind, depth):
+        calls = []
+        async with RuntimeEngine(store=store) as runtime:
+            handle = await build(runtime, nested_adapter(kind, depth, calls)).start("go")
+            error = None
+            result = None
+            try:
+                result = await handle.wait(timeout_s=3)
+            except InfrastructureError as exc:
+                error = exc.code
+            state = runtime._load(handle.run_id)
+            op = operation(runtime, handle.run_id)
+            print(
+                json.dumps(
+                    {
+                        "run_id": handle.run_id,
+                        "operation_id": op["operation_id"],
+                        "depth": depth,
+                        "recursion_limit": sys.getrecursionlimit(),
+                        "kind": kind,
+                        "driver_error": error,
+                        "run_status": state["status"],
+                        "raw": compact_raw(op),
+                        "calls": len(calls),
+                    }
+                )
+            )
+&gt;           assert error is None, "Accepted nesting must survive persistence and subsequent reads"
+E           AssertionError: Accepted nesting must survive persistence and subsequent reads
+E           assert 'ATTEMPT_COMPLETION_COMMIT_FAILED' is None
+
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round5.py:151: AssertionError</failure></testcase><testcase classname="qa.test_sdk_review_round5" name="test_nested_return_must_finish_or_reject_before_durable_write[memory-600-function]" time="0.036" /><testcase classname="qa.test_sdk_review_round5" name="test_nested_return_must_finish_or_reject_before_durable_write[memory-600-legacy]" time="0.036" /><testcase classname="qa.test_sdk_review_round5" name="test_nested_return_must_finish_or_reject_before_durable_write[memory-600-native]" time="0.025"><failure message="AssertionError: Accepted nesting must survive persistence and subsequent reads&#10;assert 'EXECUTION_DRIVER_FAILED' is None">store = &lt;agentloom.storage.memory.MemoryRuntimeStore object at 0x10bb74aa0&gt;
+kind = 'native', depth = 600
+
+    @pytest.mark.parametrize("kind", ["function", "legacy", "native", "callback"])
+    @pytest.mark.parametrize("depth", [0, 400, 465, 480, 600, 1010])
+    async def test_nested_return_must_finish_or_reject_before_durable_write(store, kind, depth):
+        calls = []
+        async with RuntimeEngine(store=store) as runtime:
+            handle = await build(runtime, nested_adapter(kind, depth, calls)).start("go")
+            error = None
+            result = None
+            try:
+                result = await handle.wait(timeout_s=3)
+            except InfrastructureError as exc:
+                error = exc.code
+            state = runtime._load(handle.run_id)
+            op = operation(runtime, handle.run_id)
+            print(
+                json.dumps(
+                    {
+                        "run_id": handle.run_id,
+                        "operation_id": op["operation_id"],
+                        "depth": depth,
+                        "recursion_limit": sys.getrecursionlimit(),
+                        "kind": kind,
+                        "driver_error": error,
+                        "run_status": state["status"],
+                        "raw": compact_raw(op),
+                        "calls": len(calls),
+                    }
+                )
+            )
+&gt;           assert error is None, "Accepted nesting must survive persistence and subsequent reads"
+E           AssertionError: Accepted nesting must survive persistence and subsequent reads
+E           assert 'EXECUTION_DRIVER_FAILED' is None
+
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round5.py:151: AssertionError</failure></testcase><testcase classname="qa.test_sdk_review_round5" name="test_nested_return_must_finish_or_reject_before_durable_write[memory-600-callback]" time="0.025"><failure message="AssertionError: Accepted nesting must survive persistence and subsequent reads&#10;assert 'ATTEMPT_COMPLETION_COMMIT_FAILED' is None">store = &lt;agentloom.storage.memory.MemoryRuntimeStore object at 0x10bb74e60&gt;
+kind = 'callback', depth = 600
+
+    @pytest.mark.parametrize("kind", ["function", "legacy", "native", "callback"])
+    @pytest.mark.parametrize("depth", [0, 400, 465, 480, 600, 1010])
+    async def test_nested_return_must_finish_or_reject_before_durable_write(store, kind, depth):
+        calls = []
+        async with RuntimeEngine(store=store) as runtime:
+            handle = await build(runtime, nested_adapter(kind, depth, calls)).start("go")
+            error = None
+            result = None
+            try:
+                result = await handle.wait(timeout_s=3)
+            except InfrastructureError as exc:
+                error = exc.code
+            state = runtime._load(handle.run_id)
+            op = operation(runtime, handle.run_id)
+            print(
+                json.dumps(
+                    {
+                        "run_id": handle.run_id,
+                        "operation_id": op["operation_id"],
+                        "depth": depth,
+                        "recursion_limit": sys.getrecursionlimit(),
+                        "kind": kind,
+                        "driver_error": error,
+                        "run_status": state["status"],
+                        "raw": compact_raw(op),
+                        "calls": len(calls),
+                    }
+                )
+            )
+&gt;           assert error is None, "Accepted nesting must survive persistence and subsequent reads"
+E           AssertionError: Accepted nesting must survive persistence and subsequent reads
+E           assert 'ATTEMPT_COMPLETION_COMMIT_FAILED' is None
+
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round5.py:151: AssertionError</failure></testcase><testcase classname="qa.test_sdk_review_round5" name="test_nested_return_must_finish_or_reject_before_durable_write[memory-1010-function]" time="0.035" /><testcase classname="qa.test_sdk_review_round5" name="test_nested_return_must_finish_or_reject_before_durable_write[memory-1010-legacy]" time="0.047" /><testcase classname="qa.test_sdk_review_round5" name="test_nested_return_must_finish_or_reject_before_durable_write[memory-1010-native]" time="0.038" /><testcase classname="qa.test_sdk_review_round5" name="test_nested_return_must_finish_or_reject_before_durable_write[memory-1010-callback]" time="0.035" /><testcase classname="qa.test_sdk_review_round5" name="test_nested_return_must_finish_or_reject_before_durable_write[file-0-function]" time="0.125" /><testcase classname="qa.test_sdk_review_round5" name="test_nested_return_must_finish_or_reject_before_durable_write[file-0-legacy]" time="0.114" /><testcase classname="qa.test_sdk_review_round5" name="test_nested_return_must_finish_or_reject_before_durable_write[file-0-native]" time="0.125" /><testcase classname="qa.test_sdk_review_round5" name="test_nested_return_must_finish_or_reject_before_durable_write[file-0-callback]" time="0.123" /><testcase classname="qa.test_sdk_review_round5" name="test_nested_return_must_finish_or_reject_before_durable_write[file-400-function]" time="0.231" /><testcase classname="qa.test_sdk_review_round5" name="test_nested_return_must_finish_or_reject_before_durable_write[file-400-legacy]" time="0.248" /><testcase classname="qa.test_sdk_review_round5" name="test_nested_return_must_finish_or_reject_before_durable_write[file-400-native]" time="0.252" /><testcase classname="qa.test_sdk_review_round5" name="test_nested_return_must_finish_or_reject_before_durable_write[file-400-callback]" time="0.293" /><testcase classname="qa.test_sdk_review_round5" name="test_nested_return_must_finish_or_reject_before_durable_write[file-465-function]" time="0.108"><failure message="AssertionError: Accepted nesting must survive persistence and subsequent reads&#10;assert 'EXECUTION_DRIVER_FAILED' is None">store = &lt;agentloom.storage.filesystem.FileRuntimeStore object at 0x10be77230&gt;
+kind = 'function', depth = 465
+
+    @pytest.mark.parametrize("kind", ["function", "legacy", "native", "callback"])
+    @pytest.mark.parametrize("depth", [0, 400, 465, 480, 600, 1010])
+    async def test_nested_return_must_finish_or_reject_before_durable_write(store, kind, depth):
+        calls = []
+        async with RuntimeEngine(store=store) as runtime:
+            handle = await build(runtime, nested_adapter(kind, depth, calls)).start("go")
+            error = None
+            result = None
+            try:
+                result = await handle.wait(timeout_s=3)
+            except InfrastructureError as exc:
+                error = exc.code
+            state = runtime._load(handle.run_id)
+            op = operation(runtime, handle.run_id)
+            print(
+                json.dumps(
+                    {
+                        "run_id": handle.run_id,
+                        "operation_id": op["operation_id"],
+                        "depth": depth,
+                        "recursion_limit": sys.getrecursionlimit(),
+                        "kind": kind,
+                        "driver_error": error,
+                        "run_status": state["status"],
+                        "raw": compact_raw(op),
+                        "calls": len(calls),
+                    }
+                )
+            )
+&gt;           assert error is None, "Accepted nesting must survive persistence and subsequent reads"
+E           AssertionError: Accepted nesting must survive persistence and subsequent reads
+E           assert 'EXECUTION_DRIVER_FAILED' is None
+
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round5.py:151: AssertionError</failure></testcase><testcase classname="qa.test_sdk_review_round5" name="test_nested_return_must_finish_or_reject_before_durable_write[file-465-legacy]" time="0.109"><failure message="AssertionError: Accepted nesting must survive persistence and subsequent reads&#10;assert 'EXECUTION_DRIVER_FAILED' is None">store = &lt;agentloom.storage.filesystem.FileRuntimeStore object at 0x10bfbacf0&gt;
+kind = 'legacy', depth = 465
+
+    @pytest.mark.parametrize("kind", ["function", "legacy", "native", "callback"])
+    @pytest.mark.parametrize("depth", [0, 400, 465, 480, 600, 1010])
+    async def test_nested_return_must_finish_or_reject_before_durable_write(store, kind, depth):
+        calls = []
+        async with RuntimeEngine(store=store) as runtime:
+            handle = await build(runtime, nested_adapter(kind, depth, calls)).start("go")
+            error = None
+            result = None
+            try:
+                result = await handle.wait(timeout_s=3)
+            except InfrastructureError as exc:
+                error = exc.code
+            state = runtime._load(handle.run_id)
+            op = operation(runtime, handle.run_id)
+            print(
+                json.dumps(
+                    {
+                        "run_id": handle.run_id,
+                        "operation_id": op["operation_id"],
+                        "depth": depth,
+                        "recursion_limit": sys.getrecursionlimit(),
+                        "kind": kind,
+                        "driver_error": error,
+                        "run_status": state["status"],
+                        "raw": compact_raw(op),
+                        "calls": len(calls),
+                    }
+                )
+            )
+&gt;           assert error is None, "Accepted nesting must survive persistence and subsequent reads"
+E           AssertionError: Accepted nesting must survive persistence and subsequent reads
+E           assert 'EXECUTION_DRIVER_FAILED' is None
+
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round5.py:151: AssertionError</failure></testcase><testcase classname="qa.test_sdk_review_round5" name="test_nested_return_must_finish_or_reject_before_durable_write[file-465-native]" time="0.100"><failure message="AssertionError: Accepted nesting must survive persistence and subsequent reads&#10;assert 'EXECUTION_DRIVER_FAILED' is None">store = &lt;agentloom.storage.filesystem.FileRuntimeStore object at 0x10be47dd0&gt;
+kind = 'native', depth = 465
+
+    @pytest.mark.parametrize("kind", ["function", "legacy", "native", "callback"])
+    @pytest.mark.parametrize("depth", [0, 400, 465, 480, 600, 1010])
+    async def test_nested_return_must_finish_or_reject_before_durable_write(store, kind, depth):
+        calls = []
+        async with RuntimeEngine(store=store) as runtime:
+            handle = await build(runtime, nested_adapter(kind, depth, calls)).start("go")
+            error = None
+            result = None
+            try:
+                result = await handle.wait(timeout_s=3)
+            except InfrastructureError as exc:
+                error = exc.code
+            state = runtime._load(handle.run_id)
+            op = operation(runtime, handle.run_id)
+            print(
+                json.dumps(
+                    {
+                        "run_id": handle.run_id,
+                        "operation_id": op["operation_id"],
+                        "depth": depth,
+                        "recursion_limit": sys.getrecursionlimit(),
+                        "kind": kind,
+                        "driver_error": error,
+                        "run_status": state["status"],
+                        "raw": compact_raw(op),
+                        "calls": len(calls),
+                    }
+                )
+            )
+&gt;           assert error is None, "Accepted nesting must survive persistence and subsequent reads"
+E           AssertionError: Accepted nesting must survive persistence and subsequent reads
+E           assert 'EXECUTION_DRIVER_FAILED' is None
+
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round5.py:151: AssertionError</failure></testcase><testcase classname="qa.test_sdk_review_round5" name="test_nested_return_must_finish_or_reject_before_durable_write[file-465-callback]" time="0.111"><failure message="AssertionError: Accepted nesting must survive persistence and subsequent reads&#10;assert 'EXECUTION_DRIVER_FAILED' is None">store = &lt;agentloom.storage.filesystem.FileRuntimeStore object at 0x10be45ca0&gt;
+kind = 'callback', depth = 465
+
+    @pytest.mark.parametrize("kind", ["function", "legacy", "native", "callback"])
+    @pytest.mark.parametrize("depth", [0, 400, 465, 480, 600, 1010])
+    async def test_nested_return_must_finish_or_reject_before_durable_write(store, kind, depth):
+        calls = []
+        async with RuntimeEngine(store=store) as runtime:
+            handle = await build(runtime, nested_adapter(kind, depth, calls)).start("go")
+            error = None
+            result = None
+            try:
+                result = await handle.wait(timeout_s=3)
+            except InfrastructureError as exc:
+                error = exc.code
+            state = runtime._load(handle.run_id)
+            op = operation(runtime, handle.run_id)
+            print(
+                json.dumps(
+                    {
+                        "run_id": handle.run_id,
+                        "operation_id": op["operation_id"],
+                        "depth": depth,
+                        "recursion_limit": sys.getrecursionlimit(),
+                        "kind": kind,
+                        "driver_error": error,
+                        "run_status": state["status"],
+                        "raw": compact_raw(op),
+                        "calls": len(calls),
+                    }
+                )
+            )
+&gt;           assert error is None, "Accepted nesting must survive persistence and subsequent reads"
+E           AssertionError: Accepted nesting must survive persistence and subsequent reads
+E           assert 'EXECUTION_DRIVER_FAILED' is None
+
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round5.py:151: AssertionError</failure></testcase><testcase classname="qa.test_sdk_review_round5" name="test_nested_return_must_finish_or_reject_before_durable_write[file-480-function]" time="0.160" /><testcase classname="qa.test_sdk_review_round5" name="test_nested_return_must_finish_or_reject_before_durable_write[file-480-legacy]" time="0.131" /><testcase classname="qa.test_sdk_review_round5" name="test_nested_return_must_finish_or_reject_before_durable_write[file-480-native]" time="0.083"><failure message="AssertionError: Accepted nesting must survive persistence and subsequent reads&#10;assert 'EXECUTION_DRIVER_FAILED' is None">store = &lt;agentloom.storage.filesystem.FileRuntimeStore object at 0x10bfba600&gt;
+kind = 'native', depth = 480
+
+    @pytest.mark.parametrize("kind", ["function", "legacy", "native", "callback"])
+    @pytest.mark.parametrize("depth", [0, 400, 465, 480, 600, 1010])
+    async def test_nested_return_must_finish_or_reject_before_durable_write(store, kind, depth):
+        calls = []
+        async with RuntimeEngine(store=store) as runtime:
+            handle = await build(runtime, nested_adapter(kind, depth, calls)).start("go")
+            error = None
+            result = None
+            try:
+                result = await handle.wait(timeout_s=3)
+            except InfrastructureError as exc:
+                error = exc.code
+            state = runtime._load(handle.run_id)
+            op = operation(runtime, handle.run_id)
+            print(
+                json.dumps(
+                    {
+                        "run_id": handle.run_id,
+                        "operation_id": op["operation_id"],
+                        "depth": depth,
+                        "recursion_limit": sys.getrecursionlimit(),
+                        "kind": kind,
+                        "driver_error": error,
+                        "run_status": state["status"],
+                        "raw": compact_raw(op),
+                        "calls": len(calls),
+                    }
+                )
+            )
+&gt;           assert error is None, "Accepted nesting must survive persistence and subsequent reads"
+E           AssertionError: Accepted nesting must survive persistence and subsequent reads
+E           assert 'EXECUTION_DRIVER_FAILED' is None
+
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round5.py:151: AssertionError</failure></testcase><testcase classname="qa.test_sdk_review_round5" name="test_nested_return_must_finish_or_reject_before_durable_write[file-480-callback]" time="0.102"><failure message="AssertionError: Accepted nesting must survive persistence and subsequent reads&#10;assert 'ATTEMPT_COMPLETION_COMMIT_FAILED' is None">store = &lt;agentloom.storage.filesystem.FileRuntimeStore object at 0x10be2e390&gt;
+kind = 'callback', depth = 480
+
+    @pytest.mark.parametrize("kind", ["function", "legacy", "native", "callback"])
+    @pytest.mark.parametrize("depth", [0, 400, 465, 480, 600, 1010])
+    async def test_nested_return_must_finish_or_reject_before_durable_write(store, kind, depth):
+        calls = []
+        async with RuntimeEngine(store=store) as runtime:
+            handle = await build(runtime, nested_adapter(kind, depth, calls)).start("go")
+            error = None
+            result = None
+            try:
+                result = await handle.wait(timeout_s=3)
+            except InfrastructureError as exc:
+                error = exc.code
+            state = runtime._load(handle.run_id)
+            op = operation(runtime, handle.run_id)
+            print(
+                json.dumps(
+                    {
+                        "run_id": handle.run_id,
+                        "operation_id": op["operation_id"],
+                        "depth": depth,
+                        "recursion_limit": sys.getrecursionlimit(),
+                        "kind": kind,
+                        "driver_error": error,
+                        "run_status": state["status"],
+                        "raw": compact_raw(op),
+                        "calls": len(calls),
+                    }
+                )
+            )
+&gt;           assert error is None, "Accepted nesting must survive persistence and subsequent reads"
+E           AssertionError: Accepted nesting must survive persistence and subsequent reads
+E           assert 'ATTEMPT_COMPLETION_COMMIT_FAILED' is None
+
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round5.py:151: AssertionError</failure></testcase><testcase classname="qa.test_sdk_review_round5" name="test_nested_return_must_finish_or_reject_before_durable_write[file-600-function]" time="0.117" /><testcase classname="qa.test_sdk_review_round5" name="test_nested_return_must_finish_or_reject_before_durable_write[file-600-legacy]" time="0.122" /><testcase classname="qa.test_sdk_review_round5" name="test_nested_return_must_finish_or_reject_before_durable_write[file-600-native]" time="0.084"><failure message="AssertionError: Accepted nesting must survive persistence and subsequent reads&#10;assert 'EXECUTION_DRIVER_FAILED' is None">store = &lt;agentloom.storage.filesystem.FileRuntimeStore object at 0x10bbb64e0&gt;
+kind = 'native', depth = 600
+
+    @pytest.mark.parametrize("kind", ["function", "legacy", "native", "callback"])
+    @pytest.mark.parametrize("depth", [0, 400, 465, 480, 600, 1010])
+    async def test_nested_return_must_finish_or_reject_before_durable_write(store, kind, depth):
+        calls = []
+        async with RuntimeEngine(store=store) as runtime:
+            handle = await build(runtime, nested_adapter(kind, depth, calls)).start("go")
+            error = None
+            result = None
+            try:
+                result = await handle.wait(timeout_s=3)
+            except InfrastructureError as exc:
+                error = exc.code
+            state = runtime._load(handle.run_id)
+            op = operation(runtime, handle.run_id)
+            print(
+                json.dumps(
+                    {
+                        "run_id": handle.run_id,
+                        "operation_id": op["operation_id"],
+                        "depth": depth,
+                        "recursion_limit": sys.getrecursionlimit(),
+                        "kind": kind,
+                        "driver_error": error,
+                        "run_status": state["status"],
+                        "raw": compact_raw(op),
+                        "calls": len(calls),
+                    }
+                )
+            )
+&gt;           assert error is None, "Accepted nesting must survive persistence and subsequent reads"
+E           AssertionError: Accepted nesting must survive persistence and subsequent reads
+E           assert 'EXECUTION_DRIVER_FAILED' is None
+
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round5.py:151: AssertionError</failure></testcase><testcase classname="qa.test_sdk_review_round5" name="test_nested_return_must_finish_or_reject_before_durable_write[file-600-callback]" time="0.071"><failure message="AssertionError: Accepted nesting must survive persistence and subsequent reads&#10;assert 'ATTEMPT_COMPLETION_COMMIT_FAILED' is None">store = &lt;agentloom.storage.filesystem.FileRuntimeStore object at 0x10bbf4860&gt;
+kind = 'callback', depth = 600
+
+    @pytest.mark.parametrize("kind", ["function", "legacy", "native", "callback"])
+    @pytest.mark.parametrize("depth", [0, 400, 465, 480, 600, 1010])
+    async def test_nested_return_must_finish_or_reject_before_durable_write(store, kind, depth):
+        calls = []
+        async with RuntimeEngine(store=store) as runtime:
+            handle = await build(runtime, nested_adapter(kind, depth, calls)).start("go")
+            error = None
+            result = None
+            try:
+                result = await handle.wait(timeout_s=3)
+            except InfrastructureError as exc:
+                error = exc.code
+            state = runtime._load(handle.run_id)
+            op = operation(runtime, handle.run_id)
+            print(
+                json.dumps(
+                    {
+                        "run_id": handle.run_id,
+                        "operation_id": op["operation_id"],
+                        "depth": depth,
+                        "recursion_limit": sys.getrecursionlimit(),
+                        "kind": kind,
+                        "driver_error": error,
+                        "run_status": state["status"],
+                        "raw": compact_raw(op),
+                        "calls": len(calls),
+                    }
+                )
+            )
+&gt;           assert error is None, "Accepted nesting must survive persistence and subsequent reads"
+E           AssertionError: Accepted nesting must survive persistence and subsequent reads
+E           assert 'ATTEMPT_COMPLETION_COMMIT_FAILED' is None
+
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round5.py:151: AssertionError</failure></testcase><testcase classname="qa.test_sdk_review_round5" name="test_nested_return_must_finish_or_reject_before_durable_write[file-1010-function]" time="0.132" /><testcase classname="qa.test_sdk_review_round5" name="test_nested_return_must_finish_or_reject_before_durable_write[file-1010-legacy]" time="0.135" /><testcase classname="qa.test_sdk_review_round5" name="test_nested_return_must_finish_or_reject_before_durable_write[file-1010-native]" time="0.129" /><testcase classname="qa.test_sdk_review_round5" name="test_nested_return_must_finish_or_reject_before_durable_write[file-1010-callback]" time="0.123" /><testcase classname="qa.test_sdk_review_round5" name="test_saved_nested_result_remains_resumable_and_releases_session[memory-function]" time="0.083"><failure message="AssertionError: The stored result must remain usable after restarting RuntimeEngine&#10;assert False&#10; +  where False = all(&lt;generator object test_saved_nested_result_remains_resumable_and_releases_session.&lt;locals&gt;.&lt;genexpr&gt; at 0x10c021b10&gt;)">store = &lt;agentloom.storage.memory.MemoryRuntimeStore object at 0x10bbd4830&gt;
+kind = 'function'
+
+    @pytest.mark.parametrize("kind", ["function", "native"])
+    async def test_saved_nested_result_remains_resumable_and_releases_session(store, kind):
+        calls = []
+        adapter = nested_adapter(kind, 465, calls)
+        observations = []
+        run_id = None
+        for cycle in ("initial", "recovered"):
+            async with RuntimeEngine(store=store) as runtime:
+                handle = await build(runtime, adapter).start(
+                    "go" if run_id is None else None, run_id=run_id, session_id="nested"
+                )
+                run_id = handle.run_id
+                error = None
+                try:
+                    await handle.wait(timeout_s=3)
+                except InfrastructureError as exc:
+                    error = exc.code
+                state = runtime._load(run_id)
+                observations.append(
+                    {
+                        "run_id": run_id,
+                        "cycle": cycle,
+                        "error": error,
+                        "status": state["status"],
+                        "raw": compact_raw(operation(runtime, run_id)),
+                    }
+                )
+                if cycle == "recovered":
+                    try:
+                        next_result = await build(
+                            runtime, FunctionToolAdapter(lambda arguments, context: "ok")
+                        ).ainvoke("next", session_id="nested")
+                        observations[-1]["next_session_turn"] = next_result.status
+                    except RequestError as exc:
+                        observations[-1]["next_session_turn"] = exc.code
+        print(json.dumps({"cycles": observations, "calls": len(calls)}))
+        assert len(calls) == 1, "Recovery must not repeat a tool with a saved completion"
+&gt;       assert all(row["error"] is None and row["status"] == "succeeded" for row in observations), (
+            "The stored result must remain usable after restarting RuntimeEngine"
+        )
+E       AssertionError: The stored result must remain usable after restarting RuntimeEngine
+E       assert False
+E        +  where False = all(&lt;generator object test_saved_nested_result_remains_resumable_and_releases_session.&lt;locals&gt;.&lt;genexpr&gt; at 0x10c021b10&gt;)
+
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round5.py:205: AssertionError</failure></testcase><testcase classname="qa.test_sdk_review_round5" name="test_saved_nested_result_remains_resumable_and_releases_session[memory-native]" time="0.085"><failure message="AssertionError: The stored result must remain usable after restarting RuntimeEngine&#10;assert False&#10; +  where False = all(&lt;generator object test_saved_nested_result_remains_resumable_and_releases_session.&lt;locals&gt;.&lt;genexpr&gt; at 0x10bd1e740&gt;)">store = &lt;agentloom.storage.memory.MemoryRuntimeStore object at 0x10bc49580&gt;
+kind = 'native'
+
+    @pytest.mark.parametrize("kind", ["function", "native"])
+    async def test_saved_nested_result_remains_resumable_and_releases_session(store, kind):
+        calls = []
+        adapter = nested_adapter(kind, 465, calls)
+        observations = []
+        run_id = None
+        for cycle in ("initial", "recovered"):
+            async with RuntimeEngine(store=store) as runtime:
+                handle = await build(runtime, adapter).start(
+                    "go" if run_id is None else None, run_id=run_id, session_id="nested"
+                )
+                run_id = handle.run_id
+                error = None
+                try:
+                    await handle.wait(timeout_s=3)
+                except InfrastructureError as exc:
+                    error = exc.code
+                state = runtime._load(run_id)
+                observations.append(
+                    {
+                        "run_id": run_id,
+                        "cycle": cycle,
+                        "error": error,
+                        "status": state["status"],
+                        "raw": compact_raw(operation(runtime, run_id)),
+                    }
+                )
+                if cycle == "recovered":
+                    try:
+                        next_result = await build(
+                            runtime, FunctionToolAdapter(lambda arguments, context: "ok")
+                        ).ainvoke("next", session_id="nested")
+                        observations[-1]["next_session_turn"] = next_result.status
+                    except RequestError as exc:
+                        observations[-1]["next_session_turn"] = exc.code
+        print(json.dumps({"cycles": observations, "calls": len(calls)}))
+        assert len(calls) == 1, "Recovery must not repeat a tool with a saved completion"
+&gt;       assert all(row["error"] is None and row["status"] == "succeeded" for row in observations), (
+            "The stored result must remain usable after restarting RuntimeEngine"
+        )
+E       AssertionError: The stored result must remain usable after restarting RuntimeEngine
+E       assert False
+E        +  where False = all(&lt;generator object test_saved_nested_result_remains_resumable_and_releases_session.&lt;locals&gt;.&lt;genexpr&gt; at 0x10bd1e740&gt;)
+
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round5.py:205: AssertionError</failure></testcase><testcase classname="qa.test_sdk_review_round5" name="test_saved_nested_result_remains_resumable_and_releases_session[file-function]" time="0.215"><failure message="AssertionError: The stored result must remain usable after restarting RuntimeEngine&#10;assert False&#10; +  where False = all(&lt;generator object test_saved_nested_result_remains_resumable_and_releases_session.&lt;locals&gt;.&lt;genexpr&gt; at 0x10bb5f2a0&gt;)">store = &lt;agentloom.storage.filesystem.FileRuntimeStore object at 0x10bbf5af0&gt;
+kind = 'function'
+
+    @pytest.mark.parametrize("kind", ["function", "native"])
+    async def test_saved_nested_result_remains_resumable_and_releases_session(store, kind):
+        calls = []
+        adapter = nested_adapter(kind, 465, calls)
+        observations = []
+        run_id = None
+        for cycle in ("initial", "recovered"):
+            async with RuntimeEngine(store=store) as runtime:
+                handle = await build(runtime, adapter).start(
+                    "go" if run_id is None else None, run_id=run_id, session_id="nested"
+                )
+                run_id = handle.run_id
+                error = None
+                try:
+                    await handle.wait(timeout_s=3)
+                except InfrastructureError as exc:
+                    error = exc.code
+                state = runtime._load(run_id)
+                observations.append(
+                    {
+                        "run_id": run_id,
+                        "cycle": cycle,
+                        "error": error,
+                        "status": state["status"],
+                        "raw": compact_raw(operation(runtime, run_id)),
+                    }
+                )
+                if cycle == "recovered":
+                    try:
+                        next_result = await build(
+                            runtime, FunctionToolAdapter(lambda arguments, context: "ok")
+                        ).ainvoke("next", session_id="nested")
+                        observations[-1]["next_session_turn"] = next_result.status
+                    except RequestError as exc:
+                        observations[-1]["next_session_turn"] = exc.code
+        print(json.dumps({"cycles": observations, "calls": len(calls)}))
+        assert len(calls) == 1, "Recovery must not repeat a tool with a saved completion"
+&gt;       assert all(row["error"] is None and row["status"] == "succeeded" for row in observations), (
+            "The stored result must remain usable after restarting RuntimeEngine"
+        )
+E       AssertionError: The stored result must remain usable after restarting RuntimeEngine
+E       assert False
+E        +  where False = all(&lt;generator object test_saved_nested_result_remains_resumable_and_releases_session.&lt;locals&gt;.&lt;genexpr&gt; at 0x10bb5f2a0&gt;)
+
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round5.py:205: AssertionError</failure></testcase><testcase classname="qa.test_sdk_review_round5" name="test_saved_nested_result_remains_resumable_and_releases_session[file-native]" time="0.176"><failure message="AssertionError: The stored result must remain usable after restarting RuntimeEngine&#10;assert False&#10; +  where False = all(&lt;generator object test_saved_nested_result_remains_resumable_and_releases_session.&lt;locals&gt;.&lt;genexpr&gt; at 0x10bb3eb50&gt;)">store = &lt;agentloom.storage.filesystem.FileRuntimeStore object at 0x10bd09490&gt;
+kind = 'native'
+
+    @pytest.mark.parametrize("kind", ["function", "native"])
+    async def test_saved_nested_result_remains_resumable_and_releases_session(store, kind):
+        calls = []
+        adapter = nested_adapter(kind, 465, calls)
+        observations = []
+        run_id = None
+        for cycle in ("initial", "recovered"):
+            async with RuntimeEngine(store=store) as runtime:
+                handle = await build(runtime, adapter).start(
+                    "go" if run_id is None else None, run_id=run_id, session_id="nested"
+                )
+                run_id = handle.run_id
+                error = None
+                try:
+                    await handle.wait(timeout_s=3)
+                except InfrastructureError as exc:
+                    error = exc.code
+                state = runtime._load(run_id)
+                observations.append(
+                    {
+                        "run_id": run_id,
+                        "cycle": cycle,
+                        "error": error,
+                        "status": state["status"],
+                        "raw": compact_raw(operation(runtime, run_id)),
+                    }
+                )
+                if cycle == "recovered":
+                    try:
+                        next_result = await build(
+                            runtime, FunctionToolAdapter(lambda arguments, context: "ok")
+                        ).ainvoke("next", session_id="nested")
+                        observations[-1]["next_session_turn"] = next_result.status
+                    except RequestError as exc:
+                        observations[-1]["next_session_turn"] = exc.code
+        print(json.dumps({"cycles": observations, "calls": len(calls)}))
+        assert len(calls) == 1, "Recovery must not repeat a tool with a saved completion"
+&gt;       assert all(row["error"] is None and row["status"] == "succeeded" for row in observations), (
+            "The stored result must remain usable after restarting RuntimeEngine"
+        )
+E       AssertionError: The stored result must remain usable after restarting RuntimeEngine
+E       assert False
+E        +  where False = all(&lt;generator object test_saved_nested_result_remains_resumable_and_releases_session.&lt;locals&gt;.&lt;genexpr&gt; at 0x10bb3eb50&gt;)
+
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round5.py:205: AssertionError</failure></testcase><testcase classname="qa.test_sdk_review_round5" name="test_raised_error_fields_do_not_bypass_operation_error_validation[memory-valid-raised]" time="0.034" /><testcase classname="qa.test_sdk_review_round5" name="test_raised_error_fields_do_not_bypass_operation_error_validation[memory-valid-reported]" time="0.034" /><testcase classname="qa.test_sdk_review_round5" name="test_raised_error_fields_do_not_bypass_operation_error_validation[memory-nan-raised]" time="0.016"><failure message="AssertionError: A malformed tool error must remain a tool failure&#10;assert 'failed' == 'succeeded'&#10;  &#10;  - succeeded&#10;  + failed">store = &lt;agentloom.storage.memory.MemoryRuntimeStore object at 0x10bf00e60&gt;
+channel = 'raised', shape = 'nan'
+
+    @pytest.mark.parametrize("channel", ["raised", "reported"])
+    @pytest.mark.parametrize("shape", ["valid", "nan", "bad-category", "empty-code", "bool-retryable"])
+    async def test_raised_error_fields_do_not_bypass_operation_error_validation(store, channel, shape):
+        calls = []
+    
+        class Native:
+            async def invoke_once(self, request, context):
+                calls.append(1)
+                error = AgentLoomError(
+                    "" if shape == "empty-code" else "FAILED",
+                    category="outside-enum" if shape == "bad-category" else "business",
+                    retry_after_at=float("nan") if shape == "nan" else None,
+                    retryable_transport=1 if shape == "bool-retryable" else False,
+                )
+                if channel == "reported":
+                    context.report_completion(error=error)
+                raise error
+    
+        async with RuntimeEngine(store=store) as runtime:
+            result = await build(runtime, Native()).ainvoke("go")
+            op = operation(runtime, result.run_id)
+            print(
+                json.dumps(
+                    {
+                        "run_id": result.run_id,
+                        "operation_id": op["operation_id"],
+                        "channel": channel,
+                        "shape": shape,
+                        "run_status": result.status,
+                        "run_error": result.error,
+                        "raw": compact_raw(op),
+                    }
+                )
+            )
+&gt;           assert result.status == "succeeded", "A malformed tool error must remain a tool failure"
+E           AssertionError: A malformed tool error must remain a tool failure
+E           assert 'failed' == 'succeeded'
+E             
+E             - succeeded
+E             + failed
+
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round5.py:245: AssertionError</failure></testcase><testcase classname="qa.test_sdk_review_round5" name="test_raised_error_fields_do_not_bypass_operation_error_validation[memory-nan-reported]" time="0.034" /><testcase classname="qa.test_sdk_review_round5" name="test_raised_error_fields_do_not_bypass_operation_error_validation[memory-bad-category-raised]" time="0.034"><failure message="AssertionError: assert 'outside-enum' in {'business', 'cancelled', 'conflict', 'not_found', 'permission', 'protocol', ...}">store = &lt;agentloom.storage.memory.MemoryRuntimeStore object at 0x10bf02f90&gt;
+channel = 'raised', shape = 'bad-category'
+
+    @pytest.mark.parametrize("channel", ["raised", "reported"])
+    @pytest.mark.parametrize("shape", ["valid", "nan", "bad-category", "empty-code", "bool-retryable"])
+    async def test_raised_error_fields_do_not_bypass_operation_error_validation(store, channel, shape):
+        calls = []
+    
+        class Native:
+            async def invoke_once(self, request, context):
+                calls.append(1)
+                error = AgentLoomError(
+                    "" if shape == "empty-code" else "FAILED",
+                    category="outside-enum" if shape == "bad-category" else "business",
+                    retry_after_at=float("nan") if shape == "nan" else None,
+                    retryable_transport=1 if shape == "bool-retryable" else False,
+                )
+                if channel == "reported":
+                    context.report_completion(error=error)
+                raise error
+    
+        async with RuntimeEngine(store=store) as runtime:
+            result = await build(runtime, Native()).ainvoke("go")
+            op = operation(runtime, result.run_id)
+            print(
+                json.dumps(
+                    {
+                        "run_id": result.run_id,
+                        "operation_id": op["operation_id"],
+                        "channel": channel,
+                        "shape": shape,
+                        "run_status": result.status,
+                        "run_error": result.error,
+                        "raw": compact_raw(op),
+                    }
+                )
+            )
+            assert result.status == "succeeded", "A malformed tool error must remain a tool failure"
+            assert len(calls) == 1 and op["status"] == "failed"
+            raw = op["raw"]
+            assert raw["status"] == "failed"
+            error = raw["error"]
+            assert isinstance(error["code"], str) and error["code"]
+            assert isinstance(error["message"], str) and error["message"]
+&gt;           assert error["category"] in {
+                "validation",
+                "permission",
+                "not_found",
+                "conflict",
+                "transport",
+                "rate_limit",
+                "timeout",
+                "business",
+                "protocol",
+                "cancelled",
+                "unknown",
+            }
+E           AssertionError: assert 'outside-enum' in {'business', 'cancelled', 'conflict', 'not_found', 'permission', 'protocol', ...}
+
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round5.py:252: AssertionError</failure></testcase><testcase classname="qa.test_sdk_review_round5" name="test_raised_error_fields_do_not_bypass_operation_error_validation[memory-bad-category-reported]" time="0.034" /><testcase classname="qa.test_sdk_review_round5" name="test_raised_error_fields_do_not_bypass_operation_error_validation[memory-empty-code-raised]" time="0.034"><failure message="AssertionError: assert (True and '')&#10; +  where True = isinstance('', str)">store = &lt;agentloom.storage.memory.MemoryRuntimeStore object at 0x10bd725d0&gt;
+channel = 'raised', shape = 'empty-code'
+
+    @pytest.mark.parametrize("channel", ["raised", "reported"])
+    @pytest.mark.parametrize("shape", ["valid", "nan", "bad-category", "empty-code", "bool-retryable"])
+    async def test_raised_error_fields_do_not_bypass_operation_error_validation(store, channel, shape):
+        calls = []
+    
+        class Native:
+            async def invoke_once(self, request, context):
+                calls.append(1)
+                error = AgentLoomError(
+                    "" if shape == "empty-code" else "FAILED",
+                    category="outside-enum" if shape == "bad-category" else "business",
+                    retry_after_at=float("nan") if shape == "nan" else None,
+                    retryable_transport=1 if shape == "bool-retryable" else False,
+                )
+                if channel == "reported":
+                    context.report_completion(error=error)
+                raise error
+    
+        async with RuntimeEngine(store=store) as runtime:
+            result = await build(runtime, Native()).ainvoke("go")
+            op = operation(runtime, result.run_id)
+            print(
+                json.dumps(
+                    {
+                        "run_id": result.run_id,
+                        "operation_id": op["operation_id"],
+                        "channel": channel,
+                        "shape": shape,
+                        "run_status": result.status,
+                        "run_error": result.error,
+                        "raw": compact_raw(op),
+                    }
+                )
+            )
+            assert result.status == "succeeded", "A malformed tool error must remain a tool failure"
+            assert len(calls) == 1 and op["status"] == "failed"
+            raw = op["raw"]
+            assert raw["status"] == "failed"
+            error = raw["error"]
+&gt;           assert isinstance(error["code"], str) and error["code"]
+E           AssertionError: assert (True and '')
+E            +  where True = isinstance('', str)
+
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round5.py:250: AssertionError</failure></testcase><testcase classname="qa.test_sdk_review_round5" name="test_raised_error_fields_do_not_bypass_operation_error_validation[memory-empty-code-reported]" time="0.034" /><testcase classname="qa.test_sdk_review_round5" name="test_raised_error_fields_do_not_bypass_operation_error_validation[memory-bool-retryable-raised]" time="0.034"><failure message="AssertionError: assert &lt;class 'int'&gt; is bool&#10; +  where &lt;class 'int'&gt; = type(1)">store = &lt;agentloom.storage.memory.MemoryRuntimeStore object at 0x10bf01160&gt;
+channel = 'raised', shape = 'bool-retryable'
+
+    @pytest.mark.parametrize("channel", ["raised", "reported"])
+    @pytest.mark.parametrize("shape", ["valid", "nan", "bad-category", "empty-code", "bool-retryable"])
+    async def test_raised_error_fields_do_not_bypass_operation_error_validation(store, channel, shape):
+        calls = []
+    
+        class Native:
+            async def invoke_once(self, request, context):
+                calls.append(1)
+                error = AgentLoomError(
+                    "" if shape == "empty-code" else "FAILED",
+                    category="outside-enum" if shape == "bad-category" else "business",
+                    retry_after_at=float("nan") if shape == "nan" else None,
+                    retryable_transport=1 if shape == "bool-retryable" else False,
+                )
+                if channel == "reported":
+                    context.report_completion(error=error)
+                raise error
+    
+        async with RuntimeEngine(store=store) as runtime:
+            result = await build(runtime, Native()).ainvoke("go")
+            op = operation(runtime, result.run_id)
+            print(
+                json.dumps(
+                    {
+                        "run_id": result.run_id,
+                        "operation_id": op["operation_id"],
+                        "channel": channel,
+                        "shape": shape,
+                        "run_status": result.status,
+                        "run_error": result.error,
+                        "raw": compact_raw(op),
+                    }
+                )
+            )
+            assert result.status == "succeeded", "A malformed tool error must remain a tool failure"
+            assert len(calls) == 1 and op["status"] == "failed"
+            raw = op["raw"]
+            assert raw["status"] == "failed"
+            error = raw["error"]
+            assert isinstance(error["code"], str) and error["code"]
+            assert isinstance(error["message"], str) and error["message"]
+            assert error["category"] in {
+                "validation",
+                "permission",
+                "not_found",
+                "conflict",
+                "transport",
+                "rate_limit",
+                "timeout",
+                "business",
+                "protocol",
+                "cancelled",
+                "unknown",
+            }
+&gt;           assert type(error["retryable_transport"]) is bool
+E           AssertionError: assert &lt;class 'int'&gt; is bool
+E            +  where &lt;class 'int'&gt; = type(1)
+
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round5.py:265: AssertionError</failure></testcase><testcase classname="qa.test_sdk_review_round5" name="test_raised_error_fields_do_not_bypass_operation_error_validation[memory-bool-retryable-reported]" time="0.034" /><testcase classname="qa.test_sdk_review_round5" name="test_raised_error_fields_do_not_bypass_operation_error_validation[file-valid-raised]" time="0.126" /><testcase classname="qa.test_sdk_review_round5" name="test_raised_error_fields_do_not_bypass_operation_error_validation[file-valid-reported]" time="0.126" /><testcase classname="qa.test_sdk_review_round5" name="test_raised_error_fields_do_not_bypass_operation_error_validation[file-nan-raised]" time="0.086"><failure message="AssertionError: A malformed tool error must remain a tool failure&#10;assert 'failed' == 'succeeded'&#10;  &#10;  - succeeded&#10;  + failed">store = &lt;agentloom.storage.filesystem.FileRuntimeStore object at 0x10bc475c0&gt;
+channel = 'raised', shape = 'nan'
+
+    @pytest.mark.parametrize("channel", ["raised", "reported"])
+    @pytest.mark.parametrize("shape", ["valid", "nan", "bad-category", "empty-code", "bool-retryable"])
+    async def test_raised_error_fields_do_not_bypass_operation_error_validation(store, channel, shape):
+        calls = []
+    
+        class Native:
+            async def invoke_once(self, request, context):
+                calls.append(1)
+                error = AgentLoomError(
+                    "" if shape == "empty-code" else "FAILED",
+                    category="outside-enum" if shape == "bad-category" else "business",
+                    retry_after_at=float("nan") if shape == "nan" else None,
+                    retryable_transport=1 if shape == "bool-retryable" else False,
+                )
+                if channel == "reported":
+                    context.report_completion(error=error)
+                raise error
+    
+        async with RuntimeEngine(store=store) as runtime:
+            result = await build(runtime, Native()).ainvoke("go")
+            op = operation(runtime, result.run_id)
+            print(
+                json.dumps(
+                    {
+                        "run_id": result.run_id,
+                        "operation_id": op["operation_id"],
+                        "channel": channel,
+                        "shape": shape,
+                        "run_status": result.status,
+                        "run_error": result.error,
+                        "raw": compact_raw(op),
+                    }
+                )
+            )
+&gt;           assert result.status == "succeeded", "A malformed tool error must remain a tool failure"
+E           AssertionError: A malformed tool error must remain a tool failure
+E           assert 'failed' == 'succeeded'
+E             
+E             - succeeded
+E             + failed
+
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round5.py:245: AssertionError</failure></testcase><testcase classname="qa.test_sdk_review_round5" name="test_raised_error_fields_do_not_bypass_operation_error_validation[file-nan-reported]" time="0.125" /><testcase classname="qa.test_sdk_review_round5" name="test_raised_error_fields_do_not_bypass_operation_error_validation[file-bad-category-raised]" time="0.136"><failure message="AssertionError: assert 'outside-enum' in {'business', 'cancelled', 'conflict', 'not_found', 'permission', 'protocol', ...}">store = &lt;agentloom.storage.filesystem.FileRuntimeStore object at 0x10bc49820&gt;
+channel = 'raised', shape = 'bad-category'
+
+    @pytest.mark.parametrize("channel", ["raised", "reported"])
+    @pytest.mark.parametrize("shape", ["valid", "nan", "bad-category", "empty-code", "bool-retryable"])
+    async def test_raised_error_fields_do_not_bypass_operation_error_validation(store, channel, shape):
+        calls = []
+    
+        class Native:
+            async def invoke_once(self, request, context):
+                calls.append(1)
+                error = AgentLoomError(
+                    "" if shape == "empty-code" else "FAILED",
+                    category="outside-enum" if shape == "bad-category" else "business",
+                    retry_after_at=float("nan") if shape == "nan" else None,
+                    retryable_transport=1 if shape == "bool-retryable" else False,
+                )
+                if channel == "reported":
+                    context.report_completion(error=error)
+                raise error
+    
+        async with RuntimeEngine(store=store) as runtime:
+            result = await build(runtime, Native()).ainvoke("go")
+            op = operation(runtime, result.run_id)
+            print(
+                json.dumps(
+                    {
+                        "run_id": result.run_id,
+                        "operation_id": op["operation_id"],
+                        "channel": channel,
+                        "shape": shape,
+                        "run_status": result.status,
+                        "run_error": result.error,
+                        "raw": compact_raw(op),
+                    }
+                )
+            )
+            assert result.status == "succeeded", "A malformed tool error must remain a tool failure"
+            assert len(calls) == 1 and op["status"] == "failed"
+            raw = op["raw"]
+            assert raw["status"] == "failed"
+            error = raw["error"]
+            assert isinstance(error["code"], str) and error["code"]
+            assert isinstance(error["message"], str) and error["message"]
+&gt;           assert error["category"] in {
+                "validation",
+                "permission",
+                "not_found",
+                "conflict",
+                "transport",
+                "rate_limit",
+                "timeout",
+                "business",
+                "protocol",
+                "cancelled",
+                "unknown",
+            }
+E           AssertionError: assert 'outside-enum' in {'business', 'cancelled', 'conflict', 'not_found', 'permission', 'protocol', ...}
+
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round5.py:252: AssertionError</failure></testcase><testcase classname="qa.test_sdk_review_round5" name="test_raised_error_fields_do_not_bypass_operation_error_validation[file-bad-category-reported]" time="0.138" /><testcase classname="qa.test_sdk_review_round5" name="test_raised_error_fields_do_not_bypass_operation_error_validation[file-empty-code-raised]" time="0.124"><failure message="AssertionError: assert (True and '')&#10; +  where True = isinstance('', str)">store = &lt;agentloom.storage.filesystem.FileRuntimeStore object at 0x10bcfa060&gt;
+channel = 'raised', shape = 'empty-code'
+
+    @pytest.mark.parametrize("channel", ["raised", "reported"])
+    @pytest.mark.parametrize("shape", ["valid", "nan", "bad-category", "empty-code", "bool-retryable"])
+    async def test_raised_error_fields_do_not_bypass_operation_error_validation(store, channel, shape):
+        calls = []
+    
+        class Native:
+            async def invoke_once(self, request, context):
+                calls.append(1)
+                error = AgentLoomError(
+                    "" if shape == "empty-code" else "FAILED",
+                    category="outside-enum" if shape == "bad-category" else "business",
+                    retry_after_at=float("nan") if shape == "nan" else None,
+                    retryable_transport=1 if shape == "bool-retryable" else False,
+                )
+                if channel == "reported":
+                    context.report_completion(error=error)
+                raise error
+    
+        async with RuntimeEngine(store=store) as runtime:
+            result = await build(runtime, Native()).ainvoke("go")
+            op = operation(runtime, result.run_id)
+            print(
+                json.dumps(
+                    {
+                        "run_id": result.run_id,
+                        "operation_id": op["operation_id"],
+                        "channel": channel,
+                        "shape": shape,
+                        "run_status": result.status,
+                        "run_error": result.error,
+                        "raw": compact_raw(op),
+                    }
+                )
+            )
+            assert result.status == "succeeded", "A malformed tool error must remain a tool failure"
+            assert len(calls) == 1 and op["status"] == "failed"
+            raw = op["raw"]
+            assert raw["status"] == "failed"
+            error = raw["error"]
+&gt;           assert isinstance(error["code"], str) and error["code"]
+E           AssertionError: assert (True and '')
+E            +  where True = isinstance('', str)
+
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round5.py:250: AssertionError</failure></testcase><testcase classname="qa.test_sdk_review_round5" name="test_raised_error_fields_do_not_bypass_operation_error_validation[file-empty-code-reported]" time="0.112" /><testcase classname="qa.test_sdk_review_round5" name="test_raised_error_fields_do_not_bypass_operation_error_validation[file-bool-retryable-raised]" time="0.123"><failure message="AssertionError: assert &lt;class 'int'&gt; is bool&#10; +  where &lt;class 'int'&gt; = type(1)">store = &lt;agentloom.storage.filesystem.FileRuntimeStore object at 0x10be2d280&gt;
+channel = 'raised', shape = 'bool-retryable'
+
+    @pytest.mark.parametrize("channel", ["raised", "reported"])
+    @pytest.mark.parametrize("shape", ["valid", "nan", "bad-category", "empty-code", "bool-retryable"])
+    async def test_raised_error_fields_do_not_bypass_operation_error_validation(store, channel, shape):
+        calls = []
+    
+        class Native:
+            async def invoke_once(self, request, context):
+                calls.append(1)
+                error = AgentLoomError(
+                    "" if shape == "empty-code" else "FAILED",
+                    category="outside-enum" if shape == "bad-category" else "business",
+                    retry_after_at=float("nan") if shape == "nan" else None,
+                    retryable_transport=1 if shape == "bool-retryable" else False,
+                )
+                if channel == "reported":
+                    context.report_completion(error=error)
+                raise error
+    
+        async with RuntimeEngine(store=store) as runtime:
+            result = await build(runtime, Native()).ainvoke("go")
+            op = operation(runtime, result.run_id)
+            print(
+                json.dumps(
+                    {
+                        "run_id": result.run_id,
+                        "operation_id": op["operation_id"],
+                        "channel": channel,
+                        "shape": shape,
+                        "run_status": result.status,
+                        "run_error": result.error,
+                        "raw": compact_raw(op),
+                    }
+                )
+            )
+            assert result.status == "succeeded", "A malformed tool error must remain a tool failure"
+            assert len(calls) == 1 and op["status"] == "failed"
+            raw = op["raw"]
+            assert raw["status"] == "failed"
+            error = raw["error"]
+            assert isinstance(error["code"], str) and error["code"]
+            assert isinstance(error["message"], str) and error["message"]
+            assert error["category"] in {
+                "validation",
+                "permission",
+                "not_found",
+                "conflict",
+                "transport",
+                "rate_limit",
+                "timeout",
+                "business",
+                "protocol",
+                "cancelled",
+                "unknown",
+            }
+&gt;           assert type(error["retryable_transport"]) is bool
+E           AssertionError: assert &lt;class 'int'&gt; is bool
+E            +  where &lt;class 'int'&gt; = type(1)
+
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round5.py:265: AssertionError</failure></testcase><testcase classname="qa.test_sdk_review_round5" name="test_raised_error_fields_do_not_bypass_operation_error_validation[file-bool-retryable-reported]" time="0.137" /></testsuite></testsuites>

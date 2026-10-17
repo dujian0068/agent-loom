@@ -84,6 +84,33 @@ async def main():
         async def invoke_once(self, request, context):
             audit("tool")
             try:
+                if kind.startswith("native-depth"):
+                    from agentloom.configuration import json_values
+
+                    # Four containers belong to the ToolResult envelope.
+                    depth = int(
+                        os.environ.get(
+                            "COMPLETION_PROBE_DEPTH",
+                            getattr(json_values, "MAX_JSON_DEPTH", 128) - 4,
+                        )
+                    )
+                    if kind == "native-depth-invalid":
+                        depth += 1
+                    value = None
+                    for _ in range(depth):
+                        value = [value]
+                    context.report_completion(
+                        {
+                            "status": "succeeded",
+                            "content": [
+                                {"type": "json", "json_ref": {"kind": "inline", "value": value}}
+                            ],
+                            "error": None,
+                            "metadata": {},
+                            "artifacts": [],
+                        }
+                    )
+                    return
                 context.report_completion(
                     error=AgentLoomError(
                         "KNOWN_RESPONSE",

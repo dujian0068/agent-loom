@@ -1,0 +1,598 @@
+........................................................................ [  6%]
+........................................................................ [ 12%]
+........................................................................ [ 19%]
+........................................................................ [ 25%]
+........................................................................ [ 32%]
+........................................................................ [ 38%]
+........................................................................ [ 45%]
+........................................................................ [ 51%]
+........................................................................ [ 58%]
+......................................................................F. [ 64%]
+....FF.F.F.............................................................. [ 71%]
+........................................................................ [ 77%]
+........................................................................ [ 84%]
+........................................................................ [ 90%]
+........................................................................ [ 97%]
+................................                                         [100%]
+=================================== FAILURES ===================================
+_______________ test_illegal_hook_patch_is_discarded_atomically ________________
+
+build = <function build.<locals>.factory at 0x10bc9b9c0>
+
+>   ???
+E   AssertionError: assert None == [{'v': 1}]
+
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/tests/test_review_whitebox_probe.py:462: AssertionError
+_____________ test_compaction_triggers_at_the_configured_threshold _____________
+
+self = <agentloom.public.handles.RunHandle object at 0x10bcc7890>
+
+    async def wait(self, *, timeout_s=None):
+        """Observe business completion and return its RunResult.
+    
+        Args:
+            timeout_s: Finite positive seconds for this wait, or None to wait
+                indefinitely. It does not change the Run's execution deadline.
+    
+        Returns:
+            RunResult for any business terminal status, including failure, stop
+            and timeout. Cleanup may still be pending; repeated waits are safe.
+    
+        Raises:
+            WaitTimeout: This observation exceeded timeout_s; the Run continues.
+            RequestError: Invalid timeout or a Run whose record is unavailable.
+            InfrastructureError: Bound runtime closed/on another event loop,
+                storage failure, or a local execution-driver failure.
+    
+        Cancelling this wait does not cancel the Run. Use stop() to request a
+        durable stop. After closing this runtime, attach the Run to another open
+        runtime sharing its storage instead of reusing this handle.
+        """
+        if timeout_s is not None and (
+            isinstance(timeout_s, bool)
+            or not isinstance(timeout_s, (int, float))
+            or not math.isfinite(timeout_s)
+            or timeout_s <= 0
+        ):
+            raise RequestError("WAIT_TIMEOUT_INVALID")
+    
+        async def observe():
+            while True:
+                self._runtime.ensure_open()
+                state = self._runtime._load(self.run_id)
+                if state["status"] in TERMINAL:
+                    return result_from(state)
+                self._runtime.raise_local_failure(self.run_id)
+                await asyncio.sleep(0.01)
+    
+        try:
+            async with asyncio.timeout(timeout_s):
+>               return await observe()
+                       ^^^^^^^^^^^^^^^
+
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/public/handles.py:57: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/public/handles.py:53: in observe
+    await asyncio.sleep(0.01)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+delay = 0.01, result = None
+
+    async def sleep(delay, result=None):
+        """Coroutine that completes after a given time (in seconds)."""
+        if delay <= 0:
+            await __sleep0()
+            return result
+    
+        loop = events.get_running_loop()
+        future = loop.create_future()
+        h = loop.call_later(delay,
+                            futures._set_result_unless_cancelled,
+                            future, result)
+        try:
+>           return await future
+                   ^^^^^^^^^^^^
+E           asyncio.exceptions.CancelledError
+
+/Users/bmilk/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/asyncio/tasks.py:665: CancelledError
+
+The above exception was the direct cause of the following exception:
+
+self = <agentloom.public.handles.RunHandle object at 0x10bcc7890>
+
+    async def wait(self, *, timeout_s=None):
+        """Observe business completion and return its RunResult.
+    
+        Args:
+            timeout_s: Finite positive seconds for this wait, or None to wait
+                indefinitely. It does not change the Run's execution deadline.
+    
+        Returns:
+            RunResult for any business terminal status, including failure, stop
+            and timeout. Cleanup may still be pending; repeated waits are safe.
+    
+        Raises:
+            WaitTimeout: This observation exceeded timeout_s; the Run continues.
+            RequestError: Invalid timeout or a Run whose record is unavailable.
+            InfrastructureError: Bound runtime closed/on another event loop,
+                storage failure, or a local execution-driver failure.
+    
+        Cancelling this wait does not cancel the Run. Use stop() to request a
+        durable stop. After closing this runtime, attach the Run to another open
+        runtime sharing its storage instead of reusing this handle.
+        """
+        if timeout_s is not None and (
+            isinstance(timeout_s, bool)
+            or not isinstance(timeout_s, (int, float))
+            or not math.isfinite(timeout_s)
+            or timeout_s <= 0
+        ):
+            raise RequestError("WAIT_TIMEOUT_INVALID")
+    
+        async def observe():
+            while True:
+                self._runtime.ensure_open()
+                state = self._runtime._load(self.run_id)
+                if state["status"] in TERMINAL:
+                    return result_from(state)
+                self._runtime.raise_local_failure(self.run_id)
+                await asyncio.sleep(0.01)
+    
+        try:
+>           async with asyncio.timeout(timeout_s):
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/public/handles.py:56: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <Timeout [expired]>
+exc_type = <class 'asyncio.exceptions.CancelledError'>
+exc_val = CancelledError(), exc_tb = <traceback object at 0x10be48c80>
+
+    async def __aexit__(
+        self,
+        exc_type: Optional[Type[BaseException]],
+        exc_val: Optional[BaseException],
+        exc_tb: Optional[TracebackType],
+    ) -> Optional[bool]:
+        assert self._state in (_State.ENTERED, _State.EXPIRING)
+    
+        if self._timeout_handler is not None:
+            self._timeout_handler.cancel()
+            self._timeout_handler = None
+    
+        if self._state is _State.EXPIRING:
+            self._state = _State.EXPIRED
+    
+            if self._task.uncancel() <= self._cancelling and exc_type is exceptions.CancelledError:
+                # Since there are no new cancel requests, we're
+                # handling this.
+>               raise TimeoutError from exc_val
+E               TimeoutError
+
+/Users/bmilk/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/asyncio/timeouts.py:115: TimeoutError
+
+The above exception was the direct cause of the following exception:
+
+build = <function build.<locals>.factory at 0x10bc99620>
+
+    purposes = []
+    
+    class Recording:
+        def __init__(self, inner):
+            self.descriptor = inner.descriptor
+            self.inner = inner
+    
+        async def stream_once(self, request, context):
+            purposes.append(request.purpose)
+            async for frame in self.inner.stream_once(request, context):
+                yield frame
+    
+    
+    filler = "x" * 4000
+    
+    def responder(request):
+        if request.purpose == "compaction":
+            return ModelResponse("SUMMARY")
+        feedback = [m for m in request.messages if m["role"] == "tool"]
+        if len(feedback) < 3:
+            return ModelResponse(
+                tool_calls=(ToolCall("echo", {"v": filler}),),
+            )
+        return ModelResponse("final")
+    
+    async with RuntimeEngine() as runtime:
+        agent = build(
+            runtime,
+            responder,
+            definition=_tool_definition(),
+            model=Recording(ScriptedModel(responder, context_window_tokens=20_000)),
+            capabilities=CapabilityRegistry(tools=(tool(lambda a, c: len(a["v"])),)),
+            context_policy=ContextPolicy(trigger_ratio=0.3),
+        )
+        result = await (await agent.start("q")).wait(timeout_s=30)
+        assert result.status == "succeeded", result.error
+        assert "compaction" in purposes, purposes
+>       assert result.usage.compaction_model_attempts >= 1
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/tests/test_review_whitebox_probe.py:642: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <agentloom.public.handles.RunHandle object at 0x10bcc7890>
+
+    async def wait(self, *, timeout_s=None):
+        """Observe business completion and return its RunResult.
+    
+        Args:
+            timeout_s: Finite positive seconds for this wait, or None to wait
+                indefinitely. It does not change the Run's execution deadline.
+    
+        Returns:
+            RunResult for any business terminal status, including failure, stop
+            and timeout. Cleanup may still be pending; repeated waits are safe.
+    
+        Raises:
+            WaitTimeout: This observation exceeded timeout_s; the Run continues.
+            RequestError: Invalid timeout or a Run whose record is unavailable.
+            InfrastructureError: Bound runtime closed/on another event loop,
+                storage failure, or a local execution-driver failure.
+    
+        Cancelling this wait does not cancel the Run. Use stop() to request a
+        durable stop. After closing this runtime, attach the Run to another open
+        runtime sharing its storage instead of reusing this handle.
+        """
+        if timeout_s is not None and (
+            isinstance(timeout_s, bool)
+            or not isinstance(timeout_s, (int, float))
+            or not math.isfinite(timeout_s)
+            or timeout_s <= 0
+        ):
+            raise RequestError("WAIT_TIMEOUT_INVALID")
+    
+        async def observe():
+            while True:
+                self._runtime.ensure_open()
+                state = self._runtime._load(self.run_id)
+                if state["status"] in TERMINAL:
+                    return result_from(state)
+                self._runtime.raise_local_failure(self.run_id)
+                await asyncio.sleep(0.01)
+    
+        try:
+            async with asyncio.timeout(timeout_s):
+                return await observe()
+        except TimeoutError as exc:
+>           raise WaitTimeout("This wait expired; the run continues") from exc
+E           agentloom.errors.WaitTimeout: This wait expired; the run continues
+
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/public/handles.py:59: WaitTimeout
+____________ test_unknown_or_unauthorized_tool_creates_no_operation ____________
+
+build = <function build.<locals>.factory at 0x10b2c84a0>
+
+    async with RuntimeEngine() as runtime:
+        statuses = {}
+    
+        def responder(request):
+            feedback = [m for m in request.messages if m["role"] == "tool"]
+            if not feedback:
+                return ModelResponse(
+                    tool_calls=(
+                        ToolCall("nope", {}),
+                        ToolCall("echo", {"v": 5}),
+                    )
+                )
+            decoded = [json.loads(m["content"]) for m in feedback]
+            statuses["codes"] = [
+                (item.get("status"), (item.get("error") or {}).get("code")) for item in decoded
+            ]
+            return ModelResponse("done")
+    
+        agent = build(
+            runtime,
+            responder,
+            definition=_tool_definition(),
+            capabilities=CapabilityRegistry(tools=(tool(lambda a, c: a["v"]),)),
+        )
+        result = await (await agent.start("q")).wait(timeout_s=10)
+        run = runtime._load(result.run_id)
+        assert result.status == "succeeded", result.error
+        assert statuses["codes"][0] == ("failed", "CAPABILITY_NOT_FOUND")
+        assert len(run["operations"]) == 2  # one model call and one real tool
+>       assert [o["event_type"] for o in run["operations"].values()].count("capability.invoke") == 1
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AssertionError: assert 'failed' == 'succeeded'
+E         
+E         - succeeded
+E         + failed
+
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/tests/test_review_whitebox_probe.py:682: AssertionError
+___________________ test_result_read_is_denied_across_roles ____________________
+
+self = <agentloom.public.handles.RunHandle object at 0x10b2109b0>
+
+    async def wait(self, *, timeout_s=None):
+        """Observe business completion and return its RunResult.
+    
+        Args:
+            timeout_s: Finite positive seconds for this wait, or None to wait
+                indefinitely. It does not change the Run's execution deadline.
+    
+        Returns:
+            RunResult for any business terminal status, including failure, stop
+            and timeout. Cleanup may still be pending; repeated waits are safe.
+    
+        Raises:
+            WaitTimeout: This observation exceeded timeout_s; the Run continues.
+            RequestError: Invalid timeout or a Run whose record is unavailable.
+            InfrastructureError: Bound runtime closed/on another event loop,
+                storage failure, or a local execution-driver failure.
+    
+        Cancelling this wait does not cancel the Run. Use stop() to request a
+        durable stop. After closing this runtime, attach the Run to another open
+        runtime sharing its storage instead of reusing this handle.
+        """
+        if timeout_s is not None and (
+            isinstance(timeout_s, bool)
+            or not isinstance(timeout_s, (int, float))
+            or not math.isfinite(timeout_s)
+            or timeout_s <= 0
+        ):
+            raise RequestError("WAIT_TIMEOUT_INVALID")
+    
+        async def observe():
+            while True:
+                self._runtime.ensure_open()
+                state = self._runtime._load(self.run_id)
+                if state["status"] in TERMINAL:
+                    return result_from(state)
+                self._runtime.raise_local_failure(self.run_id)
+                await asyncio.sleep(0.01)
+    
+        try:
+            async with asyncio.timeout(timeout_s):
+>               return await observe()
+                       ^^^^^^^^^^^^^^^
+
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/public/handles.py:57: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/public/handles.py:53: in observe
+    await asyncio.sleep(0.01)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+delay = 0.01, result = None
+
+    async def sleep(delay, result=None):
+        """Coroutine that completes after a given time (in seconds)."""
+        if delay <= 0:
+            await __sleep0()
+            return result
+    
+        loop = events.get_running_loop()
+        future = loop.create_future()
+        h = loop.call_later(delay,
+                            futures._set_result_unless_cancelled,
+                            future, result)
+        try:
+>           return await future
+                   ^^^^^^^^^^^^
+E           asyncio.exceptions.CancelledError
+
+/Users/bmilk/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/asyncio/tasks.py:665: CancelledError
+
+The above exception was the direct cause of the following exception:
+
+self = <agentloom.public.handles.RunHandle object at 0x10b2109b0>
+
+    async def wait(self, *, timeout_s=None):
+        """Observe business completion and return its RunResult.
+    
+        Args:
+            timeout_s: Finite positive seconds for this wait, or None to wait
+                indefinitely. It does not change the Run's execution deadline.
+    
+        Returns:
+            RunResult for any business terminal status, including failure, stop
+            and timeout. Cleanup may still be pending; repeated waits are safe.
+    
+        Raises:
+            WaitTimeout: This observation exceeded timeout_s; the Run continues.
+            RequestError: Invalid timeout or a Run whose record is unavailable.
+            InfrastructureError: Bound runtime closed/on another event loop,
+                storage failure, or a local execution-driver failure.
+    
+        Cancelling this wait does not cancel the Run. Use stop() to request a
+        durable stop. After closing this runtime, attach the Run to another open
+        runtime sharing its storage instead of reusing this handle.
+        """
+        if timeout_s is not None and (
+            isinstance(timeout_s, bool)
+            or not isinstance(timeout_s, (int, float))
+            or not math.isfinite(timeout_s)
+            or timeout_s <= 0
+        ):
+            raise RequestError("WAIT_TIMEOUT_INVALID")
+    
+        async def observe():
+            while True:
+                self._runtime.ensure_open()
+                state = self._runtime._load(self.run_id)
+                if state["status"] in TERMINAL:
+                    return result_from(state)
+                self._runtime.raise_local_failure(self.run_id)
+                await asyncio.sleep(0.01)
+    
+        try:
+>           async with asyncio.timeout(timeout_s):
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/public/handles.py:56: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <Timeout [expired]>
+exc_type = <class 'asyncio.exceptions.CancelledError'>
+exc_val = CancelledError(), exc_tb = <traceback object at 0x10bc20500>
+
+    async def __aexit__(
+        self,
+        exc_type: Optional[Type[BaseException]],
+        exc_val: Optional[BaseException],
+        exc_tb: Optional[TracebackType],
+    ) -> Optional[bool]:
+        assert self._state in (_State.ENTERED, _State.EXPIRING)
+    
+        if self._timeout_handler is not None:
+            self._timeout_handler.cancel()
+            self._timeout_handler = None
+    
+        if self._state is _State.EXPIRING:
+            self._state = _State.EXPIRED
+    
+            if self._task.uncancel() <= self._cancelling and exc_type is exceptions.CancelledError:
+                # Since there are no new cancel requests, we're
+                # handling this.
+>               raise TimeoutError from exc_val
+E               TimeoutError
+
+/Users/bmilk/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/asyncio/timeouts.py:115: TimeoutError
+
+The above exception was the direct cause of the following exception:
+
+build = <function build.<locals>.factory at 0x10b1e7560>
+
+    big = "y" * (70 * 1024)
+    
+    async def produce(arguments, context):
+        return big
+    
+    last_run_id = []
+    
+    async with RuntimeEngine() as runtime:
+        refs = {}
+    
+        def responder(request):
+            feedback = [m for m in request.messages if m["role"] == "tool"]
+            if request.role_key == "planner":
+                if not feedback:
+                    return ModelResponse(
+                        tool_calls=(
+                            ToolCall("delegate_task", {"executor": "w", "task": "produce"}),
+                        )
+                    )
+                if len(feedback) == 1:
+                    # White-box: address the Executor's own committed operation.
+                    refs["executor_ref"] = executor_ref(runtime, last_run_id[0])
+                    return ModelResponse(
+                        tool_calls=(ToolCall("result_read", refs["executor_ref"]),)
+                    )
+                return ModelResponse("plan done")
+            if not feedback:
+                return ModelResponse(tool_calls=(ToolCall("big", {}),))
+            return ModelResponse("sub done")
+    
+        agent = build(
+            runtime,
+            responder,
+>           cls=PlanAgent,
+                 ^^^^^^^^^^
+            executors={"w": _tool_definition("worker", "W", "big", "produces large output")},
+            capabilities=CapabilityRegistry(tools=(tool(produce, "big"),)),
+        )
+
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/tests/test_review_whitebox_probe.py:777: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <agentloom.public.handles.RunHandle object at 0x10b2109b0>
+
+    async def wait(self, *, timeout_s=None):
+        """Observe business completion and return its RunResult.
+    
+        Args:
+            timeout_s: Finite positive seconds for this wait, or None to wait
+                indefinitely. It does not change the Run's execution deadline.
+    
+        Returns:
+            RunResult for any business terminal status, including failure, stop
+            and timeout. Cleanup may still be pending; repeated waits are safe.
+    
+        Raises:
+            WaitTimeout: This observation exceeded timeout_s; the Run continues.
+            RequestError: Invalid timeout or a Run whose record is unavailable.
+            InfrastructureError: Bound runtime closed/on another event loop,
+                storage failure, or a local execution-driver failure.
+    
+        Cancelling this wait does not cancel the Run. Use stop() to request a
+        durable stop. After closing this runtime, attach the Run to another open
+        runtime sharing its storage instead of reusing this handle.
+        """
+        if timeout_s is not None and (
+            isinstance(timeout_s, bool)
+            or not isinstance(timeout_s, (int, float))
+            or not math.isfinite(timeout_s)
+            or timeout_s <= 0
+        ):
+            raise RequestError("WAIT_TIMEOUT_INVALID")
+    
+        async def observe():
+            while True:
+                self._runtime.ensure_open()
+                state = self._runtime._load(self.run_id)
+                if state["status"] in TERMINAL:
+                    return result_from(state)
+                self._runtime.raise_local_failure(self.run_id)
+                await asyncio.sleep(0.01)
+    
+        try:
+            async with asyncio.timeout(timeout_s):
+                return await observe()
+        except TimeoutError as exc:
+>           raise WaitTimeout("This wait expired; the run continues") from exc
+E           agentloom.errors.WaitTimeout: This wait expired; the run continues
+
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/public/handles.py:59: WaitTimeout
+_____________ test_stop_closes_admission_and_the_first_reason_wins _____________
+
+build = <function build.<locals>.factory at 0x10bc98680>
+
+                capabilities=CapabilityRegistry(tools=(tool(produce, "big"),)),
+            )
+            result = await (await agent.start("q")).wait(timeout_s=15)
+            assert result.status == "succeeded", result.error
+            assert captured["truncated"] is True
+            assert captured["total"] == len(big.encode())
+            assert captured["chunk"] == big[64 * 1024 : 64 * 1024 + 4096]
+    
+    
+    # ---------------------------------------------------------------- control & recovery
+    
+    
+    async def test_stop_closes_admission_and_the_first_reason_wins(build):
+        """requirements.md §6: stop closes new business entries and the persisted terminal
+        reason cannot later be overwritten by a late success."""
+    
+        class Slow:
+            def __init__(self, inner):
+                self.descriptor = inner.descriptor
+                self.inner = inner
+    
+            async def stream_once(self, request, context):
+>               async for frame in self.inner.stream_once(request, context):
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E               AssertionError: assert 'succeeded' == 'cancelled'
+E                 
+E                 - cancelled
+E                 + succeeded
+
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/tests/test_review_whitebox_probe.py:866: AssertionError
+---------------------------- Captured log teardown -----------------------------
+WARNING  agentloom.runtime.maintenance:maintenance.py:48 Maintenance failed: phase=cleanup run_id=cab87c1c-3430-4072-9715-b2d0bb83a060 code=STORE_CLOSED
+WARNING  agentloom.runtime.maintenance:maintenance.py:69 Maintenance diagnostic unavailable: phase=cleanup run_id=cab87c1c-3430-4072-9715-b2d0bb83a060 code=STORE_CLOSED
+- generated xml file: /Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/evidence/round5-fixes-20261017/regression.junit.xml -
+=========================== short test summary info ============================
+FAILED agentloom-sdk/tests/test_review_whitebox_probe.py::test_illegal_hook_patch_is_discarded_atomically
+FAILED agentloom-sdk/tests/test_review_whitebox_probe.py::test_compaction_triggers_at_the_configured_threshold
+FAILED agentloom-sdk/tests/test_review_whitebox_probe.py::test_unknown_or_unauthorized_tool_creates_no_operation
+FAILED agentloom-sdk/tests/test_review_whitebox_probe.py::test_result_read_is_denied_across_roles
+FAILED agentloom-sdk/tests/test_review_whitebox_probe.py::test_stop_closes_admission_and_the_first_reason_wins
+5 failed, 1107 passed in 340.07s (0:05:40)

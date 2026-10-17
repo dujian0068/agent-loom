@@ -11,7 +11,8 @@ from ..capabilities.invocation import (
     normalize_completion,
     normalize_error_completion,
 )
-from ..configuration import digest, validate_schema
+from ..configuration import validate_schema
+from ..configuration.json_documents import document_digest as digest
 from ..errors import AgentLoomError, InfrastructureError
 from ..models.material import (
     PartialMaterial,

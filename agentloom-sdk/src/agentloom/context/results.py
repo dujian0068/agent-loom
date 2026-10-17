@@ -2,7 +2,8 @@
 
 import hashlib
 
-from ..configuration import canonical, digest
+from ..configuration.json_documents import canonical_document as canonical
+from ..configuration.json_documents import document_digest as digest
 from ..errors import AgentLoomError
 
 PREVIEW_BYTES = 64 * 1024

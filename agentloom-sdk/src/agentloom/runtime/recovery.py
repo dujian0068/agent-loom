@@ -2,7 +2,7 @@
 
 from uuid import NAMESPACE_URL, uuid5
 
-from ..configuration import digest
+from ..configuration.json_documents import document_digest as digest
 from ..configuration.json_values import MAX_JSON_INTEGER
 from ..errors import InfrastructureError
 from .usage import TOKEN_KEYS

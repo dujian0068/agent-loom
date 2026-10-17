@@ -186,6 +186,8 @@ tool_agent = app.builder.with_options(capabilities=registry).build(tool_definiti
 
 报告失败可使用 `context.report_completion(error=error)`，error 为 AgentLoomError。合法失败提交后，该调用会抛出原异常，可在 finally 中关闭资源；external_outcome="known" 会保留 completed 事实并阻止重试，unknown／not_started 保留原语义。非法错误字段或循环返回值会成为完成后的协议失败，无需给异常添加私有属性。
 
+JSON 边界材料最多 128 层容器，标量深度为 0；工具结果计算完整 ToolResult 信封，因此单个 inline JSON 值最多 124 层。超限会保存 `CAPABILITY_RESULT_INVALID / protocol / completed`，让模型收到失败反馈，不保存无法读取的深嵌套材料。直接抛出的 AgentLoomError 同样验证错误字段；非法错误被替换为 `ADAPTER_ERROR_INVALID / protocol / unknown`，不会因 NaN 等字段导致整个 Run 序列化失败。详细计数与恢复边界见[能力结果合同](capabilities.md#2-冻结能力目录调用结果与按需读取)。
+
 ### MCP、文件和 Skill
 
 | 能力 | 当前接入方式 |
@@ -293,6 +295,6 @@ Plan 恢复还须传回原 Executor 表。已终态返回保存结果；有效 o
 
 接入验证至少覆盖：启动参数构造、角色权限绑定、一次真实业务调用、同 run_id 重开、停止／等待超时区别、维护状态查询。确定性脚本用于检查本地装配；真实模型端点和 MCP 服务需按部署环境另行联调。
 
-最近一次第四轮修复回归为 **948 passed**，包含 SDK 和四轮 QA；其源码摘要、测试范围及真实进程恢复证据见[验证记录](implementation.md#第四轮完成回调与-json-边界修复)。该结果对应指定测试快照，不自动覆盖后续新增的 QA 文件。
+最近一次第五轮修复回归为 **1089 passed**，包含既有 SDK、69 项新增修复测试及五轮 QA；源码摘要、测试范围和进程恢复证据见[验证记录](implementation.md#第五轮持久化-json-深度与异常记录修复)。独立新增的白盒探针单独记录，不计入此快照。
 
 本页 7 个 Python 代码块已通过本地验证，另验证停止、补充、等待超时和查询入口，共 8 个场景；真实模型片段仅验证构造，其余执行使用确定性模型，没有远端服务调用。[文档代码与验证结果](../../agentloom-sdk/qa/evidence/docs-integration-20261017/summary.json)独立保存，不计入上述 SDK 回归数量。

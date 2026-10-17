@@ -1,0 +1,46 @@
+{
+  "scope_note": "The requested Round 5 report explicitly excluded the independently changing untracked whitebox probe. Its original workspace file was never modified by this fix.",
+  "full_exploratory_run": {
+    "tests": 1112,
+    "failures": 5,
+    "errors": 0,
+    "skipped": 0,
+    "seconds": 340.038,
+    "failed_cases": [
+      "test_illegal_hook_patch_is_discarded_atomically",
+      "test_compaction_triggers_at_the_configured_threshold",
+      "test_unknown_or_unauthorized_tool_creates_no_operation",
+      "test_result_read_is_denied_across_roles",
+      "test_stop_closes_admission_and_the_first_reason_wins"
+    ]
+  },
+  "snapshot_run": {
+    "tests": 26,
+    "failures": 3,
+    "errors": 0,
+    "skipped": 0,
+    "seconds": 36.801,
+    "failed_cases": [
+      "test_compaction_triggers_at_the_configured_threshold",
+      "test_unknown_or_unauthorized_tool_creates_no_operation",
+      "test_result_read_is_denied_across_roles"
+    ]
+  },
+  "scratch_corrections_only": {
+    "tests": 3,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "seconds": 1.275,
+    "failed_cases": []
+  },
+  "snapshot_sha256": "2c59595cd8b8ec79ef482e209e24e6956e6e7e4fdf9319ab591dfdba6a2352d7",
+  "diagnoses": {
+    "test_compaction_triggers_at_the_configured_threshold": "Termination depended on the number of visible tool messages, which compaction replaces with a summary. A bounded business-call counter preserves the intended threshold check and passes.",
+    "test_unknown_or_unauthorized_tool_creates_no_operation": "Expected two operations, but the scenario makes two model calls plus one authorized tool call. Unknown tool admission correctly creates no operation; the total is three.",
+    "test_result_read_is_denied_across_roles": "last_run_id remained empty, so the scripted model raised IndexError before issuing result_read. Recording the returned handle.run_id allows the original cross-role denial assertions to pass."
+  },
+  "original_probe_modified_by_this_fix": false,
+  "source": "separate-probe-source.txt",
+  "scratch_diff": "separate-probe-scratch-corrections.txt"
+}

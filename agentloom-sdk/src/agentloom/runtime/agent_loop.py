@@ -3,7 +3,8 @@
 import asyncio
 import json
 
-from ..configuration import canonical, json_copy, validate_schema
+from ..configuration import json_copy, validate_schema
+from ..configuration.json_documents import canonical_document as canonical
 from ..context import append
 from ..context.results import project_result
 from ..errors import AgentLoomError, ConfigurationError, InfrastructureError
