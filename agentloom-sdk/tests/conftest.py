@@ -1,3 +1,9 @@
+import importlib
+import shutil
+import subprocess
+import sys
+from pathlib import Path
+
 import pytest
 
 from agentloom import (
@@ -12,6 +18,40 @@ from agentloom import (
     ScriptedModel,
     WorkspaceBinding,
 )
+
+
+@pytest.fixture(scope="session")
+def installed_file_package(tmp_path_factory):
+    root = tmp_path_factory.mktemp("installed-file-provider")
+    source = Path(__file__).parent / "support" / "workspace_provider"
+    shutil.copytree(
+        source, root / "source", ignore=shutil.ignore_patterns("__pycache__", "*.egg-info", "build")
+    )
+    result = subprocess.run(
+        [
+            sys.executable,
+            "-m",
+            "pip",
+            "install",
+            "--no-deps",
+            "--no-build-isolation",
+            "--no-index",
+            "--target",
+            str(root / "installed"),
+            str(root / "source"),
+        ],
+        text=True,
+        capture_output=True,
+        timeout=60,
+    )
+    assert result.returncode == 0, result.stdout + result.stderr
+    return root / "installed"
+
+
+@pytest.fixture
+def file_provider(installed_file_package, monkeypatch):
+    monkeypatch.syspath_prepend(str(installed_file_package))
+    return importlib.import_module("loom_test_files")
 
 
 @pytest.fixture(params=("memory", "file"))

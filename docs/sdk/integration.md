@@ -294,6 +294,8 @@ SDK 使用 `AcmeWorkspaceBackend(**options)` 构造实例。地址可内置，op
 
 恢复时必须保留提供者名、发行包版本和 options。检查点保存这些绑定及 options 的类型敏感摘要，不保存原始参数；更换配置会拒绝非终态恢复。第三方内部地址或行为变化应发布新版本。长同步调用的超时、提交前执行权核验及存储 fencing 由提供者实现，SDK 不替实现包建立异步或线程执行机制。完整注册、返回值、生命周期与错误合同见[文件 SPI](builtin-tools-spi.md#8-python-包注册与配置加载)。
 
+Runtime 自己负责执行租约续期，独立心跳覆盖 prepare 和全部文件调用；提供者不需要自行续租。提供者仍须在长 I/O 期间及写入发布前调用 context.check_active，并遵守业务截止时间。发生真实失权或续租失败后不得继续发布写入；prepare 中途退出时也要能按原 scope 撤权和清理。
+
 ## 7. 恢复与故障处理
 
 接入方保存 namespace、run_id、session_id、初始 input_id 及原装配配置。重启时保持状态目录、工作区根、Definition、策略、模型规格、能力与 Hook 绑定一致，并重建对应的服务实现。SDK 不替调用方保存 Python 处理器或客户端连接；服务地址和实现版本仍由接入方固定。
@@ -333,6 +335,6 @@ Plan 恢复还须传回原 Executor 表。已终态返回保存结果；有效 o
 
 接入验证至少覆盖：启动参数构造、角色权限绑定、一次真实业务调用、同 run_id 重开、停止／等待超时区别、维护状态查询。确定性脚本用于检查本地装配；真实模型端点和 MCP 服务需按部署环境另行联调。
 
-本次全部剩余改动统一提交前的完整回归为 **1537 passed，0 failed，0 skipped**，包含 SDK 1075 项与七轮 QA 462 项，独立白盒探针一并执行。源码摘要、测试范围和完整日志见[验证记录](implementation.md#验证口径)。SDK 与独立文件提供者的安装包另通过 10 个进程验证场景，见[安装包验证](../../agentloom-sdk/qa/evidence/full-workspace-publish-20261018/wheel-summary.json)。MiniMax 示例检查了命令行入口，未执行真实远端模型调用。
+第八轮修复后的完整回归为 **1665 passed，0 failed，0 skipped**，包含 SDK 1142 项与全部八轮 QA 523 项，独立白盒探针一并执行。源码摘要、测试范围和完整日志见[验证记录](implementation.md#验证口径)。SDK 与独立文件提供者的安装包另通过 10 个进程验证场景，见[安装包验证](../../agentloom-sdk/qa/evidence/round8-fixes-20261018/wheel-summary.json)。这些验证使用本地模型及协议替身，未执行真实远端模型调用。
 
 本页 7 个 Python 代码块已通过本地验证，另验证停止、补充、等待超时和查询入口，共 8 个场景；真实模型片段仅验证构造，其余执行使用确定性模型，没有远端服务调用。[文档代码与验证结果](../../agentloom-sdk/qa/evidence/docs-integration-20261017/summary.json)独立保存，不计入上述 SDK 回归数量。

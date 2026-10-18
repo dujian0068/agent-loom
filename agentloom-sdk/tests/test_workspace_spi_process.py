@@ -8,7 +8,6 @@ import time
 from pathlib import Path
 
 import pytest
-from test_workspace_spi import installed_file_package as installed_file_package
 
 
 @pytest.mark.parametrize("mode", ["react", "plan"])

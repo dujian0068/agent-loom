@@ -1,12 +1,8 @@
 """Installed provider discovery plus runtime authorization, recovery and ownership."""
 
-import importlib
 import json
-import shutil
-import subprocess
 import sys
 import time
-from pathlib import Path
 from types import SimpleNamespace
 
 import pytest
@@ -42,40 +38,6 @@ from agentloom import (
 )
 from agentloom.workspace.loader import ENTRY_POINT_GROUP, resolve_provider
 from agentloom.workspace.service import WorkspaceService
-
-
-@pytest.fixture(scope="session")
-def installed_file_package(tmp_path_factory):
-    root = tmp_path_factory.mktemp("installed-file-provider")
-    source = Path(__file__).parent / "support" / "workspace_provider"
-    shutil.copytree(
-        source, root / "source", ignore=shutil.ignore_patterns("__pycache__", "*.egg-info", "build")
-    )
-    result = subprocess.run(
-        [
-            sys.executable,
-            "-m",
-            "pip",
-            "install",
-            "--no-deps",
-            "--no-build-isolation",
-            "--no-index",
-            "--target",
-            str(root / "installed"),
-            str(root / "source"),
-        ],
-        text=True,
-        capture_output=True,
-        timeout=60,
-    )
-    assert result.returncode == 0, result.stdout + result.stderr
-    return root / "installed"
-
-
-@pytest.fixture
-def file_provider(installed_file_package, monkeypatch):
-    monkeypatch.syspath_prepend(str(installed_file_package))
-    return importlib.import_module("loom_test_files")
 
 
 def properties(**options):

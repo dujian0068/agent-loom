@@ -1,0 +1,307 @@
+{
+  "commands": [
+    {
+      "command": [
+        "/Users/bmilk/code/project/agent-loom/.venv/bin/python",
+        "-m",
+        "pip",
+        "wheel",
+        "--no-index",
+        "--no-deps",
+        "--no-build-isolation",
+        "-w",
+        "/var/folders/g6/378nmc5541n9wkbyb0nj9x9r0000gn/T/agentloom-review8-wheel-80l623b8/wheels",
+        "/var/folders/g6/378nmc5541n9wkbyb0nj9x9r0000gn/T/agentloom-review8-wheel-80l623b8/sdk",
+        "/var/folders/g6/378nmc5541n9wkbyb0nj9x9r0000gn/T/agentloom-review8-wheel-80l623b8/provider"
+      ],
+      "returncode": 0,
+      "stdout": "Processing /var/folders/g6/378nmc5541n9wkbyb0nj9x9r0000gn/T/agentloom-review8-wheel-80l623b8/sdk\n  Preparing metadata (pyproject.toml): started\n  Preparing metadata (pyproject.toml): finished with status 'done'\nProcessing /var/folders/g6/378nmc5541n9wkbyb0nj9x9r0000gn/T/agentloom-review8-wheel-80l623b8/provider\n  Preparing metadata (pyproject.toml): started\n  Preparing metadata (pyproject.toml): finished with status 'done'\nBuilding wheels for collected packages: agentloom-sdk, agentloom-test-file-provider\n  Building wheel for agentloom-sdk (pyproject.toml): started\n  Building wheel for agentloom-sdk (pyproject.toml): finished with status 'done'\n  Created wheel for agentloom-sdk: filename=agentloom_sdk-0.1.0a1-py3-none-any.whl size=169234 sha256=32e5cc32be9dd030a52bda04e0895efdd2d2c0c221c45c54b3e9debc9dcd2cda\n  Stored in directory: /private/var/folders/g6/378nmc5541n9wkbyb0nj9x9r0000gn/T/pip-ephem-wheel-cache-ecanvjpq/wheels/d9/35/37/34e5595ca499a593d0ecde2de9b31c95f8a91bf099c2b43fe5\n  Building wheel for agentloom-test-file-provider (pyproject.toml): started\n  Building wheel for agentloom-test-file-provider (pyproject.toml): finished with status 'done'\n  Created wheel for agentloom-test-file-provider: filename=agentloom_test_file_provider-1.2.3-py3-none-any.whl size=4524 sha256=935c5e3403178c4f8e1bcb3689a530e8286685aebd53bf10758edaaf1d11c767\n  Stored in directory: /private/var/folders/g6/378nmc5541n9wkbyb0nj9x9r0000gn/T/pip-ephem-wheel-cache-ecanvjpq/wheels/ed/6d/e3/3119d32ccf4a653160d8d4d8753c79b1692b29f5d46816fbf8\nSuccessfully built agentloom-sdk agentloom-test-file-provider\n",
+      "stderr": "WARNING: The directory '/Users/bmilk/Library/Caches/pip' or its parent directory is not owned or is not writable by the current user. The cache has been disabled. Check the permissions and owner of that directory. If executing pip with sudo, you should use sudo's -H flag.\n"
+    },
+    {
+      "command": [
+        "/Users/bmilk/code/project/agent-loom/.venv/bin/python",
+        "-m",
+        "pip",
+        "install",
+        "--no-index",
+        "--no-deps",
+        "--target",
+        "/var/folders/g6/378nmc5541n9wkbyb0nj9x9r0000gn/T/agentloom-review8-wheel-80l623b8/installed",
+        "/var/folders/g6/378nmc5541n9wkbyb0nj9x9r0000gn/T/agentloom-review8-wheel-80l623b8/wheels/agentloom_sdk-0.1.0a1-py3-none-any.whl",
+        "/var/folders/g6/378nmc5541n9wkbyb0nj9x9r0000gn/T/agentloom-review8-wheel-80l623b8/wheels/agentloom_test_file_provider-1.2.3-py3-none-any.whl"
+      ],
+      "returncode": 0,
+      "stdout": "Processing /var/folders/g6/378nmc5541n9wkbyb0nj9x9r0000gn/T/agentloom-review8-wheel-80l623b8/wheels/agentloom_sdk-0.1.0a1-py3-none-any.whl\nProcessing /var/folders/g6/378nmc5541n9wkbyb0nj9x9r0000gn/T/agentloom-review8-wheel-80l623b8/wheels/agentloom_test_file_provider-1.2.3-py3-none-any.whl\nInstalling collected packages: agentloom-test-file-provider, agentloom-sdk\nSuccessfully installed agentloom-sdk-0.1.0a1 agentloom-test-file-provider-1.2.3\n",
+      "stderr": "WARNING: The directory '/Users/bmilk/Library/Caches/pip' or its parent directory is not owned or is not writable by the current user. The cache has been disabled. Check the permissions and owner of that directory. If executing pip with sudo, you should use sudo's -H flag.\n"
+    },
+    {
+      "command": [
+        "/Users/bmilk/code/project/agent-loom/.venv/bin/python",
+        "-c",
+        "import json,sys,agentloom;from pathlib import Path;from importlib import metadata;assert Path(agentloom.__file__).is_relative_to(Path(sys.argv[1]));eps=metadata.entry_points(group='agentloom.workspace_backends');assert sum(e.name=='local' for e in eps)==1;assert sum(e.name=='test-files' for e in eps)==1;print(json.dumps({'imported':agentloom.__file__,'entry_points':[e.name for e in eps]}))",
+        "/var/folders/g6/378nmc5541n9wkbyb0nj9x9r0000gn/T/agentloom-review8-wheel-80l623b8/installed"
+      ],
+      "returncode": 0,
+      "stdout": "{\"imported\": \"/var/folders/g6/378nmc5541n9wkbyb0nj9x9r0000gn/T/agentloom-review8-wheel-80l623b8/installed/agentloom/__init__.py\", \"entry_points\": [\"local\", \"test-files\", \"unselected-files\"]}\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/Users/bmilk/code/project/agent-loom/.venv/bin/python",
+        "/Users/bmilk/code/project/agent-loom/agentloom-sdk/tests/support/workspace_spi_process.py",
+        "/var/folders/g6/378nmc5541n9wkbyb0nj9x9r0000gn/T/agentloom-review8-wheel-80l623b8/react-all",
+        "react",
+        "all"
+      ],
+      "returncode": 0,
+      "stdout": "{\"status\": \"succeeded\", \"mode\": \"react\", \"loops\": 12}\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/Users/bmilk/code/project/agent-loom/.venv/bin/python",
+        "/Users/bmilk/code/project/agent-loom/agentloom-sdk/tests/support/workspace_spi_process.py",
+        "/var/folders/g6/378nmc5541n9wkbyb0nj9x9r0000gn/T/agentloom-review8-wheel-80l623b8/react-recovered",
+        "react",
+        "cut"
+      ],
+      "returncode": 75,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/Users/bmilk/code/project/agent-loom/.venv/bin/python",
+        "/Users/bmilk/code/project/agent-loom/agentloom-sdk/tests/support/workspace_spi_process.py",
+        "/var/folders/g6/378nmc5541n9wkbyb0nj9x9r0000gn/T/agentloom-review8-wheel-80l623b8/react-recovered",
+        "react",
+        "change"
+      ],
+      "returncode": 0,
+      "stdout": "{\"error\": \"RECOVERY_BINDING_MISMATCH\"}\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/Users/bmilk/code/project/agent-loom/.venv/bin/python",
+        "/Users/bmilk/code/project/agent-loom/agentloom-sdk/tests/support/workspace_spi_process.py",
+        "/var/folders/g6/378nmc5541n9wkbyb0nj9x9r0000gn/T/agentloom-review8-wheel-80l623b8/react-recovered",
+        "react",
+        "resume"
+      ],
+      "returncode": 0,
+      "stdout": "{\"status\": \"succeeded\", \"mode\": \"react\", \"loops\": 12}\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/Users/bmilk/code/project/agent-loom/.venv/bin/python",
+        "/Users/bmilk/code/project/agent-loom/agentloom-sdk/tests/support/workspace_spi_process.py",
+        "/var/folders/g6/378nmc5541n9wkbyb0nj9x9r0000gn/T/agentloom-review8-wheel-80l623b8/plan-all",
+        "plan",
+        "all"
+      ],
+      "returncode": 0,
+      "stdout": "{\"status\": \"succeeded\", \"mode\": \"plan\", \"loops\": 14}\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/Users/bmilk/code/project/agent-loom/.venv/bin/python",
+        "/Users/bmilk/code/project/agent-loom/agentloom-sdk/tests/support/workspace_spi_process.py",
+        "/var/folders/g6/378nmc5541n9wkbyb0nj9x9r0000gn/T/agentloom-review8-wheel-80l623b8/plan-recovered",
+        "plan",
+        "cut"
+      ],
+      "returncode": 75,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/Users/bmilk/code/project/agent-loom/.venv/bin/python",
+        "/Users/bmilk/code/project/agent-loom/agentloom-sdk/tests/support/workspace_spi_process.py",
+        "/var/folders/g6/378nmc5541n9wkbyb0nj9x9r0000gn/T/agentloom-review8-wheel-80l623b8/plan-recovered",
+        "plan",
+        "change"
+      ],
+      "returncode": 0,
+      "stdout": "{\"error\": \"RECOVERY_BINDING_MISMATCH\"}\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/Users/bmilk/code/project/agent-loom/.venv/bin/python",
+        "/Users/bmilk/code/project/agent-loom/agentloom-sdk/tests/support/workspace_spi_process.py",
+        "/var/folders/g6/378nmc5541n9wkbyb0nj9x9r0000gn/T/agentloom-review8-wheel-80l623b8/plan-recovered",
+        "plan",
+        "resume"
+      ],
+      "returncode": 0,
+      "stdout": "{\"status\": \"succeeded\", \"mode\": \"plan\", \"loops\": 14}\n",
+      "stderr": ""
+    }
+  ],
+  "cases": [
+    {
+      "mode": "react",
+      "phase": "all-11-operations",
+      "passed": true
+    },
+    {
+      "mode": "react",
+      "phase": "crash-after-write",
+      "passed": true
+    },
+    {
+      "mode": "react",
+      "phase": "reject-changed-options",
+      "passed": true
+    },
+    {
+      "mode": "react",
+      "phase": "resume-without-duplicate-write",
+      "passed": true
+    },
+    {
+      "mode": "plan",
+      "phase": "all-11-operations",
+      "passed": true
+    },
+    {
+      "mode": "plan",
+      "phase": "crash-after-write",
+      "passed": true
+    },
+    {
+      "mode": "plan",
+      "phase": "reject-changed-options",
+      "passed": true
+    },
+    {
+      "mode": "plan",
+      "phase": "resume-without-duplicate-write",
+      "passed": true
+    }
+  ],
+  "installed_files": {
+    "agentloom/__init__.py": "94fd8a593031a85ddd4e07e1b7b307e908ed3004a0c65c38bbb93cf9a4d6300c",
+    "agentloom/capabilities/__init__.py": "7df79ccf952b42e2d92e7bbc7c8ddbefd59f3a14971fa81227aea3d4070a24de",
+    "agentloom/capabilities/catalog.py": "57b4a4235d800b36b17152815abbe2ca3be06acea909019a917327e6e800a653",
+    "agentloom/capabilities/contracts.py": "6902c49e91d25ba9c3e881104cd99a5921dd9ab6d4e8f54407533e0510e40c2c",
+    "agentloom/capabilities/invocation.py": "5640a76aa3c44b3e87775adbce6080e43c636eb63f3e57b2febf67f22b62bff7",
+    "agentloom/capabilities/mcp.py": "9d59837cd22ce04b8a8c33bff0ac03dfa478e2ff91020bbf76839062d155207a",
+    "agentloom/capabilities/registry.py": "4bfc33647df767a8c005b18163d07093082e01283e22941990255511ba47d76e",
+    "agentloom/capabilities/skill_profile.py": "457b3858ac9a5ac772a04b0101d841de688de5da9d9126f9beb44e2d54b9c587",
+    "agentloom/capabilities/skills.py": "36aa778539a813d81cb89a915f998270d734b900aad77205ed67cdb582d7ada7",
+    "agentloom/capabilities/tools.py": "4b8d8d78cbb64be8069b40cbfbfdc5437fbdeb5625633a8ed2906fc352d8c90b",
+    "agentloom/configuration/__init__.py": "338d47acd05e86afc967e0fa53d0e2384f73b13779bff768186c513f5e4017ab",
+    "agentloom/configuration/actions.py": "620c60ce02bb2d4b5a9ddb33987e5152d378d1aa0e13ed8c75ff2e9c08fdb284",
+    "agentloom/configuration/assembly.py": "14b385876480eaf47fa12113423fcff31157b1a8599d17353bf05c3293fd9528",
+    "agentloom/configuration/definitions.py": "a162c67cdc8492c9c48cdc3e2574ac16a075d42d17a52de82a53809442f553a2",
+    "agentloom/configuration/json_documents.py": "cd7116bb51325a67b058c4b98b611d5539f402bca24c7c34b372deccefc0f9cf",
+    "agentloom/configuration/json_values.py": "8916c432026f2b196ed62602803a37670ad09a8a8a7c1e80d1bad4fe56710e1e",
+    "agentloom/configuration/models.py": "76e70fba79f5a6bc302b73b0109dfbb00d31c767ffb9b0c5bbb4f6c3f8cd156d",
+    "agentloom/configuration/properties.py": "35533c6b91b34878d31b304cae0bf7ebddb917b07de00fde51c87595539b78bf",
+    "agentloom/configuration/recovery.py": "9a69c59b89b43408da1258fb27a9ecf43b0b10ff994647eaafcde8ef9230ac69",
+    "agentloom/configuration/schemas.py": "b06c7a70b4f96eb8105953636cd472a5f4145d85106de04b1005ddc0da40ac72",
+    "agentloom/configuration/variables.py": "06d0389c51dab8f388032d0f11ba39f172a6fef150b9c947c983134c3d0cf1fc",
+    "agentloom/context/__init__.py": "7b76cc16aa006c4b11ed39b54b3a9a38d3a6ec188f8ef6c88705a0b38f199191",
+    "agentloom/context/budget.py": "84f27b058031e5f7b8355b582e77b8e02e89b416889cc6f974c791bbcdeae090",
+    "agentloom/context/compaction.py": "c3488c1d13b8062aec458fefeeb52a8b9701867d7c38dc4510106fad0fc95028",
+    "agentloom/context/history_facts.py": "946b6ce0b53e3f5106218b2fa41b8e8dc4e6bc665f8007d0e565b75ef1837cb5",
+    "agentloom/context/records.py": "ed828352eb17fb69732485529693746920a6b124745595b91437b4f28e2a922e",
+    "agentloom/context/results.py": "883b56546c0a9f604677789264e2b83d81338aee787aece3289faa89d70c0320",
+    "agentloom/environment/__init__.py": "ab96e9b0d93bf56f1427457acca5d62896931142c335f91103223d8548dd8a73",
+    "agentloom/environment/limits.py": "f9fb0248483c46d21b044969e085ec3001c4a6847217be7ca2cc53f5d192ddc9",
+    "agentloom/environment/local.py": "8cd77f6769cc080a1107f56b40db05773098463034aeba84d028b97074aec92b",
+    "agentloom/environment/mutations.py": "29fb6af10513d2dd78c4952f87daabe19cd5689ac1eba4632c0d3dfb093e626d",
+    "agentloom/errors.py": "f88024e339b163ff5c37fb2892cc29cd6b06a80ffc10b2e9e8ad70f7f814e66e",
+    "agentloom/events/__init__.py": "cfa8a9dfa695e864cc76a6de7b2d18bac3543fb640d32ea9f505ba11c8ebe88f",
+    "agentloom/events/bus.py": "a0e5afab4983f9bedc08923dec80ef9b184ff74a0a7aa10d166493ffaebe7d72",
+    "agentloom/events/control.py": "52b1a4d137fa699e88fc547ae42208c6fd4d912bc6ebdc90d7269226d99fb20f",
+    "agentloom/events/hook_reads.py": "3e2bdab857d50b0f15d86ff6a83f170665d7b6524f5cac6de06fe926b5266249",
+    "agentloom/events/hook_views.py": "02255ff60dfaab2fe819eb9a824ee9bdf5314754c18de7b424e1460332fd9ef2",
+    "agentloom/events/hooks.py": "17b0f17016b7148b68c4ec099b2cb567ab6d74d15a5c81375e0a86e04cf1c7fd",
+    "agentloom/events/patch_contract.py": "a357dde3d27156bf5509b597ccc6e619ff6ac219b9e13e83720df7a9964a47c3",
+    "agentloom/events/patches.py": "545462b4819db501e18ad0de685e6698f20b395d3941197e830e4b00e69a9b30",
+    "agentloom/models/__init__.py": "db6693b3ec7eed3e0d55aa131348efc018930a51c6839e35b40714b2630811f3",
+    "agentloom/models/http.py": "315769170dee4b126e0f34815b8ffbd5f87b008e29a321eaffb8f481a12f9466",
+    "agentloom/models/limits.py": "12582b9a1d407cd9110af08b2d269b1d439f97c9145262a3767266a9bc2b1571",
+    "agentloom/models/material.py": "2d8384a70318315105be845c248a3231d0b68e4f70dc12f544feb83ad24cefba",
+    "agentloom/models/openai.py": "f417ed97e0c4381fba123fe9afb91f73f17f607769044142f3a305efd073bc7d",
+    "agentloom/models/provider_errors.py": "4bf5eeb16458d0b2573815174ba355b1396d9d0baaa5206e61f97235dd398ce9",
+    "agentloom/models/responses.py": "c8dd2764ca2dd42ea261bde78c6f94e6e57677da5fc4f06757aa60ad016394bd",
+    "agentloom/models/scripted.py": "53492aa6fed252ded8e33fb7f77f5df5f562501b2d52d87d640819e4e7b36b3d",
+    "agentloom/operation_errors.py": "50ae0e99201b9654c94e72c8dd79bb8018f0b63e3370ded124cdfcfbdf2e10b1",
+    "agentloom/prompts/LICENSE.langchain": "7d44c7f721f4ab58811a982e9641509108587a43e3e6ec838c4499c61bf0ba07",
+    "agentloom/prompts/NOTICE.md": "98aa88afa0b20522cd7904671f79ed26bc73d51cb2f91b0578ccf0943cca62c0",
+    "agentloom/prompts/__init__.py": "02cc291cc291d8737b218fdc00de887fb9f159065c95ccb95b1a8bbef62a6769",
+    "agentloom/prompts/assembly.py": "3c275c4675de2690b24d82e95a970e412db65f048a1fbb4251af1e4d294d1402",
+    "agentloom/prompts/protocol.py": "398fe46a867b81193570841762d5e349751a4ba33d25c0c37f0f129dbbf1dd50",
+    "agentloom/prompts/recovery.py": "d0da55321d57093cd486ba1f8a76b208abf9e355108d3ff02be38958127422f2",
+    "agentloom/prompts/roles/__init__.py": "010cacf18f22e511f8b4fc65a51cf2e04bfe47340818eeca549cbf697693a5aa",
+    "agentloom/prompts/roles/executor.py": "b45f2b7d8e7ba3e5100b8ce76f7901d03a812ff0ac19742d122b3f42223d1830",
+    "agentloom/prompts/roles/planner.py": "cc74457581c80b6c6ca1ec6cea074ebd7e990138c8e5a5077b02d8587451ba15",
+    "agentloom/prompts/roles/react.py": "d65339a01850a6d546c246bf5e17d377fc71d9ad6fea01b5a22c41210b4092f4",
+    "agentloom/prompts/sources.json": "9d105912e7b8390d3370e333c36e6958f4f2149c769bf789b2a5c56a473c1fc8",
+    "agentloom/prompts/templates.py": "dcb6e58189c47e228555e539b2bf05e6cd350a11511351b2eeb582afa59095ce",
+    "agentloom/public/__init__.py": "3b974d19f375abe19131666fd15111b81ba7aebbb2656fb2fff3abba033f873c",
+    "agentloom/public/agents.py": "65c187555676c9e0e0026de0240458e936c82ec2282580865a9a966eeab59075",
+    "agentloom/public/application.py": "947cb54dbfbf605f3046977a2f8aa8aff635104af7f4a6778f3485c2759dcabe",
+    "agentloom/public/assembly.py": "14426f584bad3113f50cd667771f946abcd4e1c4e81f674f8c5b951af5fd9639",
+    "agentloom/public/builder.py": "99470f3ff35c30865929278dc911ca33e589a07ed7beddf92e4dbbdfb67dfa60",
+    "agentloom/public/handles.py": "6800d3abd7d06694d93dcb650c997fc6b1544c2c058ffdd4f108974f059123aa",
+    "agentloom/public/projections.py": "2bd54000c45446da47921f7af4d18b46c48215ef88c1d57ea12ef347f62a2f55",
+    "agentloom/public/properties.py": "76130e78b61ea807afbdfc6e134bedcbdacb4422d3617d288b9272b46cdaa762",
+    "agentloom/public/validation.py": "61a27f14715e2b75afa90c47c415dc418cffd4337f9e8972de0d687d9a6d8c27",
+    "agentloom/py.typed": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "agentloom/resources.py": "b91d215f5faaf5d94e1370ee7b4c404252b651a06f20206cbfc0402ac4a51d4a",
+    "agentloom/runtime/__init__.py": "36adbfb5d4660a87a5acff11acc0c1c21250d0c3189aa9248d9fa1a4da890bc5",
+    "agentloom/runtime/agent_engine.py": "1517e4099eb5ddcb080f4fbab1f259c0f2b3b5216c49702e1442f8f65d39a31d",
+    "agentloom/runtime/agent_loop.py": "0b7838ae17fd4e205639b4c012119ddfc7a215a6dff9f3e5e2cebe6853b61b72",
+    "agentloom/runtime/calls.py": "6e6a4af548fb656729ed075468b43b412168c73ea4acc8ee21cce2b9c64510da",
+    "agentloom/runtime/cleanup.py": "e3d3701742829cf9d1b82b57dcef686b109d689f9af490a78edb785a77ffbd75",
+    "agentloom/runtime/cleanup_lease.py": "7e8368b3da20da9ac0aff993d131bab64f7c490faea0f591c69dc5b33d6da990",
+    "agentloom/runtime/completion.py": "86ffbe02776c5ef82bda82d36c53686236007d95411a485f421c0c53930e27e5",
+    "agentloom/runtime/control.py": "b41b7f547acc88f599ebceadad0f6f4a4e7ba96470171b57f71e615b316ee440",
+    "agentloom/runtime/deadlines.py": "644df0f99d8c6701ba3915c0625f06a22a97aa4b123b4ebde0d19e00dddb0ba7",
+    "agentloom/runtime/handlers.py": "d2e9365cf05eace4d046dfff09337dfc8612ed82a4ba8d73fde36480b9f64487",
+    "agentloom/runtime/host.py": "5a8a311bd7a79539f911334834976cd86007373468409a2fe18331ad0fb2196f",
+    "agentloom/runtime/leases.py": "8448850e243dcae5c94dae726e78744811baa52cd5682280d6bc64c8e8eeb588",
+    "agentloom/runtime/maintenance.py": "1a43285842f0245301f7d5a6960f4594da955abca04bc60a16d7618dda02fd38",
+    "agentloom/runtime/output.py": "ea0c3b763dfbc16db76584bfa26144a6c6a9b3dc8402296d71ae6713bcc8b4b2",
+    "agentloom/runtime/recovery.py": "0612bc2848230712f506837b1afa1ebcaa5d0fbb6a30d4340713ef1d4b20bd00",
+    "agentloom/runtime/runner.py": "8a5e51314f64dc5eaf2f9da7fa1405956f4c993d52f498fadbbb8ea35d8dec09",
+    "agentloom/runtime/services.py": "a3d156e777c8bda5e5b36fbfb0b634279fc1f25c7605f9a6b3eac104a5650590",
+    "agentloom/runtime/usage.py": "befc2c0cd6456db40691dfc621b7eea0afbe196139a005a686f1b6519ee90c75",
+    "agentloom/runtime/validation.py": "07993fa0964c4b03ce187cf2b87a3f02d4254c0f4bab8c9d2060afe2161eddfa",
+    "agentloom/storage/__init__.py": "cf63534f870aff62867b6e3987f5b3d31b32bf798828052a7351ff9055844478",
+    "agentloom/storage/_files.py": "ee21c50dec4898983b8ad72ad98827f9dbfdce1ae3a9c54375f92d4a99b8cbb9",
+    "agentloom/storage/base.py": "b67179d7f2d0032147e8d27dc53adc53205a9e28c36450e1b5c77209e32fd7fe",
+    "agentloom/storage/commit.py": "9b4df0f061a80e2b65d2273d251fbabf2aa1c8ce95356ed02a5659aa3bb409d9",
+    "agentloom/storage/filesystem.py": "30e03d516aa1f2b5edbc32096f333bdb775c4998f27836594b1147329e0caef1",
+    "agentloom/storage/memory.py": "3ac706e258a3d2d9d93066da88e176ea264dea772a3a0db2f08371bc080900be",
+    "agentloom/types.py": "646eb01b09ba2bb4b237c980489ca7876fa98b2cefbb71e4e85644334ecdd321",
+    "agentloom/workspace/__init__.py": "cd1dfbaa14b381b7cc5e2140d951a2f9b5995bc33ec4a46925432ca9de7ad3f0",
+    "agentloom/workspace/contracts.py": "ad467f3d4aae49ed0b2bc2164fd86569e11937e9a6185c0ea45ad07400c803b5",
+    "agentloom/workspace/loader.py": "f1c0ec7ce3b046d61f5fa481c9bf946a72d37ba11d26a7004ebe72e6e39cebf1",
+    "agentloom/workspace/local.py": "a931c7362801521849808ed78b948266ea237c3d68adabc3604eec4319659552",
+    "agentloom/workspace/paths.py": "53b1bfe526204c1abc863a9b7ee322a91dc581b7c1b6e783bae17fc587838806",
+    "agentloom/workspace/properties.py": "06fd330449ca0cbb5d1dfcc4d443d16d2b1af251e8e553700984000a93612728",
+    "agentloom/workspace/results.py": "5466d31b154ff788f140cd8bfe165c57a4f0caf5e4d9c9645c2fe89f49b6c20b",
+    "agentloom/workspace/runtime.py": "e4157f5fd6e9e0ca191659b2421e71a89bd93e0cb47f7d6f5f71b6efece24610",
+    "agentloom/workspace/schemas.py": "138207269bb1cb6bb1cf6f48b098f9aff38e70e3c66f2939e08e59fcae331845",
+    "agentloom/workspace/service.py": "a812d6af76a504abbff17d88e22062d1fd89899201afeb7d4dc8dc3ac67b690b"
+  },
+  "identity": {
+    "imported": "/var/folders/g6/378nmc5541n9wkbyb0nj9x9r0000gn/T/agentloom-review8-wheel-80l623b8/installed/agentloom/__init__.py",
+    "entry_points": [
+      "local",
+      "test-files",
+      "unselected-files"
+    ]
+  },
+  "passed": true
+}

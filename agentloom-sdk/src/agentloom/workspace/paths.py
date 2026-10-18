@@ -11,7 +11,9 @@ def path_parts(path):
     if path == "/work":
         path = "."
     elif path.startswith("/work/"):
-        path = path[6:]
+        # /work is a logical alias, never a host absolute path. Repeated
+        # separators must not leave an absolute component after stripping it.
+        path = path[6:].lstrip("/")
     elif path.startswith("/"):
         raise AgentLoomError("PATH_FORBIDDEN", category="permission")
     parts = PurePosixPath(path).parts

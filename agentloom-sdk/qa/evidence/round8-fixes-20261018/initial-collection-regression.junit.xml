@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="1" failures="0" skipped="0" tests="1" time="0.167" timestamp="2026-10-18T22:01:33.088329+08:00" hostname="bmilk"><testcase classname="" name="tests.test_workspace_spi_process" time="0.000"><error message="collection failure">ImportError while importing test module '/Users/bmilk/code/project/agent-loom/agentloom-sdk/tests/test_workspace_spi_process.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+../../../.cache/codex-runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/importlib/__init__.py:90: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+agentloom-sdk/tests/test_workspace_spi_process.py:11: in &lt;module&gt;
+    from test_workspace_spi import installed_file_package as installed_file_package
+E   ImportError: cannot import name 'installed_file_package' from 'test_workspace_spi' (/Users/bmilk/code/project/agent-loom/agentloom-sdk/tests/test_workspace_spi.py)</error></testcase></testsuite></testsuites>

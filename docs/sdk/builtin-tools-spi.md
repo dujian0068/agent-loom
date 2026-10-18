@@ -158,6 +158,10 @@ edit／patch 的完整实现由提供者接管；实现包可复用自己的固�
 
 长调用应在 I/O 过程中检查 deadline_at 和 check_active，写入发布前再次核验，服务端需要 fencing 时使用 lease_epoch 建立可撤销的执行域。方法不能返回后继续留下不受控写入者。普通同步方法并不获得强制中断能力；网络超时、取消、连接回收与远端失权由实现包落实。
 
+执行租约由 Runtime 的独立心跳续期，从工作区 prepare 开始覆盖整个执行过程；同步提供者阻塞事件循环时仍可续期。该心跳只维护原 worker／epoch，不执行提供者 I/O，也不延长工具或 Run 的业务截止时间。续租失败后 check_active 和业务提交立即拒绝继续推进；真实接管仍按 epoch 拒绝旧 owner。终态提交前停止并回收执行心跳，撤权和清理使用各自的租约保护，宿主关闭时等待线程收束。
+
+本地后端用同一逻辑路径规则处理授权与 glob 相对路径：`.`、重复分隔符及 `/work` 别名表示相同工作区位置。`/work//sub` 仍表示工作区内的 `sub`，不会成为宿主绝对路径；`..`、其他绝对路径和受限范围外的访问仍被拒绝。
+
 ### 4.4 启动与生命周期校验
 
 启动时只加载选中名称。不存在报 `FILE_PROVIDER_NOT_FOUND`，重名报 `FILE_PROVIDER_DUPLICATE`，缺方法、签名不兼容、异步入口报 `FILE_PROVIDER_INTERFACE_INVALID`，导入或构造失败报 `FILE_PROVIDER_LOAD_FAILED`；不回退本地。实例构造后也复核方法，防止构造器把接口覆盖为无效属性。运行时意外返回协程会拒绝，不由 SDK 代为 await。
@@ -165,6 +169,8 @@ edit／patch 的完整实现由提供者接管；实现包可复用自己的固�
 所有提供者都实现完整接口；只读限制仍由每项 CapabilityBinding.access_scope 控制。后端若不能满足选用工具的实际存储语义，应提供不同的能力接口或明确失败，不能声称完整实现后静默降级。
 
 可选生命周期方法均为普通方法：prepare(context) 可准备空间与 fence；revoke(context) 可撤销远端写入者；cleanup(context) 默认使用 list／delete 清空临时内容；close() 释放当前实例。prepare／revoke 默认无额外 I/O，适合仅通过同步调用访问的后端。需要服务端撤权的实现必须覆盖 revoke。cleanup context 另带 cleanup_job_id／cleanup_lease_epoch，与目标工作区的业务 lease_epoch 分开；由独立清理租约保护，失败保持诊断并重试；持久工作区不会调用 cleanup。额外容器或元数据回收由提供者覆盖 cleanup 完成。
+
+Runtime 在调用第三方 prepare 前先持久化 scope 身份。prepare 中途失败、停止或截止时，后续撤权和清理仍使用该 scope；提供者的生命周期方法须允许处理尚未完成准备的空间。
 
 ## 5. 三种介质怎样接入
 

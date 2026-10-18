@@ -288,6 +288,26 @@ Runtime 关闭会停止本机推进并保留检查点，不等同于用户停止
 
 ## 验证
 
+在仓库根目录用一个命令运行全部 SDK 测试及历史 QA 回归，并自动保存结果：
+
+```sh
+./scripts/test_all.py
+```
+
+脚本优先使用仓库 `.venv` 的 Python，否则使用当前 Python；依赖安装见上文。它运行 `agentloom-sdk/tests` 和 `agentloom-sdk/qa` 的全部测试，包括本地集成／进程恢复场景，无需真实 LLM Key。为避免漏跑，会清除 `PYTEST_ADDOPTS` 和配置中的 addopts 筛选参数；测试失败保留非零退出码。
+
+每次结果保存在 `.agentloom/test-results/<UTC时间戳>/`，包含实时输出的 `pytest.log`、`junit.xml`、`summary.json` 和测试前后的文件 SHA-256 清单；摘要记录 Git 版本、未提交状态、Python／依赖版本、统计和退出码。目录已由现有 `.gitignore` 的 `.agentloom/` 规则忽略，旧结果不会被覆盖。`.agentloom/test-results/latest.json` 指向最近一次运行的目录，并保存该次摘要。
+
+交给审核者时提供 `latest.json` 和其中指定的完整结果目录。只核对已有结果能否复用，不执行测试：
+
+```sh
+./scripts/test_all.py --check
+```
+
+该检查比对当前源码、测试、配置和运行环境；源码在测试期间变化、记录不完整或当前版本已变化时返回非零。检查通过表示结果仍适用，不表示测试全部通过，应同时看摘要中的失败／跳过数量。审核者可以复用匹配的全量结果，仅补测未覆盖场景；测试结果不替代代码和设计审查。
+
+需要手动执行时：
+
 ```sh
 python -m pytest -q agentloom-sdk/tests agentloom-sdk/qa
 ruff check agentloom-sdk/src agentloom-sdk/tests agentloom-sdk/qa

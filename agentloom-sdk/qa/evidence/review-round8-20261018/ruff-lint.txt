@@ -1,0 +1,1950 @@
+I001 [*] Import block is un-sorted or un-formatted
+  --> agentloom-sdk/qa/evidence/assessment-ec1c93d/probes.py:3:1
+   |
+ 1 |   """Independent assessment probes; inject local protocol facts, use no remote service."""
+ 2 |
+ 3 | / import asyncio
+ 4 | | import json
+ 5 | | import tempfile
+ 6 | | import time
+ 7 | | from contextlib import asynccontextmanager
+ 8 | | from pathlib import Path
+ 9 | | from types import SimpleNamespace
+10 | |
+11 | | import httpx
+12 | | from jsonschema import Draft202012Validator
+13 | |
+14 | | from agentloom import (
+15 | |     AgentDefinition,
+16 | |     CapabilityBinding,
+17 | |     CapabilityRegistration,
+18 | |     CapabilityRegistry,
+19 | |     CapabilitySpec,
+20 | |     ConfigurationError,
+21 | |     ExecutionPolicy,
+22 | |     FileRuntimeStore,
+23 | |     McpToolAdapter,
+24 | |     MemoryRuntimeStore,
+25 | |     ModelResponse,
+26 | |     ReactAgent,
+27 | |     RetryPolicy,
+28 | |     RuntimeEngine,
+29 | |     ScriptedModel,
+30 | |     ToolCall,
+31 | |     WorkspaceBinding,
+32 | | )
+33 | | from agentloom.configuration import check_schema
+34 | | from agentloom.models.http import http_error
+   | |____________________________________________^
+help: Organize imports
+   |
+11 | import httpx
+   - from jsonschema import Draft202012Validator
+   -
+12 | from agentloom import (
+--------------------------------------------------------------------------------
+32 | from agentloom.models.http import http_error
+33 + from jsonschema import Draft202012Validator
+34 |
+   |
+
+I001 [*] Import block is un-sorted or un-formatted
+  --> agentloom-sdk/qa/test_sdk_audit.py:8:1
+   |
+ 6 |   """
+ 7 |
+ 8 | / import asyncio
+ 9 | | import hashlib
+10 | | import json
+11 | | import time
+12 | |
+13 | | import httpx
+14 | | import pytest
+15 | |
+16 | | from agentloom import (
+17 | |     AgentDefinition,
+18 | |     AgentInput,
+19 | |     CapabilityBinding,
+20 | |     CapabilityRegistration,
+21 | |     CapabilityRegistry,
+22 | |     CapabilitySpec,
+23 | |     ConfigurationError,
+24 | |     ContextPolicy,
+25 | |     DirectorySkillLoader,
+26 | |     ExecutionPolicy,
+27 | |     FileRuntimeStore,
+28 | |     FunctionHookHandler,
+29 | |     FunctionToolAdapter,
+30 | |     HookBinding,
+31 | |     HookDecision,
+32 | |     HookSet,
+33 | |     LocalEnvironment,
+34 | |     MemoryRuntimeStore,
+35 | |     ModelResponse,
+36 | |     OpenAIChatAdapter,
+37 | |     PlanAgent,
+38 | |     ReactAgent,
+39 | |     RequestError,
+40 | |     RetryPolicy,
+41 | |     RuntimeEngine,
+42 | |     ScriptedModel,
+43 | |     SkillPackage,
+44 | |     SkillRegistration,
+45 | |     ToolCall,
+46 | |     WorkspaceBinding,
+47 | | )
+   | |_^
+help: Organize imports
+   |
+14 | import pytest
+   -
+15 | from agentloom import (
+   |
+
+I001 [*] Import block is un-sorted or un-formatted
+  --> agentloom-sdk/qa/test_sdk_rereview.py:7:1
+   |
+ 5 |   """
+ 6 |
+ 7 | / import asyncio
+ 8 | | import hashlib
+ 9 | | import json
+10 | | import time
+11 | |
+12 | | import httpx
+13 | | import pytest
+14 | |
+15 | | from agentloom import (
+16 | |     AgentDefinition,
+17 | |     AgentLoomError,
+18 | |     CapabilityBinding,
+19 | |     CapabilityRegistration,
+20 | |     CapabilityRegistry,
+21 | |     CapabilitySpec,
+22 | |     ConfigurationError,
+23 | |     DirectorySkillLoader,
+24 | |     ExecutionPolicy,
+25 | |     FileRuntimeStore,
+26 | |     FunctionToolAdapter,
+27 | |     LocalEnvironment,
+28 | |     MemoryRuntimeStore,
+29 | |     ModelResponse,
+30 | |     OpenAIChatAdapter,
+31 | |     OpenAIResponsesAdapter,
+32 | |     ReactAgent,
+33 | |     RequestError,
+34 | |     RetryPolicy,
+35 | |     RuntimeEngine,
+36 | |     ScriptedModel,
+37 | |     SkillPackage,
+38 | |     SkillRegistration,
+39 | |     ToolCall,
+40 | |     WorkspaceBinding,
+41 | | )
+   | |_^
+help: Organize imports
+   |
+13 | import pytest
+   -
+14 | from agentloom import (
+   |
+
+I001 [*] Import block is un-sorted or un-formatted
+  --> agentloom-sdk/qa/test_sdk_review_round3.py:7:1
+   |
+ 5 |   """
+ 6 |
+ 7 | / import asyncio
+ 8 | | import json
+ 9 | | from contextlib import asynccontextmanager
+10 | | from types import SimpleNamespace
+11 | |
+12 | | import pytest
+13 | |
+14 | | from agentloom import (
+15 | |     AgentDefinition,
+16 | |     CapabilityBinding,
+17 | |     CapabilityRegistration,
+18 | |     CapabilityRegistry,
+19 | |     CapabilitySpec,
+20 | |     ConfigurationError,
+21 | |     ExecutionPolicy,
+22 | |     FileRuntimeStore,
+23 | |     FunctionToolAdapter,
+24 | |     McpToolAdapter,
+25 | |     MemoryRuntimeStore,
+26 | |     ModelDescriptor,
+27 | |     ModelResponse,
+28 | |     ProviderEvent,
+29 | |     ReactAgent,
+30 | |     RetryPolicy,
+31 | |     RuntimeEngine,
+32 | |     RuntimeProperties,
+33 | |     ScriptedModel,
+34 | |     ToolCall,
+35 | |     WorkspaceBinding,
+36 | | )
+   | |_^
+help: Organize imports
+   |
+12 | import pytest
+   -
+13 | from agentloom import (
+   |
+
+I001 [*] Import block is un-sorted or un-formatted
+  --> agentloom-sdk/qa/test_sdk_review_round4.py:7:1
+   |
+ 5 |   """
+ 6 |
+ 7 | / import json
+ 8 | |
+ 9 | | import pytest
+10 | |
+11 | | from agentloom import (
+12 | |     AgentDefinition,
+13 | |     AgentLoomError,
+14 | |     CapabilityBinding,
+15 | |     CapabilityRegistration,
+16 | |     CapabilityRegistry,
+17 | |     CapabilitySpec,
+18 | |     ExecutionPolicy,
+19 | |     FileRuntimeStore,
+20 | |     FunctionToolAdapter,
+21 | |     InfrastructureError,
+22 | |     MemoryRuntimeStore,
+23 | |     ModelResponse,
+24 | |     ReactAgent,
+25 | |     RequestError,
+26 | |     RetryPolicy,
+27 | |     RuntimeEngine,
+28 | |     ScriptedModel,
+29 | |     ToolCall,
+30 | |     ToolResult,
+31 | |     WorkspaceBinding,
+32 | | )
+   | |_^
+help: Organize imports
+   |
+9  | import pytest
+   -
+10 | from agentloom import (
+   |
+
+I001 [*] Import block is un-sorted or un-formatted
+  --> agentloom-sdk/qa/test_sdk_review_round5.py:7:1
+   |
+ 5 |   """
+ 6 |
+ 7 | / import json
+ 8 | | import math
+ 9 | | import sys
+10 | |
+11 | | import pytest
+12 | |
+13 | | from agentloom import (
+14 | |     AgentDefinition,
+15 | |     AgentLoomError,
+16 | |     CapabilityBinding,
+17 | |     CapabilityRegistration,
+18 | |     CapabilityRegistry,
+19 | |     CapabilitySpec,
+20 | |     ExecutionPolicy,
+21 | |     FileRuntimeStore,
+22 | |     FunctionToolAdapter,
+23 | |     InfrastructureError,
+24 | |     MemoryRuntimeStore,
+25 | |     ModelResponse,
+26 | |     ReactAgent,
+27 | |     RequestError,
+28 | |     RuntimeEngine,
+29 | |     ScriptedModel,
+30 | |     ToolCall,
+31 | |     WorkspaceBinding,
+32 | | )
+   | |_^
+help: Organize imports
+   |
+11 | import pytest
+   -
+12 | from agentloom import (
+   |
+
+I001 [*] Import block is un-sorted or un-formatted
+  --> agentloom-sdk/qa/test_sdk_review_round6.py:8:1
+   |
+ 6 |   """
+ 7 |
+ 8 | / import json
+ 9 | |
+10 | | import pytest
+11 | |
+12 | | from agentloom import (
+13 | |     AgentDefinition,
+14 | |     AgentLoomError,
+15 | |     CapabilityBinding,
+16 | |     CapabilityRegistration,
+17 | |     CapabilityRegistry,
+18 | |     CapabilitySpec,
+19 | |     ExecutionPolicy,
+20 | |     FileRuntimeStore,
+21 | |     InfrastructureError,
+22 | |     MemoryRuntimeStore,
+23 | |     ModelResponse,
+24 | |     PlanAgent,
+25 | |     ReactAgent,
+26 | |     RuntimeEngine,
+27 | |     ScriptedModel,
+28 | |     ToolCall,
+29 | |     WorkspaceBinding,
+30 | | )
+31 | | from agentloom.configuration import json_copy
+   | |_____________________________________________^
+help: Organize imports
+   |
+10 | import pytest
+   -
+11 | from agentloom import (
+   |
+
+I001 [*] Import block is un-sorted or un-formatted
+  --> agentloom-sdk/qa/test_sdk_review_round7.py:7:1
+   |
+ 5 |   """
+ 6 |
+ 7 | / import json
+ 8 | |
+ 9 | | import pytest
+10 | |
+11 | | from agentloom import (
+12 | |     AgentDefinition,
+13 | |     ExecutionPolicy,
+14 | |     FileRuntimeStore,
+15 | |     InfrastructureError,
+16 | |     MemoryRuntimeStore,
+17 | |     ModelResponse,
+18 | |     PlanAgent,
+19 | |     ReactAgent,
+20 | |     RetryPolicy,
+21 | |     RuntimeEngine,
+22 | |     ScriptedModel,
+23 | |     ToolCall,
+24 | |     WorkspaceBinding,
+25 | | )
+26 | | from agentloom.configuration import json_copy
+27 | | from agentloom.prompts import templates
+28 | | from agentloom.runtime.recovery import validate_recovery
+   | |________________________________________________________^
+help: Organize imports
+   |
+9  | import pytest
+   -
+10 | from agentloom import (
+   |
+
+I001 [*] Import block is un-sorted or un-formatted
+  --> agentloom-sdk/tests/conftest.py:1:1
+   |
+ 1 | / import pytest
+ 2 | |
+ 3 | | from agentloom import (
+ 4 | |     AgentDefinition,
+ 5 | |     CapabilityBinding,
+ 6 | |     CapabilityRegistration,
+ 7 | |     CapabilitySpec,
+ 8 | |     FileRuntimeStore,
+ 9 | |     FunctionToolAdapter,
+10 | |     MemoryRuntimeStore,
+11 | |     ReactAgent,
+12 | |     ScriptedModel,
+13 | |     WorkspaceBinding,
+14 | | )
+   | |_^
+help: Organize imports
+  |
+1 | import pytest
+  -
+2 | from agentloom import (
+  |
+
+I001 [*] Import block is un-sorted or un-formatted
+  --> agentloom-sdk/tests/test_attempt_completion.py:3:1
+   |
+ 1 |   """Completion precedes teardown; control and lease fencing still govern delivery."""
+ 2 |
+ 3 | / import asyncio
+ 4 | | from contextlib import asynccontextmanager
+ 5 | | from types import SimpleNamespace
+ 6 | |
+ 7 | | import pytest
+ 8 | | from conftest import assert_finished
+ 9 | |
+10 | | from agentloom import (
+11 | |     AgentDefinition,
+12 | |     AgentLoomError,
+13 | |     CapabilityBinding,
+14 | |     CapabilityRegistration,
+15 | |     CapabilityRegistry,
+16 | |     CapabilitySpec,
+17 | |     ExecutionPolicy,
+18 | |     FunctionToolAdapter,
+19 | |     InfrastructureError,
+20 | |     McpToolAdapter,
+21 | |     ModelDescriptor,
+22 | |     ModelResponse,
+23 | |     ProviderEvent,
+24 | |     RetryPolicy,
+25 | |     RuntimeEngine,
+26 | |     ToolCall,
+27 | |     ToolResult,
+28 | | )
+29 | | from agentloom.errors import LeaseLost
+30 | | from agentloom.runtime.recovery import validate_recovery
+31 | | from agentloom.storage.commit import CommitCoordinator
+   | |______________________________________________________^
+help: Organize imports
+   |
+7  | import pytest
+   - from conftest import assert_finished
+   -
+8  | from agentloom import (
+--------------------------------------------------------------------------------
+29 | from agentloom.storage.commit import CommitCoordinator
+30 + from conftest import assert_finished
+31 |
+   |
+
+I001 [*] Import block is un-sorted or un-formatted
+  --> agentloom-sdk/tests/test_builder_contract.py:3:1
+   |
+ 1 |   """Definition-based assembly preserves isolation, authorization and recovery bindings."""
+ 2 |
+ 3 | / import asyncio
+ 4 | | from dataclasses import FrozenInstanceError
+ 5 | |
+ 6 | | import pytest
+ 7 | | from conftest import assert_finished, binding, tool
+ 8 | |
+ 9 | | from agentloom import (
+10 | |     AgentBuilder,
+11 | |     AgentDefinition,
+12 | |     AgentInput,
+13 | |     CapabilityRegistry,
+14 | |     ConfigurationError,
+15 | |     ContextPolicy,
+16 | |     ExecutionPolicy,
+17 | |     FunctionHookHandler,
+18 | |     HookBinding,
+19 | |     HookDecision,
+20 | |     HookMatcher,
+21 | |     HookSet,
+22 | |     InfrastructureError,
+23 | |     ModelOptions,
+24 | |     ModelResponse,
+25 | |     PlanAgent,
+26 | |     ReactAgent,
+27 | |     RequestError,
+28 | |     RuntimeEngine,
+29 | |     ScriptedModel,
+30 | |     ToolCall,
+31 | |     VariableSpec,
+32 | |     WorkspaceBinding,
+33 | | )
+34 | | from agentloom.configuration.assembly import recovery_manifest
+   | |______________________________________________________________^
+help: Organize imports
+   |
+6  | import pytest
+   - from conftest import assert_finished, binding, tool
+   -
+7  | from agentloom import (
+--------------------------------------------------------------------------------
+32 | from agentloom.configuration.assembly import recovery_manifest
+33 + from conftest import assert_finished, binding, tool
+34 |
+   |
+
+I001 [*] Import block is un-sorted or un-formatted
+  --> agentloom-sdk/tests/test_capability_public_contract.py:3:1
+   |
+ 1 |   """Native capability adapters and immutable role catalogs obey the public contract."""
+ 2 |
+ 3 | / import json
+ 4 | | from dataclasses import FrozenInstanceError
+ 5 | |
+ 6 | | import pytest
+ 7 | | from conftest import assert_finished
+ 8 | |
+ 9 | | from agentloom import (
+10 | |     AgentDefinition,
+11 | |     AgentLoomError,
+12 | |     CapabilityAdapter,
+13 | |     CapabilityBinding,
+14 | |     CapabilityRegistration,
+15 | |     CapabilityRegistry,
+16 | |     CapabilityRequest,
+17 | |     CapabilitySpec,
+18 | |     ContentBlock,
+19 | |     ExecutionPolicy,
+20 | |     FunctionHookHandler,
+21 | |     HookBinding,
+22 | |     HookDecision,
+23 | |     HookSet,
+24 | |     ModelResponse,
+25 | |     PlanAgent,
+26 | |     RequestError,
+27 | |     RetryPolicy,
+28 | |     RuntimeEngine,
+29 | |     ToolCall,
+30 | |     ToolInvocationContext,
+31 | |     ToolResult,
+32 | | )
+   | |_^
+help: Organize imports
+   |
+6  | import pytest
+   - from conftest import assert_finished
+   -
+7  | from agentloom import (
+--------------------------------------------------------------------------------
+30 | )
+31 + from conftest import assert_finished
+32 |
+   |
+
+I001 [*] Import block is un-sorted or un-formatted
+  --> agentloom-sdk/tests/test_completion_boundaries.py:3:1
+   |
+ 1 |   """Returned data and reported failures share validation, not execution exceptions."""
+ 2 |
+ 3 | / import asyncio
+ 4 | | import sys
+ 5 | |
+ 6 | | import pytest
+ 7 | | from conftest import assert_finished
+ 8 | | from test_attempt_completion import operation, tool_model, tool_options
+ 9 | |
+10 | | from agentloom import (
+11 | |     AgentLoomError,
+12 | |     ExecutionPolicy,
+13 | |     FunctionToolAdapter,
+14 | |     InfrastructureError,
+15 | |     RetryPolicy,
+16 | |     RuntimeEngine,
+17 | | )
+18 | | from agentloom.capabilities.invocation import normalize_completion, normalize_error_completion
+19 | | from agentloom.errors import LeaseLost
+   | |______________________________________^
+help: Organize imports
+   |
+6  | import pytest
+   - from conftest import assert_finished
+   - from test_attempt_completion import operation, tool_model, tool_options
+   -
+7  | from agentloom import (
+--------------------------------------------------------------------------------
+16 | from agentloom.errors import LeaseLost
+17 + from conftest import assert_finished
+18 + from test_attempt_completion import operation, tool_model, tool_options
+19 |
+   |
+
+I001 [*] Import block is un-sorted or un-formatted
+  --> agentloom-sdk/tests/test_completion_cleanup.py:3:1
+   |
+ 1 |   """Transport teardown cannot erase completion or turn business failure into retry."""
+ 2 |
+ 3 | / import asyncio
+ 4 | | import json
+ 5 | | from contextlib import asynccontextmanager
+ 6 | | from types import SimpleNamespace
+ 7 | |
+ 8 | | import httpx
+ 9 | | import pytest
+10 | | from conftest import assert_finished
+11 | |
+12 | | from agentloom import (
+13 | |     AgentDefinition,
+14 | |     CapabilityBinding,
+15 | |     CapabilityRegistration,
+16 | |     CapabilityRegistry,
+17 | |     CapabilitySpec,
+18 | |     ExecutionPolicy,
+19 | |     McpToolAdapter,
+20 | |     ModelResponse,
+21 | |     OpenAIChatAdapter,
+22 | |     OpenAIResponsesAdapter,
+23 | |     RetryPolicy,
+24 | |     RuntimeEngine,
+25 | |     ToolCall,
+26 | | )
+27 | | from agentloom.errors import InfrastructureError, LeaseLost
+28 | | from agentloom.resources import managed_resource
+   | |________________________________________________^
+help: Organize imports
+   |
+9  | import pytest
+   - from conftest import assert_finished
+   -
+10 | from agentloom import (
+--------------------------------------------------------------------------------
+26 | from agentloom.resources import managed_resource
+27 + from conftest import assert_finished
+28 |
+   |
+
+I001 [*] Import block is un-sorted or un-formatted
+  --> agentloom-sdk/tests/test_completion_recovery.py:3:1
+   |
+ 1 |   """A process lost during teardown resumes the already committed outcome."""
+ 2 |
+ 3 | / import json
+ 4 | | import os
+ 5 | | import subprocess
+ 6 | | import sys
+ 7 | | import time
+ 8 | | from pathlib import Path
+ 9 | |
+10 | | import pytest
+11 | |
+12 | | from agentloom import FileRuntimeStore
+13 | | from agentloom.runtime.recovery import validate_recovery
+   | |________________________________________________________^
+help: Organize imports
+   |
+10 | import pytest
+   -
+11 | from agentloom import FileRuntimeStore
+   |
+
+I001 [*] Import block is un-sorted or un-formatted
+  --> agentloom-sdk/tests/test_control_and_history.py:1:1
+   |
+ 1 | / import asyncio
+ 2 | | import json
+ 3 | |
+ 4 | | import pytest
+ 5 | |
+ 6 | | from agentloom import (
+ 7 | |     AgentDefinition,
+ 8 | |     AgentInput,
+ 9 | |     ExecutionPolicy,
+10 | |     InfrastructureError,
+11 | |     LocalEnvironment,
+12 | |     ModelResponse,
+13 | |     RequestError,
+14 | |     RuntimeEngine,
+15 | |     VariableSpec,
+16 | | )
+   | |_^
+help: Organize imports
+  |
+4 | import pytest
+  -
+5 | from agentloom import (
+  |
+
+I001 [*] Import block is un-sorted or un-formatted
+  --> agentloom-sdk/tests/test_control_reconciliation.py:3:1
+   |
+ 1 |   """Stop/deadline recovery settles saved facts without invoking a new Hook or tool."""
+ 2 |
+ 3 | / import asyncio
+ 4 | | import json
+ 5 | | import os
+ 6 | | import subprocess
+ 7 | | import sys
+ 8 | | import time
+ 9 | | from pathlib import Path
+10 | |
+11 | | import pytest
+12 | | from conftest import assert_finished, binding, tool
+13 | |
+14 | | from agentloom import (
+15 | |     AgentDefinition,
+16 | |     CapabilityRegistry,
+17 | |     FunctionHookHandler,
+18 | |     HookBinding,
+19 | |     HookDecision,
+20 | |     HookSet,
+21 | |     InfrastructureError,
+22 | |     LocalEnvironment,
+23 | |     ModelResponse,
+24 | |     PlanAgent,
+25 | |     RuntimeEngine,
+26 | |     ScriptedModel,
+27 | |     ToolCall,
+28 | | )
+29 | | from agentloom.errors import LeaseLost
+30 | | from agentloom.runtime.control import finalize_run
+31 | | from agentloom.storage import claim
+   | |___________________________________^
+help: Organize imports
+   |
+11 | import pytest
+   - from conftest import assert_finished, binding, tool
+   -
+12 | from agentloom import (
+--------------------------------------------------------------------------------
+29 | from agentloom.storage import claim
+30 + from conftest import assert_finished, binding, tool
+31 |
+   |
+
+I001 [*] Import block is un-sorted or un-formatted
+  --> agentloom-sdk/tests/test_definition_snapshots.py:3:1
+   |
+ 1 |   """Persisted action validation uses the same variable semantics as live definitions."""
+ 2 |
+ 3 | / import json
+ 4 | |
+ 5 | | import pytest
+ 6 | |
+ 7 | | from agentloom import AgentDefinition, AgentLoomError, RequestError, VariableSpec
+ 8 | | from agentloom.configuration.definitions import (
+ 9 | |     definition_snapshot,
+10 | |     manifest_definition_snapshot,
+11 | |     restore_definition,
+12 | |     variable_contract,
+13 | | )
+14 | | from agentloom.configuration.json_documents import canonical_document
+   | |_____________________________________________________________________^
+help: Organize imports
+  |
+5 | import pytest
+  -
+6 | from agentloom import AgentDefinition, AgentLoomError, RequestError, VariableSpec
+  |
+
+I001 [*] Import block is un-sorted or un-formatted
+  --> agentloom-sdk/tests/test_design_alignment.py:1:1
+   |
+ 1 | / import asyncio
+ 2 | | import importlib.util
+ 3 | | import json
+ 4 | | import time
+ 5 | | from contextlib import asynccontextmanager
+ 6 | | from types import SimpleNamespace
+ 7 | |
+ 8 | | import pytest
+ 9 | | from conftest import binding, tool
+10 | |
+11 | | from agentloom import (
+12 | |     AgentDefinition,
+13 | |     AgentLoomError,
+14 | |     CapabilityBinding,
+15 | |     CapabilityRegistration,
+16 | |     CapabilityRegistry,
+17 | |     CapabilitySpec,
+18 | |     ContextPolicy,
+19 | |     DirectorySkillLoader,
+20 | |     ExecutionPolicy,
+21 | |     FileRuntimeStore,
+22 | |     FunctionHookHandler,
+23 | |     FunctionToolAdapter,
+24 | |     HookBinding,
+25 | |     HookDecision,
+26 | |     HookMatcher,
+27 | |     HookSet,
+28 | |     InfrastructureError,
+29 | |     LocalEnvironment,
+30 | |     McpToolAdapter,
+31 | |     MemoryRuntimeStore,
+32 | |     ModelDescriptor,
+33 | |     ModelResponse,
+34 | |     PlanAgent,
+35 | |     ProviderEvent,
+36 | |     RequestError,
+37 | |     RuntimeEngine,
+38 | |     ScriptedModel,
+39 | |     SkillPackage,
+40 | |     SkillRegistration,
+41 | |     ToolCall,
+42 | |     WorkspaceBinding,
+43 | | )
+   | |_^
+help: Organize imports
+   |
+8  | import pytest
+   - from conftest import binding, tool
+   -
+9  | from agentloom import (
+--------------------------------------------------------------------------------
+41 | )
+42 + from conftest import binding, tool
+43 |
+   |
+
+I001 [*] Import block is un-sorted or un-formatted
+ --> agentloom-sdk/tests/test_environment_contract.py:1:1
+  |
+1 | / import difflib
+2 | | from pathlib import Path
+3 | |
+4 | | import pytest
+5 | |
+6 | | from agentloom import AgentLoomError, LeaseLost, LocalEnvironment, WorkspaceBinding
+7 | | from agentloom.capabilities import WorkspaceService
+  | |___________________________________________________^
+help: Organize imports
+  |
+4 | import pytest
+  -
+5 | from agentloom import AgentLoomError, LeaseLost, LocalEnvironment, WorkspaceBinding
+  |
+
+I001 [*] Import block is un-sorted or un-formatted
+  --> agentloom-sdk/tests/test_execution_contract.py:1:1
+   |
+ 1 | / import asyncio
+ 2 | | import json
+ 3 | | from uuid import uuid4
+ 4 | |
+ 5 | | import pytest
+ 6 | | from conftest import binding, tool
+ 7 | |
+ 8 | | from agentloom import (
+ 9 | |     Agent,
+10 | |     AgentDefinition,
+11 | |     AgentLoomError,
+12 | |     AgentNode,
+13 | |     CapabilityBinding,
+14 | |     CapabilityRegistry,
+15 | |     ConfigurationError,
+16 | |     ContextPolicy,
+17 | |     ExecutionPolicy,
+18 | |     ModelDescriptor,
+19 | |     ModelOptions,
+20 | |     ModelResponse,
+21 | |     Node,
+22 | |     PlanAgent,
+23 | |     ProviderEvent,
+24 | |     RequestError,
+25 | |     RetryPolicy,
+26 | |     RuntimeEngine,
+27 | |     ToolCall,
+28 | |     WaitTimeout,
+29 | | )
+   | |_^
+help: Organize imports
+   |
+5  | import pytest
+   - from conftest import binding, tool
+   -
+6  | from agentloom import (
+--------------------------------------------------------------------------------
+27 | )
+28 + from conftest import binding, tool
+29 |
+   |
+
+I001 [*] Import block is un-sorted or un-formatted
+  --> agentloom-sdk/tests/test_file_store_contract.py:1:1
+   |
+ 1 | / import errno
+ 2 | | import hashlib
+ 3 | | import json
+ 4 | | import os
+ 5 | | import subprocess
+ 6 | | import sys
+ 7 | | import time
+ 8 | | from pathlib import Path
+ 9 | |
+10 | | import pytest
+11 | |
+12 | | from agentloom import ConfigurationError, FileRuntimeStore, InfrastructureError
+13 | | from agentloom.configuration import canonical, digest
+14 | | from agentloom.storage import CommitCoordinator, _files, claim
+   | |______________________________________________________________^
+help: Organize imports
+   |
+10 | import pytest
+   -
+11 | from agentloom import ConfigurationError, FileRuntimeStore, InfrastructureError
+   |
+
+I001 [*] Import block is un-sorted or un-formatted
+  --> agentloom-sdk/tests/test_final_output_boundaries.py:3:1
+   |
+ 1 |   """Output correction uses business loops; schema defects remain configuration failures."""
+ 2 |
+ 3 | / import pytest
+ 4 | |
+ 5 | | from agentloom import (
+ 6 | |     AgentDefinition,
+ 7 | |     ExecutionPolicy,
+ 8 | |     ModelResponse,
+ 9 | |     RetryPolicy,
+10 | |     RuntimeEngine,
+11 | | )
+12 | | from agentloom.runtime.recovery import validate_recovery
+   | |________________________________________________________^
+help: Organize imports
+  |
+3 | import pytest
+  -
+4 | from agentloom import (
+  |
+
+I001 [*] Import block is un-sorted or un-formatted
+  --> agentloom-sdk/tests/test_followup_review.py:1:1
+   |
+ 1 | / import asyncio
+ 2 | | import json
+ 3 | | import time
+ 4 | | from email.utils import formatdate
+ 5 | |
+ 6 | | import httpx
+ 7 | | import pytest
+ 8 | |
+ 9 | | from agentloom import (
+10 | |     AgentDefinition,
+11 | |     ExecutionPolicy,
+12 | |     FileRuntimeStore,
+13 | |     FunctionHookHandler,
+14 | |     HookBinding,
+15 | |     HookDecision,
+16 | |     HookSet,
+17 | |     LocalEnvironment,
+18 | |     MemoryRuntimeStore,
+19 | |     ModelResponse,
+20 | |     OpenAIChatAdapter,
+21 | |     OpenAIResponsesAdapter,
+22 | |     PlanAgent,
+23 | |     RetryPolicy,
+24 | |     RuntimeEngine,
+25 | |     ToolCall,
+26 | | )
+27 | | from agentloom.models.http import retry_after_deadline
+   | |______________________________________________________^
+help: Organize imports
+  |
+7 | import pytest
+  -
+8 | from agentloom import (
+  |
+
+I001 [*] Import block is un-sorted or un-formatted
+ --> agentloom-sdk/tests/test_history_execution_facts.py:3:1
+  |
+1 |   """Interrupted history preserves known completion without inventing delivered output."""
+2 |
+3 | / import asyncio
+4 | | import json
+5 | |
+6 | | from conftest import binding, tool
+7 | |
+8 | | from agentloom import AgentDefinition, CapabilityRegistry, ModelResponse, RuntimeEngine, ToolCall
+  | |_________________________________________________________________________________________________^
+help: Organize imports
+  |
+5 |
+  - from conftest import binding, tool
+  -
+6 | from agentloom import AgentDefinition, CapabilityRegistry, ModelResponse, RuntimeEngine, ToolCall
+7 + from conftest import binding, tool
+8 |
+  |
+
+I001 [*] Import block is un-sorted or un-formatted
+  --> agentloom-sdk/tests/test_hook_context_contract.py:1:1
+   |
+ 1 | / import json
+ 2 | |
+ 3 | | import pytest
+ 4 | | from conftest import binding, tool
+ 5 | |
+ 6 | | from agentloom import (
+ 7 | |     AgentDefinition,
+ 8 | |     AgentLoomError,
+ 9 | |     CapabilityBinding,
+10 | |     CapabilityRegistry,
+11 | |     ContextPolicy,
+12 | |     DirectorySkillLoader,
+13 | |     FunctionHookHandler,
+14 | |     HookBinding,
+15 | |     HookDecision,
+16 | |     HookSet,
+17 | |     ModelResponse,
+18 | |     RuntimeEngine,
+19 | |     ScriptedModel,
+20 | |     SkillPackage,
+21 | |     SkillRegistration,
+22 | |     ToolCall,
+23 | | )
+   | |_^
+help: Organize imports
+   |
+3  | import pytest
+   - from conftest import binding, tool
+   -
+4  | from agentloom import (
+--------------------------------------------------------------------------------
+21 | )
+22 + from conftest import binding, tool
+23 |
+   |
+
+I001 [*] Import block is un-sorted or un-formatted
+  --> agentloom-sdk/tests/test_hook_public_contract.py:3:1
+   |
+ 1 |   """Documented Hook inputs and pinned immutable reads across commit boundaries."""
+ 2 |
+ 3 | / import json
+ 4 | | from dataclasses import asdict
+ 5 | |
+ 6 | | import pytest
+ 7 | |
+ 8 | | from agentloom import (
+ 9 | |     AgentLoomError,
+10 | |     FunctionHookHandler,
+11 | |     HookBinding,
+12 | |     HookContext,
+13 | |     HookDecision,
+14 | |     HookInput,
+15 | |     HookReadPort,
+16 | |     HookRecordPage,
+17 | |     HookRecordView,
+18 | |     HookSet,
+19 | |     ModelResponse,
+20 | |     RuntimeEngine,
+21 | | )
+   | |_^
+help: Organize imports
+  |
+6 | import pytest
+  -
+7 | from agentloom import (
+  |
+
+I001 [*] Import block is un-sorted or un-formatted
+  --> agentloom-sdk/tests/test_json_value_boundaries.py:3:1
+   |
+ 1 |   """Invalid container graphs cannot escape the canonical JSON boundary."""
+ 2 |
+ 3 | / import sys
+ 4 | | from collections import UserDict
+ 5 | |
+ 6 | | import pytest
+ 7 | |
+ 8 | | from agentloom import AgentLoomError, ConfigurationError
+ 9 | | from agentloom.capabilities.invocation import result_from_value
+10 | | from agentloom.configuration import canonical, freeze, json_copy
+   | |________________________________________________________________^
+help: Organize imports
+  |
+6 | import pytest
+  -
+7 | from agentloom import AgentLoomError, ConfigurationError
+  |
+
+I001 [*] Import block is un-sorted or un-formatted
+  --> agentloom-sdk/tests/test_langchain_prompts.py:3:1
+   |
+ 1 |   """Native action, final-output and replanning contracts of the LangChain adaptations."""
+ 2 |
+ 3 | / import json
+ 4 | | from importlib.resources import files
+ 5 | |
+ 6 | | from conftest import binding, tool
+ 7 | |
+ 8 | | from agentloom import (
+ 9 | |     AgentDefinition,
+10 | |     AgentLoomError,
+11 | |     CapabilityRegistry,
+12 | |     ModelResponse,
+13 | |     PlanAgent,
+14 | |     RuntimeEngine,
+15 | |     ToolCall,
+16 | | )
+17 | | from agentloom.prompts import templates
+18 | | from agentloom.runtime.recovery import validate_recovery
+   | |________________________________________________________^
+help: Organize imports
+   |
+5  |
+   - from conftest import binding, tool
+   -
+6  | from agentloom import (
+--------------------------------------------------------------------------------
+16 | from agentloom.runtime.recovery import validate_recovery
+17 + from conftest import binding, tool
+18 |
+   |
+
+I001 [*] Import block is un-sorted or un-formatted
+  --> agentloom-sdk/tests/test_maintenance_contract.py:3:1
+   |
+ 1 |   """Cleanup lease ownership and deadline finalization without reconstructing Agents."""
+ 2 |
+ 3 | / import asyncio
+ 4 | | import os
+ 5 | | import sys
+ 6 | | import threading
+ 7 | | import time
+ 8 | | from pathlib import Path
+ 9 | |
+10 | | import pytest
+11 | | from conftest import assert_finished
+12 | |
+13 | | from agentloom import (
+14 | |     ExecutionPolicy,
+15 | |     FileRuntimeStore,
+16 | |     LocalEnvironment,
+17 | |     ModelResponse,
+18 | |     RuntimeEngine,
+19 | | )
+20 | | from agentloom.errors import LeaseLost
+21 | | from agentloom.runtime.cleanup import CleanupService
+22 | | from agentloom.runtime.cleanup_lease import CleanupLeaseGuard
+23 | | from agentloom.runtime.deadlines import request_expired_stops
+   | |_____________________________________________________________^
+help: Organize imports
+   |
+10 | import pytest
+   - from conftest import assert_finished
+   -
+11 | from agentloom import (
+--------------------------------------------------------------------------------
+21 | from agentloom.runtime.deadlines import request_expired_stops
+22 + from conftest import assert_finished
+23 |
+   |
+
+I001 [*] Import block is un-sorted or un-formatted
+  --> agentloom-sdk/tests/test_maintenance_shutdown.py:3:1
+   |
+ 1 |   """Host shutdown must drain both maintenance threads before returning."""
+ 2 |
+ 3 | / import asyncio
+ 4 | | import threading
+ 5 | |
+ 6 | | import pytest
+ 7 | |
+ 8 | | from agentloom import RuntimeEngine
+ 9 | | from agentloom.runtime import host
+10 | | from agentloom.runtime.cleanup import CleanupService
+   | |____________________________________________________^
+help: Organize imports
+  |
+6 | import pytest
+  -
+7 | from agentloom import RuntimeEngine
+  |
+
+I001 [*] Import block is un-sorted or un-formatted
+  --> agentloom-sdk/tests/test_mcp_protocol.py:1:1
+   |
+ 1 | / import json
+ 2 | | import sys
+ 3 | | from pathlib import Path
+ 4 | |
+ 5 | | import pytest
+ 6 | |
+ 7 | | from agentloom import (
+ 8 | |     AgentDefinition,
+ 9 | |     CapabilityBinding,
+10 | |     CapabilityRegistration,
+11 | |     CapabilityRegistry,
+12 | |     CapabilitySpec,
+13 | |     ExecutionPolicy,
+14 | |     McpToolAdapter,
+15 | |     ModelResponse,
+16 | |     RetryPolicy,
+17 | |     RuntimeEngine,
+18 | |     ToolCall,
+19 | | )
+   | |_^
+help: Organize imports
+  |
+5 | import pytest
+  -
+6 | from agentloom import (
+  |
+
+I001 [*] Import block is un-sorted or un-formatted
+  --> agentloom-sdk/tests/test_mcp_retry_contract.py:3:1
+   |
+ 1 |   """MCP HTTP failures share persisted retry deadlines with the model call driver."""
+ 2 |
+ 3 | / import asyncio
+ 4 | | import time
+ 5 | | from contextlib import asynccontextmanager
+ 6 | | from email.utils import formatdate
+ 7 | | from types import SimpleNamespace
+ 8 | |
+ 9 | | import httpx
+10 | | import pytest
+11 | | from conftest import assert_finished
+12 | |
+13 | | from agentloom import (
+14 | |     AgentDefinition,
+15 | |     CapabilityBinding,
+16 | |     CapabilityRegistration,
+17 | |     CapabilityRegistry,
+18 | |     CapabilitySpec,
+19 | |     ExecutionPolicy,
+20 | |     McpToolAdapter,
+21 | |     ModelResponse,
+22 | |     RetryPolicy,
+23 | |     RuntimeEngine,
+24 | |     ToolCall,
+25 | | )
+   | |_^
+help: Organize imports
+   |
+10 | import pytest
+   - from conftest import assert_finished
+   -
+11 | from agentloom import (
+--------------------------------------------------------------------------------
+23 | )
+24 + from conftest import assert_finished
+25 |
+   |
+
+I001 [*] Import block is un-sorted or un-formatted
+  --> agentloom-sdk/tests/test_mode_prompts.py:3:1
+   |
+ 1 |   """Business-only definitions receive SDK instructions at every assembly boundary."""
+ 2 |
+ 3 | / import json
+ 4 | | from contextlib import AsyncExitStack
+ 5 | |
+ 6 | | import httpx
+ 7 | | import pytest
+ 8 | | from conftest import binding, tool
+ 9 | |
+10 | | from agentloom import (
+11 | |     AgentBuilder,
+12 | |     AgentDefinition,
+13 | |     AgentInput,
+14 | |     AgentLoom,
+15 | |     AgentProperties,
+16 | |     CapabilityRegistry,
+17 | |     FunctionHookHandler,
+18 | |     HookBinding,
+19 | |     HookDecision,
+20 | |     HookSet,
+21 | |     ModelResponse,
+22 | |     OpenAIChatAdapter,
+23 | |     OpenAIResponsesAdapter,
+24 | |     PlanAgent,
+25 | |     PropertiesConfig,
+26 | |     ReactAgent,
+27 | |     RuntimeEngine,
+28 | |     ScriptedModel,
+29 | |     ServiceProperties,
+30 | |     ToolCall,
+31 | |     VariableSpec,
+32 | |     WorkspaceBinding,
+33 | | )
+34 | | from agentloom.configuration.json_documents import canonical_document
+35 | | from agentloom.context.budget import estimate
+36 | | from agentloom.prompts.assembly import PROMPT_RECORD_KIND
+37 | | from agentloom.runtime.recovery import validate_recovery
+   | |________________________________________________________^
+help: Organize imports
+   |
+7  | import pytest
+   - from conftest import binding, tool
+   -
+8  | from agentloom import (
+--------------------------------------------------------------------------------
+35 | from agentloom.runtime.recovery import validate_recovery
+36 + from conftest import binding, tool
+37 |
+   |
+
+I001 [*] Import block is un-sorted or un-formatted
+  --> agentloom-sdk/tests/test_model_material.py:3:1
+   |
+ 1 |   """Malformed response containment and attempt-local evidence across protocols."""
+ 2 |
+ 3 | / import asyncio
+ 4 | | import json
+ 5 | |
+ 6 | | import httpx
+ 7 | | import pytest
+ 8 | | from conftest import assert_finished, binding, tool
+ 9 | |
+10 | | from agentloom import (
+11 | |     AgentDefinition,
+12 | |     CapabilityRegistry,
+13 | |     ExecutionPolicy,
+14 | |     FunctionHookHandler,
+15 | |     HookBinding,
+16 | |     HookDecision,
+17 | |     HookSet,
+18 | |     ModelResponse,
+19 | |     OpenAIChatAdapter,
+20 | |     OpenAIResponsesAdapter,
+21 | |     ProviderEvent,
+22 | |     RetryPolicy,
+23 | |     RuntimeEngine,
+24 | |     ScriptedModel,
+25 | |     ToolCall,
+26 | | )
+   | |_^
+help: Organize imports
+   |
+7  | import pytest
+   - from conftest import assert_finished, binding, tool
+   -
+8  | from agentloom import (
+--------------------------------------------------------------------------------
+24 | )
+25 + from conftest import assert_finished, binding, tool
+26 |
+   |
+
+I001 [*] Import block is un-sorted or un-formatted
+  --> agentloom-sdk/tests/test_model_protocols.py:1:1
+   |
+ 1 | / import json
+ 2 | |
+ 3 | | import httpx
+ 4 | | import pytest
+ 5 | | from conftest import binding, tool
+ 6 | |
+ 7 | | from agentloom import (
+ 8 | |     AgentDefinition,
+ 9 | |     AgentLoomError,
+10 | |     CapabilityRegistry,
+11 | |     FunctionHookHandler,
+12 | |     HookBinding,
+13 | |     HookDecision,
+14 | |     HookSet,
+15 | |     ModelRequest,
+16 | |     OpenAIChatAdapter,
+17 | |     OpenAIResponsesAdapter,
+18 | |     RuntimeEngine,
+19 | | )
+   | |_^
+help: Organize imports
+   |
+4  | import pytest
+   - from conftest import binding, tool
+   -
+5  | from agentloom import (
+--------------------------------------------------------------------------------
+17 | )
+18 + from conftest import binding, tool
+19 |
+   |
+
+I001 [*] Import block is un-sorted or un-formatted
+  --> agentloom-sdk/tests/test_operation_error_boundaries.py:3:1
+   |
+ 1 |   """Malformed exception DTOs are safe failures, never retry or completion evidence."""
+ 2 |
+ 3 | / import asyncio
+ 4 | |
+ 5 | | import pytest
+ 6 | | from conftest import assert_finished
+ 7 | | from test_attempt_completion import operation, tool_model, tool_options
+ 8 | |
+ 9 | | from agentloom import (
+10 | |     AgentLoomError,
+11 | |     ExecutionPolicy,
+12 | |     InfrastructureError,
+13 | |     ModelDescriptor,
+14 | |     RetryPolicy,
+15 | |     RuntimeEngine,
+16 | |     ToolResult,
+17 | | )
+18 | | from agentloom.capabilities.invocation import normalize_completion, normalize_error_completion
+19 | | from agentloom.errors import LeaseLost, error_record
+20 | | from agentloom.operation_errors import normalize_operation_error
+21 | | from agentloom.runtime.completion import failed_result
+   | |______________________________________________________^
+help: Organize imports
+   |
+5  | import pytest
+   - from conftest import assert_finished
+   - from test_attempt_completion import operation, tool_model, tool_options
+   -
+6  | from agentloom import (
+--------------------------------------------------------------------------------
+18 | from agentloom.runtime.completion import failed_result
+19 + from conftest import assert_finished
+20 + from test_attempt_completion import operation, tool_model, tool_options
+21 |
+   |
+
+I001 [*] Import block is un-sorted or un-formatted
+  --> agentloom-sdk/tests/test_persisted_json_depth.py:3:1
+   |
+ 1 |   """Accepted boundary values survive SDK wrapping, persistence and recovery."""
+ 2 |
+ 3 | / import json
+ 4 | |
+ 5 | | import pytest
+ 6 | | import rfc8785
+ 7 | | from conftest import binding
+ 8 | |
+ 9 | | from agentloom import (
+10 | |     AgentDefinition,
+11 | |     CapabilityRegistration,
+12 | |     CapabilityRegistry,
+13 | |     CapabilitySpec,
+14 | |     ConfigurationError,
+15 | |     FunctionHookHandler,
+16 | |     FunctionToolAdapter,
+17 | |     HookBinding,
+18 | |     HookDecision,
+19 | |     HookSet,
+20 | |     ModelResponse,
+21 | |     RuntimeEngine,
+22 | |     ToolCall,
+23 | | )
+24 | | from agentloom.configuration import canonical, freeze, json_copy
+25 | | from agentloom.configuration.json_documents import (
+26 | |     MAX_DOCUMENT_DEPTH,
+27 | |     canonical_document,
+28 | |     copy_document,
+29 | |     freeze_document,
+30 | | )
+31 | | from agentloom.configuration.json_values import MAX_JSON_DEPTH
+32 | | from agentloom.runtime.recovery import validate_recovery
+   | |________________________________________________________^
+help: Organize imports
+   |
+6  | import rfc8785
+   - from conftest import binding
+   -
+7  | from agentloom import (
+--------------------------------------------------------------------------------
+30 | from agentloom.runtime.recovery import validate_recovery
+31 + from conftest import binding
+32 |
+   |
+
+I001 [*] Import block is un-sorted or un-formatted
+  --> agentloom-sdk/tests/test_persistence_contract.py:1:1
+   |
+ 1 | / import asyncio
+ 2 | | import json
+ 3 | | import os
+ 4 | | import subprocess
+ 5 | | import sys
+ 6 | | import time
+ 7 | | from pathlib import Path
+ 8 | |
+ 9 | | import pytest
+10 | |
+11 | | from agentloom import ModelResponse, RuntimeEngine
+   | |__________________________________________________^
+help: Organize imports
+   |
+9  | import pytest
+   -
+10 | from agentloom import ModelResponse, RuntimeEngine
+   |
+
+I001 [*] Import block is un-sorted or un-formatted
+  --> agentloom-sdk/tests/test_prompt_recovery.py:3:1
+   |
+ 1 |   """Instruction snapshots survive restart, including roles not yet instantiated."""
+ 2 |
+ 3 | / import json
+ 4 | | import os
+ 5 | | import subprocess
+ 6 | | import sys
+ 7 | | import time
+ 8 | | from pathlib import Path
+ 9 | |
+10 | | import pytest
+11 | |
+12 | | from agentloom import (
+13 | |     AgentDefinition,
+14 | |     InfrastructureError,
+15 | |     LocalEnvironment,
+16 | |     ModelResponse,
+17 | |     PlanAgent,
+18 | |     RuntimeEngine,
+19 | |     ToolCall,
+20 | | )
+21 | | from agentloom.prompts import templates
+22 | | from agentloom.prompts.assembly import PROMPT_RECORD_KIND
+23 | | from agentloom.runtime.recovery import validate_recovery
+   | |________________________________________________________^
+help: Organize imports
+   |
+10 | import pytest
+   -
+11 | from agentloom import (
+   |
+
+I001 [*] Import block is un-sorted or un-formatted
+  --> agentloom-sdk/tests/test_properties_contract.py:3:1
+   |
+ 1 |   """Unified startup parameters keep dependency ownership and Run recovery unchanged."""
+ 2 |
+ 3 | / import asyncio
+ 4 | | import json
+ 5 | | from dataclasses import FrozenInstanceError, replace
+ 6 | |
+ 7 | | import pytest
+ 8 | | from conftest import assert_finished, binding, tool
+ 9 | |
+10 | | from agentloom import (
+11 | |     AgentBuilder,
+12 | |     AgentDefinition,
+13 | |     AgentLoom,
+14 | |     AgentProperties,
+15 | |     CapabilityRegistry,
+16 | |     ConfigurationError,
+17 | |     ContextPolicy,
+18 | |     ExecutionPolicy,
+19 | |     FileRuntimeStore,
+20 | |     FunctionHookHandler,
+21 | |     HookBinding,
+22 | |     HookDecision,
+23 | |     HookSet,
+24 | |     InfrastructureError,
+25 | |     LocalEnvironment,
+26 | |     ModelOptions,
+27 | |     ModelResponse,
+28 | |     PlanAgent,
+29 | |     PropertiesConfig,
+30 | |     ReactAgent,
+31 | |     RequestError,
+32 | |     RuntimeEngine,
+33 | |     RuntimeProperties,
+34 | |     ScriptedModel,
+35 | |     ServiceProperties,
+36 | |     ToolCall,
+37 | |     WorkspaceBinding,
+38 | | )
+39 | | from agentloom.configuration.assembly import recovery_manifest
+   | |______________________________________________________________^
+help: Organize imports
+   |
+7  | import pytest
+   - from conftest import assert_finished, binding, tool
+   -
+8  | from agentloom import (
+--------------------------------------------------------------------------------
+37 | from agentloom.configuration.assembly import recovery_manifest
+38 + from conftest import assert_finished, binding, tool
+39 |
+   |
+
+I001 [*] Import block is un-sorted or un-formatted
+  --> agentloom-sdk/tests/test_public_event_depth.py:3:1
+   |
+ 1 |   """Public event envelopes preserve legal output without shrinking its JSON budget."""
+ 2 |
+ 3 | / import pytest
+ 4 | |
+ 5 | | from agentloom import (
+ 6 | |     AgentDefinition,
+ 7 | |     AgentInput,
+ 8 | |     ConfigurationError,
+ 9 | |     ModelResponse,
+10 | |     PlanAgent,
+11 | |     ReactAgent,
+12 | |     RunEvent,
+13 | |     RuntimeEngine,
+14 | | )
+15 | | from agentloom.configuration.json_documents import MAX_DOCUMENT_DEPTH, canonical_document
+16 | | from agentloom.configuration.json_values import MAX_JSON_DEPTH
+   | |______________________________________________________________^
+help: Organize imports
+  |
+3 | import pytest
+  -
+4 | from agentloom import (
+  |
+
+I001 [*] Import block is un-sorted or un-formatted
+  --> agentloom-sdk/tests/test_public_result_projection.py:3:1
+   |
+ 1 |   """Internal model fragments must survive recovery without entering public views."""
+ 2 |
+ 3 | / import asyncio
+ 4 | | import json
+ 5 | | from dataclasses import asdict
+ 6 | |
+ 7 | | import pytest
+ 8 | | from conftest import assert_finished
+ 9 | |
+10 | | from agentloom import (
+11 | |     AgentDefinition,
+12 | |     AgentLoomError,
+13 | |     ExecutionPolicy,
+14 | |     ModelDescriptor,
+15 | |     ModelResponse,
+16 | |     PlanAgent,
+17 | |     ProviderEvent,
+18 | |     RetryPolicy,
+19 | |     RuntimeEngine,
+20 | |     ToolCall,
+21 | | )
+   | |_^
+22 |
+23 |   MARKER = "PRIVATE_PARTIAL_AUDIT"
+   |
+help: Organize imports
+   |
+7  | import pytest
+   - from conftest import assert_finished
+   -
+8  | from agentloom import (
+--------------------------------------------------------------------------------
+19 | )
+20 + from conftest import assert_finished
+21 |
+   |
+
+I001 [*] Import block is un-sorted or un-formatted
+ --> agentloom-sdk/tests/test_public_validation.py:3:1
+  |
+1 |   """Reject invalid keys before mutation and validate event cursors before reads."""
+2 |
+3 | / from uuid import uuid4
+4 | |
+5 | | import pytest
+6 | |
+7 | | from agentloom import ModelResponse, RequestError, RuntimeEngine
+  | |________________________________________________________________^
+help: Organize imports
+  |
+5 | import pytest
+  -
+6 | from agentloom import ModelResponse, RequestError, RuntimeEngine
+  |
+
+I001 [*] Import block is un-sorted or un-formatted
+  --> agentloom-sdk/tests/test_recovery_binding_contract.py:3:1
+   |
+ 1 |   """Recovery rejects semantic configuration changes before dispatching any work."""
+ 2 |
+ 3 | / from dataclasses import asdict, replace
+ 4 | |
+ 5 | | import pytest
+ 6 | |
+ 7 | | from agentloom import (
+ 8 | |     AgentDefinition,
+ 9 | |     InfrastructureError,
+10 | |     LocalEnvironment,
+11 | |     ModelOptions,
+12 | |     ModelResponse,
+13 | |     PlanAgent,
+14 | |     ReactAgent,
+15 | |     RequestError,
+16 | |     RuntimeEngine,
+17 | |     ScriptedModel,
+18 | |     ToolCall,
+19 | |     VariableSpec,
+20 | |     WorkspaceBinding,
+21 | | )
+22 | | from agentloom.configuration.json_documents import canonical_document
+23 | | from agentloom.runtime.recovery import validate_recovery
+   | |________________________________________________________^
+help: Organize imports
+  |
+5 | import pytest
+  -
+6 | from agentloom import (
+  |
+
+I001 [*] Import block is un-sorted or un-formatted
+ --> agentloom-sdk/tests/test_recovery_invariants.py:3:1
+  |
+1 |   """Semantic checkpoint corruption is rejected before environment or model dispatch."""
+2 |
+3 | / import pytest
+4 | |
+5 | | from agentloom import InfrastructureError, LocalEnvironment, ModelResponse, RuntimeEngine
+  | |_________________________________________________________________________________________^
+help: Organize imports
+  |
+3 | import pytest
+  -
+4 | from agentloom import InfrastructureError, LocalEnvironment, ModelResponse, RuntimeEngine
+  |
+
+I001 [*] Import block is un-sorted or un-formatted
+  --> agentloom-sdk/tests/test_result_and_scope_contract.py:1:1
+   |
+ 1 | / import asyncio
+ 2 | | import json
+ 3 | |
+ 4 | | import pytest
+ 5 | | from conftest import binding, tool
+ 6 | |
+ 7 | | from agentloom import (
+ 8 | |     AgentDefinition,
+ 9 | |     AgentLoomError,
+10 | |     CapabilityRegistry,
+11 | |     FunctionHookHandler,
+12 | |     HookBinding,
+13 | |     HookDecision,
+14 | |     HookSet,
+15 | |     LocalEnvironment,
+16 | |     MemoryRuntimeStore,
+17 | |     ModelResponse,
+18 | |     PlanAgent,
+19 | |     RuntimeEngine,
+20 | |     ToolCall,
+21 | |     WorkspaceBinding,
+22 | | )
+23 | | from agentloom.storage import claim
+   | |___________________________________^
+help: Organize imports
+   |
+4  | import pytest
+   - from conftest import binding, tool
+   -
+5  | from agentloom import (
+--------------------------------------------------------------------------------
+21 | from agentloom.storage import claim
+22 + from conftest import binding, tool
+23 |
+   |
+
+I001 [*] Import block is un-sorted or un-formatted
+  --> agentloom-sdk/tests/test_review_regressions.py:1:1
+   |
+ 1 | / import asyncio
+ 2 | | import json
+ 3 | |
+ 4 | | import pytest
+ 5 | |
+ 6 | | from agentloom import (
+ 7 | |     AgentDefinition,
+ 8 | |     CapabilityBinding,
+ 9 | |     CapabilityRegistration,
+10 | |     CapabilityRegistry,
+11 | |     CapabilitySpec,
+12 | |     ExecutionPolicy,
+13 | |     FileRuntimeStore,
+14 | |     FunctionHookHandler,
+15 | |     FunctionToolAdapter,
+16 | |     HookBinding,
+17 | |     HookDecision,
+18 | |     HookMatcher,
+19 | |     HookSet,
+20 | |     MemoryRuntimeStore,
+21 | |     ModelDescriptor,
+22 | |     ModelResponse,
+23 | |     PlanAgent,
+24 | |     ProviderEvent,
+25 | |     ReactAgent,
+26 | |     RetryPolicy,
+27 | |     RuntimeEngine,
+28 | |     ScriptedModel,
+29 | |     ToolCall,
+30 | |     WorkspaceBinding,
+31 | | )
+   | |_^
+help: Organize imports
+  |
+4 | import pytest
+  -
+5 | from agentloom import (
+  |
+
+I001 [*] Import block is un-sorted or un-formatted
+  --> agentloom-sdk/tests/test_review_whitebox_probe.py:8:1
+   |
+ 6 |   """
+ 7 |
+ 8 | / import asyncio
+ 9 | | import json
+10 | |
+11 | | import pytest
+12 | | from conftest import binding, tool
+13 | |
+14 | | from agentloom import (
+15 | |     AgentDefinition,
+16 | |     AgentLoomError,
+17 | |     CapabilityRegistration,
+18 | |     CapabilityRegistry,
+19 | |     CapabilitySpec,
+20 | |     ContextPolicy,
+21 | |     ExecutionPolicy,
+22 | |     FunctionToolAdapter,
+23 | |     ModelDescriptor,
+24 | |     ModelOptions,
+25 | |     ModelResponse,
+26 | |     PlanAgent,
+27 | |     ProviderEvent,
+28 | |     RequestError,
+29 | |     RetryPolicy,
+30 | |     RuntimeEngine,
+31 | |     ScriptedModel,
+32 | |     ToolCall,
+33 | |     WorkspaceBinding,
+34 | | )
+   | |_^
+help: Organize imports
+   |
+11 | import pytest
+   - from conftest import binding, tool
+   -
+12 | from agentloom import (
+--------------------------------------------------------------------------------
+32 | )
+33 + from conftest import binding, tool
+34 |
+   |
+
+I001 [*] Import block is un-sorted or un-formatted
+ --> agentloom-sdk/tests/test_schema_contract.py:3:1
+  |
+1 |   """Schema locations, offline references and runtime error containment."""
+2 |
+3 | / import pytest
+4 | |
+5 | | from agentloom import AgentDefinition, ConfigurationError, RequestError
+6 | | from agentloom.configuration import check_schema, validate_schema
+  | |_________________________________________________________________^
+help: Organize imports
+  |
+3 | import pytest
+  -
+4 | from agentloom import AgentDefinition, ConfigurationError, RequestError
+  |
+
+I001 [*] Import block is un-sorted or un-formatted
+ --> agentloom-sdk/tests/test_skill_profile_contract.py:3:1
+  |
+1 |   """Prepared Skill packages and directory imports share one metadata contract."""
+2 |
+3 | / import hashlib
+4 | |
+5 | | import pytest
+6 | | import yaml
+7 | |
+8 | | from agentloom import ConfigurationError, DirectorySkillLoader, SkillPackage
+  | |____________________________________________________________________________^
+help: Organize imports
+  |
+6 | import yaml
+  -
+7 | from agentloom import ConfigurationError, DirectorySkillLoader, SkillPackage
+  |
+
+I001 [*] Import block is un-sorted or un-formatted
+  --> agentloom-sdk/tests/test_usage_accounting.py:3:1
+   |
+ 1 |   """Usage accounting stays canonical and preserves unknown/partial statistics."""
+ 2 |
+ 3 | / import pytest
+ 4 | | from conftest import assert_finished, binding, tool
+ 5 | |
+ 6 | | from agentloom import (
+ 7 | |     AgentDefinition,
+ 8 | |     CapabilityRegistry,
+ 9 | |     ConfigurationError,
+10 | |     ModelResponse,
+11 | |     RuntimeEngine,
+12 | |     ToolCall,
+13 | | )
+14 | | from agentloom.configuration.json_values import MAX_JSON_INTEGER
+15 | | from agentloom.runtime.recovery import validate_recovery
+   | |________________________________________________________^
+help: Organize imports
+   |
+3  | import pytest
+   - from conftest import assert_finished, binding, tool
+   -
+4  | from agentloom import (
+--------------------------------------------------------------------------------
+13 | from agentloom.runtime.recovery import validate_recovery
+14 + from conftest import assert_finished, binding, tool
+15 |
+   |
+
+I001 [*] Import block is un-sorted or un-formatted
+  --> agentloom-sdk/tests/test_usage_events.py:3:1
+   |
+ 1 |   """All adapters share cumulative usage validation at the model event boundary."""
+ 2 |
+ 3 | / import pytest
+ 4 | | from conftest import assert_finished, binding, tool
+ 5 | |
+ 6 | | from agentloom import (
+ 7 | |     AgentDefinition,
+ 8 | |     CapabilityRegistry,
+ 9 | |     ModelDescriptor,
+10 | |     ModelResponse,
+11 | |     ProviderEvent,
+12 | |     RuntimeEngine,
+13 | |     ToolCall,
+14 | | )
+15 | | from agentloom.configuration.json_values import MAX_JSON_INTEGER
+16 | | from agentloom.runtime.recovery import validate_recovery
+   | |________________________________________________________^
+help: Organize imports
+   |
+3  | import pytest
+   - from conftest import assert_finished, binding, tool
+   -
+4  | from agentloom import (
+--------------------------------------------------------------------------------
+14 | from agentloom.runtime.recovery import validate_recovery
+15 + from conftest import assert_finished, binding, tool
+16 |
+   |
+
+I001 [*] Import block is un-sorted or un-formatted
+  --> agentloom-sdk/tests/test_workspace_spi.py:3:1
+   |
+ 1 |   """Installed provider discovery plus runtime authorization, recovery and ownership."""
+ 2 |
+ 3 | / import importlib
+ 4 | | import json
+ 5 | | import shutil
+ 6 | | import subprocess
+ 7 | | import sys
+ 8 | | import time
+ 9 | | from pathlib import Path
+10 | | from types import SimpleNamespace
+11 | |
+12 | | import pytest
+13 | |
+14 | | from agentloom import (
+15 | |     FILE_OPERATIONS,
+16 | |     AgentDefinition,
+17 | |     AgentLoom,
+18 | |     AgentLoomError,
+19 | |     AgentProperties,
+20 | |     CapabilityBinding,
+21 | |     CapabilityRegistry,
+22 | |     ConfigurationError,
+23 | |     ExecutionPolicy,
+24 | |     FileProperties,
+25 | |     FunctionHookHandler,
+26 | |     HookBinding,
+27 | |     HookDecision,
+28 | |     HookSet,
+29 | |     InfrastructureError,
+30 | |     ModelResponse,
+31 | |     PropertiesConfig,
+32 | |     ReactAgent,
+33 | |     RequestError,
+34 | |     RetryPolicy,
+35 | |     RuntimeEngine,
+36 | |     ScriptedModel,
+37 | |     ServiceProperties,
+38 | |     ToolCall,
+39 | |     WorkspaceBackend,
+40 | |     WorkspaceBinding,
+41 | |     file_tools,
+42 | | )
+43 | | from agentloom.workspace.loader import ENTRY_POINT_GROUP, resolve_provider
+44 | | from agentloom.workspace.service import WorkspaceService
+   | |________________________________________________________^
+help: Organize imports
+   |
+12 | import pytest
+   -
+13 | from agentloom import (
+   |
+
+Found 54 errors.
+[*] 54 fixable with the `--fix` option.

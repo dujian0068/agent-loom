@@ -2,7 +2,7 @@
 
 日期：2026-10-18。实现版本：`agentloom-sdk 0.1.0a1`。当前推荐入口是 `PropertiesConfig → AgentLoom → build(AgentDefinition)`，默认使用文件系统保存执行状态。安装、可运行代码和接续步骤见 [SDK 接入指南](integration.md)。Workflow 按当前开发范围暂不接入。
 
-本页先说明当前状态与实现职责，再保留各阶段修复及验证记录。最新实现见[文件提供者 SPI](#文件提供者-spi)，此前修复见[恢复绑定与公开事件边界](#恢复绑定与公开事件边界修复)。SDK 已按 LangChain 模板适配 ReAct／Planner／Executor，业务方只填写业务 Prompt，见[LangChain 模板适配](#langchain-模板适配与回归)。首次自动注入与第五轮修复分别保留在[模式提示词实现](#sdk-自动模式提示词)和[第五轮记录](#第五轮持久化-json-深度与异常记录修复)。其他 SDK 章节仍含完整目标设计，不能据此推定全部接口已发布。
+本页先说明当前状态与实现职责，再保留各阶段修复及验证记录。最新修复见[第八轮租约与路径边界](#第八轮租约与路径边界修复)，文件接入机制见[文件提供者 SPI](#文件提供者-spi)。SDK 已按 LangChain 模板适配 ReAct／Planner／Executor，业务方只填写业务 Prompt，见[LangChain 模板适配](#langchain-模板适配与回归)。首次自动注入与第五轮修复分别保留在[模式提示词实现](#sdk-自动模式提示词)和[第五轮记录](#第五轮持久化-json-深度与异常记录修复)。其他 SDK 章节仍含完整目标设计，不能据此推定全部接口已发布。
 
 ## 当前接口与交付状态
 
@@ -67,7 +67,9 @@ flowchart LR
 
 ## 验证口径
 
-本次统一提交此前所有剩余改动，包括 LangChain 三角色模式提示词、恢复合同与公开事件修复、输出与异常结果校验、测试、文档、示例及历史验证证据。提交前重新完整执行 SDK 与七轮 QA：**1537 passed，0 failed，0 skipped**，其中 SDK 1075 项、QA 462 项，耗时 342.81 秒。189 个源码／资源／测试／示例文件在运行前后保持一致，没有排除用例或功能子集，见[本次完整回归](../../agentloom-sdk/qa/evidence/full-workspace-publish-20261018/regression-summary.json)和[日志](../../agentloom-sdk/qa/evidence/full-workspace-publish-20261018/regression.txt)。
+第八轮修复后的完整回归为 **1665 passed，0 failed，0 skipped**：SDK 1142 项、全部八轮 QA 523 项，约 385 秒。包含原第八轮 61 项及本次新增 67 项边界测试，没有排除用例或修改既有 QA 断言。189 个源码／资源／测试文件在回归前后摘要一致，见[本轮结果](../../agentloom-sdk/qa/evidence/round8-fixes-20261018/regression-summary.json)、[完整日志](../../agentloom-sdk/qa/evidence/round8-fixes-20261018/regression.txt)与[QA 完整性核对](../../agentloom-sdk/qa/evidence/round8-fixes-20261018/qa-integrity.json)。
+
+此前统一提交所有剩余改动，包括 LangChain 三角色模式提示词、恢复合同与公开事件修复、输出与异常结果校验、测试、文档、示例及历史验证证据。提交前重新完整执行 SDK 与七轮 QA：**1537 passed，0 failed，0 skipped**，其中 SDK 1075 项、QA 462 项，耗时 342.81 秒。189 个源码／资源／测试／示例文件在运行前后保持一致，没有排除用例或功能子集，见[该次完整回归](../../agentloom-sdk/qa/evidence/full-workspace-publish-20261018/regression-summary.json)和[日志](../../agentloom-sdk/qa/evidence/full-workspace-publish-20261018/regression.txt)。
 
 此前文件提供者 SPI 完成时的完整工作区回归 **1537 passed，0 failed，0 skipped**：SDK 1075 项、七轮 QA 462 项，耗时 336.82 秒。该轮新增 54 项测试，完整执行 SDK 与 QA 两个目录，没有排除用例；171 个源码／测试／配置文件摘要在运行前后保持一致，见[固定源码与回归结果](../../agentloom-sdk/qa/evidence/workspace-spi-20261018/regression-summary.json)。
 
@@ -91,6 +93,22 @@ flowchart LR
 - 独立停止命令与停止前准入关闭，宿主关闭保留现场；终态与 CleanupJob 原子提交，清理独立领取租约、失败重试，不再次激活 Agent。
 
 源码按 `public`、`configuration`、`prompts`、`runtime`、`events`、`context`、`capabilities`、`workspace`、`environment`、`models`、`storage` 分包。具体接入见[接入指南](integration.md)，包安装说明见 [SDK README](../../agentloom-sdk/README.md)。
+
+## 第八轮租约与路径边界修复
+
+第八轮报告的两项缺陷均属实：同步 prepare／文件操作会阻塞原有续租协程，glob 使用未规范化的 root 裁剪路径导致漏报。保留原 61 项 QA 断言，修复后该批全部通过。
+
+| 边界 | 实现与验证 |
+| --- | --- |
+| 同步调用跨租约 | `runtime.leases` 独立续租，`runtime.runner` 从 prepare 开始管理执行心跳；11 个普通文件方法与第三方注册合同不变，ReAct／Planner／Executor 共用执行保护 |
+| 失权、停止与截止 | 心跳失败拒绝新业务与提交；原 worker／epoch 始终校验，不延长业务 deadline。终态前回收执行心跳，宿主关闭等待执行与撤权收束 |
+| 准备中途退出 | `workspace.runtime` 在第三方 prepare 前持久化 scope；停止、截止及业务失败进入正常终态处理，撤权和清理仍能定位已分配资源 |
+| glob 等价路径 | `environment.mutations` 按 `workspace.paths` 的规范路径段计算相对路径，保留递归、排序、截断和授权规则 |
+| `/work//` 路径边界 | 补充测试发现去除别名后可能残留绝对路径；共享解析确保其仍是工作区相对路径。工作区内外同名文件验证覆盖 read／write／delete／list／glob／grep |
+
+新增回归按职责放在 `test_workspace_leases.py` 和 `test_workspace_glob.py`。前者基于真实安装并通过 entry point 加载的提供者覆盖全部 11 个 Executor 文件操作、真实 epoch 接管、续租失败、停止／截止、部分准备失败与关闭；后者覆盖路径别名、中文目录、递归搜索、范围拒绝和符号链接。Workflow 和此前声明的目标缺口不在本次变更范围。
+
+更新后的 SDK 与独立提供者重新构建并安装为 wheel，108 个源码／资源文件逐字节一致；两种模式的本地／第三方 11 个操作、写入后进程退出、错误配置拒绝和原配置恢复共 10 个进程场景通过，见[本轮安装包验证](../../agentloom-sdk/qa/evidence/round8-fixes-20261018/wheel-summary.json)。
 
 ## 文件提供者 SPI
 
@@ -377,6 +395,8 @@ QA 的 Schema 用例调整为验证完整装配边界，并通过单独故障注
 | `test_model_protocols.py` | 分片参数、完整结束证据、后置 Hook 次数、HTTP 分类、Responses reasoning / phase 与有效文本续传、非有限 JSON 参数 |
 | `test_mcp_protocol.py` | 实际 stdio 初始化、工具目录、调用元数据、业务错误不自动重试、Schema 漂移拒绝调用 |
 | `test_environment_contract.py` | etag 冲突、精确 patch、移动／删除、越根及符号链接、epoch 撤销、持久卷、搜索顺序与完整文本 |
+| `test_workspace_leases.py` | 已安装 SPI 的全部 Executor 文件操作跨租约、接管／续租失败拒绝写入、准备中停止／截止／失败、工具超时、关闭时心跳与慢撤权收束 |
+| `test_workspace_glob.py` | 等价根路径、递归／排序／截断、中文目录、授权／符号链接边界及 `/work//` 宿主路径隔离 |
 | `test_result_and_scope_contract.py` | 64 KiB 有效预览、分片读取、Executor 私有引用拒绝、目录游标、UTF-8 边界、过期 owner 的自动接管 |
 | `test_design_alignment.py` | 默认文件重开与资源所有权、Planner 只读现场、并发准入、无 Attempt 的本地拒绝、失败计票、Hook 校验、首输出送达、恢复绑定、压缩终止、最终截止与目录／MCP 游标 |
 | `test_review_regressions.py` | 审查的 14 次双后端复现，加并行改参、Hook 保存／应用后接续、超窗修改原子拒绝、可压缩修改、idle 重试、根截止、预占额度等待、连续补充转交，共 34 项 |
@@ -392,7 +412,7 @@ QA 的 Schema 用例调整为验证完整装配边界，并通过单独故障注
 运行命令：
 
 ```sh
-.venv/bin/python -m pytest -q agentloom-sdk/tests agentloom-sdk/qa/test_sdk_audit.py agentloom-sdk/qa/test_sdk_rereview.py agentloom-sdk/qa/test_sdk_review_round3.py agentloom-sdk/qa/test_sdk_review_round4.py
+.venv/bin/python -m pytest -q agentloom-sdk/tests agentloom-sdk/qa
 .venv/bin/ruff check agentloom-sdk/src agentloom-sdk/tests agentloom-sdk/qa
 .venv/bin/ruff format --check agentloom-sdk/src agentloom-sdk/tests agentloom-sdk/qa
 .venv/bin/python -m pip wheel ./agentloom-sdk --no-build-isolation --no-deps --no-index -w /tmp/agentloom-wheels

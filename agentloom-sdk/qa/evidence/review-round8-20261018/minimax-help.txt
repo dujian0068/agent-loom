@@ -1,0 +1,18 @@
+usage: smoke.py [-h] [--case {basic,react,plan,schema,all}] [--model MODEL]
+                [--base-url BASE_URL] [--context-window CONTEXT_WINDOW]
+                [--max-output-tokens MAX_OUTPUT_TOKENS]
+                [--max-loops MAX_LOOPS] [--timeout TIMEOUT]
+                [--output-dir OUTPUT_DIR]
+
+通过 AgentLoom 进行真实 MiniMax 冒烟测试。
+
+options:
+  -h, --help            show this help message and exit
+  --case {basic,react,plan,schema,all}
+  --model MODEL
+  --base-url BASE_URL
+  --context-window CONTEXT_WINDOW
+  --max-output-tokens MAX_OUTPUT_TOKENS
+  --max-loops MAX_LOOPS
+  --timeout TIMEOUT     每个 Run 的执行期限，单位秒
+  --output-dir OUTPUT_DIR

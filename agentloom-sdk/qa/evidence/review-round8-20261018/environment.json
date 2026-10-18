@@ -1,0 +1,14 @@
+{
+  "head": "e8fd3b25625cfda1096650af5e17ef1a767c43e4",
+  "started_at": "2026-10-18T12:29:54.223495+00:00",
+  "python": "3.12.14 (main, Aug 25 2026, 13:50:33) [Clang 22.1.3 ]",
+  "platform": "macOS-26.7-arm64-arm-64bit",
+  "source_files": 231,
+  "packages": {
+    "pytest": "8.4.2",
+    "pytest-asyncio": "1.4.0",
+    "httpx": "0.28.1",
+    "jsonschema": "4.26.0",
+    "ruff": "0.16.9"
+  }
+}

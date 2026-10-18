@@ -8,6 +8,7 @@ import stat
 
 from ..configuration import digest
 from ..errors import AgentLoomError
+from ..workspace.paths import path_parts
 
 
 class FileMutations:
@@ -190,6 +191,7 @@ class FileMutations:
             raise AgentLoomError("GLOB_ARGUMENTS_INVALID")
         if pattern.startswith("/") or ".." in pattern.split("/"):
             raise AgentLoomError("PATH_FORBIDDEN")
+        root_parts = path_parts(root)
         pending, paths = [root], []
 
         def matches(parts, segments):
@@ -206,12 +208,10 @@ class FileMutations:
         while pending:
             current = pending.pop()
             for entry in self.list(scope, current, guard):
-                relative = (
-                    entry["path"].removeprefix(root.rstrip("/") + "/")
-                    if root != "."
-                    else entry["path"]
-                )
-                if matches(relative.split("/"), pattern.split("/")):
+                # list() normalizes dot segments and repeated separators. Use
+                # the same logical path parts, including the /work alias.
+                relative = path_parts(entry["path"])[len(root_parts) :]
+                if matches(relative, pattern.split("/")):
                     paths.append(entry["path"])
                 if entry["kind"] == "directory":
                     pending.append(entry["path"])

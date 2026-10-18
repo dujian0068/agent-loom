@@ -1,0 +1,109 @@
+.FF..FF                                                                  [100%]
+=================================== FAILURES ===================================
+___________ test_glob_normalizes_equivalent_authorized_roots[./sub] ____________
+
+local_files = <agentloom.workspace.service.WorkspaceService object at 0x10a17ee40>
+root = './sub'
+
+    @pytest.mark.parametrize(
+        "root", ["sub", "./sub", "sub/.", "sub//", "/work/sub", "/work/./sub", "/work/sub/."]
+    )
+    def test_glob_normalizes_equivalent_authorized_roots(local_files, root):
+        """All accepted spellings of one directory must find the same direct file."""
+        local_files.mkdir("sub")
+        local_files.write("sub/a.txt", "needle")
+        assert local_files.read(root + "/a.txt")["text"] == "needle"
+        assert [entry["name"] for entry in local_files.list(root)["entries"]] == ["a.txt"]
+        found = local_files.glob("*.txt", root=root)
+        print(json.dumps({"root": root, "result": found}))
+>       assert [Path(path).name for path in found["paths"]] == ["a.txt"]
+E       AssertionError: assert [] == ['a.txt']
+E         
+E         Right contains one more item: 'a.txt'
+E         Use -v to get more diff
+
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round8.py:259: AssertionError
+----------------------------- Captured stdout call -----------------------------
+{"root": "./sub", "result": {"paths": [], "truncated": false}}
+___________ test_glob_normalizes_equivalent_authorized_roots[sub/.] ____________
+
+local_files = <agentloom.workspace.service.WorkspaceService object at 0x10a19c320>
+root = 'sub/.'
+
+    @pytest.mark.parametrize(
+        "root", ["sub", "./sub", "sub/.", "sub//", "/work/sub", "/work/./sub", "/work/sub/."]
+    )
+    def test_glob_normalizes_equivalent_authorized_roots(local_files, root):
+        """All accepted spellings of one directory must find the same direct file."""
+        local_files.mkdir("sub")
+        local_files.write("sub/a.txt", "needle")
+        assert local_files.read(root + "/a.txt")["text"] == "needle"
+        assert [entry["name"] for entry in local_files.list(root)["entries"]] == ["a.txt"]
+        found = local_files.glob("*.txt", root=root)
+        print(json.dumps({"root": root, "result": found}))
+>       assert [Path(path).name for path in found["paths"]] == ["a.txt"]
+E       AssertionError: assert [] == ['a.txt']
+E         
+E         Right contains one more item: 'a.txt'
+E         Use -v to get more diff
+
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round8.py:259: AssertionError
+----------------------------- Captured stdout call -----------------------------
+{"root": "sub/.", "result": {"paths": [], "truncated": false}}
+________ test_glob_normalizes_equivalent_authorized_roots[/work/./sub] _________
+
+local_files = <agentloom.workspace.service.WorkspaceService object at 0x10a17eea0>
+root = '/work/./sub'
+
+    @pytest.mark.parametrize(
+        "root", ["sub", "./sub", "sub/.", "sub//", "/work/sub", "/work/./sub", "/work/sub/."]
+    )
+    def test_glob_normalizes_equivalent_authorized_roots(local_files, root):
+        """All accepted spellings of one directory must find the same direct file."""
+        local_files.mkdir("sub")
+        local_files.write("sub/a.txt", "needle")
+        assert local_files.read(root + "/a.txt")["text"] == "needle"
+        assert [entry["name"] for entry in local_files.list(root)["entries"]] == ["a.txt"]
+        found = local_files.glob("*.txt", root=root)
+        print(json.dumps({"root": root, "result": found}))
+>       assert [Path(path).name for path in found["paths"]] == ["a.txt"]
+E       AssertionError: assert [] == ['a.txt']
+E         
+E         Right contains one more item: 'a.txt'
+E         Use -v to get more diff
+
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round8.py:259: AssertionError
+----------------------------- Captured stdout call -----------------------------
+{"root": "/work/./sub", "result": {"paths": [], "truncated": false}}
+________ test_glob_normalizes_equivalent_authorized_roots[/work/sub/.] _________
+
+local_files = <agentloom.workspace.service.WorkspaceService object at 0x10a17e0f0>
+root = '/work/sub/.'
+
+    @pytest.mark.parametrize(
+        "root", ["sub", "./sub", "sub/.", "sub//", "/work/sub", "/work/./sub", "/work/sub/."]
+    )
+    def test_glob_normalizes_equivalent_authorized_roots(local_files, root):
+        """All accepted spellings of one directory must find the same direct file."""
+        local_files.mkdir("sub")
+        local_files.write("sub/a.txt", "needle")
+        assert local_files.read(root + "/a.txt")["text"] == "needle"
+        assert [entry["name"] for entry in local_files.list(root)["entries"]] == ["a.txt"]
+        found = local_files.glob("*.txt", root=root)
+        print(json.dumps({"root": root, "result": found}))
+>       assert [Path(path).name for path in found["paths"]] == ["a.txt"]
+E       AssertionError: assert [] == ['a.txt']
+E         
+E         Right contains one more item: 'a.txt'
+E         Use -v to get more diff
+
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round8.py:259: AssertionError
+----------------------------- Captured stdout call -----------------------------
+{"root": "/work/sub/.", "result": {"paths": [], "truncated": false}}
+- generated xml file: /Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/evidence/review-round8-20261018/glob.junit.xml -
+=========================== short test summary info ============================
+FAILED agentloom-sdk/qa/test_sdk_review_round8.py::test_glob_normalizes_equivalent_authorized_roots[./sub]
+FAILED agentloom-sdk/qa/test_sdk_review_round8.py::test_glob_normalizes_equivalent_authorized_roots[sub/.]
+FAILED agentloom-sdk/qa/test_sdk_review_round8.py::test_glob_normalizes_equivalent_authorized_roots[/work/./sub]
+FAILED agentloom-sdk/qa/test_sdk_review_round8.py::test_glob_normalizes_equivalent_authorized_roots[/work/sub/.]
+4 failed, 3 passed, 54 deselected in 0.11s

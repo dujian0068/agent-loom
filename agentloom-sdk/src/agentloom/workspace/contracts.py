@@ -94,6 +94,8 @@ class WorkspaceCallContext:
     use lease_epoch for backend fencing where required. Providers must finish or
     stop their writers before returning/raising, and respect deadline_at. SDK does
     not create an executor, event loop or hidden retries for these plain methods.
+    Runtime renews execution ownership independently of provider I/O, including
+    prepare. A renewal failure makes check_active reject further business work.
     Lifecycle contexts have purpose prepare/revoke/cleanup and no tool attempt.
     cleanup_job_id/cleanup_lease_epoch identify the independent cleanup authority;
     lease_epoch still identifies the original workspace execution domain.

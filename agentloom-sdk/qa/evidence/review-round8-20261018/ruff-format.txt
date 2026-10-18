@@ -1,0 +1,71 @@
+unformatted: File would be reformatted
+   --> examples/minimax/smoke.py:44:21
+    |
+43  | def save_json(path, value):
+    -     path.write_text(
+    -         json.dumps(value, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
+    -     )
+44  +     path.write_text(json.dumps(value, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+45  |
+--------------------------------------------------------------------------------
+189 |     config = PropertiesConfig(
+    -         runtime=RuntimeProperties(
+    -             state_directory=directory / "state", namespace="minimax-smoke"
+    -         ),
+190 +         runtime=RuntimeProperties(state_directory=directory / "state", namespace="minimax-smoke"),
+191 |         defaults=AgentProperties(
+--------------------------------------------------------------------------------
+203 |     async with AgentLoom(config) as app:
+    -         agent = app.build(
+    -             definition, executors={"worker": worker} if case == "plan" else None
+    -         )
+204 +         agent = app.build(definition, executors={"worker": worker} if case == "plan" else None)
+205 |         handle = await agent.start(input_text)
+--------------------------------------------------------------------------------
+222 |         checks["tool_role_correct"] = bool(tool_calls) and all(
+    -             call["role"] == ("worker" if case == "plan" else "react")
+    -             for call in tool_calls
+223 +             call["role"] == ("worker" if case == "plan" else "react") for call in tool_calls
+224 |         )
+--------------------------------------------------------------------------------
+244 |         "expected": expected,
+    -         "output": {"kind": result.output.kind, "value": value}
+    -         if result.output
+    -         else None,
+245 +         "output": {"kind": result.output.kind, "value": value} if result.output else None,
+246 |         "usage": asdict(result.usage),
+247 |         "tool_calls": tool_calls,
+248 |         "model_call_count": len(model.calls),
+249 |         "inline_thinking_seen": any(
+    -             "<think>" in call.get("response", {}).get("text", "")
+    -             for call in model.calls
+250 +             "<think>" in call.get("response", {}).get("text", "") for call in model.calls
+251 |         ),
+--------------------------------------------------------------------------------
+258 | def parse_args():
+    -     parser = argparse.ArgumentParser(
+    -         description="通过 AgentLoom 进行真实 MiniMax 冒烟测试。"
+    -     )
+259 +     parser = argparse.ArgumentParser(description="通过 AgentLoom 进行真实 MiniMax 冒烟测试。")
+260 |     parser.add_argument("--case", choices=(*CASES, "all"), default="basic")
+--------------------------------------------------------------------------------
+271 |     parser.add_argument("--max-loops", type=int, default=8)
+    -     parser.add_argument(
+    -         "--timeout", type=int, default=180, help="每个 Run 的执行期限，单位秒"
+    -     )
+    -     parser.add_argument(
+    -         "--output-dir", type=Path, default=Path(".agentloom/live-minimax")
+    -     )
+272 +     parser.add_argument("--timeout", type=int, default=180, help="每个 Run 的执行期限，单位秒")
+273 +     parser.add_argument("--output-dir", type=Path, default=Path(".agentloom/live-minimax"))
+274 |     return parser.parse_args()
+--------------------------------------------------------------------------------
+289 |         if not report["passed"]:
+    -             print(
+    -                 "首个失败用例后停止。详细原因见结果文件；可用 --case 单独运行其他用例。"
+    -             )
+290 +             print("首个失败用例后停止。详细原因见结果文件；可用 --case 单独运行其他用例。")
+291 |             return 1
+    |
+
+1 file would be reformatted, 183 files already formatted

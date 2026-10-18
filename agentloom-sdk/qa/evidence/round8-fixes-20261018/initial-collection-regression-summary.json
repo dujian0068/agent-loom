@@ -1,0 +1,31 @@
+{
+  "tests": 1,
+  "failures": 0,
+  "errors": 1,
+  "skipped": 0,
+  "base_commit": "e8fd3b25625cfda1096650af5e17ef1a767c43e4",
+  "duration_seconds": 0.38,
+  "source_files_checked": 189,
+  "source_unchanged_during_regression": true,
+  "command": [
+    "caffeinate",
+    "-is",
+    ".venv/bin/python",
+    "-m",
+    "pytest",
+    "-q",
+    "-ra",
+    "agentloom-sdk/tests",
+    "agentloom-sdk/qa",
+    "--tb=short",
+    "--durations=15",
+    "--junitxml=/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/evidence/round8-fixes-20261018/regression.junit.xml"
+  ],
+  "excluded_tests": [],
+  "exit_code": 2,
+  "passed": 0,
+  "areas": {
+    "tests": 0,
+    "qa": 0
+  }
+}

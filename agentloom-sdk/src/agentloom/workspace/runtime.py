@@ -69,11 +69,16 @@ class WorkspaceResources:
             **values,
         )
 
-    def prepare(self, runtime, binding, session_id, run_id, epoch, guard):
+    def prepare(
+        self, runtime, binding, session_id, run_id, epoch, guard, *, record_scope=lambda scope: None
+    ):
         if self.local:
-            return self.environment.prepare(
+            scope = self.environment.prepare(
                 binding, session_id, run_id, epoch, runtime.namespace, guard=guard
             )
+            record_scope(scope)
+            guard()
+            return scope
         workspace_id = digest(
             {
                 "namespace": runtime.namespace,
@@ -92,6 +97,9 @@ class WorkspaceResources:
             "file_provider": self.manifest,
         }
         guard()
+        # A provider may acquire resources before prepare() fails or is stopped.
+        # Persist the identity first so revocation/recovery can find those resources.
+        record_scope(scope)
         synchronous_result(self.backend.prepare(self.context(scope, guard, purpose="prepare")))
         guard()
         return scope

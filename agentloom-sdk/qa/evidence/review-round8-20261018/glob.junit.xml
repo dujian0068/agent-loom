@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="4" skipped="0" tests="7" time="0.106" timestamp="2026-10-18T20:36:33.445578+08:00" hostname="bmilk"><testcase classname="qa.test_sdk_review_round8" name="test_glob_normalizes_equivalent_authorized_roots[sub]" time="0.005" /><testcase classname="qa.test_sdk_review_round8" name="test_glob_normalizes_equivalent_authorized_roots[./sub]" time="0.003"><failure message="AssertionError: assert [] == ['a.txt']&#10;  &#10;  Right contains one more item: 'a.txt'&#10;  Use -v to get more diff">local_files = &lt;agentloom.workspace.service.WorkspaceService object at 0x10a17ee40&gt;
+root = './sub'
+
+    @pytest.mark.parametrize(
+        "root", ["sub", "./sub", "sub/.", "sub//", "/work/sub", "/work/./sub", "/work/sub/."]
+    )
+    def test_glob_normalizes_equivalent_authorized_roots(local_files, root):
+        """All accepted spellings of one directory must find the same direct file."""
+        local_files.mkdir("sub")
+        local_files.write("sub/a.txt", "needle")
+        assert local_files.read(root + "/a.txt")["text"] == "needle"
+        assert [entry["name"] for entry in local_files.list(root)["entries"]] == ["a.txt"]
+        found = local_files.glob("*.txt", root=root)
+        print(json.dumps({"root": root, "result": found}))
+&gt;       assert [Path(path).name for path in found["paths"]] == ["a.txt"]
+E       AssertionError: assert [] == ['a.txt']
+E         
+E         Right contains one more item: 'a.txt'
+E         Use -v to get more diff
+
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round8.py:259: AssertionError</failure></testcase><testcase classname="qa.test_sdk_review_round8" name="test_glob_normalizes_equivalent_authorized_roots[sub/.]" time="0.003"><failure message="AssertionError: assert [] == ['a.txt']&#10;  &#10;  Right contains one more item: 'a.txt'&#10;  Use -v to get more diff">local_files = &lt;agentloom.workspace.service.WorkspaceService object at 0x10a19c320&gt;
+root = 'sub/.'
+
+    @pytest.mark.parametrize(
+        "root", ["sub", "./sub", "sub/.", "sub//", "/work/sub", "/work/./sub", "/work/sub/."]
+    )
+    def test_glob_normalizes_equivalent_authorized_roots(local_files, root):
+        """All accepted spellings of one directory must find the same direct file."""
+        local_files.mkdir("sub")
+        local_files.write("sub/a.txt", "needle")
+        assert local_files.read(root + "/a.txt")["text"] == "needle"
+        assert [entry["name"] for entry in local_files.list(root)["entries"]] == ["a.txt"]
+        found = local_files.glob("*.txt", root=root)
+        print(json.dumps({"root": root, "result": found}))
+&gt;       assert [Path(path).name for path in found["paths"]] == ["a.txt"]
+E       AssertionError: assert [] == ['a.txt']
+E         
+E         Right contains one more item: 'a.txt'
+E         Use -v to get more diff
+
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round8.py:259: AssertionError</failure></testcase><testcase classname="qa.test_sdk_review_round8" name="test_glob_normalizes_equivalent_authorized_roots[sub//]" time="0.003" /><testcase classname="qa.test_sdk_review_round8" name="test_glob_normalizes_equivalent_authorized_roots[/work/sub]" time="0.003" /><testcase classname="qa.test_sdk_review_round8" name="test_glob_normalizes_equivalent_authorized_roots[/work/./sub]" time="0.003"><failure message="AssertionError: assert [] == ['a.txt']&#10;  &#10;  Right contains one more item: 'a.txt'&#10;  Use -v to get more diff">local_files = &lt;agentloom.workspace.service.WorkspaceService object at 0x10a17eea0&gt;
+root = '/work/./sub'
+
+    @pytest.mark.parametrize(
+        "root", ["sub", "./sub", "sub/.", "sub//", "/work/sub", "/work/./sub", "/work/sub/."]
+    )
+    def test_glob_normalizes_equivalent_authorized_roots(local_files, root):
+        """All accepted spellings of one directory must find the same direct file."""
+        local_files.mkdir("sub")
+        local_files.write("sub/a.txt", "needle")
+        assert local_files.read(root + "/a.txt")["text"] == "needle"
+        assert [entry["name"] for entry in local_files.list(root)["entries"]] == ["a.txt"]
+        found = local_files.glob("*.txt", root=root)
+        print(json.dumps({"root": root, "result": found}))
+&gt;       assert [Path(path).name for path in found["paths"]] == ["a.txt"]
+E       AssertionError: assert [] == ['a.txt']
+E         
+E         Right contains one more item: 'a.txt'
+E         Use -v to get more diff
+
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round8.py:259: AssertionError</failure></testcase><testcase classname="qa.test_sdk_review_round8" name="test_glob_normalizes_equivalent_authorized_roots[/work/sub/.]" time="0.003"><failure message="AssertionError: assert [] == ['a.txt']&#10;  &#10;  Right contains one more item: 'a.txt'&#10;  Use -v to get more diff">local_files = &lt;agentloom.workspace.service.WorkspaceService object at 0x10a17e0f0&gt;
+root = '/work/sub/.'
+
+    @pytest.mark.parametrize(
+        "root", ["sub", "./sub", "sub/.", "sub//", "/work/sub", "/work/./sub", "/work/sub/."]
+    )
+    def test_glob_normalizes_equivalent_authorized_roots(local_files, root):
+        """All accepted spellings of one directory must find the same direct file."""
+        local_files.mkdir("sub")
+        local_files.write("sub/a.txt", "needle")
+        assert local_files.read(root + "/a.txt")["text"] == "needle"
+        assert [entry["name"] for entry in local_files.list(root)["entries"]] == ["a.txt"]
+        found = local_files.glob("*.txt", root=root)
+        print(json.dumps({"root": root, "result": found}))
+&gt;       assert [Path(path).name for path in found["paths"]] == ["a.txt"]
+E       AssertionError: assert [] == ['a.txt']
+E         
+E         Right contains one more item: 'a.txt'
+E         Use -v to get more diff
+
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round8.py:259: AssertionError</failure></testcase></testsuite></testsuites>

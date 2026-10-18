@@ -16,6 +16,7 @@ from .agent_engine import AgentGraphEngine
 from .calls import CallDriver, failure, success
 from .control import emit, finalize_run, run_sequence
 from .handlers import ModelHandler, SkillHandler, ToolHandler
+from .leases import LeaseHeartbeat
 
 
 def new_task(
@@ -90,6 +91,7 @@ class ExecutionRunner:
         self.calls = CallDriver(self)
         self.engine = AgentGraphEngine(self)
         self._slots = asyncio.Semaphore(program.execution_policy.executor_max_parallel)
+        self._heartbeat = None
 
     def state(self):
         return self.runtime._load(self.run_id)
@@ -103,6 +105,8 @@ class ExecutionRunner:
         )
 
     def commit(self, command, mutation):
+        if self._heartbeat is not None:
+            self._heartbeat.check()
         return self.coordinator.commit(command, mutation)
 
     @staticmethod
@@ -113,6 +117,8 @@ class ExecutionRunner:
             raise AgentLoomError("RUN_TIMEOUT", category="timeout")
 
     def check_active(self):
+        if self._heartbeat is not None:
+            self._heartbeat.check()
         with self.runtime.store.transaction(self.runtime.namespace) as tx:
             state = tx.get("runs", self.run_id)
             verify_lease(state, self.lease, tx.now)
@@ -203,33 +209,41 @@ class ExecutionRunner:
         )
 
     async def _monitor(self):
-        renewed = time.monotonic()
         while True:
             self.check_active()
-            if time.monotonic() - renewed >= self.runtime.lease_seconds / 3:
-                self.coordinator.renew(self.runtime.lease_seconds)
-                renewed = time.monotonic()
             await asyncio.sleep(min(0.02, self.runtime.lease_seconds / 6))
 
     async def run(self):
+        # Provider methods remain ordinary synchronous calls. Ownership must not
+        # depend on their yielding to this event loop, including during prepare.
+        with LeaseHeartbeat(
+            lambda: self.coordinator.renew(self.runtime.lease_seconds),
+            self.runtime.lease_seconds,
+            name="agentloom-execution-lease:" + self.run_id,
+        ) as heartbeat:
+            self._heartbeat = heartbeat
+            try:
+                await self._run()
+            finally:
+                self._heartbeat = None
+
+    def _prepare(self):
         state = self.state()
-        if state["status"] == "stopping":
-            self.finalize("cancelled", error=AgentLoomError("RUN_STOPPED").to_dict())
-            return
-        if time.time() >= state["deadline_at"]:
-            self.finalize("timed_out", error=AgentLoomError("RUN_TIMEOUT").to_dict())
-            return
-        scope = self.runtime._files.prepare(
+
+        def record_scope(scope):
+            if state["workspace"] and state["workspace"]["path"] != scope["path"]:
+                raise InfrastructureError("WORKSPACE_BINDING_MISMATCH")
+            self.commit("environment:" + str(self.lease.epoch), lambda s: s.update(workspace=scope))
+
+        self.runtime._files.prepare(
             self.runtime,
             self.program.workspace,
             state["session_id"],
             self.run_id,
             self.lease.epoch,
             guard=self.check_active,
+            record_scope=record_scope,
         )
-        if state["workspace"] and state["workspace"]["path"] != scope["path"]:
-            raise InfrastructureError("WORKSPACE_BINDING_MISMATCH")
-        self.commit("environment:" + str(self.lease.epoch), lambda s: s.update(workspace=scope))
         if state["root_task_id"] is None:
             with self.runtime.store.transaction(self.runtime.namespace) as tx:
                 previous = sorted(
@@ -263,9 +277,14 @@ class ExecutionRunner:
                 emit(s, "run.started")
 
             self.commit("initialize", initialize)
-        work = asyncio.create_task(self.engine.run_task(self.state()["root_task_id"]))
-        monitor = asyncio.create_task(self._monitor())
+
+    async def _run(self):
+        work, monitor = None, None
         try:
+            self.check_active()
+            self._prepare()
+            work = asyncio.create_task(self.engine.run_task(self.state()["root_task_id"]))
+            monitor = asyncio.create_task(self._monitor())
             done, _ = await asyncio.wait((work, monitor), return_when=asyncio.FIRST_COMPLETED)
             if monitor in done:
                 await monitor
@@ -287,11 +306,12 @@ class ExecutionRunner:
         except InfrastructureError:
             raise
         except AgentLoomError as exc:
-            work.cancel()
-            outcomes = await asyncio.gather(work, return_exceptions=True)
-            for outcome in outcomes:
-                if isinstance(outcome, InfrastructureError):
-                    raise outcome
+            if work is not None:
+                work.cancel()
+                outcomes = await asyncio.gather(work, return_exceptions=True)
+                for outcome in outcomes:
+                    if isinstance(outcome, InfrastructureError):
+                        raise outcome
             status = {
                 "RUN_STOPPED": "cancelled",
                 "RUN_TIMEOUT": "timed_out",
@@ -299,11 +319,18 @@ class ExecutionRunner:
             }.get(exc.code, "failed")
             self.finalize(status, error=exc.to_dict())
         finally:
-            work.cancel()
-            monitor.cancel()
-            await asyncio.gather(work, monitor, return_exceptions=True)
-            if self.state()["status"] not in TERMINAL:
-                self.runtime._files.revoke(self.runtime, scope)
+            active = [task for task in (work, monitor) if task is not None]
+            for task in active:
+                task.cancel()
+            await asyncio.gather(*active, return_exceptions=True)
+            state = self.state()
+            if state["status"] not in TERMINAL and state["workspace"]:
+                self.runtime._files.revoke(self.runtime, state["workspace"])
 
     def finalize(self, status, *, output=None, error=None):
+        # The terminal path owns its revocation heartbeat. Stop this one first:
+        # renewing after the terminal commit would falsely report LEASE_LOST.
+        if self._heartbeat is not None:
+            self._heartbeat.stop()
+            self._heartbeat.check()
         return finalize_run(self.runtime, self.lease, status, output=output, error=error)

@@ -1,4 +1,4 @@
-"""Keep synchronous environment work fenced while the event loop cannot renew."""
+"""Renew ownership independently of synchronous provider work and the event loop."""
 
 import threading
 
@@ -25,8 +25,18 @@ class LeaseHeartbeat:
         self._thread.start()
         return self
 
-    def __exit__(self, exc_type, exc, traceback):
-        self._stop.set()
-        self._thread.join()
-        if exc_type is None and self._error is not None:
+    def check(self):
+        """Fail closed after a renewal error, even before the old TTL expires."""
+        if self._error is not None:
             raise self._error
+
+    def stop(self):
+        """Drain the renewal thread before terminal commit or store shutdown."""
+        self._stop.set()
+        if self._thread is not None:
+            self._thread.join()
+
+    def __exit__(self, exc_type, exc, traceback):
+        self.stop()
+        if exc_type is None:
+            self.check()
