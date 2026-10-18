@@ -1,0 +1,284 @@
+--- before/configuration/actions.py
++++ after/configuration/actions.py
+@@ -1,40 +1,9 @@
+ """Serializable action admission rules shared by live calls and saved Hook patches."""
+ 
+-from dataclasses import asdict
+-
+ from ..errors import AgentLoomError
++from .definitions import definition_snapshot, restore_definition
+ from .json_documents import copy_document as json_copy
+-from .models import AgentDefinition, VariableSpec
+ from .schemas import validate_schema
+-
+-
+-def definition_snapshot(definition):
+-    return {
+-        "definition": asdict(definition),
+-        "variable_specs": [
+-            key for key, value in definition.variables.items() if isinstance(value, VariableSpec)
+-        ],
+-    }
+-
+-
+-def restore_definition(snapshot):
+-    value = snapshot["definition"]
+-    variables = dict(value["variables"])
+-    if snapshot.get("legacy_variables") and any(
+-        isinstance(v, dict) and set(v) == {"schema", "default", "required"}
+-        for v in variables.values()
+-    ):
+-        raise AgentLoomError("HOOK_VARIABLE_VALIDATION_UNAVAILABLE")
+-    for key in snapshot["variable_specs"]:
+-        variables[key] = VariableSpec(**variables[key])
+-    return AgentDefinition(
+-        value["name"],
+-        value["prompt"],
+-        value["description"],
+-        variables=variables,
+-        input_schema=value["input_schema"],
+-        output_schema=value["output_schema"],
+-    )
+ 
+ 
+ def action_contract(program, role, tools):
+--- before/configuration/assembly.py
++++ after/configuration/assembly.py
+@@ -2,14 +2,20 @@
+ 
+ from dataclasses import asdict
+ 
++from .definitions import variable_contract
+ from .json_documents import copy_document as json_copy
++from .recovery import BINDING_VERSION
+ 
+ 
+ def recovery_manifest(program):
+     return json_copy(
+         {
++            "binding_version": BINDING_VERSION,
+             "mode": program.mode,
+             "definitions": {key: asdict(value) for key, value in program.definitions.items()},
++            "variable_contracts": {
++                key: variable_contract(value) for key, value in program.definitions.items()
++            },
+             "execution_policy": asdict(program.execution_policy),
+             "context_policy": asdict(program.context_policy),
+             "model_options": asdict(program.model_options),
+--- before/configuration/definitions.py
++++ after/configuration/definitions.py
+@@ -0,0 +1,86 @@
++"""Preserve variable declaration semantics in recoverable Definition snapshots."""
++
++from dataclasses import asdict
++
++from ..errors import AgentLoomError
++from .models import AgentDefinition, VariableSpec
++from .variables import default_variable_schema
++
++
++def variable_contract(definition):
++    """Separate explicit specs from defaults, including integer/number inference.
++
++    Canonical JSON can encode 1.0 as 1. The inferred default type must therefore
++    travel separately, just like the VariableSpec discriminator.
++    """
++    return {
++        "specs": sorted(
++            key for key, value in definition.variables.items() if isinstance(value, VariableSpec)
++        ),
++        "defaults": {
++            key: default_variable_schema(value)["type"]
++            for key, value in definition.variables.items()
++            if not isinstance(value, VariableSpec)
++        },
++    }
++
++
++def definition_snapshot(definition):
++    contract = variable_contract(definition)
++    return {
++        "definition": asdict(definition),
++        "variable_specs": contract["specs"],
++        "variable_types": contract["defaults"],
++    }
++
++
++def manifest_definition_snapshot(bindings, role):
++    """Use saved type evidence only; old ambiguous declarations remain unproven."""
++    snapshot = {"definition": bindings["definitions"][role], "variable_specs": []}
++    contracts = bindings.get("variable_contracts")
++    if contracts is None:
++        snapshot["legacy_variables"] = True
++    else:
++        contract = contracts[role]
++        snapshot.update(variable_specs=contract["specs"], variable_types=contract["defaults"])
++    return snapshot
++
++
++def ambiguous_legacy_variable(value):
++    """Old JSON cannot distinguish a spec-shaped dict or an integral number default."""
++    return (
++        type(value) is int
++        or type(value) is float
++        and value.is_integer()
++        or isinstance(value, dict)
++        and set(value) == {"schema", "default", "required"}
++    )
++
++
++def restore_definition(snapshot):
++    value = snapshot["definition"]
++    variables = dict(value["variables"])
++    if snapshot.get("legacy_variables") and any(
++        ambiguous_legacy_variable(v) for v in variables.values()
++    ):
++        raise AgentLoomError("HOOK_VARIABLE_VALIDATION_UNAVAILABLE")
++    if "variable_types" not in snapshot and any(
++        type(value) in (int, float)
++        and ambiguous_legacy_variable(value)
++        and key not in snapshot["variable_specs"]
++        for key, value in variables.items()
++    ):
++        raise AgentLoomError("HOOK_VARIABLE_VALIDATION_UNAVAILABLE")
++    for key in snapshot["variable_specs"]:
++        variables[key] = VariableSpec(**variables[key])
++    for key, kind in snapshot.get("variable_types", {}).items():
++        if kind == "number" and type(variables[key]) is int:
++            variables[key] = float(variables[key])
++    return AgentDefinition(
++        value["name"],
++        value["prompt"],
++        value["description"],
++        variables=variables,
++        input_schema=value["input_schema"],
++        output_schema=value["output_schema"],
++    )
+--- before/configuration/recovery.py
++++ after/configuration/recovery.py
+@@ -0,0 +1,47 @@
++"""Compare execution bindings with JSON type semantics and explicit format versions."""
++
++from ..errors import RequestError
++from .definitions import ambiguous_legacy_variable
++from .json_documents import canonical_document
++
++BINDING_VERSION = 2
++
++
++def require_same_bindings(saved, current):
++    """Reject changed/ambiguous configurations before lease or environment work.
++
++    Legacy manifests remain readable when their variable declarations have an
++    unambiguous representation. Missing type evidence is never reconstructed
++    from the newly supplied program, since that could authorize a changed run.
++    Numeric JSON representations otherwise retain RFC 8785 equivalence; booleans
++    are distinct from numbers and variable default types are explicit metadata.
++    """
++    expected = current
++    if (
++        isinstance(saved, dict)
++        and "binding_version" not in saved
++        and isinstance(saved.get("definitions"), dict)
++        and all(
++            isinstance(d, dict) and isinstance(d.get("variables"), dict)
++            for d in saved["definitions"].values()
++        )
++    ):
++        for role, definition in saved["definitions"].items():
++            for name, value in definition["variables"].items():
++                if ambiguous_legacy_variable(value):
++                    raise RequestError(
++                        "RECOVERY_BINDING_MISMATCH",
++                        "The legacy checkpoint did not preserve this variable declaration type; "
++                        "its execution configuration cannot be safely verified",
++                        field_path=f"bindings.definitions.{role}.variables.{name}",
++                    )
++        expected = {
++            key: value
++            for key, value in current.items()
++            if key not in {"binding_version", "variable_contracts"}
++        }
++    if canonical_document(saved) != canonical_document(expected):
++        raise RequestError(
++            "RECOVERY_BINDING_MISMATCH",
++            "Reconstruct the original execution configuration and resource manifests",
++        )
+--- before/events/patch_contract.py
++++ after/events/patch_contract.py
+@@ -2,6 +2,7 @@
+ 
+ from ..configuration import ContextPolicy, ModelOptions, json_copy
+ from ..configuration.actions import action_contract
++from ..configuration.definitions import manifest_definition_snapshot
+ from ..configuration.json_documents import document_digest as digest
+ from ..context.budget import ContextBudget
+ from ..errors import AgentLoomError, InfrastructureError, error_record
+@@ -58,14 +59,10 @@
+         and item["task_id"] == op["task_id"]
+     ]
+     definitions = {
+-        name: {"definition": definition, "variable_specs": []}
+-        for name, definition in bindings["definitions"].items()
++        name: manifest_definition_snapshot(bindings, name)
++        for name in bindings["definitions"]
+         if name not in {"react", "planner"}
+     }
+-    # The old manifest flattened VariableSpec and ordinary dict defaults alike.
+-    # Never guess their meaning when validating a delegated variable edit.
+-    for snapshot in definitions.values():
+-        snapshot["legacy_variables"] = True
+     descriptor = ModelDescriptor(**bindings["model_descriptor"])
+     options = ModelOptions(**bindings["model_options"])
+     budget = ContextBudget.resolve(descriptor, ContextPolicy(**bindings["context_policy"]), options)
+--- before/runtime/host.py
++++ after/runtime/host.py
+@@ -8,6 +8,7 @@
+ from ..configuration.json_documents import canonical_document as canonical
+ from ..configuration.json_documents import document_digest as digest
+ from ..configuration.properties import UNSET, resolve_properties
++from ..configuration.recovery import require_same_bindings
+ from ..environment import LocalEnvironment
+ from ..errors import InfrastructureError, RequestError
+ from ..prompts.assembly import create_prompt_contract
+@@ -175,13 +176,8 @@
+                     raise RequestError("INPUT_CONFLICT")
+                 if state["mode"] != program.mode:
+                     raise RequestError("RECOVERY_BINDING_MISMATCH")
+-                if state["status"] not in TERMINAL and state["bindings"] != recovery_manifest(
+-                    program
+-                ):
+-                    raise RequestError(
+-                        "RECOVERY_BINDING_MISMATCH",
+-                        "Reconstruct the original execution configuration and resource manifests",
+-                    )
++                if state["status"] not in TERMINAL:
++                    require_same_bindings(state["bindings"], recovery_manifest(program))
+             else:
+                 if tx.get("admission", run_id):
+                     raise RequestError("RUN_ADMISSION_CLOSED")
+--- before/runtime/recovery.py
++++ after/runtime/recovery.py
+@@ -42,7 +42,7 @@
+     tasks, operations, usage = state["tasks"], state["operations"], state["usage"]
+     root = state["root_task_id"]
+     _require(root in tasks if root is not None else not tasks and not operations, "root_task_id")
+-    _require(state["policy"] == state["bindings"]["execution_policy"], "policy")
++    _require(digest(state["policy"]) == digest(state["bindings"]["execution_policy"]), "policy")
+     counts = dict.fromkeys(
+         (
+             "loops_reserved",
+--- before/types.py
++++ after/types.py
+@@ -158,7 +158,10 @@
+     schema_version: int = 1
+ 
+     def __post_init__(self):
+-        object.__setattr__(self, "payload", freeze(self.payload))
++        from .configuration.json_documents import freeze_document
++
++        # The committed payload already wraps validated boundary values.
++        object.__setattr__(self, "payload", freeze_document(self.payload))
+ 
+ 
+ @dataclass(frozen=True)

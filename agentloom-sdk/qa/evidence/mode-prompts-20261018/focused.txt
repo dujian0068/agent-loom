@@ -1,0 +1,49 @@
+........................................................................ [ 34%]
+.....F.................................................................. [ 68%]
+...................................................................      [100%]
+=================================== FAILURES ===================================
+_________ test_model_first_output_timeout_retries_when_enabled[memory] _________
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/tests/test_review_regressions.py:236: in test_model_first_output_timeout_retries_when_enabled
+    result = await agent(runtime, tmp_path, respond, execution_policy=policy).ainvoke("go")
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/public/agents.py:135: in ainvoke
+    return await (await self.start(input, **ids)).wait()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/public/handles.py:57: in wait
+    return await observe()
+           ^^^^^^^^^^^^^^^
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/public/handles.py:52: in observe
+    self._runtime.raise_local_failure(self.run_id)
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/runtime/host.py:140: in raise_local_failure
+    raise failure
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/runtime/host.py:316: in _drive
+    await runner.run()
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/runtime/runner.py:272: in run
+    result = await work
+             ^^^^^^^^^^
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/runtime/agent_engine.py:24: in run_task
+    return await AgentNode(agent).activate(None, task["stage"], NodeContext(task_id, runner))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/public/agents.py:265: in activate
+    return await self.agent._activate(node_context)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/public/agents.py:74: in _activate
+    return await AgentLoop(self, node_context).run()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/runtime/agent_loop.py:74: in run
+    response = await runner.calls.model(task_id, f"model:{round_number}")
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/runtime/calls.py:92: in model
+    return await self.advance(op_id)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/runtime/calls.py:233: in advance
+    runner.check_active()
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/runtime/runner.py:118: in check_active
+    verify_lease(state, self.lease, tx.now)
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/storage/commit.py:14: in verify_lease
+    raise LeaseLost()
+E   agentloom.errors.LeaseLost: LEASE_LOST: Execution ownership has expired or was revoked
+- generated xml file: /Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/evidence/mode-prompts-20261018/focused.junit.xml -
+=========================== short test summary info ============================
+FAILED agentloom-sdk/tests/test_review_regressions.py::test_model_first_output_timeout_retries_when_enabled[memory]
+1 failed, 210 passed in 31.42s

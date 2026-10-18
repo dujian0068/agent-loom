@@ -80,7 +80,11 @@ async def test_valid_deny_survives_invalid_patch_and_stops_chain(build):
 
     async def deny(event, context):
         seen.append("deny")
-        protected = next(r for r in context.reader.messages() if r["protected"])
+        protected = next(
+            r
+            for r in context.reader.messages()
+            if r["protected"] and r["message"]["role"] == "user"
+        )
         return HookDecision("deny", context_patch={protected["record_id"]: "lost question"})
 
     async def skipped(event, context):
@@ -106,7 +110,7 @@ async def test_valid_deny_survives_invalid_patch_and_stops_chain(build):
             runtime,
             lambda r: (
                 ModelResponse("done")
-                if len(r.messages) > 2
+                if any(m["role"] == "tool" for m in r.messages)
                 else ModelResponse(tool_calls=(ToolCall("echo", {}),))
             ),
             definition=AgentDefinition("a", "SYS", capabilities=(binding(),)),
@@ -197,7 +201,7 @@ async def test_skill_manifest_arguments_authorization_and_effective_result(tmp_p
         )
 
     def model(request):
-        if len(request.messages) == 2:
+        if not any(m["role"] == "tool" for m in request.messages):
             assert not any(t["name"] == "exec" for t in request.tools)
             return ModelResponse(
                 tool_calls=(ToolCall("skill_read", {"name": "research", "arguments": ["hello"]}),)

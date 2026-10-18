@@ -1,0 +1,26 @@
+{
+  "unchanged_outside_task": true,
+  "checked_baseline_files": 640,
+  "changed_existing_files": [
+    "agentloom-sdk/README.md",
+    "agentloom-sdk/pyproject.toml",
+    "agentloom-sdk/src/agentloom/__init__.py",
+    "agentloom-sdk/src/agentloom/capabilities/tools.py",
+    "agentloom-sdk/src/agentloom/configuration/assembly.py",
+    "agentloom-sdk/src/agentloom/configuration/models.py",
+    "agentloom-sdk/src/agentloom/environment/local.py",
+    "agentloom-sdk/src/agentloom/public/agents.py",
+    "agentloom-sdk/src/agentloom/public/application.py",
+    "agentloom-sdk/src/agentloom/public/properties.py",
+    "agentloom-sdk/src/agentloom/runtime/cleanup.py",
+    "agentloom-sdk/src/agentloom/runtime/control.py",
+    "agentloom-sdk/src/agentloom/runtime/handlers.py",
+    "agentloom-sdk/src/agentloom/runtime/host.py",
+    "agentloom-sdk/src/agentloom/runtime/runner.py",
+    "docs/sdk/assembly.md",
+    "docs/sdk/builtin-tools-spi.md",
+    "docs/sdk/capabilities.md",
+    "docs/sdk/implementation.md",
+    "docs/sdk/integration.md"
+  ]
+}

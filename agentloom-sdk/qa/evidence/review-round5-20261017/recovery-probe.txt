@@ -1,0 +1,285 @@
+{"backend": "memory", "cycle": "first", "error": "EXECUTION_DRIVER_FAILED", "calls": 1}
+Traceback (most recent call last):
+  File "/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/runtime/host.py", line 312, in _drive
+    await runner.run()
+  File "/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/runtime/runner.py", line 257, in run
+    result = await work
+             ^^^^^^^^^^
+  File "/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/runtime/agent_engine.py", line 24, in run_task
+    return await AgentNode(agent).activate(None, task["stage"], NodeContext(task_id, runner))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/public/agents.py", line 265, in activate
+    return await self.agent._activate(node_context)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/public/agents.py", line 74, in _activate
+    return await AgentLoop(self, node_context).run()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/runtime/agent_loop.py", line 112, in run
+    await runner.calls.action(task_id, call, ordinal, round_number)
+  File "/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/runtime/calls.py", line 135, in action
+    return await self.advance(op_id)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/runtime/calls.py", line 235, in advance
+    after = await self._stage(op_id, "response")
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/runtime/calls.py", line 147, in _stage
+    return await self.runner.bus.request(event)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/events/bus.py", line 75, in request
+    return await binding.handler.handle(event, context)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/events/hooks.py", line 126, in handle
+    return await self.request(event, context)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/events/hooks.py", line 304, in request
+    runner.commit(
+  File "/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/runtime/runner.py", line 93, in commit
+    return self.coordinator.commit(command, mutation)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/storage/commit.py", line 43, in commit
+    return self._commit_once(command, change, fingerprint=fingerprint)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/storage/commit.py", line 52, in _commit_once
+    state = tx.get("runs", self.lease.run_id)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/storage/memory.py", line 18, in get
+    return copy.deepcopy(self.pending.get(key, self.data.get(key)))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/bmilk/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/copy.py", line 136, in deepcopy
+    y = copier(x, memo)
+        ^^^^^^^^^^^^^^^
+  File "/Users/bmilk/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/copy.py", line 221, in _deepcopy_dict
+    y[deepcopy(key, memo)] = deepcopy(value, memo)
+                             ^^^^^^^^^^^^^^^^^^^^^
+RecursionError: maximum recursion depth exceeded
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/tmp/agentloom-review5-20261017/probe_recovery.py", line 20, in run
+    result=await handle.wait(timeout_s=3)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/public/handles.py", line 57, in wait
+    return await observe()
+           ^^^^^^^^^^^^^^^
+  File "/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/public/handles.py", line 52, in observe
+    self._runtime.raise_local_failure(self.run_id)
+  File "/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/runtime/host.py", line 137, in raise_local_failure
+    raise failure
+agentloom.errors.InfrastructureError: EXECUTION_DRIVER_FAILED: RecursionError
+{"status": "running", "raw": "succeeded"}
+session-next: SESSION_BUSY
+{"backend": "memory", "cycle": "recovered", "error": "EXECUTION_DRIVER_FAILED", "calls": 1}
+Traceback (most recent call last):
+  File "/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/runtime/host.py", line 312, in _drive
+    await runner.run()
+  File "/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/runtime/runner.py", line 257, in run
+    result = await work
+             ^^^^^^^^^^
+  File "/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/runtime/agent_engine.py", line 24, in run_task
+    return await AgentNode(agent).activate(None, task["stage"], NodeContext(task_id, runner))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/public/agents.py", line 265, in activate
+    return await self.agent._activate(node_context)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/public/agents.py", line 74, in _activate
+    return await AgentLoop(self, node_context).run()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/runtime/agent_loop.py", line 112, in run
+    await runner.calls.action(task_id, call, ordinal, round_number)
+  File "/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/runtime/calls.py", line 135, in action
+    return await self.advance(op_id)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/runtime/calls.py", line 235, in advance
+    after = await self._stage(op_id, "response")
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/runtime/calls.py", line 147, in _stage
+    return await self.runner.bus.request(event)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/events/bus.py", line 75, in request
+    return await binding.handler.handle(event, context)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/events/hooks.py", line 126, in handle
+    return await self.request(event, context)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/events/hooks.py", line 304, in request
+    runner.commit(
+  File "/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/runtime/runner.py", line 93, in commit
+    return self.coordinator.commit(command, mutation)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/storage/commit.py", line 43, in commit
+    return self._commit_once(command, change, fingerprint=fingerprint)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/storage/commit.py", line 52, in _commit_once
+    state = tx.get("runs", self.lease.run_id)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/storage/memory.py", line 18, in get
+    return copy.deepcopy(self.pending.get(key, self.data.get(key)))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/bmilk/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/copy.py", line 136, in deepcopy
+    y = copier(x, memo)
+        ^^^^^^^^^^^^^^^
+  File "/Users/bmilk/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/copy.py", line 221, in _deepcopy_dict
+    y[deepcopy(key, memo)] = deepcopy(value, memo)
+                             ^^^^^^^^^^^^^^^^^^^^^
+RecursionError: maximum recursion depth exceeded
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/tmp/agentloom-review5-20261017/probe_recovery.py", line 20, in run
+    result=await handle.wait(timeout_s=3)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/public/handles.py", line 57, in wait
+    return await observe()
+           ^^^^^^^^^^^^^^^
+  File "/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/public/handles.py", line 52, in observe
+    self._runtime.raise_local_failure(self.run_id)
+  File "/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/runtime/host.py", line 137, in raise_local_failure
+    raise failure
+agentloom.errors.InfrastructureError: EXECUTION_DRIVER_FAILED: RecursionError
+{"status": "running", "raw": "succeeded"}
+session-next: SESSION_BUSY
+{"backend": "file", "cycle": "first", "error": "EXECUTION_DRIVER_FAILED", "calls": 1}
+Traceback (most recent call last):
+  File "/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/runtime/host.py", line 312, in _drive
+    await runner.run()
+  File "/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/runtime/runner.py", line 257, in run
+    result = await work
+             ^^^^^^^^^^
+  File "/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/runtime/agent_engine.py", line 24, in run_task
+    return await AgentNode(agent).activate(None, task["stage"], NodeContext(task_id, runner))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/public/agents.py", line 265, in activate
+    return await self.agent._activate(node_context)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/public/agents.py", line 74, in _activate
+    return await AgentLoop(self, node_context).run()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/runtime/agent_loop.py", line 112, in run
+    await runner.calls.action(task_id, call, ordinal, round_number)
+  File "/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/runtime/calls.py", line 135, in action
+    return await self.advance(op_id)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/runtime/calls.py", line 235, in advance
+    after = await self._stage(op_id, "response")
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/runtime/calls.py", line 147, in _stage
+    return await self.runner.bus.request(event)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/events/bus.py", line 75, in request
+    return await binding.handler.handle(event, context)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/events/hooks.py", line 126, in handle
+    return await self.request(event, context)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/events/hooks.py", line 304, in request
+    runner.commit(
+  File "/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/runtime/runner.py", line 93, in commit
+    return self.coordinator.commit(command, mutation)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/storage/commit.py", line 43, in commit
+    return self._commit_once(command, change, fingerprint=fingerprint)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/storage/commit.py", line 52, in _commit_once
+    state = tx.get("runs", self.lease.run_id)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/storage/filesystem.py", line 83, in get
+    return copy.deepcopy(self._value(kind, key))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/bmilk/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/copy.py", line 136, in deepcopy
+    y = copier(x, memo)
+        ^^^^^^^^^^^^^^^
+  File "/Users/bmilk/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/copy.py", line 221, in _deepcopy_dict
+    y[deepcopy(key, memo)] = deepcopy(value, memo)
+                             ^^^^^^^^^^^^^^^^^^^^^
+RecursionError: maximum recursion depth exceeded
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/tmp/agentloom-review5-20261017/probe_recovery.py", line 20, in run
+    result=await handle.wait(timeout_s=3)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/public/handles.py", line 57, in wait
+    return await observe()
+           ^^^^^^^^^^^^^^^
+  File "/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/public/handles.py", line 52, in observe
+    self._runtime.raise_local_failure(self.run_id)
+  File "/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/runtime/host.py", line 137, in raise_local_failure
+    raise failure
+agentloom.errors.InfrastructureError: EXECUTION_DRIVER_FAILED: RecursionError
+{"status": "running", "raw": "succeeded"}
+session-next: SESSION_BUSY
+{"backend": "file", "cycle": "recovered", "error": "EXECUTION_DRIVER_FAILED", "calls": 1}
+Traceback (most recent call last):
+  File "/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/runtime/host.py", line 312, in _drive
+    await runner.run()
+  File "/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/runtime/runner.py", line 257, in run
+    result = await work
+             ^^^^^^^^^^
+  File "/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/runtime/agent_engine.py", line 24, in run_task
+    return await AgentNode(agent).activate(None, task["stage"], NodeContext(task_id, runner))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/public/agents.py", line 265, in activate
+    return await self.agent._activate(node_context)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/public/agents.py", line 74, in _activate
+    return await AgentLoop(self, node_context).run()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/runtime/agent_loop.py", line 112, in run
+    await runner.calls.action(task_id, call, ordinal, round_number)
+  File "/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/runtime/calls.py", line 135, in action
+    return await self.advance(op_id)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/runtime/calls.py", line 235, in advance
+    after = await self._stage(op_id, "response")
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/runtime/calls.py", line 147, in _stage
+    return await self.runner.bus.request(event)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/events/bus.py", line 75, in request
+    return await binding.handler.handle(event, context)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/events/hooks.py", line 126, in handle
+    return await self.request(event, context)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/events/hooks.py", line 304, in request
+    runner.commit(
+  File "/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/runtime/runner.py", line 93, in commit
+    return self.coordinator.commit(command, mutation)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/storage/commit.py", line 43, in commit
+    return self._commit_once(command, change, fingerprint=fingerprint)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/storage/commit.py", line 52, in _commit_once
+    state = tx.get("runs", self.lease.run_id)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/storage/filesystem.py", line 83, in get
+    return copy.deepcopy(self._value(kind, key))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/bmilk/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/copy.py", line 136, in deepcopy
+    y = copier(x, memo)
+        ^^^^^^^^^^^^^^^
+  File "/Users/bmilk/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/copy.py", line 221, in _deepcopy_dict
+    y[deepcopy(key, memo)] = deepcopy(value, memo)
+                             ^^^^^^^^^^^^^^^^^^^^^
+RecursionError: maximum recursion depth exceeded
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/tmp/agentloom-review5-20261017/probe_recovery.py", line 20, in run
+    result=await handle.wait(timeout_s=3)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/public/handles.py", line 57, in wait
+    return await observe()
+           ^^^^^^^^^^^^^^^
+  File "/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/public/handles.py", line 52, in observe
+    self._runtime.raise_local_failure(self.run_id)
+  File "/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/runtime/host.py", line 137, in raise_local_failure
+    raise failure
+agentloom.errors.InfrastructureError: EXECUTION_DRIVER_FAILED: RecursionError
+{"status": "running", "raw": "succeeded"}
+session-next: SESSION_BUSY
+Maintenance failed: phase=stop_scan run_id=None code=STORE_UNAVAILABLE

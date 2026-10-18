@@ -1,0 +1,34 @@
+import asyncio,json,pathlib,sys,tempfile,os
+sys.path.insert(0,'/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa')
+from test_sdk_review_round5 import build,operation
+from agentloom import AgentDefinition,AgentLoomError,FileRuntimeStore,MemoryRuntimeStore,RuntimeEngine,ReactAgent,ScriptedModel,ModelResponse,WorkspaceBinding,ExecutionPolicy
+async def sidecar(backend,field,value):
+ calls=[]
+ class Native:
+  async def invoke_once(self,request,context):
+   calls.append(1);error=AgentLoomError('FAILED');setattr(error,field,value);raise error
+ with tempfile.TemporaryDirectory() as d:
+  store=MemoryRuntimeStore() if backend=='memory' else FileRuntimeStore(pathlib.Path(d)/'state')
+  async with RuntimeEngine(store=store) as runtime:
+   h=await build(runtime,Native()).start('go');error=None
+   try:r=await h.wait(timeout_s=3)
+   except Exception as exc:error=getattr(exc,'code',type(exc).__name__)
+   s=runtime._load(h.run_id);op=operation(runtime,h.run_id)
+   print(json.dumps({'backend':backend,'sidecar':field,'value':value,'error':error,'status':s['status'],'raw':op['raw'],'calls':len(calls)}),flush=True)
+  store.close()
+async def output_case(text):
+ calls=[]
+ def respond(request):calls.append(1);return ModelResponse(text if len(calls)==1 else '42')
+ with tempfile.TemporaryDirectory() as d:
+  async with RuntimeEngine(store=MemoryRuntimeStore()) as runtime:
+   a=ReactAgent(definition=AgentDefinition('a','Return a number',output_schema={'type':'number'}),runtime_engine=runtime,model=ScriptedModel(respond),workspace=WorkspaceBinding(pathlib.Path(d)/'work'),execution_policy=ExecutionPolicy(loop_max=3))
+   r=await a.ainvoke('go');print(json.dumps({'candidate':text,'status':r.status,'error':r.error,'calls':len(calls),'output':r.output.value if r.output else None}),flush=True)
+async def main():
+ with tempfile.TemporaryDirectory() as d:
+  os.chdir(d)
+  for b in ['memory','file']:
+   for f in ['tool_result','invalid_tool_result']:
+    for v in [None,[],{},'text']:await sidecar(b,f,v)
+  for text in ['oops','NaN','Infinity','1e309','9007199254740992']:
+   await output_case(text)
+asyncio.run(main())

@@ -1,0 +1,16 @@
+[
+  "/Users/bmilk/code/project/agent-loom/.venv/bin/python",
+  "-m",
+  "pytest",
+  "-vv",
+  "agentloom-sdk/tests",
+  "agentloom-sdk/qa/test_sdk_audit.py",
+  "agentloom-sdk/qa/test_sdk_rereview.py",
+  "agentloom-sdk/qa/test_sdk_review_round3.py",
+  "agentloom-sdk/qa/test_sdk_review_round4.py",
+  "agentloom-sdk/qa/test_sdk_review_round5.py",
+  "--ignore=agentloom-sdk/tests/test_review_whitebox_probe.py",
+  "--basetemp=/private/tmp/agentloom-prompts-final-6vj_0e7v",
+  "--tb=short",
+  "--junitxml=/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/evidence/mode-prompts-20261018/regression-final.junit.xml"
+]

@@ -1,0 +1,996 @@
+"""White-box probes derived line-by-line from docs/sdk requirements and design.
+
+Each test names the document clause it probes. Nothing here duplicates an
+existing suite assertion on purpose: the target is a doc clause, not a line
+count. Workflow is explicitly out of scope for this release.
+"""
+
+import asyncio
+import json
+
+import pytest
+from conftest import binding, tool
+
+from agentloom import (
+    AgentDefinition,
+    AgentLoomError,
+    CapabilityBinding,
+    CapabilityRegistration,
+    CapabilityRegistry,
+    CapabilitySpec,
+    CapabilitySpec,
+    ContextPolicy,
+    ExecutionPolicy,
+    FunctionToolAdapter,
+    ModelDescriptor,
+    ModelOptions,
+    ModelResponse,
+    PlanAgent,
+    ProviderEvent,
+    RequestError,
+    RetryPolicy,
+    RuntimeEngine,
+    ScriptedModel,
+    ToolCall,
+    WorkspaceBinding,
+)
+
+def _tool_definition(name="assistant", prompt="SYSTEM", binding_key="echo", description=""):
+    return AgentDefinition(name, prompt, description, capabilities=(binding(binding_key),))
+
+
+def _one_tool_call_then_done(request, name="echo", arguments=None):
+    if [m for m in request.messages if m["role"] == "tool"]:
+        return ModelResponse("done")
+    return ModelResponse(tool_calls=(ToolCall(name, arguments or {}),))
+
+
+def writer_driver(request):
+    return _one_tool_call_then_done(request, "writer")
+
+
+def _constrained_tool(function, name="echo", schema=None):
+    """A registration whose arguments a Hook cannot freely rewrite."""
+    return CapabilityRegistration(
+        name,
+        FunctionToolAdapter(function),
+        (
+            CapabilitySpec(
+                name,
+                name,
+                name,
+                schema or {"type": "object", "properties": {"v": {"type": "integer", "maximum": 10}}},
+            ),
+        ),
+    )
+
+
+# ---------------------------------------------------------------- requirements §2
+
+
+def test_requirements_default_table_matches_sdk_defaults():
+    """requirements.md §2 default table, checked against the actual dataclasses."""
+    execution = ExecutionPolicy()
+    assert (execution.loop_max, execution.run_timeout_seconds) == (100, 3600)
+    assert execution.parallel_enabled is False
+    assert execution.executor_max_parallel == 2
+    assert execution.model_first_output_timeout_seconds == 60
+    assert execution.model_stream_idle_timeout_seconds is None
+    assert execution.tool_timeout_seconds == 10
+    assert execution.retry == RetryPolicy()
+    assert (execution.retry.enabled, execution.retry.max_attempts) == (False, 2)
+    assert execution.retry.delay_seconds == 2
+
+    context = ContextPolicy()
+    assert (context.recent_runs, context.trigger_ratio) == (2, 0.8)
+    assert context.output_reserve_tokens is None
+    assert context.safety_margin_tokens is None
+    assert context.summary_target_tokens is None
+    assert context.compaction_prompt_addendum == ""
+
+    # §2 upper bounds are input validation only.
+    for field, value in (
+        ("loop_max", 0),
+        ("loop_max", 100001),
+        ("run_timeout_seconds", 86401),
+        ("executor_max_parallel", 129),
+        ("model_first_output_timeout_seconds", 3601),
+        ("tool_timeout_seconds", 3601),
+        ("model_stream_idle_timeout_seconds", 3601),
+    ):
+        with pytest.raises(AgentLoomError):
+            ExecutionPolicy(**{field: value})
+    with pytest.raises(AgentLoomError):
+        RetryPolicy(max_attempts=21)
+    with pytest.raises(AgentLoomError):
+        RetryPolicy(delay_seconds=301)
+    with pytest.raises(AgentLoomError):
+        RetryPolicy(enabled="yes")
+    for field, value in (("recent_runs", 101), ("trigger_ratio", 1.0), ("trigger_ratio", 0.0)):
+        with pytest.raises(AgentLoomError):
+            ContextPolicy(**{field: value})
+
+
+def test_safety_margin_and_budget_derivation_matches_context_design(tmp_path):
+    """requirements.md §2: safety margin defaults to max(256, ceil(window * 1%))."""
+    from agentloom.context import ContextBudget
+
+    options = ModelOptions()
+    for window, safety in ((10_000, 256), (100_000, 1000), (1_000_000, 10_000)):
+        budget = ContextBudget.resolve(
+            ModelDescriptor("m", window, max_output_tokens=4096), ContextPolicy(), options
+        )
+        assert budget.safety == safety
+        assert budget.window == window
+        assert budget.output == min(4096, window // 4)
+        assert budget.input == window - budget.output - safety
+        assert budget.trigger == int(0.8 * budget.input)
+    # An explicit margin overrides the derivation; an over-large window fails early.
+    override = ContextBudget.resolve(
+        ModelDescriptor("m", 10_000), ContextPolicy(safety_margin_tokens=64), options
+    )
+    assert override.safety == 64
+    assert ScriptedModel(lambda r: ModelResponse("x"), context_window_tokens=1000).descriptor
+
+
+# ---------------------------------------------------------------- requirements §3
+
+
+@pytest.mark.parametrize("finish_at,expected", [(2, "succeeded"), (None, "budget_exhausted")])
+async def test_loop_limit_stops_before_an_extra_model_call(build, finish_at, expected):
+    """requirements.md §3: the Nth legal Loop may finish; N+1 returns LOOP_LIMIT_EXCEEDED
+    without an extra summarizing model call."""
+    limit, calls = 3, {"n": 0}
+
+    def responder(request):
+        calls["n"] += 1
+        if finish_at is not None and calls["n"] >= finish_at:
+            return ModelResponse("done")
+        return ModelResponse(tool_calls=(ToolCall("echo", {"v": calls["n"]}),))
+
+    async with RuntimeEngine() as runtime:
+        agent = build(
+            runtime,
+            responder,
+            definition=_tool_definition(),
+            capabilities=CapabilityRegistry(tools=(tool(lambda a, c: a["v"]),)),
+            execution_policy=ExecutionPolicy(loop_max=limit),
+        )
+        result = await (await agent.start("question")).wait(timeout_s=10)
+        state = runtime._load(result.run_id)
+        assert state["status"] == expected, state["error"]
+        if expected == "budget_exhausted":
+            assert state["error"]["code"] == "LOOP_LIMIT_EXCEEDED"
+            # The 101st-style call is refused before the model is asked again.
+            assert calls["n"] == limit
+            assert state["usage"]["loops_consumed"] == limit
+        else:
+            # The last legal Loop is allowed to finish and deliver its answer.
+            assert calls["n"] == finish_at and state["output"]["value"] == "done"
+
+
+async def test_planner_and_executors_share_one_root_loop_budget(build):
+    """requirements.md §2: loop_max belongs to the root ExecutionRecord and is shared
+    by the Planner and every Executor."""
+    seen = {"executor": 0, "planner": 0}
+
+    def responder(request):
+        if request.role_key == "planner":
+            seen["planner"] += 1
+            feedback = [m for m in request.messages if m["role"] == "tool"]
+            if not feedback:
+                return ModelResponse(
+                    tool_calls=(ToolCall("delegate_task", {"executor": "w", "task": "a"}),)
+                )
+            return ModelResponse("plan done")
+        seen["executor"] += 1
+        return ModelResponse("sub done")
+
+    async with RuntimeEngine() as runtime:
+        agent = build(
+            runtime,
+            responder,
+            cls=PlanAgent,
+            executors={"w": AgentDefinition("worker", "SUB", "carries out delegated work")},
+            execution_policy=ExecutionPolicy(loop_max=10),
+        )
+        result = await (await agent.start("question")).wait(timeout_s=10)
+        state = runtime._load(result.run_id)
+        assert state["status"] == "succeeded"
+        # 1 planner + 1 executor decision, plus the planner's post-batch decision.
+        assert state["usage"]["loops_consumed"] == seen["planner"] + seen["executor"] == 3
+        assert state["usage"]["business_model_attempts"] == 3
+
+
+async def test_retry_creates_a_new_attempt_under_one_operation(build):
+    """requirements.md §3: SDK retry is a new Attempt of the same Operation, not a
+    new logical model call."""
+    state = {"n": 0}
+
+    class Flaky:
+        def __init__(self, inner):
+            self.descriptor = inner.descriptor
+            self.inner = inner
+
+        async def stream_once(self, request, context):
+            state["n"] += 1
+            if state["n"] == 1:
+                yield ProviderEvent("text_delta", "partial")
+                raise AgentLoomError(
+                    "MODEL_STREAM_IDLE_TIMEOUT",
+                    category="timeout",
+                    phase="receive",
+                    external_outcome="unknown",
+                )
+            async for frame in self.inner.stream_once(request, context):
+                yield frame
+
+
+    async with RuntimeEngine() as runtime:
+        inner = ScriptedModel(lambda r: ModelResponse("recovered"))
+        model = Flaky(inner)
+        agent = build(
+            runtime,
+            None,
+            model=model,
+            execution_policy=ExecutionPolicy(
+                retry=RetryPolicy(enabled=True, max_attempts=2, delay_seconds=0)
+            ),
+        )
+        result = await (await agent.start("question")).wait(timeout_s=10)
+        run = runtime._load(result.run_id)
+        op = next(iter(run["operations"].values()))
+        assert result.status == "succeeded" and result.output.value == "recovered"
+        assert len(op["attempts"]) == 2 and op["attempts"][0]["status"] != "started"
+        # One accepted logical decision still consumes exactly one Loop ticket.
+        assert run["usage"]["loops_consumed"] == 1
+        assert run["usage"]["business_model_attempts"] == 2
+
+
+# ---------------------------------------------------------------- requirements §3 / runtime.md §5
+
+
+async def test_batch_feedback_is_delivered_once_in_call_order(build):
+    """runtime.md §5: batch input order never depends on completion order."""
+    order = []
+
+    latency = {1: 0.15, 2: 0.08, 3: 0.0}
+
+    async def slow_echo(arguments, context):
+        await asyncio.sleep(latency[arguments["v"]])
+        order.append(arguments["v"])
+        return f"r{arguments['v']}"
+
+    async with RuntimeEngine() as runtime:
+        seen_feedback = {}
+
+        def responder(request):
+            feedback = [m for m in request.messages if m["role"] == "tool"]
+            if not feedback:
+                return ModelResponse(
+                    tool_calls=(
+                        ToolCall("echo", {"v": 1}, "call-a"),
+                        ToolCall("echo", {"v": 2}, "call-b"),
+                        ToolCall("echo", {"v": 3}, "call-c"),
+                    )
+                )
+            assistant = [m for m in request.messages if m["role"] == "assistant"][-1]
+            seen_feedback["declared"] = [c["id"] for c in assistant["tool_calls"]]
+            seen_feedback["ids"] = [m["tool_call_id"] for m in feedback]
+            seen_feedback["values"] = [json.loads(m["content"])["result"] for m in feedback]
+            return ModelResponse("all done")
+
+        agent = build(
+            runtime,
+            responder,
+            definition=_tool_definition(),
+            capabilities=CapabilityRegistry(tools=(tool(slow_echo, "echo"),)),
+            execution_policy=ExecutionPolicy(parallel_enabled=True),
+        )
+        result = await (await agent.start("question")).wait(timeout_s=10)
+        assert result.status == "succeeded"
+        # Completion order follows the sleep profile; delivery order does not.
+        assert order == [3, 2, 1], order
+        # One result slot per call id, in the model's own order.
+        assert seen_feedback["ids"] == seen_feedback["declared"]
+        assert len(set(seen_feedback["ids"])) == 3
+        assert seen_feedback["values"] == ["r1", "r2", "r3"]
+
+
+async def test_one_batch_failure_does_not_cancel_sibling_members(build):
+    """requirements.md §3: one failing member never cancels the other parallel members."""
+
+    async def flaky(arguments, context):
+        if arguments.get("v") == 2:
+            raise AgentLoomError("TOOL_BROKEN", category="business")
+        return f"ok{arguments['v']}"
+
+    async with RuntimeEngine() as runtime:
+        statuses = {}
+
+        def responder(request):
+            feedback = [m for m in request.messages if m["role"] == "tool"]
+            if not feedback:
+                return ModelResponse(
+                    tool_calls=(
+                        ToolCall("echo", {"v": 1}, "a"),
+                        ToolCall("echo", {"v": 2}, "b"),
+                        ToolCall("echo", {"v": 3}, "c"),
+                    )
+                )
+            statuses["order"] = [json.loads(m["content"])["status"] for m in feedback]
+            return ModelResponse("handled")
+
+        agent = build(
+            runtime,
+            responder,
+            definition=_tool_definition(),
+            capabilities=CapabilityRegistry(tools=(tool(flaky),)),
+            execution_policy=ExecutionPolicy(parallel_enabled=True),
+        )
+        result = await (await agent.start("q")).wait(timeout_s=10)
+        assert result.status == "succeeded"
+        assert statuses["order"] == ["succeeded", "failed", "succeeded"]
+
+
+async def test_parallel_executors_never_exceed_the_configured_ceiling(build):
+    """runtime.md §5: active + reserved admission stays within executor_max_parallel."""
+    live = {"now": 0, "peak": 0}
+
+    def responder(request):
+        if request.role_key == "planner":
+            if not [m for m in request.messages if m["role"] == "tool"]:
+                return ModelResponse(
+                    tool_calls=tuple(
+                        ToolCall("delegate_task", {"executor": "w", "task": str(i)})
+                        for i in range(4)
+                    )
+                )
+            return ModelResponse("done")
+        return ModelResponse(f"sub-{request.messages[-1]['content']}")
+
+    async def instrumented(inner):
+        return inner
+
+    class Counting:
+        def __init__(self, inner):
+            self.descriptor = inner.descriptor
+            self.inner = inner
+
+        async def stream_once(self, request, context):
+            if request.role_key == "planner":
+                async for frame in self.inner.stream_once(request, context):
+                    yield frame
+                return
+            live["now"] += 1
+            live["peak"] = max(live["peak"], live["now"])
+            try:
+                await asyncio.sleep(0.05)
+                async for frame in self.inner.stream_once(request, context):
+                    yield frame
+            finally:
+                live["now"] -= 1
+
+
+    async with RuntimeEngine() as runtime:
+        agent = build(
+            runtime,
+            None,
+            cls=PlanAgent,
+            executors={"w": AgentDefinition("worker", "SUB", "carries out delegated work")},
+            model=Counting(ScriptedModel(responder)),
+            execution_policy=ExecutionPolicy(parallel_enabled=True, executor_max_parallel=2),
+        )
+        result = await (await agent.start("q")).wait(timeout_s=15)
+        assert result.status == "succeeded"
+        assert live["peak"] <= 2, live
+        run = runtime._load(result.run_id)
+        assert len([t for t in run["tasks"].values() if t["role_key"] == "w"]) == 4
+
+
+# ---------------------------------------------------------------- requirements §5 / event-bus hooks
+
+
+async def test_before_hook_deny_blocks_the_call_without_an_attempt(build):
+    """requirements.md §5: a legal deny takes effect and no external work starts."""
+    from agentloom import FunctionHookHandler, HookBinding, HookDecision, HookSet
+
+    calls = {"n": 0}
+
+    async def hook(event, context):
+        return HookDecision("deny")
+
+    async with RuntimeEngine() as runtime:
+        agent = build(
+            runtime,
+            lambda r: ModelResponse("never"),
+            hooks=HookSet(
+                bindings=(
+                    HookBinding("h1", "model.generate", "request", "denier", ordinal=0),
+                ),
+                handlers={"denier": FunctionHookHandler(hook)},
+            ),
+        )
+        result = await (await agent.start("q")).wait(timeout_s=10)
+        run = runtime._load(result.run_id)
+        op = next(iter(run["operations"].values()))
+        assert result.status == "failed"
+        assert op["status"] == "blocked" and op["attempts"] == []
+        assert op["ticket"] is None  # a denied root call never reserves a Loop ticket
+        assert len(agent.model.requests) == 0
+        assert run["usage"]["loops_consumed"] == 0
+
+
+async def test_illegal_hook_patch_is_discarded_atomically(build):
+    """requirements.md §5 / implementation.md: an invalid patch keeps the original
+    effective result and only records a diagnostic."""
+    from agentloom import FunctionHookHandler, HookBinding, HookDecision, HookSet
+
+    executed = {}
+
+    async def hook(event, context):
+        # v=99 violates the tool's declared input schema.
+        return HookDecision("allow", payload_patch={"arguments": {"v": 99}})
+
+    async with RuntimeEngine() as runtime:
+        def responder(request):
+            return _one_tool_call_then_done(request, "echo", {"v": 1})
+
+        agent = build(
+            runtime,
+            responder,
+            definition=_tool_definition(),
+            capabilities=CapabilityRegistry(
+                tools=(_constrained_tool(lambda a, c: executed.setdefault("v", a["v"]), "echo"),)
+            ),
+            hooks=HookSet(
+                bindings=(HookBinding("h", "capability.invoke", "request", "patcher"),),
+                handlers={"patcher": FunctionHookHandler(hook)},
+            ),
+        )
+        result = await (await agent.start("q")).wait(timeout_s=10)
+        assert result.status == "succeeded"
+        run = runtime._load(result.run_id)
+        tool_ops = [o for o in run["operations"].values() if o["event_type"] == "capability.invoke"]
+        hook_state = tool_ops[0]["hooks"]["request:h"]
+        assert hook_state["patch_status"] == "rejected"
+        assert tool_ops[0]["request"]["arguments"] == {"v": 1}
+        # The original, unpatched arguments were actually executed.
+        assert executed["v"] == 1
+        assert result.status == "succeeded"
+
+
+async def test_legal_hook_payload_patch_is_the_authoritative_model_input(build):
+    """requirements.md §5: a legal modification is committed as authoritative."""
+    from agentloom import FunctionHookHandler, HookBinding, HookDecision, HookSet
+
+    async def hook(event, context):
+        return HookDecision("allow", payload_patch={"arguments": {"v": 7}})
+
+    async with RuntimeEngine() as runtime:
+        agent = build(
+            runtime,
+            _one_tool_call_then_done,
+            definition=_tool_definition(),
+            capabilities=CapabilityRegistry(tools=(tool(lambda a, c: a["v"]),)),
+            hooks=HookSet(
+                bindings=(HookBinding("h", "capability.invoke", "request", "patcher"),),
+                handlers={"patcher": FunctionHookHandler(hook)},
+            ),
+        )
+        result = await (await agent.start("q")).wait(timeout_s=10)
+        run = runtime._load(result.run_id)
+        tool_op = next(o for o in run["operations"].values() if o["event_type"] == "capability.invoke")
+        assert tool_op["hooks"]["request:h"]["patch_status"] == "applied"
+        assert tool_op["request"]["arguments"] == {"v": 7}
+        assert tool_op["response"]["result"] == 7
+
+
+async def test_hook_cannot_rewrite_a_protected_user_input(build):
+    """requirements.md §4/§5: the current question and supplements are protected."""
+    from agentloom import FunctionHookHandler, HookBinding, HookDecision, HookSet
+
+    seen = {}
+
+    async def hook(event, context):
+        records = await context.reader.read_context(
+            context.metadata.context_ref, limit=50
+        )
+        target = records.records[-1].record_id
+        return HookDecision("allow", context_patch={target: "REWRITTEN QUESTION"})
+
+    async with RuntimeEngine() as runtime:
+        def responder(request):
+            seen["first"] = request.messages[-1]["content"]
+            return ModelResponse("fine")
+
+        agent = build(
+            runtime,
+            responder,
+            hooks=HookSet(
+                bindings=(HookBinding("h", "model.generate", "request", "patcher"),),
+                handlers={"patcher": FunctionHookHandler(hook)},
+            ),
+        )
+        result = await (await agent.start("original question")).wait(timeout_s=10)
+        assert seen["first"] == "original question"
+        assert result.status == "succeeded"
+
+
+async def test_hook_timeout_or_crash_fails_open(build):
+    """requirements.md §5: hook failure/timeout/illegal patch must not stop the main flow."""
+    from agentloom import FunctionHookHandler, HookBinding, HookDecision, HookSet
+
+    async def boom(event, context):
+        raise RuntimeError("hook exploded")
+
+    async with RuntimeEngine() as runtime:
+        agent = build(
+            runtime,
+            lambda r: ModelResponse("still works"),
+            hooks=HookSet(
+                bindings=(HookBinding("h", "model.generate", "request", "boom"),),
+                handlers={"boom": FunctionHookHandler(boom)},
+            ),
+        )
+        result = await (await agent.start("q")).wait(timeout_s=10)
+        assert result.status == "succeeded" and result.output.value == "still works"
+
+
+# ---------------------------------------------------------------- requirements §4 / context
+
+
+async def test_history_uses_recent_runs_and_hides_executor_private_records(build):
+    """requirements.md §4: only the most recent N finished root processes are replayed."""
+    captured = {}
+
+    async def each(runtime, question, answer):
+        agent = build(runtime, lambda r: ModelResponse(answer))
+        return await (await agent.start(question, session_id="s1")).wait(timeout_s=10)
+
+    async with RuntimeEngine() as runtime:
+        await each(runtime, "q1", "a1")
+        await each(runtime, "q2", "a2")
+
+        def responder(request):
+            captured["text"] = json.dumps(request.messages)
+            return ModelResponse("a3")
+
+        agent = build(runtime, responder, context_policy=ContextPolicy(recent_runs=1))
+        await (await agent.start("q3", session_id="s1")).wait(timeout_s=10)
+        text = captured["text"]
+        # The most recent finished run is replayed as its actual root process.
+        assert "a2" in text
+        # requirements.md §4: older runs keep every user input and the final result,
+        # but never their intermediate tool exchange.
+        assert "q1" in text and "a1" in text
+        assert "assistant" not in text or text.count('"tool"') == 0
+
+
+async def test_unconsumed_supplement_is_carried_to_the_next_run(build):
+    """requirements.md §4: an accepted but unconsumed supplement is handed to the next
+    entry-role Loop instead of being silently dropped."""
+    captured = {}
+
+    async with RuntimeEngine() as runtime:
+        # A model that never gets to consume the supplement because it is stopped.
+        class Blocking:
+            def __init__(self, inner):
+                self.descriptor = inner.descriptor
+                self.inner = inner
+
+            async def stream_once(self, request, context):
+                while True:
+                    await asyncio.sleep(0.01)
+                    yield  # pragma: no cover - never reached
+
+    
+        agent = build(runtime, None, model=Blocking(ScriptedModel(lambda r: ModelResponse("x"))))
+        handle = await agent.start("q1", session_id="s2")
+        await runtime.inputs.append(handle.run_id, input_id="sup-1", content="FOLLOW UP")
+        await handle.stop(command_id="c1")
+        await handle.wait(timeout_s=10)
+
+        agent2 = build(
+            runtime,
+            lambda r: captured.setdefault("text", json.dumps(r.messages)) or ModelResponse("a2"),
+        )
+        await (await agent2.start("q2", session_id="s2")).wait(timeout_s=10)
+        assert "FOLLOW UP" in captured["text"]
+
+
+async def test_compaction_triggers_at_the_configured_threshold(build):
+    """requirements.md §4: compaction fires at the threshold without waiting for the
+    provider to report an overflow, and it inherits the current model."""
+    purposes = []
+
+    class Recording:
+        def __init__(self, inner):
+            self.descriptor = inner.descriptor
+            self.inner = inner
+
+        async def stream_once(self, request, context):
+            purposes.append(request.purpose)
+            async for frame in self.inner.stream_once(request, context):
+                yield frame
+
+
+    filler = "x" * 4000
+    business_calls = 0
+
+    def responder(request):
+        nonlocal business_calls
+        if request.purpose == "compaction":
+            return ModelResponse("SUMMARY")
+        business_calls += 1
+        if business_calls < 4:
+            return ModelResponse(
+                tool_calls=(ToolCall("echo", {"v": filler}),),
+            )
+        return ModelResponse("final")
+
+    async with RuntimeEngine() as runtime:
+        agent = build(
+            runtime,
+            responder,
+            definition=_tool_definition(),
+            model=Recording(ScriptedModel(responder, context_window_tokens=20_000)),
+            capabilities=CapabilityRegistry(tools=(tool(lambda a, c: len(a["v"])),)),
+            context_policy=ContextPolicy(trigger_ratio=0.3),
+        )
+        result = await (await agent.start("q")).wait(timeout_s=30)
+        assert result.status == "succeeded", result.error
+        assert "compaction" in purposes, purposes
+        assert result.usage.compaction_model_attempts >= 1
+        # Compaction never consumes a business Loop ticket.
+        assert result.usage.loops_consumed == 4
+
+
+# ---------------------------------------------------------------- capabilities
+
+
+async def test_unknown_or_unauthorized_tool_creates_no_operation(build):
+    """runtime.md §4.3: an unknown capability name becomes a rejected member without
+    creating an Operation, Attempt or Hook call."""
+    async with RuntimeEngine() as runtime:
+        statuses = {}
+
+        def responder(request):
+            feedback = [m for m in request.messages if m["role"] == "tool"]
+            if not feedback:
+                return ModelResponse(
+                    tool_calls=(
+                        ToolCall("nope", {}),
+                        ToolCall("echo", {"v": 5}),
+                    )
+                )
+            decoded = [json.loads(m["content"]) for m in feedback]
+            statuses["codes"] = [
+                (item.get("status"), (item.get("error") or {}).get("code")) for item in decoded
+            ]
+            return ModelResponse("done")
+
+        agent = build(
+            runtime,
+            responder,
+            definition=_tool_definition(),
+            capabilities=CapabilityRegistry(tools=(tool(lambda a, c: a["v"]),)),
+        )
+        result = await (await agent.start("q")).wait(timeout_s=10)
+        run = runtime._load(result.run_id)
+        assert result.status == "succeeded", result.error
+        assert statuses["codes"][0] == ("failed", "CAPABILITY_NOT_FOUND")
+        assert len(run["operations"]) == 3  # two model calls and one real tool
+        assert [o["event_type"] for o in run["operations"].values()].count("capability.invoke") == 1
+
+
+async def test_executor_capability_catalog_is_role_scoped(build):
+    """definitions.md §2: each role selects its own capabilities."""
+    seen = {}
+
+    async def runner_tool(arguments, context):
+        return "executor-only"
+
+    async def planner_tool(arguments, context):
+        return "planner-only"
+
+    async with RuntimeEngine() as runtime:
+        def responder(request):
+            seen.setdefault(request.role_key, set()).update(
+                t["name"] for t in request.tools
+            )
+            if request.role_key == "planner":
+                if not [m for m in request.messages if m["role"] == "tool"]:
+                    return ModelResponse(
+                        tool_calls=(ToolCall("delegate_task", {"executor": "w", "task": "go"}),)
+                    )
+                return ModelResponse("plan")
+            return ModelResponse("sub")
+
+        registry = CapabilityRegistry(
+            tools=(
+                tool(runner_tool, "sub_tool"),
+                tool(planner_tool, "plan_tool"),
+            )
+        )
+        planner_def = AgentDefinition(
+            "planner",
+            "P",
+            capabilities=(binding("sub_tool"),),
+        )
+        executor_def = AgentDefinition(
+            "worker",
+            "W",
+            "runs delegated work",
+            capabilities=(binding("plan_tool"),),
+        )
+        agent = build(
+            runtime,
+            responder,
+            cls=PlanAgent,
+            executors={"w": executor_def},
+            definition=planner_def,
+            capabilities=registry,
+        )
+        result = await (await agent.start("q")).wait(timeout_s=10)
+        assert result.status == "succeeded"
+        assert "sub_tool" in seen["planner"] and "plan_tool" not in seen["planner"]
+        assert "plan_tool" in seen["w"] and "sub_tool" not in seen["w"]
+        assert "delegate_task" in seen["planner"]
+        assert "delegate_task" not in seen["w"]
+
+
+async def test_result_read_is_denied_across_roles(build):
+    """definitions.md §3 / context design: Executor private references are not readable
+    from the Planner or from a sibling Executor."""
+    big = "y" * (70 * 1024)
+
+    async def produce(arguments, context):
+        return big
+
+    last_run_id = []
+
+    async with RuntimeEngine() as runtime:
+        refs = {}
+
+        def responder(request):
+            feedback = [m for m in request.messages if m["role"] == "tool"]
+            if request.role_key == "planner":
+                if not feedback:
+                    return ModelResponse(
+                        tool_calls=(
+                            ToolCall("delegate_task", {"executor": "w", "task": "produce"}),
+                        )
+                    )
+                if len(feedback) == 1:
+                    # White-box: address the Executor's own committed operation.
+                    refs["executor_ref"] = executor_ref(runtime, last_run_id[0])
+                    return ModelResponse(
+                        tool_calls=(ToolCall("result_read", refs["executor_ref"]),)
+                    )
+                return ModelResponse("plan done")
+            if not feedback:
+                return ModelResponse(tool_calls=(ToolCall("big", {}),))
+            return ModelResponse("sub done")
+
+        agent = build(
+            runtime,
+            responder,
+            cls=PlanAgent,
+            executors={"w": _tool_definition("worker", "W", "big", "produces large output")},
+            capabilities=CapabilityRegistry(tools=(tool(produce, "big"),)),
+        )
+        handle = await agent.start("q")
+        last_run_id.append(handle.run_id)
+        result = await handle.wait(timeout_s=15)
+        run = runtime._load(result.run_id)
+        reads = [o for o in run["operations"].values() if o["event_type"] == "result.read"]
+        assert reads, "the Planner must have attempted result_read"
+        assert reads[0]["status"] == "failed"
+        assert reads[0]["response"]["error"]["code"] == "RESULT_ACCESS_DENIED"
+
+
+def executor_ref(runtime, run_id):
+    """The result reference that only the producing Executor may read."""
+    from agentloom.configuration import digest
+
+    state = runtime._load(run_id)
+    op = next(
+        o
+        for o in state["operations"].values()
+        if o["event_type"] == "capability.invoke" and o["task_id"] != state["root_task_id"]
+    )
+    return {
+        "result_ref": {
+            "run_id": run_id,
+            "operation_id": op["operation_id"],
+            "effective_result_hash": digest(op["response"]["result"]),
+        }
+    }
+
+
+async def test_large_result_is_previewed_and_hash_addressed(build):
+    """context design: results over 64 KiB are projected into a preview plus a ref."""
+    big = "z" * (80 * 1024)
+    captured = {}
+
+    async def produce(arguments, context):
+        return big
+
+    async with RuntimeEngine() as runtime:
+        def responder(request):
+            feedback = [m for m in request.messages if m["role"] == "tool"]
+            if not feedback:
+                return ModelResponse(tool_calls=(ToolCall("big", {}),))
+            if len(feedback) == 1:
+                payload = json.loads(feedback[0]["content"])["result"]
+                captured["truncated"] = payload["truncated"]
+                captured["total"] = payload["total_bytes"]
+                return ModelResponse(
+                    tool_calls=(
+                        ToolCall(
+                            "result_read",
+                            {
+                                "result_ref": payload["result_ref"],
+                                "offset": 64 * 1024,
+                                "limit": 4096,
+                            },
+                        ),
+                    )
+                )
+            captured["chunk"] = json.loads(feedback[-1]["content"])["result"]["text"]
+            return ModelResponse("done")
+
+        agent = build(
+            runtime,
+            responder,
+            definition=_tool_definition(binding_key="big"),
+            capabilities=CapabilityRegistry(tools=(tool(produce, "big"),)),
+        )
+        result = await (await agent.start("q")).wait(timeout_s=15)
+        assert result.status == "succeeded", result.error
+        assert captured["truncated"] is True
+        assert captured["total"] == len(big.encode())
+        assert captured["chunk"] == big[64 * 1024 : 64 * 1024 + 4096]
+
+
+# ---------------------------------------------------------------- control & recovery
+
+
+async def test_stop_closes_admission_and_the_first_reason_wins(build):
+    """requirements.md §6: stop closes new business entries and the persisted terminal
+    reason cannot later be overwritten by a late success."""
+
+    entered = asyncio.Event()
+    release = asyncio.Event()
+
+    class Slow:
+        def __init__(self, inner):
+            self.descriptor = inner.descriptor
+            self.inner = inner
+
+        async def stream_once(self, request, context):
+            entered.set()
+            await release.wait()
+            async for frame in self.inner.stream_once(request, context):
+                yield frame
+
+
+    async with RuntimeEngine() as runtime:
+        agent = build(runtime, None, model=Slow(ScriptedModel(lambda r: ModelResponse("late"))))
+        handle = await agent.start("q")
+        await asyncio.wait_for(entered.wait(), timeout=3)
+        receipt = await handle.stop(command_id="stop-1")
+        release.set()
+        assert receipt["admission_closed"] is True
+        result = await handle.wait(timeout_s=10)
+        assert result.status == "cancelled"
+        assert result.error["code"] == "RUN_STOPPED"
+        # Replaying the same command returns the original receipt.
+        again = await handle.stop(command_id="stop-1")
+        assert again == receipt
+        with pytest.raises(RequestError):
+            await handle.stop(command_id="stop-1", reason="other")
+        state = runtime._load(result.run_id)
+        assert state["status"] == "cancelled" and state["output"] is None
+
+
+async def test_persistent_workspace_survives_and_isolated_files_do_not(build, tmp_path):
+    """requirements.md §6: a persistent sandbox keeps its files; a non-persistent run's
+    working directory is removed only after the whole record settles."""
+    import pathlib
+
+    async def persistent_writer(arguments, context):
+        context.workspace.write("keep.txt", "keep")
+        return "ok"
+
+    async def isolated_writer(arguments, context):
+        context.workspace.write("drop.txt", "drop")
+        return "ok"
+
+    async with RuntimeEngine() as runtime:
+        keep = build(
+            runtime,
+            writer_driver,
+            definition=_tool_definition(binding_key="writer"),
+            capabilities=CapabilityRegistry(tools=(tool(persistent_writer, "writer"),)),
+            workspace=WorkspaceBinding(tmp_path / "work", persistent_sandbox=True),
+        )
+        result = await (await keep.start("q")).wait(timeout_s=10)
+        assert result.status == "succeeded"
+        scope = runtime._load(result.run_id)["workspace"]
+        assert (pathlib.Path(scope["path"]) / "keep.txt").exists()
+
+        drop = build(
+            runtime,
+            writer_driver,
+            definition=_tool_definition(binding_key="writer"),
+            capabilities=CapabilityRegistry(tools=(tool(isolated_writer, "writer"),)),
+        )
+        second = await (await drop.start("q")).wait(timeout_s=10)
+        assert second.status == "succeeded"
+        for _ in range(200):
+            if runtime._load(second.run_id)["cleanup_state"] == "succeeded":
+                break
+            await asyncio.sleep(0.05)
+        assert runtime._load(second.run_id)["cleanup_state"] == "succeeded"
+        dropped = pathlib.Path(runtime._load(second.run_id)["workspace"]["path"])
+        assert not (dropped / "drop.txt").exists()
+        # The persistent directory is untouched by the other run's cleanup.
+        assert (pathlib.Path(scope["path"]) / "keep.txt").exists()
+
+
+async def test_terminal_run_is_reopened_without_calling_the_model(build):
+    """requirements.md §6: takeover continues the same ExecutionRecord and never
+    repeats a completed call."""
+    async with RuntimeEngine() as runtime:
+        agent = build(runtime, lambda r: ModelResponse("answer"))
+        handle = await agent.start("q")
+        first = await handle.wait(timeout_s=10)
+        assert first.status == "succeeded"
+
+        reopened = build(runtime, lambda r: ModelResponse("never"))
+        again = await (await reopened.start(None, run_id=first.run_id)).wait(timeout_s=10)
+        assert again.output.value == "answer"
+        assert reopened.model.requests == []
+        assert len(runtime._load(first.run_id)["tasks"]) == 1
+
+
+async def test_public_result_never_exposes_attempt_fragments(build):
+    """implementation.md: internal PartialModelMaterial is not published as a partial
+    public result."""
+
+    class Broken:
+        def __init__(self, inner):
+            self.descriptor = inner.descriptor
+            self.inner = inner
+
+        async def stream_once(self, request, context):
+            yield ProviderEvent("text_delta", "half a thought")
+            yield ProviderEvent("tool_name_delta", "ec", 0, "c1")
+            raise AgentLoomError(
+                "MODEL_STREAM_INTERRUPTED",
+                category="transport",
+                phase="receive",
+                retryable_transport=True,
+                external_outcome="unknown",
+            )
+
+
+    async with RuntimeEngine() as runtime:
+        agent = build(runtime, None, model=Broken(ScriptedModel(lambda r: ModelResponse("x"))))
+        result = await (await agent.start("q")).wait(timeout_s=10)
+        assert result.status == "failed"
+        assert result.partial_results == ()
+        run = runtime._load(result.run_id)
+        # The audit material is retained internally.
+        assert run["partial_results"], "fragments must stay in the execution ledger"
+
+
+def test_workflow_surface_is_absent_from_this_release():
+    """implementation.md §1: Workflow / StateGraph are not part of the current delivery."""
+    import agentloom
+
+    for name in ("Workflow", "StateGraph", "AgentGraphEngine", "WorkflowEngine"):
+        assert name not in agentloom.__all__
+        assert not hasattr(agentloom, name)

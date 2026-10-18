@@ -1,0 +1,55 @@
+................................................................FF...... [ 33%]
+........................................................................ [ 66%]
+.......................................................................  [100%]
+=================================== FAILURES ===================================
+_ test_ambiguous_legacy_variables_are_not_guessed_from_current_program[memory-1.0-react] _
+
+runtime_store = <agentloom.storage.memory.MemoryRuntimeStore object at 0x1099a4bc0>
+role = 'react', default = 1.0
+
+    @pytest.mark.parametrize("role", ["react", "worker"])
+    @pytest.mark.parametrize(
+        "default",
+        [VariableSpec({}, "SAFE", False), {"schema": {}, "default": "SAFE", "required": False}, 1, 1.0],
+    )
+    async def test_ambiguous_legacy_variables_are_not_guessed_from_current_program(
+        runtime_store, role, default
+    ):
+        definition = AgentDefinition("a", "Mode: {{mode}}", "Work", variables={"mode": default})
+        await suspend(runtime_store, definition, role)
+        legacy_manifest(runtime_store)
+        async with RuntimeEngine(store=runtime_store, environment=NoPreparation()) as runtime:
+            agent = program(runtime, definition, role)
+>           with pytest.raises(RequestError, match="RECOVERY_BINDING_MISMATCH") as caught:
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E           Failed: DID NOT RAISE <class 'agentloom.errors.RequestError'>
+
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/tests/test_recovery_binding_contract.py:195: Failed
+_ test_ambiguous_legacy_variables_are_not_guessed_from_current_program[memory-1.0-worker] _
+
+runtime_store = <agentloom.storage.memory.MemoryRuntimeStore object at 0x10994df10>
+role = 'worker', default = 1.0
+
+    @pytest.mark.parametrize("role", ["react", "worker"])
+    @pytest.mark.parametrize(
+        "default",
+        [VariableSpec({}, "SAFE", False), {"schema": {}, "default": "SAFE", "required": False}, 1, 1.0],
+    )
+    async def test_ambiguous_legacy_variables_are_not_guessed_from_current_program(
+        runtime_store, role, default
+    ):
+        definition = AgentDefinition("a", "Mode: {{mode}}", "Work", variables={"mode": default})
+        await suspend(runtime_store, definition, role)
+        legacy_manifest(runtime_store)
+        async with RuntimeEngine(store=runtime_store, environment=NoPreparation()) as runtime:
+            agent = program(runtime, definition, role)
+>           with pytest.raises(RequestError, match="RECOVERY_BINDING_MISMATCH") as caught:
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E           Failed: DID NOT RAISE <class 'agentloom.errors.RequestError'>
+
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/tests/test_recovery_binding_contract.py:195: Failed
+- generated xml file: /Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/evidence/recovery-contracts-20261018/focused.junit.xml -
+=========================== short test summary info ============================
+FAILED agentloom-sdk/tests/test_recovery_binding_contract.py::test_ambiguous_legacy_variables_are_not_guessed_from_current_program[memory-1.0-react]
+FAILED agentloom-sdk/tests/test_recovery_binding_contract.py::test_ambiguous_legacy_variables_are_not_guessed_from_current_program[memory-1.0-worker]
+2 failed, 213 passed in 10.67s

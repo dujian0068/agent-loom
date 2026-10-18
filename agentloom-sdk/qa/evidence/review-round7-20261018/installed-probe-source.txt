@@ -1,0 +1,109 @@
+"""Offline validation of the built wheel and real v1-to-v2 checkpoint handoff."""
+
+import asyncio
+import hashlib
+import json
+import os
+from pathlib import Path
+import subprocess
+import sys
+import time
+
+work = Path(__file__).resolve().parent
+installed = (work / "installed").resolve()
+sys.path.insert(0, str(installed))
+
+import agentloom
+from agentloom import (
+    AgentDefinition,
+    ExecutionPolicy,
+    FileRuntimeStore,
+    MemoryRuntimeStore,
+    ModelResponse,
+    PlanAgent,
+    ReactAgent,
+    RuntimeEngine,
+    ScriptedModel,
+    WorkspaceBinding,
+)
+from agentloom.prompts import templates
+
+assert Path(agentloom.__file__).resolve().is_relative_to(installed)
+assert templates.TEMPLATE_VERSION == "agentloom-langchain-modes-v2"
+
+
+async def smoke(mode, backend):
+    case = work / ("wheel-smoke-" + mode + "-" + backend)
+    case.mkdir()
+    store = MemoryRuntimeStore() if backend == "memory" else FileRuntimeStore(case / "state")
+    calls = []
+
+    def respond(request):
+        calls.append(request)
+        return ModelResponse("NaN" if len(calls) == 1 else "null")
+
+    try:
+        async with RuntimeEngine(store=store) as runtime:
+            cls = ReactAgent if mode == "react" else PlanAgent
+            agent = cls(
+                definition=AgentDefinition("wheel", "Return JSON", output_schema={"type": "null"}),
+                model=ScriptedModel(respond),
+                workspace=WorkspaceBinding(case / "work"),
+                execution_policy=ExecutionPolicy(loop_max=2),
+                runtime_engine=runtime,
+            )
+            result = await agent.ainvoke("go")
+            assert result.status == "succeeded" and result.output.value is None
+            assert len(calls) == 2
+            state = runtime._load(result.run_id)
+            assert all(p["template_version"] == templates.TEMPLATE_VERSION for p in state["prompt_contract"]["roles"].values())
+            assert "native tool calls" in calls[0].messages[1]["content"]
+            if mode == "plan":
+                assert "No executors are available." in calls[0].messages[1]["content"]
+                assert "delegate_task" not in {t["name"] for t in calls[0].tools}
+            return {"mode": mode, "backend": backend, "status": result.status, "calls": len(calls), "template": templates.TEMPLATE_VERSION}
+    finally:
+        store.close()
+
+
+async def run_smokes():
+    rows = []
+    for mode in ("react", "plan"):
+        for backend in ("memory", "file"):
+            rows.append(await smoke(mode, backend))
+    return rows
+
+
+os.chdir(work)
+smokes = asyncio.run(run_smokes())
+legacy = work / "round6-source/agentloom-sdk/src"
+worker = work / "installed_prompt_process.py"
+wrapper = """import pathlib,runpy,sys
+package = pathlib.Path(sys.argv[1]).resolve()
+sys.path.insert(0, str(package))
+import agentloom
+assert pathlib.Path(agentloom.__file__).resolve().is_relative_to(package)
+sys.argv = sys.argv[2:]
+runpy.run_path(sys.argv[0], run_name='__main__')
+"""
+migrations = []
+for cut in ("before_root", "before_child"):
+    case = work / ("v1-v2-" + cut)
+    case.mkdir()
+    first = subprocess.run([sys.executable, "-I", "-c", wrapper, str(legacy), str(worker), str(case), cut], capture_output=True, text=True, timeout=15)
+    assert first.returncode == 75, (first.returncode, first.stdout, first.stderr)
+    assert not first.stderr, first.stderr
+    time.sleep(0.4)
+    second = subprocess.run([sys.executable, "-I", "-c", wrapper, str(installed), str(worker), str(case), "resume"], capture_output=True, text=True, timeout=15)
+    assert second.returncode == 0, (second.returncode, second.stdout, second.stderr)
+    assert not second.stderr, second.stderr
+    result = json.loads(second.stdout)
+    assert result == {"status": "succeeded", "loops": 3, "installed_template": "agentloom-langchain-modes-v2", "saved_templates": ["agentloom-modes-v1"]}, result
+    audit = [json.loads(line) for line in (case / "audit.jsonl").read_text().splitlines()]
+    assert [row["role"] for row in audit] == ["planner", "worker", "planner"]
+    assert audit[0]["instructions"] == audit[2]["instructions"]
+    migrations.append({"cut": cut, "initial_exit": first.returncode, "resumed_exit": second.returncode, "stderr": second.stderr, **result, "audit_roles": [row["role"] for row in audit], "instruction_sha256": [hashlib.sha256(row["instructions"].encode()).hexdigest() for row in audit]})
+
+result = {"imported_package": str(Path(agentloom.__file__).resolve()), "smokes": smokes, "v1_to_v2_process_recovery": migrations}
+(work / "installed-results.json").write_text(json.dumps(result, indent=2) + "\n")
+print(json.dumps(result, indent=2))

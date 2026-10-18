@@ -1,0 +1,38 @@
+{
+  "changed": [
+    "agentloom-sdk/README.md",
+    "agentloom-sdk/pyproject.toml",
+    "agentloom-sdk/src/agentloom/prompts/assembly.py",
+    "agentloom-sdk/src/agentloom/prompts/templates.py",
+    "agentloom-sdk/src/agentloom/runtime/agent_loop.py",
+    "agentloom-sdk/src/agentloom/runtime/completion.py",
+    "agentloom-sdk/tests/test_mode_prompts.py",
+    "agentloom-sdk/tests/test_operation_error_boundaries.py",
+    "agentloom-sdk/tests/test_review_whitebox_probe.py",
+    "docs/sdk/assembly.md",
+    "docs/sdk/implementation.md",
+    "docs/sdk/integration.md"
+  ],
+  "newly_included_paths": [
+    "agentloom-sdk/qa/test_sdk_review_round6.py",
+    "agentloom-sdk/src/.gitkeep",
+    "agentloom-sdk/src/agentloom/prompts/LICENSE.langchain",
+    "agentloom-sdk/src/agentloom/prompts/NOTICE.md",
+    "agentloom-sdk/src/agentloom/prompts/protocol.py",
+    "agentloom-sdk/src/agentloom/prompts/roles/__init__.py",
+    "agentloom-sdk/src/agentloom/prompts/roles/executor.py",
+    "agentloom-sdk/src/agentloom/prompts/roles/planner.py",
+    "agentloom-sdk/src/agentloom/prompts/roles/react.py",
+    "agentloom-sdk/src/agentloom/prompts/sources.json",
+    "agentloom-sdk/src/agentloom/py.typed",
+    "agentloom-sdk/src/agentloom/runtime/output.py",
+    "agentloom-sdk/src/agentloom_sdk.egg-info/PKG-INFO",
+    "agentloom-sdk/src/agentloom_sdk.egg-info/SOURCES.txt",
+    "agentloom-sdk/src/agentloom_sdk.egg-info/dependency_links.txt",
+    "agentloom-sdk/src/agentloom_sdk.egg-info/requires.txt",
+    "agentloom-sdk/src/agentloom_sdk.egg-info/top_level.txt",
+    "agentloom-sdk/tests/test_final_output_boundaries.py",
+    "agentloom-sdk/tests/test_langchain_prompts.py"
+  ],
+  "note": "Newly included paths are snapshot coverage, not necessarily newly authored files; round6 QA, py.typed, .gitkeep and generated egg-info existed before this review."
+}

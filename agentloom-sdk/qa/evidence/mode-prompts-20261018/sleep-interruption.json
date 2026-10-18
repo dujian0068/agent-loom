@@ -1,0 +1,26 @@
+{
+  "observed_runs": [
+    {
+      "run": "focused",
+      "pytest_seconds": 31.409,
+      "wall_seconds": 433.4579780101776,
+      "failures": 1
+    },
+    {
+      "run": "regression",
+      "pytest_seconds": 233.695,
+      "wall_seconds": 2000.6157076358795,
+      "failures": 2
+    }
+  ],
+  "power_events": [
+    "2026-10-18 01:57:33 +0800 Sleep               \tEntering Sleep state due to 'Maintenance Sleep':TCPKeepAlive=active Using AC (Charge:80%) 295 secs  ",
+    "2026-10-18 02:02:28 +0800 DarkWake            \tDarkWake from Deep Idle [CDNPB] : due to NUB.SPMI0Sw3IRQ nub-spmi0.0x02 rtc/Maintenance Using AC (Charge:80%) 45 secs   ",
+    "2026-10-18 02:03:13 +0800 Sleep               \tEntering Sleep state due to 'Maintenance Sleep':TCPKeepAlive=active Using AC (Charge:80%) 739 secs  ",
+    "2026-10-18 02:15:32 +0800 DarkWake            \tDarkWake from Deep Idle [CDNPB] : due to smc.sysState.Wake(0x70070000) wifibt SMC.OutboxNotEmpty centauri-alpha E_TKO_UNEXPECT_TCP_FLAG ARPT/ Using AC (Charge:80%) 45 secs   ",
+    "2026-10-18 02:16:17 +0800 Sleep               \tEntering Sleep state due to 'Maintenance Sleep':TCPKeepAlive=active Using AC (Charge:80%) 739 secs  ",
+    "2026-10-18 02:28:36 +0800 DarkWake            \tDarkWake from Deep Idle [CDNPB] : due to smc.sysState.Wake(0x70070000) wifibt SMC.OutboxNotEmpty centauri-alpha E_TKO_UNEXPECT_TCP_FLAG ARPT/ Using AC (Charge:80%) 45 secs   ",
+    "2026-10-18 02:29:21 +0800 Sleep               \tEntering Sleep state due to 'Maintenance Sleep':TCPKeepAlive=active Using AC (Charge:80%) 739 secs  "
+  ],
+  "action": "Final regression runs under process-scoped caffeinate -is. No SDK lease or timeout semantics changed."
+}

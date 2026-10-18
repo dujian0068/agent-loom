@@ -1,0 +1,37 @@
+FFFF                                                                     [100%]
+=================================== FAILURES ===================================
+_______ test_shutdown_waits_for_each_maintenance_worker[memory-control] ________
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/tests/test_maintenance_shutdown.py:46: in test_shutdown_waits_for_each_maintenance_worker
+    assert not closing.done(), "Host returned while a maintenance thread was still running"
+E   AssertionError: Host returned while a maintenance thread was still running
+E   assert not True
+E    +  where True = <built-in method done of _asyncio.Task object at 0x107c422c0>()
+E    +    where <built-in method done of _asyncio.Task object at 0x107c422c0> = <Task finished name='Task-7' coro=<RuntimeEngine.aclose() done, defined at /Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/runtime/host.py:115> result=None>.done
+_______ test_shutdown_waits_for_each_maintenance_worker[memory-cleanup] ________
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/tests/test_maintenance_shutdown.py:46: in test_shutdown_waits_for_each_maintenance_worker
+    assert not closing.done(), "Host returned while a maintenance thread was still running"
+E   AssertionError: Host returned while a maintenance thread was still running
+E   assert not True
+E    +  where True = <built-in method done of _asyncio.Task object at 0x107c42980>()
+E    +    where <built-in method done of _asyncio.Task object at 0x107c42980> = <Task finished name='Task-16' coro=<RuntimeEngine.aclose() done, defined at /Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/runtime/host.py:115> result=None>.done
+________ test_shutdown_waits_for_each_maintenance_worker[file-control] _________
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/tests/test_maintenance_shutdown.py:46: in test_shutdown_waits_for_each_maintenance_worker
+    assert not closing.done(), "Host returned while a maintenance thread was still running"
+E   AssertionError: Host returned while a maintenance thread was still running
+E   assert not True
+E    +  where True = <built-in method done of _asyncio.Task object at 0x107c43040>()
+E    +    where <built-in method done of _asyncio.Task object at 0x107c43040> = <Task finished name='Task-25' coro=<RuntimeEngine.aclose() done, defined at /Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/runtime/host.py:115> result=None>.done
+________ test_shutdown_waits_for_each_maintenance_worker[file-cleanup] _________
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/tests/test_maintenance_shutdown.py:46: in test_shutdown_waits_for_each_maintenance_worker
+    assert not closing.done(), "Host returned while a maintenance thread was still running"
+E   AssertionError: Host returned while a maintenance thread was still running
+E   assert not True
+E    +  where True = <built-in method done of _asyncio.Task object at 0x107c43dc0>()
+E    +    where <built-in method done of _asyncio.Task object at 0x107c43dc0> = <Task finished name='Task-34' coro=<RuntimeEngine.aclose() done, defined at /Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/runtime/host.py:115> result=None>.done
+- generated xml file: /Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/evidence/mode-prompts-20261018/maintenance-before.junit.xml -
+=========================== short test summary info ============================
+FAILED agentloom-sdk/tests/test_maintenance_shutdown.py::test_shutdown_waits_for_each_maintenance_worker[memory-control]
+FAILED agentloom-sdk/tests/test_maintenance_shutdown.py::test_shutdown_waits_for_each_maintenance_worker[memory-cleanup]
+FAILED agentloom-sdk/tests/test_maintenance_shutdown.py::test_shutdown_waits_for_each_maintenance_worker[file-control]
+FAILED agentloom-sdk/tests/test_maintenance_shutdown.py::test_shutdown_waits_for_each_maintenance_worker[file-cleanup]
+4 failed in 0.30s

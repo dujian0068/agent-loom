@@ -1,0 +1,79 @@
+{
+  "imported_package": "/private/tmp/agentloom-review7-20261018/installed/agentloom/__init__.py",
+  "smokes": [
+    {
+      "mode": "react",
+      "backend": "memory",
+      "status": "succeeded",
+      "calls": 2,
+      "template": "agentloom-langchain-modes-v2"
+    },
+    {
+      "mode": "react",
+      "backend": "file",
+      "status": "succeeded",
+      "calls": 2,
+      "template": "agentloom-langchain-modes-v2"
+    },
+    {
+      "mode": "plan",
+      "backend": "memory",
+      "status": "succeeded",
+      "calls": 2,
+      "template": "agentloom-langchain-modes-v2"
+    },
+    {
+      "mode": "plan",
+      "backend": "file",
+      "status": "succeeded",
+      "calls": 2,
+      "template": "agentloom-langchain-modes-v2"
+    }
+  ],
+  "v1_to_v2_process_recovery": [
+    {
+      "cut": "before_root",
+      "initial_exit": 75,
+      "resumed_exit": 0,
+      "stderr": "",
+      "status": "succeeded",
+      "loops": 3,
+      "installed_template": "agentloom-langchain-modes-v2",
+      "saved_templates": [
+        "agentloom-modes-v1"
+      ],
+      "audit_roles": [
+        "planner",
+        "worker",
+        "planner"
+      ],
+      "instruction_sha256": [
+        "06a6e4d740bf89cc5446923fe17de67e8be8636d501d47a59045508366520bdf",
+        "e1bb8db8db78ea27b795de74a2d9c5c6ce1eac12e3e7a9c00e1a91efaee27f95",
+        "06a6e4d740bf89cc5446923fe17de67e8be8636d501d47a59045508366520bdf"
+      ]
+    },
+    {
+      "cut": "before_child",
+      "initial_exit": 75,
+      "resumed_exit": 0,
+      "stderr": "",
+      "status": "succeeded",
+      "loops": 3,
+      "installed_template": "agentloom-langchain-modes-v2",
+      "saved_templates": [
+        "agentloom-modes-v1"
+      ],
+      "audit_roles": [
+        "planner",
+        "worker",
+        "planner"
+      ],
+      "instruction_sha256": [
+        "06a6e4d740bf89cc5446923fe17de67e8be8636d501d47a59045508366520bdf",
+        "e1bb8db8db78ea27b795de74a2d9c5c6ce1eac12e3e7a9c00e1a91efaee27f95",
+        "06a6e4d740bf89cc5446923fe17de67e8be8636d501d47a59045508366520bdf"
+      ]
+    }
+  ]
+}

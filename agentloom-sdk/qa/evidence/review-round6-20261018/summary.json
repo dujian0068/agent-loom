@@ -1,0 +1,213 @@
+{
+  "review": "round6",
+  "review_date": "2026-10-18",
+  "timezone": "Asia/Shanghai",
+  "head": "2b47ea96111326b3e13d5a0f808583bcf50cc8b4",
+  "scope": "SDK; excluding Workflow, default tools and SPI, Platform",
+  "workspace": "HEAD plus existing uncommitted mode-prompt implementation and whitebox probe; see source-before.json and reviewed-source.diff",
+  "existing_files_compared": 156,
+  "existing_files_changed": [],
+  "head_unchanged": true,
+  "environment": {
+    "python": "3.12.14 (main, Aug 25 2026, 13:50:33) [Clang 22.1.3 ]",
+    "platform": "macOS-26.7-arm64-arm-64bit",
+    "machine": "arm64",
+    "recursion_limit": 1000,
+    "packages": {
+      "pytest": "8.4.2",
+      "pytest-asyncio": "1.4.0",
+      "ruff": "0.16.9",
+      "httpx": "0.28.1",
+      "jsonschema": "4.26.0",
+      "rfc8785": "0.1.4",
+      "mcp": "1.30.0"
+    }
+  },
+  "provider_testing": "ScriptedModel, httpx.MockTransport, local MCP subprocess/fixtures only. No live paid model, remote MCP, API key, OAuth credential or reasoning-quality validation.",
+  "suites": {
+    "regression": {
+      "summary": {
+        "name": "pytest",
+        "errors": "0",
+        "failures": "0",
+        "skipped": "0",
+        "tests": "1155",
+        "time": "305.355",
+        "timestamp": "2026-10-18T10:10:01.870366+08:00",
+        "hostname": "bmilk"
+      },
+      "cases_by_file": {
+        "tests.test_attempt_completion": 52,
+        "tests.test_builder_contract": 31,
+        "tests.test_capability_public_contract": 30,
+        "tests.test_completion_boundaries": 53,
+        "tests.test_completion_cleanup": 15,
+        "tests.test_completion_recovery": 7,
+        "tests.test_control_and_history": 7,
+        "tests.test_control_reconciliation": 40,
+        "tests.test_design_alignment": 15,
+        "tests.test_environment_contract": 4,
+        "tests.test_execution_contract": 34,
+        "tests.test_file_store_contract": 19,
+        "tests.test_followup_review": 54,
+        "tests.test_history_execution_facts": 2,
+        "tests.test_hook_context_contract": 9,
+        "tests.test_hook_public_contract": 10,
+        "tests.test_json_value_boundaries": 14,
+        "tests.test_maintenance_contract": 17,
+        "tests.test_maintenance_shutdown": 4,
+        "tests.test_mcp_protocol": 3,
+        "tests.test_mcp_retry_contract": 12,
+        "tests.test_mode_prompts": 34,
+        "tests.test_model_material": 60,
+        "tests.test_model_protocols": 11,
+        "tests.test_operation_error_boundaries": 32,
+        "tests.test_persisted_json_depth": 35,
+        "tests.test_persistence_contract": 17,
+        "tests.test_prompt_recovery": 28,
+        "tests.test_properties_contract": 38,
+        "tests.test_public_result_projection": 8,
+        "tests.test_public_validation": 28,
+        "tests.test_recovery_invariants": 16,
+        "tests.test_result_and_scope_contract": 4,
+        "tests.test_review_regressions": 34,
+        "tests.test_schema_contract": 21,
+        "tests.test_skill_profile_contract": 13,
+        "tests.test_usage_accounting": 12,
+        "tests.test_usage_events": 26,
+        "qa.test_sdk_audit": 110,
+        "qa.test_sdk_rereview": 24,
+        "qa.test_sdk_review_round3": 44,
+        "qa.test_sdk_review_round4": 56,
+        "qa.test_sdk_review_round5": 72
+      },
+      "failed_cases": []
+    },
+    "boundaries": {
+      "summary": {
+        "name": "pytest",
+        "errors": "0",
+        "failures": "42",
+        "skipped": "0",
+        "tests": "114",
+        "time": "7.444",
+        "timestamp": "2026-10-18T10:15:40.602154+08:00",
+        "hostname": "bmilk"
+      },
+      "cases_by_file": {
+        "qa.test_sdk_review_round6": 114
+      },
+      "failed_cases": [
+        "test_noncanonical_final_candidate_uses_format_correction[memory-nan-react]",
+        "test_noncanonical_final_candidate_uses_format_correction[memory-nan-planner]",
+        "test_noncanonical_final_candidate_uses_format_correction[memory-nan-executor]",
+        "test_noncanonical_final_candidate_uses_format_correction[memory-float-overflow-react]",
+        "test_noncanonical_final_candidate_uses_format_correction[memory-float-overflow-planner]",
+        "test_noncanonical_final_candidate_uses_format_correction[memory-float-overflow-executor]",
+        "test_noncanonical_final_candidate_uses_format_correction[memory-unsafe-integer-react]",
+        "test_noncanonical_final_candidate_uses_format_correction[memory-unsafe-integer-planner]",
+        "test_noncanonical_final_candidate_uses_format_correction[memory-unsafe-integer-executor]",
+        "test_noncanonical_final_candidate_uses_format_correction[memory-unpaired-surrogate-react]",
+        "test_noncanonical_final_candidate_uses_format_correction[memory-unpaired-surrogate-planner]",
+        "test_noncanonical_final_candidate_uses_format_correction[memory-unpaired-surrogate-executor]",
+        "test_noncanonical_final_candidate_uses_format_correction[memory-depth-129-react]",
+        "test_noncanonical_final_candidate_uses_format_correction[memory-depth-129-planner]",
+        "test_noncanonical_final_candidate_uses_format_correction[memory-depth-129-executor]",
+        "test_noncanonical_final_candidate_uses_format_correction[file-nan-react]",
+        "test_noncanonical_final_candidate_uses_format_correction[file-nan-planner]",
+        "test_noncanonical_final_candidate_uses_format_correction[file-nan-executor]",
+        "test_noncanonical_final_candidate_uses_format_correction[file-float-overflow-react]",
+        "test_noncanonical_final_candidate_uses_format_correction[file-float-overflow-planner]",
+        "test_noncanonical_final_candidate_uses_format_correction[file-float-overflow-executor]",
+        "test_noncanonical_final_candidate_uses_format_correction[file-unsafe-integer-react]",
+        "test_noncanonical_final_candidate_uses_format_correction[file-unsafe-integer-planner]",
+        "test_noncanonical_final_candidate_uses_format_correction[file-unsafe-integer-executor]",
+        "test_noncanonical_final_candidate_uses_format_correction[file-unpaired-surrogate-react]",
+        "test_noncanonical_final_candidate_uses_format_correction[file-unpaired-surrogate-planner]",
+        "test_noncanonical_final_candidate_uses_format_correction[file-unpaired-surrogate-executor]",
+        "test_noncanonical_final_candidate_uses_format_correction[file-depth-129-react]",
+        "test_noncanonical_final_candidate_uses_format_correction[file-depth-129-planner]",
+        "test_noncanonical_final_candidate_uses_format_correction[file-depth-129-executor]",
+        "test_error_sidecar_shape_cannot_break_attempt_commit[memory-empty-list-tool_result-raised]",
+        "test_error_sidecar_shape_cannot_break_attempt_commit[memory-empty-list-invalid_tool_result-raised]",
+        "test_error_sidecar_shape_cannot_break_attempt_commit[memory-empty-object-tool_result-raised]",
+        "test_error_sidecar_shape_cannot_break_attempt_commit[memory-empty-object-invalid_tool_result-raised]",
+        "test_error_sidecar_shape_cannot_break_attempt_commit[memory-text-tool_result-raised]",
+        "test_error_sidecar_shape_cannot_break_attempt_commit[memory-text-invalid_tool_result-raised]",
+        "test_error_sidecar_shape_cannot_break_attempt_commit[file-empty-list-tool_result-raised]",
+        "test_error_sidecar_shape_cannot_break_attempt_commit[file-empty-list-invalid_tool_result-raised]",
+        "test_error_sidecar_shape_cannot_break_attempt_commit[file-empty-object-tool_result-raised]",
+        "test_error_sidecar_shape_cannot_break_attempt_commit[file-empty-object-invalid_tool_result-raised]",
+        "test_error_sidecar_shape_cannot_break_attempt_commit[file-text-tool_result-raised]",
+        "test_error_sidecar_shape_cannot_break_attempt_commit[file-text-invalid_tool_result-raised]"
+      ]
+    },
+    "whitebox": {
+      "summary": {
+        "name": "pytest",
+        "errors": "0",
+        "failures": "4",
+        "skipped": "0",
+        "tests": "26",
+        "time": "36.965",
+        "timestamp": "2026-10-18T10:10:29.625405+08:00",
+        "hostname": "bmilk"
+      },
+      "cases_by_file": {
+        "tests.test_review_whitebox_probe": 26
+      },
+      "failed_cases": [
+        "test_compaction_triggers_at_the_configured_threshold",
+        "test_unknown_or_unauthorized_tool_creates_no_operation",
+        "test_result_read_is_denied_across_roles",
+        "test_stop_closes_admission_and_the_first_reason_wins"
+      ]
+    },
+    "whitebox-corrected": {
+      "summary": {
+        "name": "pytest",
+        "errors": "0",
+        "failures": "0",
+        "skipped": "0",
+        "tests": "4",
+        "time": "1.242",
+        "timestamp": "2026-10-18T10:14:19.045055+08:00",
+        "hostname": "bmilk"
+      },
+      "cases_by_file": {
+        "test_review_whitebox_probe": 4
+      },
+      "failed_cases": []
+    }
+  },
+  "findings": {
+    "R6-01": {
+      "priority": 2,
+      "failing_cases": 30,
+      "topic": "noncanonical model candidate skips output correction"
+    },
+    "R6-02": {
+      "priority": 2,
+      "failing_cases": 12,
+      "topic": "malformed private exception result sidecars break attempt persistence"
+    }
+  },
+  "test_quality": {
+    "whitebox_original_failures": 4,
+    "whitebox_corrected_in_temporary_copy": 4,
+    "source_test_modified": false,
+    "ruff_findings_in_whitebox": 5
+  },
+  "commands": {
+    "regression": ".venv/bin/python -m pytest -q agentloom-sdk/tests --ignore=agentloom-sdk/tests/test_review_whitebox_probe.py agentloom-sdk/qa/test_sdk_audit.py agentloom-sdk/qa/test_sdk_rereview.py agentloom-sdk/qa/test_sdk_review_round3.py agentloom-sdk/qa/test_sdk_review_round4.py agentloom-sdk/qa/test_sdk_review_round5.py --tb=short --junitxml=/tmp/agentloom-review6-20261018/regression.junit.xml",
+    "boundaries": ".venv/bin/python -m pytest -q agentloom-sdk/qa/test_sdk_review_round6.py --tb=short --junitxml=/tmp/agentloom-review6-20261018/boundaries.junit.xml",
+    "whitebox": ".venv/bin/python -m pytest -q agentloom-sdk/tests/test_review_whitebox_probe.py --tb=short --junitxml=/tmp/agentloom-review6-20261018/whitebox.junit.xml",
+    "whitebox_corrected": "Run scratch test_review_whitebox_probe.py with recorded pytest.ini/conftest, selecting the four tests listed in whitebox-fixture-corrections.diff.",
+    "ruff": "ruff check and ruff format --check: SDK src/tests and six QA files; test_review_whitebox_probe.py excluded and linted separately."
+  },
+  "notes": [
+    "Only final-version new-test results are counted. Exploratory runs and corrected copies are not added to the SDK regression total.",
+    "The first temporary-copy collection attempts failed on macOS /tmp symlink/root traversal; local scratch pytest.ini fixed collection without changing repository configuration.",
+    "The new test compares immutable public DTOs through json_copy; draft tuple/list comparison failures are test authoring issues, not SDK findings."
+  ]
+}

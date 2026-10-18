@@ -1,0 +1,154 @@
+{
+  "review": "round7",
+  "date": "2026-10-18",
+  "timezone": "Asia/Shanghai",
+  "head": "2b47ea96111326b3e13d5a0f808583bcf50cc8b4",
+  "reviewed_workspace": "Current uncommitted LangChain prompt adaptation plus R6 output-correction and exception-sidecar fixes; old conclusions were not reused as current results.",
+  "scope": "SDK, excluding Workflow, default tools/SPI, and Platform acceptance.",
+  "environment": {
+    "python": "3.12.14 (main, Aug 25 2026, 13:50:33) [Clang 22.1.3 ]",
+    "platform": "macOS-26.7-arm64-arm-64bit",
+    "recursion_limit": 1000,
+    "packages": {
+      "pytest": "8.4.2",
+      "pytest-asyncio": "1.4.0",
+      "ruff": "0.16.9",
+      "httpx": "0.28.1",
+      "jsonschema": "4.26.0",
+      "rfc8785": "0.1.4",
+      "mcp": "1.30.0"
+    }
+  },
+  "existing_files_compared": 175,
+  "existing_files_changed": [],
+  "head_unchanged": true,
+  "unchanged_prior_qa_files": {
+    "agentloom-sdk/qa/test_sdk_audit.py": "75e22018c4df4ecb8d4ba1dbd31d1f3affd10839b72059c8f9fdf0171ec4165f",
+    "agentloom-sdk/qa/test_sdk_rereview.py": "df17cc4ec0f09b09d3e2f6e8f0d885520bb53bdfbeaeedb49d8edf138f742873",
+    "agentloom-sdk/qa/test_sdk_review_round3.py": "adc6b442ae71512491056a47e0c96f0b917d0dfa07960f14969510a582272c55",
+    "agentloom-sdk/qa/test_sdk_review_round4.py": "152b2a8de031055e5c94db660d8d714bb63786a22bd4b8219b9ca76819683dfe",
+    "agentloom-sdk/qa/test_sdk_review_round5.py": "847277f082d0416baecc4ec486ab09f1f44425e655ca557bf942ed20fdd6fa02",
+    "agentloom-sdk/qa/test_sdk_review_round6.py": "68287b814ad7b590438fea855eeaffeb041501a8f421912ba26f4fe164f7f7e0"
+  },
+  "suites": {
+    "regression": {
+      "summary": {
+        "name": "pytest",
+        "errors": "0",
+        "failures": "0",
+        "skipped": "0",
+        "tests": "1317",
+        "time": "313.669",
+        "timestamp": "2026-10-18T11:53:38.327085+08:00",
+        "hostname": "bmilk"
+      },
+      "cases_by_file": {
+        "tests.test_attempt_completion": 52,
+        "tests.test_builder_contract": 31,
+        "tests.test_capability_public_contract": 30,
+        "tests.test_completion_boundaries": 53,
+        "tests.test_completion_cleanup": 15,
+        "tests.test_completion_recovery": 7,
+        "tests.test_control_and_history": 7,
+        "tests.test_control_reconciliation": 40,
+        "tests.test_design_alignment": 15,
+        "tests.test_environment_contract": 4,
+        "tests.test_execution_contract": 34,
+        "tests.test_file_store_contract": 19,
+        "tests.test_final_output_boundaries": 8,
+        "tests.test_followup_review": 54,
+        "tests.test_history_execution_facts": 2,
+        "tests.test_hook_context_contract": 9,
+        "tests.test_hook_public_contract": 10,
+        "tests.test_json_value_boundaries": 14,
+        "tests.test_langchain_prompts": 5,
+        "tests.test_maintenance_contract": 17,
+        "tests.test_maintenance_shutdown": 4,
+        "tests.test_mcp_protocol": 3,
+        "tests.test_mcp_retry_contract": 12,
+        "tests.test_mode_prompts": 34,
+        "tests.test_model_material": 60,
+        "tests.test_model_protocols": 11,
+        "tests.test_operation_error_boundaries": 41,
+        "tests.test_persisted_json_depth": 35,
+        "tests.test_persistence_contract": 17,
+        "tests.test_prompt_recovery": 28,
+        "tests.test_properties_contract": 38,
+        "tests.test_public_result_projection": 8,
+        "tests.test_public_validation": 28,
+        "tests.test_recovery_invariants": 16,
+        "tests.test_result_and_scope_contract": 4,
+        "tests.test_review_regressions": 34,
+        "tests.test_review_whitebox_probe": 26,
+        "tests.test_schema_contract": 21,
+        "tests.test_skill_profile_contract": 13,
+        "tests.test_usage_accounting": 12,
+        "tests.test_usage_events": 26,
+        "qa.test_sdk_audit": 110,
+        "qa.test_sdk_rereview": 24,
+        "qa.test_sdk_review_round3": 44,
+        "qa.test_sdk_review_round4": 56,
+        "qa.test_sdk_review_round5": 72,
+        "qa.test_sdk_review_round6": 114
+      },
+      "failed_cases": []
+    },
+    "boundaries": {
+      "summary": {
+        "name": "pytest",
+        "errors": "0",
+        "failures": "0",
+        "skipped": "0",
+        "tests": "42",
+        "time": "4.247",
+        "timestamp": "2026-10-18T11:56:21.640896+08:00",
+        "hostname": "bmilk"
+      },
+      "cases_by_file": {
+        "qa.test_sdk_review_round7": 42
+      },
+      "failed_cases": []
+    }
+  },
+  "pytest_total": 1359,
+  "pytest_passed": 1359,
+  "pytest_failed": 0,
+  "pytest_skipped": 0,
+  "previous_findings": {
+    "R6-01": "Original 30 failures now pass; syntax/schema and valid-boundary controls also pass.",
+    "R6-02": "Original 12 failures now pass; raised/reported and valid-sidecar controls also pass."
+  },
+  "new_confirmed_findings": [],
+  "new_cases": {
+    "parser_extremes_to_falsy_values": 24,
+    "resume_saved_correction_after_observer_failure": 6,
+    "unstructured_json_looking_text": 12
+  },
+  "packaging": {
+    "matched_files": 96,
+    "wheel_sha256": "f371bf2f6de9897cde8501f3ebb1e7e7a50b803e46cc598253bc32348c91c125",
+    "isolated_installed_smokes": 4,
+    "real_process_v1_to_v2_recoveries": 2,
+    "legacy_source_files_matched_to_round6": 86
+  },
+  "lint": {
+    "status": "passed",
+    "format_checked_files": 149,
+    "excluded_files": []
+  },
+  "test_method": "Local deterministic ScriptedModel, httpx MockTransport and local MCP subprocess/fixtures; no live provider or remote MCP credentials.",
+  "commands": {
+    "initial_regression": ".venv/bin/python -m pytest -q agentloom-sdk/tests agentloom-sdk/qa --tb=short --junitxml=/tmp/agentloom-review7-20261018/regression.junit.xml",
+    "new_boundaries": ".venv/bin/python -m pytest -q agentloom-sdk/qa/test_sdk_review_round7.py --tb=short --junitxml=/tmp/agentloom-review7-20261018/boundaries.junit.xml",
+    "wheel_build": ".venv/bin/python -m pip wheel --no-build-isolation --no-deps --no-index /tmp/agentloom-review7-20261018/package --wheel-dir /tmp/agentloom-review7-20261018/wheel",
+    "installed_probe": ".venv/bin/python -I /tmp/agentloom-review7-20261018/verify_installed.py",
+    "delivered_combined_regression": ".venv/bin/python -m pytest -q agentloom-sdk/tests agentloom-sdk/qa"
+  },
+  "notes": [
+    "The initial directory collection had 1317 tests before round7 QA was created. The delivered combined command collects 1359 tests.",
+    "All six previous QA files retain their round6 hashes; the user corrected the whitebox probe, which now passes all 26 cases and is included without exclusions.",
+    "Wheel built from a temporary source copy; package imports and process recovery use isolated temporary paths, not the editable source checkout.",
+    "The two process handoffs use real v1 source reconstructed from the round6 recorded patch, with 86 Python file hashes verified. The recorded prompt text is not manually rewritten.",
+    "Wheel pip cache was disabled by the sandbox; the offline build succeeded without downloads."
+  ]
+}

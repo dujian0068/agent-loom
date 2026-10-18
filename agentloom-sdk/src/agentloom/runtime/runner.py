@@ -9,6 +9,7 @@ from ..context import history_records, record
 from ..context.results import RESULT_READ_TOOL, ResultReadHandler
 from ..errors import AgentLoomError, InfrastructureError
 from ..events import EventBusImpl, HandlerBinding, HookHandler
+from ..prompts.assembly import PROMPT_RECORD_KIND
 from ..storage import TERMINAL, CommitCoordinator, verify_lease
 from ..types import new_id
 from .agent_engine import AgentGraphEngine
@@ -26,10 +27,20 @@ def new_task(
     parent_operation=None,
     history=(),
     include_input=True,
+    system_prompt=None,
 ):
     task_id = new_id()
     text = content if isinstance(content, str) else canonical(content)
     records = [record({"role": "system", "content": definition.render(variables)}, fixed=True)]
+    if system_prompt is not None:
+        records.append(
+            record(
+                {"role": "system", "content": system_prompt["content"]},
+                fixed=True,
+                protected=True,
+                kind=PROMPT_RECORD_KIND,
+            )
+        )
     records.extend(history)
     if include_input:
         records.append(record({"role": "user", "content": text}, protected=True, fixed=True))
@@ -60,6 +71,7 @@ class ExecutionRunner:
     def __init__(self, runtime, program, lease):
         self.runtime, self.program, self.lease = runtime, program, lease
         self.run_id = lease.run_id
+        self._prompts = (self.state().get("prompt_contract") or {}).get("roles", {})
         self.coordinator = CommitCoordinator(
             runtime.store, runtime.namespace, lease, runtime.checkpoint_callback
         )
@@ -167,6 +179,7 @@ class ExecutionRunner:
                     arguments["task"],
                     arguments.get("variables"),
                     parent_operation=op_id,
+                    system_prompt=self._prompts.get(key),
                 )
 
                 def start(s):
@@ -234,6 +247,7 @@ class ExecutionRunner:
                 state["initial_input"]["variables"],
                 history=history,
                 include_input=False,
+                system_prompt=self._prompts.get(role),
             )
 
             def initialize(s):

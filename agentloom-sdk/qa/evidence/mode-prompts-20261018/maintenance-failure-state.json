@@ -1,0 +1,11 @@
+[
+  {
+    "revision": 13,
+    "status": "cancelled",
+    "lease": {
+      "epoch": 2,
+      "expires_at": 0,
+      "worker_id": "c6b000bd-fce6-48f0-965a-8d5b9f4b3ab5"
+    }
+  }
+]

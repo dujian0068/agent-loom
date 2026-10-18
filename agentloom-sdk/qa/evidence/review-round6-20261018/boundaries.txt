@@ -1,0 +1,432 @@
+FFFFFFFFFFFFFFFFFFFFFFFFFFFFFF.......................................... [ 63%]
+......F.F.F.F.F.F.........F.F.F.F.F.F.....                               [100%]
+=================================== FAILURES ===================================
+__ test_noncanonical_final_candidate_uses_format_correction[memory-nan-react] __
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round6.py:123: in test_noncanonical_final_candidate_uses_format_correction
+    assert task["status"] == "succeeded", (
+E   AssertionError: Invalid candidate data must be corrected, not treated as a broken schema
+E   assert 'failed' == 'succeeded'
+E     
+E     - succeeded
+E     + failed
+----------------------------- Captured stdout call -----------------------------
+{"run_id": "56d8d6b1-d490-47ec-ab9c-9eb55faab665", "role": "react", "run_status": "failed", "task_status": "failed", "task_error": {"code": "INVALID_JSON", "message": "Only finite JSON values are accepted", "category": "business", "phase": "execute", "external_outcome": "known", "retryable_transport": false, "field_path": null}, "target_model_calls": 1, "format_feedback_count": 0}
+_ test_noncanonical_final_candidate_uses_format_correction[memory-nan-planner] _
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round6.py:123: in test_noncanonical_final_candidate_uses_format_correction
+    assert task["status"] == "succeeded", (
+E   AssertionError: Invalid candidate data must be corrected, not treated as a broken schema
+E   assert 'failed' == 'succeeded'
+E     
+E     - succeeded
+E     + failed
+----------------------------- Captured stdout call -----------------------------
+{"run_id": "baeccc55-54d1-4282-ba77-7dddef8e76f3", "role": "planner", "run_status": "failed", "task_status": "failed", "task_error": {"code": "INVALID_JSON", "message": "Only finite JSON values are accepted", "category": "business", "phase": "execute", "external_outcome": "known", "retryable_transport": false, "field_path": null}, "target_model_calls": 1, "format_feedback_count": 0}
+_ test_noncanonical_final_candidate_uses_format_correction[memory-nan-executor] _
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round6.py:123: in test_noncanonical_final_candidate_uses_format_correction
+    assert task["status"] == "succeeded", (
+E   AssertionError: Invalid candidate data must be corrected, not treated as a broken schema
+E   assert 'failed' == 'succeeded'
+E     
+E     - succeeded
+E     + failed
+----------------------------- Captured stdout call -----------------------------
+{"run_id": "1b6c878c-6cb7-4f16-affa-65a5a37c892f", "role": "executor", "run_status": "succeeded", "task_status": "failed", "task_error": {"code": "INVALID_JSON", "message": "Only finite JSON values are accepted", "category": "business", "phase": "execute", "external_outcome": "known", "retryable_transport": false, "field_path": null}, "target_model_calls": 1, "format_feedback_count": 0}
+_ test_noncanonical_final_candidate_uses_format_correction[memory-float-overflow-react] _
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round6.py:123: in test_noncanonical_final_candidate_uses_format_correction
+    assert task["status"] == "succeeded", (
+E   AssertionError: Invalid candidate data must be corrected, not treated as a broken schema
+E   assert 'failed' == 'succeeded'
+E     
+E     - succeeded
+E     + failed
+----------------------------- Captured stdout call -----------------------------
+{"run_id": "0923c597-9f20-4fef-9048-dc3a0921fc51", "role": "react", "run_status": "failed", "task_status": "failed", "task_error": {"code": "INVALID_JSON", "message": "Only finite JSON values are accepted", "category": "business", "phase": "execute", "external_outcome": "known", "retryable_transport": false, "field_path": null}, "target_model_calls": 1, "format_feedback_count": 0}
+_ test_noncanonical_final_candidate_uses_format_correction[memory-float-overflow-planner] _
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round6.py:123: in test_noncanonical_final_candidate_uses_format_correction
+    assert task["status"] == "succeeded", (
+E   AssertionError: Invalid candidate data must be corrected, not treated as a broken schema
+E   assert 'failed' == 'succeeded'
+E     
+E     - succeeded
+E     + failed
+----------------------------- Captured stdout call -----------------------------
+{"run_id": "00f88df0-9637-4cec-8e10-22e27fbd6988", "role": "planner", "run_status": "failed", "task_status": "failed", "task_error": {"code": "INVALID_JSON", "message": "Only finite JSON values are accepted", "category": "business", "phase": "execute", "external_outcome": "known", "retryable_transport": false, "field_path": null}, "target_model_calls": 1, "format_feedback_count": 0}
+_ test_noncanonical_final_candidate_uses_format_correction[memory-float-overflow-executor] _
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round6.py:123: in test_noncanonical_final_candidate_uses_format_correction
+    assert task["status"] == "succeeded", (
+E   AssertionError: Invalid candidate data must be corrected, not treated as a broken schema
+E   assert 'failed' == 'succeeded'
+E     
+E     - succeeded
+E     + failed
+----------------------------- Captured stdout call -----------------------------
+{"run_id": "fd6ae885-c37e-4f8e-98bf-4c2d298b4616", "role": "executor", "run_status": "succeeded", "task_status": "failed", "task_error": {"code": "INVALID_JSON", "message": "Only finite JSON values are accepted", "category": "business", "phase": "execute", "external_outcome": "known", "retryable_transport": false, "field_path": null}, "target_model_calls": 1, "format_feedback_count": 0}
+_ test_noncanonical_final_candidate_uses_format_correction[memory-unsafe-integer-react] _
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round6.py:123: in test_noncanonical_final_candidate_uses_format_correction
+    assert task["status"] == "succeeded", (
+E   AssertionError: Invalid candidate data must be corrected, not treated as a broken schema
+E   assert 'failed' == 'succeeded'
+E     
+E     - succeeded
+E     + failed
+----------------------------- Captured stdout call -----------------------------
+{"run_id": "5e704377-9c52-4855-944e-a1a3c74a6e0d", "role": "react", "run_status": "failed", "task_status": "failed", "task_error": {"code": "INVALID_CANONICAL_JSON", "message": "Integer exceeds the interoperable RFC 8785 range", "category": "business", "phase": "execute", "external_outcome": "known", "retryable_transport": false, "field_path": null}, "target_model_calls": 1, "format_feedback_count": 0}
+_ test_noncanonical_final_candidate_uses_format_correction[memory-unsafe-integer-planner] _
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round6.py:123: in test_noncanonical_final_candidate_uses_format_correction
+    assert task["status"] == "succeeded", (
+E   AssertionError: Invalid candidate data must be corrected, not treated as a broken schema
+E   assert 'failed' == 'succeeded'
+E     
+E     - succeeded
+E     + failed
+----------------------------- Captured stdout call -----------------------------
+{"run_id": "3bd554c4-36a4-4c79-b3f8-9f4b3bb64494", "role": "planner", "run_status": "failed", "task_status": "failed", "task_error": {"code": "INVALID_CANONICAL_JSON", "message": "Integer exceeds the interoperable RFC 8785 range", "category": "business", "phase": "execute", "external_outcome": "known", "retryable_transport": false, "field_path": null}, "target_model_calls": 1, "format_feedback_count": 0}
+_ test_noncanonical_final_candidate_uses_format_correction[memory-unsafe-integer-executor] _
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round6.py:123: in test_noncanonical_final_candidate_uses_format_correction
+    assert task["status"] == "succeeded", (
+E   AssertionError: Invalid candidate data must be corrected, not treated as a broken schema
+E   assert 'failed' == 'succeeded'
+E     
+E     - succeeded
+E     + failed
+----------------------------- Captured stdout call -----------------------------
+{"run_id": "afb434f3-7b81-43ac-b202-c814b81dc614", "role": "executor", "run_status": "succeeded", "task_status": "failed", "task_error": {"code": "INVALID_CANONICAL_JSON", "message": "Integer exceeds the interoperable RFC 8785 range", "category": "business", "phase": "execute", "external_outcome": "known", "retryable_transport": false, "field_path": null}, "target_model_calls": 1, "format_feedback_count": 0}
+_ test_noncanonical_final_candidate_uses_format_correction[memory-unpaired-surrogate-react] _
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round6.py:123: in test_noncanonical_final_candidate_uses_format_correction
+    assert task["status"] == "succeeded", (
+E   AssertionError: Invalid candidate data must be corrected, not treated as a broken schema
+E   assert 'failed' == 'succeeded'
+E     
+E     - succeeded
+E     + failed
+----------------------------- Captured stdout call -----------------------------
+{"run_id": "7899e975-dc41-44e8-8887-dc2f79fa4c8d", "role": "react", "run_status": "failed", "task_status": "failed", "task_error": {"code": "INVALID_CANONICAL_JSON", "message": "Invalid Unicode scalar value", "category": "business", "phase": "execute", "external_outcome": "known", "retryable_transport": false, "field_path": null}, "target_model_calls": 1, "format_feedback_count": 0}
+_ test_noncanonical_final_candidate_uses_format_correction[memory-unpaired-surrogate-planner] _
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round6.py:123: in test_noncanonical_final_candidate_uses_format_correction
+    assert task["status"] == "succeeded", (
+E   AssertionError: Invalid candidate data must be corrected, not treated as a broken schema
+E   assert 'failed' == 'succeeded'
+E     
+E     - succeeded
+E     + failed
+----------------------------- Captured stdout call -----------------------------
+{"run_id": "d2ce51d5-925b-42fa-a649-92888396b6d5", "role": "planner", "run_status": "failed", "task_status": "failed", "task_error": {"code": "INVALID_CANONICAL_JSON", "message": "Invalid Unicode scalar value", "category": "business", "phase": "execute", "external_outcome": "known", "retryable_transport": false, "field_path": null}, "target_model_calls": 1, "format_feedback_count": 0}
+_ test_noncanonical_final_candidate_uses_format_correction[memory-unpaired-surrogate-executor] _
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round6.py:123: in test_noncanonical_final_candidate_uses_format_correction
+    assert task["status"] == "succeeded", (
+E   AssertionError: Invalid candidate data must be corrected, not treated as a broken schema
+E   assert 'failed' == 'succeeded'
+E     
+E     - succeeded
+E     + failed
+----------------------------- Captured stdout call -----------------------------
+{"run_id": "a27e1fb3-8abb-4102-93bc-0293f103c27e", "role": "executor", "run_status": "succeeded", "task_status": "failed", "task_error": {"code": "INVALID_CANONICAL_JSON", "message": "Invalid Unicode scalar value", "category": "business", "phase": "execute", "external_outcome": "known", "retryable_transport": false, "field_path": null}, "target_model_calls": 1, "format_feedback_count": 0}
+_ test_noncanonical_final_candidate_uses_format_correction[memory-depth-129-react] _
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round6.py:123: in test_noncanonical_final_candidate_uses_format_correction
+    assert task["status"] == "succeeded", (
+E   AssertionError: Invalid candidate data must be corrected, not treated as a broken schema
+E   assert 'failed' == 'succeeded'
+E     
+E     - succeeded
+E     + failed
+----------------------------- Captured stdout call -----------------------------
+{"run_id": "bc5ca652-29fc-4170-a7e3-a9f2255a6c1a", "role": "react", "run_status": "failed", "task_status": "failed", "task_error": {"code": "INVALID_JSON", "message": "JSON nesting exceeds the supported depth of 128", "category": "business", "phase": "execute", "external_outcome": "known", "retryable_transport": false, "field_path": null}, "target_model_calls": 1, "format_feedback_count": 0}
+_ test_noncanonical_final_candidate_uses_format_correction[memory-depth-129-planner] _
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round6.py:123: in test_noncanonical_final_candidate_uses_format_correction
+    assert task["status"] == "succeeded", (
+E   AssertionError: Invalid candidate data must be corrected, not treated as a broken schema
+E   assert 'failed' == 'succeeded'
+E     
+E     - succeeded
+E     + failed
+----------------------------- Captured stdout call -----------------------------
+{"run_id": "a47733c9-86fb-4bc6-be9d-8bb538d337b5", "role": "planner", "run_status": "failed", "task_status": "failed", "task_error": {"code": "INVALID_JSON", "message": "JSON nesting exceeds the supported depth of 128", "category": "business", "phase": "execute", "external_outcome": "known", "retryable_transport": false, "field_path": null}, "target_model_calls": 1, "format_feedback_count": 0}
+_ test_noncanonical_final_candidate_uses_format_correction[memory-depth-129-executor] _
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round6.py:123: in test_noncanonical_final_candidate_uses_format_correction
+    assert task["status"] == "succeeded", (
+E   AssertionError: Invalid candidate data must be corrected, not treated as a broken schema
+E   assert 'failed' == 'succeeded'
+E     
+E     - succeeded
+E     + failed
+----------------------------- Captured stdout call -----------------------------
+{"run_id": "d8221026-d75f-4ecf-a8ad-75b75c4b4b91", "role": "executor", "run_status": "succeeded", "task_status": "failed", "task_error": {"code": "INVALID_JSON", "message": "JSON nesting exceeds the supported depth of 128", "category": "business", "phase": "execute", "external_outcome": "known", "retryable_transport": false, "field_path": null}, "target_model_calls": 1, "format_feedback_count": 0}
+___ test_noncanonical_final_candidate_uses_format_correction[file-nan-react] ___
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round6.py:123: in test_noncanonical_final_candidate_uses_format_correction
+    assert task["status"] == "succeeded", (
+E   AssertionError: Invalid candidate data must be corrected, not treated as a broken schema
+E   assert 'failed' == 'succeeded'
+E     
+E     - succeeded
+E     + failed
+----------------------------- Captured stdout call -----------------------------
+{"run_id": "ab678422-5f85-4ebb-83e7-c92f4fa7dc00", "role": "react", "run_status": "failed", "task_status": "failed", "task_error": {"category": "business", "code": "INVALID_JSON", "external_outcome": "known", "field_path": null, "message": "Only finite JSON values are accepted", "phase": "execute", "retryable_transport": false}, "target_model_calls": 1, "format_feedback_count": 0}
+__ test_noncanonical_final_candidate_uses_format_correction[file-nan-planner] __
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round6.py:123: in test_noncanonical_final_candidate_uses_format_correction
+    assert task["status"] == "succeeded", (
+E   AssertionError: Invalid candidate data must be corrected, not treated as a broken schema
+E   assert 'failed' == 'succeeded'
+E     
+E     - succeeded
+E     + failed
+----------------------------- Captured stdout call -----------------------------
+{"run_id": "8acf957d-6a6d-49af-b096-6777cd93e9d7", "role": "planner", "run_status": "failed", "task_status": "failed", "task_error": {"category": "business", "code": "INVALID_JSON", "external_outcome": "known", "field_path": null, "message": "Only finite JSON values are accepted", "phase": "execute", "retryable_transport": false}, "target_model_calls": 1, "format_feedback_count": 0}
+_ test_noncanonical_final_candidate_uses_format_correction[file-nan-executor] __
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round6.py:123: in test_noncanonical_final_candidate_uses_format_correction
+    assert task["status"] == "succeeded", (
+E   AssertionError: Invalid candidate data must be corrected, not treated as a broken schema
+E   assert 'failed' == 'succeeded'
+E     
+E     - succeeded
+E     + failed
+----------------------------- Captured stdout call -----------------------------
+{"run_id": "6d8ee4b7-8b17-494f-adb8-8a2a4ec03580", "role": "executor", "run_status": "succeeded", "task_status": "failed", "task_error": {"category": "business", "code": "INVALID_JSON", "external_outcome": "known", "field_path": null, "message": "Only finite JSON values are accepted", "phase": "execute", "retryable_transport": false}, "target_model_calls": 1, "format_feedback_count": 0}
+_ test_noncanonical_final_candidate_uses_format_correction[file-float-overflow-react] _
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round6.py:123: in test_noncanonical_final_candidate_uses_format_correction
+    assert task["status"] == "succeeded", (
+E   AssertionError: Invalid candidate data must be corrected, not treated as a broken schema
+E   assert 'failed' == 'succeeded'
+E     
+E     - succeeded
+E     + failed
+----------------------------- Captured stdout call -----------------------------
+{"run_id": "bc9a5b3a-a1ac-4793-8754-9cafe4272a36", "role": "react", "run_status": "failed", "task_status": "failed", "task_error": {"category": "business", "code": "INVALID_JSON", "external_outcome": "known", "field_path": null, "message": "Only finite JSON values are accepted", "phase": "execute", "retryable_transport": false}, "target_model_calls": 1, "format_feedback_count": 0}
+_ test_noncanonical_final_candidate_uses_format_correction[file-float-overflow-planner] _
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round6.py:123: in test_noncanonical_final_candidate_uses_format_correction
+    assert task["status"] == "succeeded", (
+E   AssertionError: Invalid candidate data must be corrected, not treated as a broken schema
+E   assert 'failed' == 'succeeded'
+E     
+E     - succeeded
+E     + failed
+----------------------------- Captured stdout call -----------------------------
+{"run_id": "69a656df-81f9-456a-bbc6-37543a8bf05a", "role": "planner", "run_status": "failed", "task_status": "failed", "task_error": {"category": "business", "code": "INVALID_JSON", "external_outcome": "known", "field_path": null, "message": "Only finite JSON values are accepted", "phase": "execute", "retryable_transport": false}, "target_model_calls": 1, "format_feedback_count": 0}
+_ test_noncanonical_final_candidate_uses_format_correction[file-float-overflow-executor] _
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round6.py:123: in test_noncanonical_final_candidate_uses_format_correction
+    assert task["status"] == "succeeded", (
+E   AssertionError: Invalid candidate data must be corrected, not treated as a broken schema
+E   assert 'failed' == 'succeeded'
+E     
+E     - succeeded
+E     + failed
+----------------------------- Captured stdout call -----------------------------
+{"run_id": "da170178-6a76-4669-8a15-f71e1ea5721e", "role": "executor", "run_status": "succeeded", "task_status": "failed", "task_error": {"category": "business", "code": "INVALID_JSON", "external_outcome": "known", "field_path": null, "message": "Only finite JSON values are accepted", "phase": "execute", "retryable_transport": false}, "target_model_calls": 1, "format_feedback_count": 0}
+_ test_noncanonical_final_candidate_uses_format_correction[file-unsafe-integer-react] _
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round6.py:123: in test_noncanonical_final_candidate_uses_format_correction
+    assert task["status"] == "succeeded", (
+E   AssertionError: Invalid candidate data must be corrected, not treated as a broken schema
+E   assert 'failed' == 'succeeded'
+E     
+E     - succeeded
+E     + failed
+----------------------------- Captured stdout call -----------------------------
+{"run_id": "bbeb036b-ca98-4a28-abd8-56e21dc57653", "role": "react", "run_status": "failed", "task_status": "failed", "task_error": {"category": "business", "code": "INVALID_CANONICAL_JSON", "external_outcome": "known", "field_path": null, "message": "Integer exceeds the interoperable RFC 8785 range", "phase": "execute", "retryable_transport": false}, "target_model_calls": 1, "format_feedback_count": 0}
+_ test_noncanonical_final_candidate_uses_format_correction[file-unsafe-integer-planner] _
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round6.py:123: in test_noncanonical_final_candidate_uses_format_correction
+    assert task["status"] == "succeeded", (
+E   AssertionError: Invalid candidate data must be corrected, not treated as a broken schema
+E   assert 'failed' == 'succeeded'
+E     
+E     - succeeded
+E     + failed
+----------------------------- Captured stdout call -----------------------------
+{"run_id": "8b2c7081-1b1c-450a-a4a6-ba33c01d5e83", "role": "planner", "run_status": "failed", "task_status": "failed", "task_error": {"category": "business", "code": "INVALID_CANONICAL_JSON", "external_outcome": "known", "field_path": null, "message": "Integer exceeds the interoperable RFC 8785 range", "phase": "execute", "retryable_transport": false}, "target_model_calls": 1, "format_feedback_count": 0}
+_ test_noncanonical_final_candidate_uses_format_correction[file-unsafe-integer-executor] _
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round6.py:123: in test_noncanonical_final_candidate_uses_format_correction
+    assert task["status"] == "succeeded", (
+E   AssertionError: Invalid candidate data must be corrected, not treated as a broken schema
+E   assert 'failed' == 'succeeded'
+E     
+E     - succeeded
+E     + failed
+----------------------------- Captured stdout call -----------------------------
+{"run_id": "66a2334e-53db-4177-b3ce-be72693a3b29", "role": "executor", "run_status": "succeeded", "task_status": "failed", "task_error": {"category": "business", "code": "INVALID_CANONICAL_JSON", "external_outcome": "known", "field_path": null, "message": "Integer exceeds the interoperable RFC 8785 range", "phase": "execute", "retryable_transport": false}, "target_model_calls": 1, "format_feedback_count": 0}
+_ test_noncanonical_final_candidate_uses_format_correction[file-unpaired-surrogate-react] _
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round6.py:123: in test_noncanonical_final_candidate_uses_format_correction
+    assert task["status"] == "succeeded", (
+E   AssertionError: Invalid candidate data must be corrected, not treated as a broken schema
+E   assert 'failed' == 'succeeded'
+E     
+E     - succeeded
+E     + failed
+----------------------------- Captured stdout call -----------------------------
+{"run_id": "326da25e-b168-4a77-a9e0-d9151013fd66", "role": "react", "run_status": "failed", "task_status": "failed", "task_error": {"category": "business", "code": "INVALID_CANONICAL_JSON", "external_outcome": "known", "field_path": null, "message": "Invalid Unicode scalar value", "phase": "execute", "retryable_transport": false}, "target_model_calls": 1, "format_feedback_count": 0}
+_ test_noncanonical_final_candidate_uses_format_correction[file-unpaired-surrogate-planner] _
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round6.py:123: in test_noncanonical_final_candidate_uses_format_correction
+    assert task["status"] == "succeeded", (
+E   AssertionError: Invalid candidate data must be corrected, not treated as a broken schema
+E   assert 'failed' == 'succeeded'
+E     
+E     - succeeded
+E     + failed
+----------------------------- Captured stdout call -----------------------------
+{"run_id": "992649ac-3c54-4c81-9684-0a281d2939fa", "role": "planner", "run_status": "failed", "task_status": "failed", "task_error": {"category": "business", "code": "INVALID_CANONICAL_JSON", "external_outcome": "known", "field_path": null, "message": "Invalid Unicode scalar value", "phase": "execute", "retryable_transport": false}, "target_model_calls": 1, "format_feedback_count": 0}
+_ test_noncanonical_final_candidate_uses_format_correction[file-unpaired-surrogate-executor] _
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round6.py:123: in test_noncanonical_final_candidate_uses_format_correction
+    assert task["status"] == "succeeded", (
+E   AssertionError: Invalid candidate data must be corrected, not treated as a broken schema
+E   assert 'failed' == 'succeeded'
+E     
+E     - succeeded
+E     + failed
+----------------------------- Captured stdout call -----------------------------
+{"run_id": "1f8dab6a-28f1-430d-9e8e-9fa84c9d232d", "role": "executor", "run_status": "succeeded", "task_status": "failed", "task_error": {"category": "business", "code": "INVALID_CANONICAL_JSON", "external_outcome": "known", "field_path": null, "message": "Invalid Unicode scalar value", "phase": "execute", "retryable_transport": false}, "target_model_calls": 1, "format_feedback_count": 0}
+_ test_noncanonical_final_candidate_uses_format_correction[file-depth-129-react] _
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round6.py:123: in test_noncanonical_final_candidate_uses_format_correction
+    assert task["status"] == "succeeded", (
+E   AssertionError: Invalid candidate data must be corrected, not treated as a broken schema
+E   assert 'failed' == 'succeeded'
+E     
+E     - succeeded
+E     + failed
+----------------------------- Captured stdout call -----------------------------
+{"run_id": "16297754-8cf2-423f-a7af-4705f9fd17d3", "role": "react", "run_status": "failed", "task_status": "failed", "task_error": {"category": "business", "code": "INVALID_JSON", "external_outcome": "known", "field_path": null, "message": "JSON nesting exceeds the supported depth of 128", "phase": "execute", "retryable_transport": false}, "target_model_calls": 1, "format_feedback_count": 0}
+_ test_noncanonical_final_candidate_uses_format_correction[file-depth-129-planner] _
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round6.py:123: in test_noncanonical_final_candidate_uses_format_correction
+    assert task["status"] == "succeeded", (
+E   AssertionError: Invalid candidate data must be corrected, not treated as a broken schema
+E   assert 'failed' == 'succeeded'
+E     
+E     - succeeded
+E     + failed
+----------------------------- Captured stdout call -----------------------------
+{"run_id": "6620fa21-ad08-4e23-8dbc-17f0977da43c", "role": "planner", "run_status": "failed", "task_status": "failed", "task_error": {"category": "business", "code": "INVALID_JSON", "external_outcome": "known", "field_path": null, "message": "JSON nesting exceeds the supported depth of 128", "phase": "execute", "retryable_transport": false}, "target_model_calls": 1, "format_feedback_count": 0}
+_ test_noncanonical_final_candidate_uses_format_correction[file-depth-129-executor] _
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round6.py:123: in test_noncanonical_final_candidate_uses_format_correction
+    assert task["status"] == "succeeded", (
+E   AssertionError: Invalid candidate data must be corrected, not treated as a broken schema
+E   assert 'failed' == 'succeeded'
+E     
+E     - succeeded
+E     + failed
+----------------------------- Captured stdout call -----------------------------
+{"run_id": "25995998-384c-49e6-a5f7-b48f9b8d878f", "role": "executor", "run_status": "succeeded", "task_status": "failed", "task_error": {"category": "business", "code": "INVALID_JSON", "external_outcome": "known", "field_path": null, "message": "JSON nesting exceeds the supported depth of 128", "phase": "execute", "retryable_transport": false}, "target_model_calls": 1, "format_feedback_count": 0}
+_ test_error_sidecar_shape_cannot_break_attempt_commit[memory-empty-list-tool_result-raised] _
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round6.py:277: in test_error_sidecar_shape_cannot_break_attempt_commit
+    assert driver_error is None, "Malformed adapter sidecars must not break host persistence"
+E   AssertionError: Malformed adapter sidecars must not break host persistence
+E   assert 'EXECUTION_DRIVER_FAILED' is None
+----------------------------- Captured stdout call -----------------------------
+{"run_id": "318c932f-aafe-404d-84c7-156b56012a61", "operation_id": "a584f993-a234-5085-89e3-908220318b26", "channel": "raised", "field": "tool_result", "shape": "empty-list", "driver_error": "EXECUTION_DRIVER_FAILED", "run_status": "running", "raw": null, "calls": 1}
+_ test_error_sidecar_shape_cannot_break_attempt_commit[memory-empty-list-invalid_tool_result-raised] _
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round6.py:277: in test_error_sidecar_shape_cannot_break_attempt_commit
+    assert driver_error is None, "Malformed adapter sidecars must not break host persistence"
+E   AssertionError: Malformed adapter sidecars must not break host persistence
+E   assert 'EXECUTION_DRIVER_FAILED' is None
+----------------------------- Captured stdout call -----------------------------
+{"run_id": "8548a6f6-87ac-4ffd-8b3f-537a5f6d1c39", "operation_id": "c2c85ccf-3ebf-5828-968b-1c12a9f5b0d4", "channel": "raised", "field": "invalid_tool_result", "shape": "empty-list", "driver_error": "EXECUTION_DRIVER_FAILED", "run_status": "running", "raw": null, "calls": 1}
+_ test_error_sidecar_shape_cannot_break_attempt_commit[memory-empty-object-tool_result-raised] _
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round6.py:277: in test_error_sidecar_shape_cannot_break_attempt_commit
+    assert driver_error is None, "Malformed adapter sidecars must not break host persistence"
+E   AssertionError: Malformed adapter sidecars must not break host persistence
+E   assert 'EXECUTION_DRIVER_FAILED' is None
+----------------------------- Captured stdout call -----------------------------
+{"run_id": "afa6be2a-3317-4833-a8ad-0b9ba1c3ba50", "operation_id": "e7fa2498-46d8-5ffc-9d5b-3914161bcd55", "channel": "raised", "field": "tool_result", "shape": "empty-object", "driver_error": "EXECUTION_DRIVER_FAILED", "run_status": "running", "raw": null, "calls": 1}
+_ test_error_sidecar_shape_cannot_break_attempt_commit[memory-empty-object-invalid_tool_result-raised] _
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round6.py:277: in test_error_sidecar_shape_cannot_break_attempt_commit
+    assert driver_error is None, "Malformed adapter sidecars must not break host persistence"
+E   AssertionError: Malformed adapter sidecars must not break host persistence
+E   assert 'EXECUTION_DRIVER_FAILED' is None
+----------------------------- Captured stdout call -----------------------------
+{"run_id": "46f46e38-e500-4fa9-a244-e53dce469c8a", "operation_id": "b6b8fc3b-187b-5282-a3fa-0c2598a3b422", "channel": "raised", "field": "invalid_tool_result", "shape": "empty-object", "driver_error": "EXECUTION_DRIVER_FAILED", "run_status": "running", "raw": null, "calls": 1}
+_ test_error_sidecar_shape_cannot_break_attempt_commit[memory-text-tool_result-raised] _
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round6.py:277: in test_error_sidecar_shape_cannot_break_attempt_commit
+    assert driver_error is None, "Malformed adapter sidecars must not break host persistence"
+E   AssertionError: Malformed adapter sidecars must not break host persistence
+E   assert 'EXECUTION_DRIVER_FAILED' is None
+----------------------------- Captured stdout call -----------------------------
+{"run_id": "58c85735-8f0b-4e1c-942c-1491a6f11131", "operation_id": "580a0eb5-a642-5efa-af0a-06381faa9f50", "channel": "raised", "field": "tool_result", "shape": "text", "driver_error": "EXECUTION_DRIVER_FAILED", "run_status": "running", "raw": null, "calls": 1}
+_ test_error_sidecar_shape_cannot_break_attempt_commit[memory-text-invalid_tool_result-raised] _
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round6.py:277: in test_error_sidecar_shape_cannot_break_attempt_commit
+    assert driver_error is None, "Malformed adapter sidecars must not break host persistence"
+E   AssertionError: Malformed adapter sidecars must not break host persistence
+E   assert 'EXECUTION_DRIVER_FAILED' is None
+----------------------------- Captured stdout call -----------------------------
+{"run_id": "3ef07bb5-59f5-482c-9cc5-0043e0ce8d90", "operation_id": "e888cdbd-23fc-5c7a-882b-80edc474301a", "channel": "raised", "field": "invalid_tool_result", "shape": "text", "driver_error": "EXECUTION_DRIVER_FAILED", "run_status": "running", "raw": null, "calls": 1}
+_ test_error_sidecar_shape_cannot_break_attempt_commit[file-empty-list-tool_result-raised] _
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round6.py:277: in test_error_sidecar_shape_cannot_break_attempt_commit
+    assert driver_error is None, "Malformed adapter sidecars must not break host persistence"
+E   AssertionError: Malformed adapter sidecars must not break host persistence
+E   assert 'EXECUTION_DRIVER_FAILED' is None
+----------------------------- Captured stdout call -----------------------------
+{"run_id": "f84a8931-cdde-4af1-8200-eb7587901fba", "operation_id": "464d4253-1ed4-579a-985a-811786e49257", "channel": "raised", "field": "tool_result", "shape": "empty-list", "driver_error": "EXECUTION_DRIVER_FAILED", "run_status": "running", "raw": null, "calls": 1}
+_ test_error_sidecar_shape_cannot_break_attempt_commit[file-empty-list-invalid_tool_result-raised] _
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round6.py:277: in test_error_sidecar_shape_cannot_break_attempt_commit
+    assert driver_error is None, "Malformed adapter sidecars must not break host persistence"
+E   AssertionError: Malformed adapter sidecars must not break host persistence
+E   assert 'EXECUTION_DRIVER_FAILED' is None
+----------------------------- Captured stdout call -----------------------------
+{"run_id": "55bb84c2-9acc-459c-a6f3-c26e01cff6c1", "operation_id": "1f0a9dd0-d7c0-5c85-adfb-97acbe278716", "channel": "raised", "field": "invalid_tool_result", "shape": "empty-list", "driver_error": "EXECUTION_DRIVER_FAILED", "run_status": "running", "raw": null, "calls": 1}
+_ test_error_sidecar_shape_cannot_break_attempt_commit[file-empty-object-tool_result-raised] _
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round6.py:277: in test_error_sidecar_shape_cannot_break_attempt_commit
+    assert driver_error is None, "Malformed adapter sidecars must not break host persistence"
+E   AssertionError: Malformed adapter sidecars must not break host persistence
+E   assert 'EXECUTION_DRIVER_FAILED' is None
+----------------------------- Captured stdout call -----------------------------
+{"run_id": "d8ea49c5-ce0c-46e6-acf2-78f4c1991ab3", "operation_id": "5999703e-3020-5e69-a590-1921783bb2d0", "channel": "raised", "field": "tool_result", "shape": "empty-object", "driver_error": "EXECUTION_DRIVER_FAILED", "run_status": "running", "raw": null, "calls": 1}
+_ test_error_sidecar_shape_cannot_break_attempt_commit[file-empty-object-invalid_tool_result-raised] _
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round6.py:277: in test_error_sidecar_shape_cannot_break_attempt_commit
+    assert driver_error is None, "Malformed adapter sidecars must not break host persistence"
+E   AssertionError: Malformed adapter sidecars must not break host persistence
+E   assert 'EXECUTION_DRIVER_FAILED' is None
+----------------------------- Captured stdout call -----------------------------
+{"run_id": "f95373d1-5c88-4bbf-bdc6-afdcc2a17919", "operation_id": "49b91628-5b01-5649-997e-a1a6001fa085", "channel": "raised", "field": "invalid_tool_result", "shape": "empty-object", "driver_error": "EXECUTION_DRIVER_FAILED", "run_status": "running", "raw": null, "calls": 1}
+_ test_error_sidecar_shape_cannot_break_attempt_commit[file-text-tool_result-raised] _
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round6.py:277: in test_error_sidecar_shape_cannot_break_attempt_commit
+    assert driver_error is None, "Malformed adapter sidecars must not break host persistence"
+E   AssertionError: Malformed adapter sidecars must not break host persistence
+E   assert 'EXECUTION_DRIVER_FAILED' is None
+----------------------------- Captured stdout call -----------------------------
+{"run_id": "acae34fc-7366-47f4-928e-2b48449b4994", "operation_id": "251d7608-683a-5950-9b15-8c57c0c1fbfd", "channel": "raised", "field": "tool_result", "shape": "text", "driver_error": "EXECUTION_DRIVER_FAILED", "run_status": "running", "raw": null, "calls": 1}
+_ test_error_sidecar_shape_cannot_break_attempt_commit[file-text-invalid_tool_result-raised] _
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round6.py:277: in test_error_sidecar_shape_cannot_break_attempt_commit
+    assert driver_error is None, "Malformed adapter sidecars must not break host persistence"
+E   AssertionError: Malformed adapter sidecars must not break host persistence
+E   assert 'EXECUTION_DRIVER_FAILED' is None
+----------------------------- Captured stdout call -----------------------------
+{"run_id": "4af6fdec-493f-4f37-ac42-48eaf04be852", "operation_id": "10e0c57e-7411-53f2-9fe2-20cccd0bbcbe", "channel": "raised", "field": "invalid_tool_result", "shape": "text", "driver_error": "EXECUTION_DRIVER_FAILED", "run_status": "running", "raw": null, "calls": 1}
+--- generated xml file: /tmp/agentloom-review6-20261018/boundaries.junit.xml ---
+=========================== short test summary info ============================
+FAILED agentloom-sdk/qa/test_sdk_review_round6.py::test_noncanonical_final_candidate_uses_format_correction[memory-nan-react]
+FAILED agentloom-sdk/qa/test_sdk_review_round6.py::test_noncanonical_final_candidate_uses_format_correction[memory-nan-planner]
+FAILED agentloom-sdk/qa/test_sdk_review_round6.py::test_noncanonical_final_candidate_uses_format_correction[memory-nan-executor]
+FAILED agentloom-sdk/qa/test_sdk_review_round6.py::test_noncanonical_final_candidate_uses_format_correction[memory-float-overflow-react]
+FAILED agentloom-sdk/qa/test_sdk_review_round6.py::test_noncanonical_final_candidate_uses_format_correction[memory-float-overflow-planner]
+FAILED agentloom-sdk/qa/test_sdk_review_round6.py::test_noncanonical_final_candidate_uses_format_correction[memory-float-overflow-executor]
+FAILED agentloom-sdk/qa/test_sdk_review_round6.py::test_noncanonical_final_candidate_uses_format_correction[memory-unsafe-integer-react]
+FAILED agentloom-sdk/qa/test_sdk_review_round6.py::test_noncanonical_final_candidate_uses_format_correction[memory-unsafe-integer-planner]
+FAILED agentloom-sdk/qa/test_sdk_review_round6.py::test_noncanonical_final_candidate_uses_format_correction[memory-unsafe-integer-executor]
+FAILED agentloom-sdk/qa/test_sdk_review_round6.py::test_noncanonical_final_candidate_uses_format_correction[memory-unpaired-surrogate-react]
+FAILED agentloom-sdk/qa/test_sdk_review_round6.py::test_noncanonical_final_candidate_uses_format_correction[memory-unpaired-surrogate-planner]
+FAILED agentloom-sdk/qa/test_sdk_review_round6.py::test_noncanonical_final_candidate_uses_format_correction[memory-unpaired-surrogate-executor]
+FAILED agentloom-sdk/qa/test_sdk_review_round6.py::test_noncanonical_final_candidate_uses_format_correction[memory-depth-129-react]
+FAILED agentloom-sdk/qa/test_sdk_review_round6.py::test_noncanonical_final_candidate_uses_format_correction[memory-depth-129-planner]
+FAILED agentloom-sdk/qa/test_sdk_review_round6.py::test_noncanonical_final_candidate_uses_format_correction[memory-depth-129-executor]
+FAILED agentloom-sdk/qa/test_sdk_review_round6.py::test_noncanonical_final_candidate_uses_format_correction[file-nan-react]
+FAILED agentloom-sdk/qa/test_sdk_review_round6.py::test_noncanonical_final_candidate_uses_format_correction[file-nan-planner]
+FAILED agentloom-sdk/qa/test_sdk_review_round6.py::test_noncanonical_final_candidate_uses_format_correction[file-nan-executor]
+FAILED agentloom-sdk/qa/test_sdk_review_round6.py::test_noncanonical_final_candidate_uses_format_correction[file-float-overflow-react]
+FAILED agentloom-sdk/qa/test_sdk_review_round6.py::test_noncanonical_final_candidate_uses_format_correction[file-float-overflow-planner]
+FAILED agentloom-sdk/qa/test_sdk_review_round6.py::test_noncanonical_final_candidate_uses_format_correction[file-float-overflow-executor]
+FAILED agentloom-sdk/qa/test_sdk_review_round6.py::test_noncanonical_final_candidate_uses_format_correction[file-unsafe-integer-react]
+FAILED agentloom-sdk/qa/test_sdk_review_round6.py::test_noncanonical_final_candidate_uses_format_correction[file-unsafe-integer-planner]
+FAILED agentloom-sdk/qa/test_sdk_review_round6.py::test_noncanonical_final_candidate_uses_format_correction[file-unsafe-integer-executor]
+FAILED agentloom-sdk/qa/test_sdk_review_round6.py::test_noncanonical_final_candidate_uses_format_correction[file-unpaired-surrogate-react]
+FAILED agentloom-sdk/qa/test_sdk_review_round6.py::test_noncanonical_final_candidate_uses_format_correction[file-unpaired-surrogate-planner]
+FAILED agentloom-sdk/qa/test_sdk_review_round6.py::test_noncanonical_final_candidate_uses_format_correction[file-unpaired-surrogate-executor]
+FAILED agentloom-sdk/qa/test_sdk_review_round6.py::test_noncanonical_final_candidate_uses_format_correction[file-depth-129-react]
+FAILED agentloom-sdk/qa/test_sdk_review_round6.py::test_noncanonical_final_candidate_uses_format_correction[file-depth-129-planner]
+FAILED agentloom-sdk/qa/test_sdk_review_round6.py::test_noncanonical_final_candidate_uses_format_correction[file-depth-129-executor]
+FAILED agentloom-sdk/qa/test_sdk_review_round6.py::test_error_sidecar_shape_cannot_break_attempt_commit[memory-empty-list-tool_result-raised]
+FAILED agentloom-sdk/qa/test_sdk_review_round6.py::test_error_sidecar_shape_cannot_break_attempt_commit[memory-empty-list-invalid_tool_result-raised]
+FAILED agentloom-sdk/qa/test_sdk_review_round6.py::test_error_sidecar_shape_cannot_break_attempt_commit[memory-empty-object-tool_result-raised]
+FAILED agentloom-sdk/qa/test_sdk_review_round6.py::test_error_sidecar_shape_cannot_break_attempt_commit[memory-empty-object-invalid_tool_result-raised]
+FAILED agentloom-sdk/qa/test_sdk_review_round6.py::test_error_sidecar_shape_cannot_break_attempt_commit[memory-text-tool_result-raised]
+FAILED agentloom-sdk/qa/test_sdk_review_round6.py::test_error_sidecar_shape_cannot_break_attempt_commit[memory-text-invalid_tool_result-raised]
+FAILED agentloom-sdk/qa/test_sdk_review_round6.py::test_error_sidecar_shape_cannot_break_attempt_commit[file-empty-list-tool_result-raised]
+FAILED agentloom-sdk/qa/test_sdk_review_round6.py::test_error_sidecar_shape_cannot_break_attempt_commit[file-empty-list-invalid_tool_result-raised]
+FAILED agentloom-sdk/qa/test_sdk_review_round6.py::test_error_sidecar_shape_cannot_break_attempt_commit[file-empty-object-tool_result-raised]
+FAILED agentloom-sdk/qa/test_sdk_review_round6.py::test_error_sidecar_shape_cannot_break_attempt_commit[file-empty-object-invalid_tool_result-raised]
+FAILED agentloom-sdk/qa/test_sdk_review_round6.py::test_error_sidecar_shape_cannot_break_attempt_commit[file-text-tool_result-raised]
+FAILED agentloom-sdk/qa/test_sdk_review_round6.py::test_error_sidecar_shape_cannot_break_attempt_commit[file-text-invalid_tool_result-raised]
+42 failed, 72 passed in 7.45s

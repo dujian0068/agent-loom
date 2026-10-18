@@ -1,0 +1,53 @@
+................FF.F.F....                                               [100%]
+=================================== FAILURES ===================================
+_____________ test_compaction_triggers_at_the_configured_threshold _____________
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/public/handles.py:57: in wait
+    return await observe()
+           ^^^^^^^^^^^^^^^
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/public/handles.py:53: in observe
+    await asyncio.sleep(0.01)
+/Users/bmilk/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/asyncio/tasks.py:665: in sleep
+    return await future
+           ^^^^^^^^^^^^
+E   asyncio.exceptions.CancelledError
+
+The above exception was the direct cause of the following exception:
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/public/handles.py:56: in wait
+    async with asyncio.timeout(timeout_s):
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^
+/Users/bmilk/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/asyncio/timeouts.py:115: in __aexit__
+    raise TimeoutError from exc_val
+E   TimeoutError
+
+The above exception was the direct cause of the following exception:
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/tests/test_review_whitebox_probe.py:639: in test_compaction_triggers_at_the_configured_threshold
+    result = await (await agent.start("q")).wait(timeout_s=30)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/public/handles.py:59: in wait
+    raise WaitTimeout("This wait expired; the run continues") from exc
+E   agentloom.errors.WaitTimeout: This wait expired; the run continues
+____________ test_unknown_or_unauthorized_tool_creates_no_operation ____________
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/tests/test_review_whitebox_probe.py:681: in test_unknown_or_unauthorized_tool_creates_no_operation
+    assert len(run["operations"]) == 2  # one model call and one real tool
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   AssertionError: assert 3 == 2
+E    +  where 3 = len({'15c35747-b8b4-5bc0-b68a-4bcc9f980306': {'attempts': [{'attempt_id': 'b041e584-7da9-5ef9-9213-b42a7384327d', 'attempt...: 1792289465.044239, 'error': None, ...}], 'binding_key': 'echo', 'event_type': 'capability.invoke', 'hooks': {}, ...}})
+___________________ test_result_read_is_denied_across_roles ____________________
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/tests/test_review_whitebox_probe.py:784: in test_result_read_is_denied_across_roles
+    assert reads, "the Planner must have attempted result_read"
+E   AssertionError: the Planner must have attempted result_read
+E   assert []
+_____________ test_stop_closes_admission_and_the_first_reason_wins _____________
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/tests/test_review_whitebox_probe.py:878: in test_stop_closes_admission_and_the_first_reason_wins
+    assert result.status == "cancelled"
+E   AssertionError: assert 'succeeded' == 'cancelled'
+E     
+E     - cancelled
+E     + succeeded
+---- generated xml file: /tmp/agentloom-review6-20261018/whitebox.junit.xml ----
+=========================== short test summary info ============================
+FAILED agentloom-sdk/tests/test_review_whitebox_probe.py::test_compaction_triggers_at_the_configured_threshold
+FAILED agentloom-sdk/tests/test_review_whitebox_probe.py::test_unknown_or_unauthorized_tool_creates_no_operation
+FAILED agentloom-sdk/tests/test_review_whitebox_probe.py::test_result_read_is_denied_across_roles
+FAILED agentloom-sdk/tests/test_review_whitebox_probe.py::test_stop_closes_admission_and_the_first_reason_wins
+4 failed, 22 passed in 36.97s

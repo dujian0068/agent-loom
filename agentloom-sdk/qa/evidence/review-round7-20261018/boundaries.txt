@@ -1,0 +1,3 @@
+..........................................                               [100%]
+--- generated xml file: /tmp/agentloom-review7-20261018/boundaries.junit.xml ---
+42 passed in 4.25s

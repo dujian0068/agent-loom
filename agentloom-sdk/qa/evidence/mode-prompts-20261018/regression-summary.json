@@ -1,0 +1,19 @@
+{
+  "returncode": 1,
+  "elapsed_seconds": 234.00064295902848,
+  "junit": {
+    "name": "pytest",
+    "errors": "0",
+    "failures": "2",
+    "skipped": "0",
+    "tests": "1147",
+    "time": "233.695",
+    "timestamp": "2026-10-18T01:55:53.693160+08:00",
+    "hostname": "bmilk"
+  },
+  "source_files": 136,
+  "source_unchanged": true,
+  "source_changes": [],
+  "base_head": "2b47ea96111326b3e13d5a0f808583bcf50cc8b4",
+  "excluded_independent_probe": "agentloom-sdk/tests/test_review_whitebox_probe.py"
+}

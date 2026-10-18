@@ -1,0 +1,28 @@
+{
+  "wheel": "/private/tmp/agentloom-prompts-delivery-wheel-37abvw4x/dist/agentloom_sdk-0.1.0a1-py3-none-any.whl",
+  "sha256": "cb71d40b81bcaee2cdf9926b5be31b4033e8679c2176776d4513cbfc7b8eaa5b",
+  "installed": "/private/tmp/agentloom-prompts-delivery-wheel-37abvw4x/install/agentloom",
+  "verified_import": "/private/tmp/agentloom-prompts-delivery-wheel-37abvw4x/install/agentloom/__init__.py",
+  "source_modules_match": 86,
+  "py_typed": true,
+  "process_recovery": [
+    {
+      "cut": "before_root",
+      "initial_exit": 75,
+      "resumed": {
+        "status": "succeeded",
+        "loops": 3
+      },
+      "stderr_empty": true
+    },
+    {
+      "cut": "before_child",
+      "initial_exit": 75,
+      "resumed": {
+        "status": "succeeded",
+        "loops": 3
+      },
+      "stderr_empty": true
+    }
+  ]
+}

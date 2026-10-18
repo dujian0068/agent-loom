@@ -577,7 +577,9 @@ async def test_json_number_unicode_and_snapshot_immutability(store):
         handle = await agent.start(supplied)
         result = await handle.wait(timeout_s=4)
         assert result.status == "succeeded"
-        content = json.loads(agent.model.requests[0].messages[1]["content"])
+        content = json.loads(
+            next(m["content"] for m in agent.model.requests[0].messages if m["role"] == "user")
+        )
         assert content["numbers"] == [-(2**53 - 1), 2**53 - 1, 0]
         assert content["text"] == "中文🙂\u0000"
         snapshot = await handle.snapshot()

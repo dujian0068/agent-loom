@@ -1,0 +1,78 @@
+"""Crash before root/child creation, then resume after a template upgrade."""
+
+import asyncio
+import json
+import os
+import sys
+from pathlib import Path
+
+from agentloom import (
+    AgentDefinition,
+    FileRuntimeStore,
+    ModelResponse,
+    PlanAgent,
+    RuntimeEngine,
+    ScriptedModel,
+    ToolCall,
+    WorkspaceBinding,
+)
+from agentloom.prompts import templates
+
+
+async def main():
+    root, cut = Path(sys.argv[1]), sys.argv[2]
+
+    def checkpoint(command, state):
+        if (
+            cut == "before_root"
+            and command.startswith("environment:")
+            or cut == "before_child"
+            and command.startswith("decision:")
+        ):
+            os._exit(75)
+
+    store = FileRuntimeStore(root / "state")
+
+    def respond(request):
+        saved = store.load("default", "prompt-run")["prompt_contract"]
+        assert request.messages[1]["content"] == saved["roles"][request.role_key]["content"]
+        assert "Changed installed SDK" not in request.messages[1]["content"]
+        with (root / "audit.jsonl").open("a") as fp:
+            fp.write(
+                json.dumps(
+                    {"role": request.role_key, "instructions": request.messages[1]["content"]}
+                )
+                + "\n"
+            )
+            fp.flush()
+            os.fsync(fp.fileno())
+        if request.role_key == "planner" and not any(m["role"] == "tool" for m in request.messages):
+            return ModelResponse(
+                tool_calls=(
+                    ToolCall("delegate_task", {"executor": "worker", "task": "Extract facts"}),
+                )
+            )
+        return ModelResponse("done")
+
+    try:
+        async with RuntimeEngine(
+            store=store, lease_seconds=0.3, checkpoint_callback=checkpoint
+        ) as runtime:
+            agent = PlanAgent(
+                definition=AgentDefinition("p", "Write a report."),
+                executors={"worker": AgentDefinition("w", "Extract facts.", "Extract facts")},
+                model=ScriptedModel(respond),
+                runtime_engine=runtime,
+                workspace=WorkspaceBinding(root / "work"),
+            )
+            handle = await agent.start(
+                None if store.load("default", "prompt-run") else "Report", run_id="prompt-run"
+            )
+            result = await handle.wait(timeout_s=5)
+            print(json.dumps({"status": result.status, "loops": result.usage.loops_consumed, "installed_template": templates.TEMPLATE_VERSION, "saved_templates": sorted({p["template_version"] for p in store.load("default", "prompt-run")["prompt_contract"]["roles"].values()})}))
+    finally:
+        store.close()
+
+
+if __name__ == "__main__":
+    asyncio.run(main())

@@ -373,7 +373,7 @@ async def test_output_reserve_is_independent_of_provider_output_cap(build):
 async def test_parallel_usage_is_complete_when_all_attempts_report_counts(build):
     async def model(request):
         usage = {"input_tokens": 10, "output_tokens": 2}
-        if request.role_key == "planner" and len(request.messages) == 2:
+        if request.role_key == "planner" and not any(m["role"] == "tool" for m in request.messages):
             return ModelResponse(
                 tool_calls=tuple(
                     ToolCall("delegate_task", {"executor": "worker", "task": str(i)})

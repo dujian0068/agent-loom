@@ -1,0 +1,21 @@
+....FF...........................................                        [100%]
+=================================== FAILURES ===================================
+_________ test_output_correction_cannot_exceed_business_budget[memory] _________
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/tests/test_final_output_boundaries.py:55: in test_output_correction_cannot_exceed_business_budget
+    assert result.status == "failed" and result.error["code"] == "LOOP_LIMIT_EXCEEDED"
+E   AssertionError: assert ('budget_exhausted' == 'failed'
+E     
+E     - failed
+E     + budget_exhausted)
+__________ test_output_correction_cannot_exceed_business_budget[file] __________
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/tests/test_final_output_boundaries.py:55: in test_output_correction_cannot_exceed_business_budget
+    assert result.status == "failed" and result.error["code"] == "LOOP_LIMIT_EXCEEDED"
+E   AssertionError: assert ('budget_exhausted' == 'failed'
+E     
+E     - failed
+E     + budget_exhausted)
+- generated xml file: /Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/evidence/langchain-prompts-20261018/output-boundaries.junit.xml -
+=========================== short test summary info ============================
+FAILED agentloom-sdk/tests/test_final_output_boundaries.py::test_output_correction_cannot_exceed_business_budget[memory]
+FAILED agentloom-sdk/tests/test_final_output_boundaries.py::test_output_correction_cannot_exceed_business_budget[file]
+2 failed, 47 passed in 0.76s

@@ -12,6 +12,7 @@ from typing import Any, Mapping
 from ..errors import ConfigurationError, RequestError
 from .json_values import FrozenDict, canonical, freeze, json_copy
 from .schemas import check_schema, validate_schema
+from .variables import default_variable_schema
 
 
 def number(value, name, low, high, *, integer=False, open_low=False):
@@ -227,17 +228,9 @@ class AgentDefinition:
                 validate_schema(value, specification.schema, code="VARIABLE_TYPE_INVALID")
             else:
                 value = json_copy(supplied.get(key, specification))
-                default = json_copy(specification)
-                expected = {
-                    type(None): "null",
-                    bool: "boolean",
-                    int: "integer",
-                    float: "number",
-                    str: "string",
-                    list: "array",
-                    dict: "object",
-                }[type(default)]
-                validate_schema(value, {"type": expected}, code="VARIABLE_TYPE_INVALID")
+                validate_schema(
+                    value, default_variable_schema(specification), code="VARIABLE_TYPE_INVALID"
+                )
             values[key] = value
         return re.sub(
             r"\{\{\s*([A-Za-z_]\w*)\s*\}\}",

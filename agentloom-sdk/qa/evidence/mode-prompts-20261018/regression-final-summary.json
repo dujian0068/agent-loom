@@ -1,0 +1,21 @@
+{
+  "returncode": 0,
+  "elapsed_seconds": 295.79937529203016,
+  "wall_elapsed_seconds": 295.7973940372467,
+  "junit": {
+    "name": "pytest",
+    "errors": "0",
+    "failures": "0",
+    "skipped": "0",
+    "tests": "1155",
+    "time": "295.433",
+    "timestamp": "2026-10-18T10:01:45.915170+08:00",
+    "hostname": "bmilk"
+  },
+  "source_files": 138,
+  "source_unchanged": true,
+  "source_changes": [],
+  "base_head": "2b47ea96111326b3e13d5a0f808583bcf50cc8b4",
+  "excluded_independent_probe": "agentloom-sdk/tests/test_review_whitebox_probe.py",
+  "sleep_inhibition": "caffeinate -is; assertion scoped to this regression process"
+}

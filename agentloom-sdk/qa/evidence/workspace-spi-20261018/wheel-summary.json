@@ -1,0 +1,107 @@
+{
+  "root": "/private/tmp/agentloom-file-spi-wheel-izyn9wow",
+  "wheel": "/private/tmp/agentloom-file-spi-wheel-izyn9wow/dist/agentloom_sdk-0.1.0a1-py3-none-any.whl",
+  "wheel_sha256": "de2e787789ce4d3a1209120ef9cd549bb72a71f4a8fea8a9accddcbf1670f068",
+  "imported": "/private/tmp/agentloom-file-spi-wheel-izyn9wow/installed/agentloom/__init__.py",
+  "source_files_match": 108,
+  "checks": [
+    {
+      "script": "worker.py",
+      "mode": "react",
+      "phase": "all",
+      "returncode": 0,
+      "result": {
+        "status": "succeeded",
+        "mode": "react",
+        "loops": 12
+      }
+    },
+    {
+      "script": "local_worker.py",
+      "mode": "react",
+      "phase": "all",
+      "returncode": 0,
+      "result": {
+        "status": "succeeded",
+        "mode": "react",
+        "loops": 12
+      }
+    },
+    {
+      "script": "worker.py",
+      "mode": "react",
+      "phase": "cut",
+      "returncode": 75,
+      "result": null
+    },
+    {
+      "script": "worker.py",
+      "mode": "react",
+      "phase": "change",
+      "returncode": 0,
+      "result": {
+        "error": "RECOVERY_BINDING_MISMATCH"
+      }
+    },
+    {
+      "script": "worker.py",
+      "mode": "react",
+      "phase": "resume",
+      "returncode": 0,
+      "result": {
+        "status": "succeeded",
+        "mode": "react",
+        "loops": 12
+      }
+    },
+    {
+      "script": "worker.py",
+      "mode": "plan",
+      "phase": "all",
+      "returncode": 0,
+      "result": {
+        "status": "succeeded",
+        "mode": "plan",
+        "loops": 14
+      }
+    },
+    {
+      "script": "local_worker.py",
+      "mode": "plan",
+      "phase": "all",
+      "returncode": 0,
+      "result": {
+        "status": "succeeded",
+        "mode": "plan",
+        "loops": 14
+      }
+    },
+    {
+      "script": "worker.py",
+      "mode": "plan",
+      "phase": "cut",
+      "returncode": 75,
+      "result": null
+    },
+    {
+      "script": "worker.py",
+      "mode": "plan",
+      "phase": "change",
+      "returncode": 0,
+      "result": {
+        "error": "RECOVERY_BINDING_MISMATCH"
+      }
+    },
+    {
+      "script": "worker.py",
+      "mode": "plan",
+      "phase": "resume",
+      "returncode": 0,
+      "result": {
+        "status": "succeeded",
+        "mode": "plan",
+        "loops": 14
+      }
+    }
+  ]
+}

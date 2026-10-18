@@ -1,0 +1,4 @@
+........................................................................ [ 71%]
+.............................                                            [100%]
+- generated xml file: /Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/evidence/langchain-prompts-20261018/focused.junit.xml -
+101 passed in 20.58s

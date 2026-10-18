@@ -187,6 +187,8 @@ RunHandle 是本机门面，不能序列化连接供另一进程接着用；跨�
 | handle.stop | 等价于 runtime_engine.runs.stop；返回停止接收回执，不等于全部执行已停止 |
 | runtime_engine.runs.attach | 仅获得原 ExecutionRecord 的观察／控制句柄，不提供程序，不启动或接管执行 |
 
+当前 JSON 实现对业务输入／输出材料使用 128 层容器上限；RunEvent.payload 是已经校验材料的 SDK 封装，使用内部文档的 512 层预算。因此合法的 128 层最终值可通过 wait、events、astream 及终态游标回放完整交付，不因 output／payload 包装而缩小业务上限；公开事件仍深度不可变。内部预算不放宽 AgentInput、工具结果或模型最终候选的入口限制。
+
 wait 的 timeout_s 只限制本次等待，正数或 null；超时抛 WaitTimeout，不改变 ExecutionRecord deadline。取消等待、关闭事件迭代器或 HTTP 断开都不停止后台执行；后台任务由 RuntimeEngine supervisor 持有。RuntimeEngine 关闭后本机未完成等待收到 RUNTIME_CLOSED，持久事实保留；用户主动结束使用 stop。
 
 ## 4. 结果、事件与错误

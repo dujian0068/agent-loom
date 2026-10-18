@@ -1,0 +1,11 @@
+[
+  "/Users/bmilk/code/project/agent-loom/.venv/bin/python",
+  "-m",
+  "pytest",
+  "-q",
+  "agentloom-sdk/tests",
+  "agentloom-sdk/qa",
+  "--tb=short",
+  "--durations=10",
+  "--junitxml=agentloom-sdk/qa/evidence/workspace-spi-20261018/regression.junit.xml"
+]

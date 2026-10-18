@@ -2,14 +2,20 @@
 
 from dataclasses import asdict
 
+from .definitions import variable_contract
 from .json_documents import copy_document as json_copy
+from .recovery import BINDING_VERSION
 
 
 def recovery_manifest(program):
     return json_copy(
         {
+            "binding_version": BINDING_VERSION,
             "mode": program.mode,
             "definitions": {key: asdict(value) for key, value in program.definitions.items()},
+            "variable_contracts": {
+                key: variable_contract(value) for key, value in program.definitions.items()
+            },
             "execution_policy": asdict(program.execution_policy),
             "context_policy": asdict(program.context_policy),
             "model_options": asdict(program.model_options),

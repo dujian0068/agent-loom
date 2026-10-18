@@ -89,6 +89,10 @@ other_properties = properties.with_options(
 
 ## 从已有定义构建
 
+AgentDefinition.prompt 只写业务提示词。SDK 按构造模式自动注入 ReAct／Planner／Executor 指令，并提供最终输出 Schema 和委派输入合同；调用方无需编写模式系统 Prompt。模式指令在 Run 创建时保存，后续恢复沿用原快照，详见[模式指令合同](../docs/sdk/assembly.md#25-sdk-模式指令与业务-prompt)。
+
+当前内置模板为 LangChain 适配版 `agentloom-langchain-modes-v2`，三个角色分别维护，使用 SDK 原生工具调用和最终输出校验。[来源、固定版本与适配说明](src/agentloom/prompts/NOTICE.md)、MIT 许可证和来源清单随 wheel 一同分发；运行时无需安装 LangChain 或下载模板。
+
 已有 `AgentDefinition` 时，统一入口直接使用 `app.build(agent_def)`。需要自行管理 Runtime 时，仍可使用 `AgentBuilder`；支持 `properties=AgentProperties(...)`，也保留原关键字构造方式。`model`、`runtime`、`registry` 是调用方已准备的依赖；执行时 RuntimeEngine 需要处于打开状态。
 
 ```python
@@ -156,9 +160,9 @@ HTTP 限流重试取配置间隔与合法 `Retry-After` 剩余时间的较大值
 from agentloom import AgentDefinition, ExecutionPolicy, PlanAgent
 
 agent = PlanAgent(
-    definition=AgentDefinition("planner", "分解任务，选择合适的执行者并汇总结果。"),
+    definition=AgentDefinition("advisor", "分析方案的成本和风险，给出有事实依据的建议。"),
     executors={
-        "research": AgentDefinition("research", "完成交付的研究任务。", "收集和分析材料"),
+        "research": AgentDefinition("research", "收集与方案有关的事实，标注来源。", "收集和分析材料"),
         "review": AgentDefinition("review", "检查交付材料中的问题。", "审查事实与结论"),
     },
     model=model, workspace=workspace, runtime_engine=runtime,
@@ -219,6 +223,8 @@ properties = properties.with_options(files=FileProperties(provider="acme", optio
 
 恢复沿用原 Task、Operation、Attempt 和截止时间。已经保存的模型／工具结果只续后置处理；外部调用开始后却没有可靠结果时记录 `CALL_OUTCOME_UNKNOWN`，不盲目重发可能产生副作用的调用。
 
+活动 Run 恢复会核对类型明确的配置清单，区分布尔／数字、VariableSpec／普通默认值，并保留变量默认值的 integer／number 推导。旧清单如果已丢失声明类型且无法无歧义核对，返回带变量路径的 `RECOVERY_BINDING_MISMATCH`；可以用原版本续完，或通过控制接口停止后以新 run_id 发起执行。详见[恢复清单合同](../docs/sdk/assembly.md#24-统一参数配置-propertiesconfig)。合法的 128 层最终 JSON 值也能通过公开事件流及游标回放交付，SDK 事件包装使用独立内部预算。
+
 模型完整响应和 MCP 已知结果在关闭连接前持久化，关闭阶段超时不会触发重复业务调用；关闭失败诊断独立保留。停止／截止仍阻止成功交付，失权仍拒绝旧 owner 写入。自定义能力若在方法内部关闭资源，可在关闭前通过 `context.report_completion(tool_result)` 固定结果，详细合同见[能力接口](../docs/sdk/capabilities.md)。通用模型 usage 事件与 completed 的计数按字段合并，不因空值丢失已知用量。
 
 Runtime 关闭会停止本机推进并保留检查点，不等同于用户停止；注入的 store、HTTP 客户端和其他共享依赖仍由调用者关闭。临时目录在根执行终态后由独立 CleanupService 清理，失败单独重试；`persistent_sandbox=True` 保留会话文件，并使旧执行句柄失效。
@@ -260,6 +266,7 @@ Runtime 关闭会停止本机推进并保留检查点，不等同于用户停止
 | --- | --- |
 | `agentloom.public` | PropertiesConfig、AgentLoom、AgentBuilder、统一装配、Agent 门面、RunHandle 与公开投影 |
 | `agentloom.configuration` | 冻结配置、Schema／变量校验、恢复清单、RFC 8785 canonical JSON |
+| `agentloom.prompts` | LangChain 模板按 roles 分包、原生动作协议、格式合同组装、Run 快照恢复校验 |
 | `agentloom.runtime` | 宿主、Runner、角色激活、Agent Loop、调用准入／Attempt、完成回执、恢复核验、停止、输入、查询、清理 |
 | `agentloom.events` | 单处理者 EventBus、局部注册、Hook 链和持久阶段 |
 | `agentloom.context` | 原始／有效记录、历史投影、预算、压缩、大结果分片 |
@@ -282,7 +289,7 @@ Runtime 关闭会停止本机推进并保留检查点，不等同于用户停止
 ## 验证
 
 ```sh
-python -m pytest -q agentloom-sdk/tests agentloom-sdk/qa/test_sdk_audit.py agentloom-sdk/qa/test_sdk_rereview.py agentloom-sdk/qa/test_sdk_review_round3.py agentloom-sdk/qa/test_sdk_review_round4.py agentloom-sdk/qa/test_sdk_review_round5.py
+python -m pytest -q agentloom-sdk/tests agentloom-sdk/qa
 ruff check agentloom-sdk/src agentloom-sdk/tests agentloom-sdk/qa
 ruff format --check agentloom-sdk/src agentloom-sdk/tests agentloom-sdk/qa
 python -m pip wheel ./agentloom-sdk --no-deps -w /tmp/agentloom-wheels
@@ -290,4 +297,4 @@ python -m pip wheel ./agentloom-sdk --no-deps -w /tmp/agentloom-wheels
 
 测试不依赖 Platform 或真实模型凭据。覆盖持久化提交边界的独立进程退出、双宿主租约、并发与额度、Hook、补充及历史、压缩、文件 fence、真实 MCP stdio 子进程和 HTTP SSE 协议分片。
 
-最近第五轮修复的固定范围回归为 **1089 passed**，覆盖既有 SDK、新增修复测试及五轮 QA。另行新增的白盒探针单独记录，未计入该快照；范围、命令与结果见[实现记录](../docs/sdk/implementation.md#第五轮持久化-json-深度与异常记录修复)。此后的新增文件或远端服务联调需另行验证。
+恢复绑定与公开事件修复后的完整回归为 **1483 passed，0 failed，0 skipped**，覆盖 SDK 1021 项和七轮 QA 462 项，包含独立白盒探针；本轮新增 124 项测试。范围、命令与结果见[实现记录](../docs/sdk/implementation.md#恢复绑定与公开事件边界修复)。测试使用本地确定性模型、协议替身和真实本地子进程，真实模型行为及远端服务仍需按部署环境联调。

@@ -1,0 +1,30 @@
+{
+  "base_commit": "2b47ea96111326b3e13d5a0f808583bcf50cc8b4",
+  "command": [
+    "/Users/bmilk/code/project/agent-loom/.venv/bin/python",
+    "-m",
+    "pytest",
+    "-q",
+    "agentloom-sdk/tests",
+    "agentloom-sdk/qa",
+    "--tb=short",
+    "--durations=10",
+    "--junitxml=agentloom-sdk/qa/evidence/workspace-spi-20261018/regression.junit.xml"
+  ],
+  "tests": 1537,
+  "failures": 0,
+  "errors": 0,
+  "skipped": 0,
+  "duration_seconds": 336.796,
+  "source_files_checked": 171,
+  "source_unchanged_during_regression": true,
+  "excluded_tests": [],
+  "new_spi_tests": 54,
+  "log": "regression.txt",
+  "junit": "regression.junit.xml",
+  "passed": 1537,
+  "areas": {
+    "tests": 1075,
+    "qa": 462
+  }
+}

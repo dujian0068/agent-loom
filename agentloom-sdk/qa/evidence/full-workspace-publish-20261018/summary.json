@@ -1,0 +1,25 @@
+{
+  "date": "2026-10-18",
+  "scope": "All remaining workspace changes, including SDK code, prompts, tests, documentation, examples, QA reports and historical evidence",
+  "initial_pending_files": 266,
+  "regression": {
+    "passed": 1537,
+    "failed": 0,
+    "errors": 0,
+    "skipped": 0,
+    "duration_seconds": 342.788,
+    "evidence": "regression-summary.json"
+  },
+  "source_files_unchanged": 189,
+  "installed_wheel": {
+    "source_resource_files_matched": 108,
+    "process_scenarios": 10,
+    "evidence": "wheel-summary.json"
+  },
+  "ruff_lint": "passed",
+  "ruff_format": "passed",
+  "docs_build": "passed",
+  "docs_site_check": "passed",
+  "example_command_line": "passed",
+  "live_remote_model_calls": "not run"
+}

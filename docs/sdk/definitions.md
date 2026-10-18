@@ -102,6 +102,8 @@ CapabilityBinding
 
 输入输出 Schema 不执行远程引用。Prompt 变量按声明类型检查，纯文本替换，不执行模板代码。构造校验不调用模型或执行工具；资源准备、导入和授权在 SDK 外完成。
 
+`prompt` 是业务提示词；ReAct、Planner、Executor 的执行指令由 SDK 按绑定角色自动组装。调用方不负责解释模式、动作协议或角色循环。SDK 指令与业务 Prompt 分开保存，组装、保护和恢复合同见[SDK 模式指令与业务 Prompt](assembly.md#25-sdk-模式指令与业务-prompt)。
+
 直接 Agent 的公开输入输出格式取 `definition.input_schema / output_schema`；Plan 的 Planner 使用同一份定义，Executor 取 `executors[key]` 的 Schema。精确装配参数、CapabilityRegistration、HookSet、program_key 派生及资源所有权见[构造与绑定](assembly.md)。
 
 ## 3. Node 类与 NodeTask

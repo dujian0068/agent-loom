@@ -1,0 +1,357 @@
+.........FFF.........FFF................................................ [ 42%]
+........................................................................ [ 84%]
+..........................                                               [100%]
+=================================== FAILURES ===================================
+_ test_boolean_and_number_are_distinct_recovery_bindings[memory-model_options-react] _
+
+runtime_store = <agentloom.storage.memory.MemoryRuntimeStore object at 0x10bb02f30>
+role = 'react', location = 'model_options'
+
+    @pytest.mark.parametrize("role", ["react", "planner", "worker"])
+    @pytest.mark.parametrize("location", ["const", "enum", "variable", "model_options"])
+    async def test_boolean_and_number_are_distinct_recovery_bindings(runtime_store, role, location):
+        original = AgentDefinition("agent", "Mode: {{mode}}", "Perform work", variables={"mode": True})
+        changed = original
+        before_options = after_options = None
+        if location == "const":
+            original = replace(original, output_schema={"const": True})
+            changed = replace(original, output_schema={"const": 1})
+        elif location == "enum":
+            original = replace(original, output_schema={"enum": [{"flags": [False, True]}]})
+            changed = replace(original, output_schema={"enum": [{"flags": [0, 1]}]})
+        elif location == "variable":
+            changed = replace(original, variables={"mode": 1})
+        else:
+            before_options = ModelOptions(parameters={"custom": {"flags": [True, False]}})
+            after_options = ModelOptions(parameters={"custom": {"flags": [1, 0]}})
+>       saved = await suspend(runtime_store, original, role, model_options=before_options)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/tests/test_recovery_binding_contract.py:87: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/tests/test_recovery_binding_contract.py:56: in suspend
+    agent = program(runtime, definition, role, model_options=model_options)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/tests/test_recovery_binding_contract.py:47: in program
+    return (ReactAgent if role == "react" else PlanAgent)(**options)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/public/agents.py:40: in __init__
+    assembly = AgentAssembly(
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/public/assembly.py:112: in __init__
+    object.__setattr__(self, "budget", resolve_model_budget(model, properties))
+                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+model = <agentloom.models.scripted.ScriptedModel object at 0x10bb022d0>
+properties = AgentProperties(workspace=WorkspaceBinding(root=PosixPath('/private/var/folders/g6/378nmc5541n9wkbyb0nj9x9r0000gn/T/py...ompt_addendum=''), model_options=ModelOptions(max_output_tokens=None, parameters={'custom': {'flags': (True, False)}}))
+
+    def resolve_model_budget(model, properties):
+        """Validate only supplied metadata/options; never discover or invoke a model."""
+        validate_model_adapter(model)
+        budget = ContextBudget.resolve(
+            model.descriptor, properties.context_policy, properties.model_options
+        )
+        if hasattr(model, "validate_options"):
+            model.validate_options(properties.model_options)
+        elif properties.model_options.parameters:
+>           raise ConfigurationError("MODEL_FEATURE_UNSUPPORTED")
+E           agentloom.errors.ConfigurationError: MODEL_FEATURE_UNSUPPORTED: MODEL_FEATURE_UNSUPPORTED
+
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/public/assembly.py:62: ConfigurationError
+_ test_boolean_and_number_are_distinct_recovery_bindings[memory-model_options-planner] _
+
+runtime_store = <agentloom.storage.memory.MemoryRuntimeStore object at 0x10b9706b0>
+role = 'planner', location = 'model_options'
+
+    @pytest.mark.parametrize("role", ["react", "planner", "worker"])
+    @pytest.mark.parametrize("location", ["const", "enum", "variable", "model_options"])
+    async def test_boolean_and_number_are_distinct_recovery_bindings(runtime_store, role, location):
+        original = AgentDefinition("agent", "Mode: {{mode}}", "Perform work", variables={"mode": True})
+        changed = original
+        before_options = after_options = None
+        if location == "const":
+            original = replace(original, output_schema={"const": True})
+            changed = replace(original, output_schema={"const": 1})
+        elif location == "enum":
+            original = replace(original, output_schema={"enum": [{"flags": [False, True]}]})
+            changed = replace(original, output_schema={"enum": [{"flags": [0, 1]}]})
+        elif location == "variable":
+            changed = replace(original, variables={"mode": 1})
+        else:
+            before_options = ModelOptions(parameters={"custom": {"flags": [True, False]}})
+            after_options = ModelOptions(parameters={"custom": {"flags": [1, 0]}})
+>       saved = await suspend(runtime_store, original, role, model_options=before_options)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/tests/test_recovery_binding_contract.py:87: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/tests/test_recovery_binding_contract.py:56: in suspend
+    agent = program(runtime, definition, role, model_options=model_options)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/tests/test_recovery_binding_contract.py:47: in program
+    return (ReactAgent if role == "react" else PlanAgent)(**options)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/public/agents.py:213: in __init__
+    super().__init__(**kwargs)
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/public/agents.py:40: in __init__
+    assembly = AgentAssembly(
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/public/assembly.py:112: in __init__
+    object.__setattr__(self, "budget", resolve_model_budget(model, properties))
+                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+model = <agentloom.models.scripted.ScriptedModel object at 0x10bba7bc0>
+properties = AgentProperties(workspace=WorkspaceBinding(root=PosixPath('/private/var/folders/g6/378nmc5541n9wkbyb0nj9x9r0000gn/T/py...ompt_addendum=''), model_options=ModelOptions(max_output_tokens=None, parameters={'custom': {'flags': (True, False)}}))
+
+    def resolve_model_budget(model, properties):
+        """Validate only supplied metadata/options; never discover or invoke a model."""
+        validate_model_adapter(model)
+        budget = ContextBudget.resolve(
+            model.descriptor, properties.context_policy, properties.model_options
+        )
+        if hasattr(model, "validate_options"):
+            model.validate_options(properties.model_options)
+        elif properties.model_options.parameters:
+>           raise ConfigurationError("MODEL_FEATURE_UNSUPPORTED")
+E           agentloom.errors.ConfigurationError: MODEL_FEATURE_UNSUPPORTED: MODEL_FEATURE_UNSUPPORTED
+
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/public/assembly.py:62: ConfigurationError
+_ test_boolean_and_number_are_distinct_recovery_bindings[memory-model_options-worker] _
+
+runtime_store = <agentloom.storage.memory.MemoryRuntimeStore object at 0x10bb03140>
+role = 'worker', location = 'model_options'
+
+    @pytest.mark.parametrize("role", ["react", "planner", "worker"])
+    @pytest.mark.parametrize("location", ["const", "enum", "variable", "model_options"])
+    async def test_boolean_and_number_are_distinct_recovery_bindings(runtime_store, role, location):
+        original = AgentDefinition("agent", "Mode: {{mode}}", "Perform work", variables={"mode": True})
+        changed = original
+        before_options = after_options = None
+        if location == "const":
+            original = replace(original, output_schema={"const": True})
+            changed = replace(original, output_schema={"const": 1})
+        elif location == "enum":
+            original = replace(original, output_schema={"enum": [{"flags": [False, True]}]})
+            changed = replace(original, output_schema={"enum": [{"flags": [0, 1]}]})
+        elif location == "variable":
+            changed = replace(original, variables={"mode": 1})
+        else:
+            before_options = ModelOptions(parameters={"custom": {"flags": [True, False]}})
+            after_options = ModelOptions(parameters={"custom": {"flags": [1, 0]}})
+>       saved = await suspend(runtime_store, original, role, model_options=before_options)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/tests/test_recovery_binding_contract.py:87: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/tests/test_recovery_binding_contract.py:56: in suspend
+    agent = program(runtime, definition, role, model_options=model_options)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/tests/test_recovery_binding_contract.py:47: in program
+    return (ReactAgent if role == "react" else PlanAgent)(**options)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/public/agents.py:213: in __init__
+    super().__init__(**kwargs)
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/public/agents.py:40: in __init__
+    assembly = AgentAssembly(
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/public/assembly.py:112: in __init__
+    object.__setattr__(self, "budget", resolve_model_budget(model, properties))
+                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+model = <agentloom.models.scripted.ScriptedModel object at 0x10bb023f0>
+properties = AgentProperties(workspace=WorkspaceBinding(root=PosixPath('/private/var/folders/g6/378nmc5541n9wkbyb0nj9x9r0000gn/T/py...ompt_addendum=''), model_options=ModelOptions(max_output_tokens=None, parameters={'custom': {'flags': (True, False)}}))
+
+    def resolve_model_budget(model, properties):
+        """Validate only supplied metadata/options; never discover or invoke a model."""
+        validate_model_adapter(model)
+        budget = ContextBudget.resolve(
+            model.descriptor, properties.context_policy, properties.model_options
+        )
+        if hasattr(model, "validate_options"):
+            model.validate_options(properties.model_options)
+        elif properties.model_options.parameters:
+>           raise ConfigurationError("MODEL_FEATURE_UNSUPPORTED")
+E           agentloom.errors.ConfigurationError: MODEL_FEATURE_UNSUPPORTED: MODEL_FEATURE_UNSUPPORTED
+
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/public/assembly.py:62: ConfigurationError
+_ test_boolean_and_number_are_distinct_recovery_bindings[file-model_options-react] _
+
+runtime_store = <agentloom.storage.filesystem.FileRuntimeStore object at 0x10bc3d490>
+role = 'react', location = 'model_options'
+
+    @pytest.mark.parametrize("role", ["react", "planner", "worker"])
+    @pytest.mark.parametrize("location", ["const", "enum", "variable", "model_options"])
+    async def test_boolean_and_number_are_distinct_recovery_bindings(runtime_store, role, location):
+        original = AgentDefinition("agent", "Mode: {{mode}}", "Perform work", variables={"mode": True})
+        changed = original
+        before_options = after_options = None
+        if location == "const":
+            original = replace(original, output_schema={"const": True})
+            changed = replace(original, output_schema={"const": 1})
+        elif location == "enum":
+            original = replace(original, output_schema={"enum": [{"flags": [False, True]}]})
+            changed = replace(original, output_schema={"enum": [{"flags": [0, 1]}]})
+        elif location == "variable":
+            changed = replace(original, variables={"mode": 1})
+        else:
+            before_options = ModelOptions(parameters={"custom": {"flags": [True, False]}})
+            after_options = ModelOptions(parameters={"custom": {"flags": [1, 0]}})
+>       saved = await suspend(runtime_store, original, role, model_options=before_options)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/tests/test_recovery_binding_contract.py:87: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/tests/test_recovery_binding_contract.py:56: in suspend
+    agent = program(runtime, definition, role, model_options=model_options)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/tests/test_recovery_binding_contract.py:47: in program
+    return (ReactAgent if role == "react" else PlanAgent)(**options)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/public/agents.py:40: in __init__
+    assembly = AgentAssembly(
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/public/assembly.py:112: in __init__
+    object.__setattr__(self, "budget", resolve_model_budget(model, properties))
+                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+model = <agentloom.models.scripted.ScriptedModel object at 0x10bc3dfd0>
+properties = AgentProperties(workspace=WorkspaceBinding(root=PosixPath('/private/var/folders/g6/378nmc5541n9wkbyb0nj9x9r0000gn/T/py...ompt_addendum=''), model_options=ModelOptions(max_output_tokens=None, parameters={'custom': {'flags': (True, False)}}))
+
+    def resolve_model_budget(model, properties):
+        """Validate only supplied metadata/options; never discover or invoke a model."""
+        validate_model_adapter(model)
+        budget = ContextBudget.resolve(
+            model.descriptor, properties.context_policy, properties.model_options
+        )
+        if hasattr(model, "validate_options"):
+            model.validate_options(properties.model_options)
+        elif properties.model_options.parameters:
+>           raise ConfigurationError("MODEL_FEATURE_UNSUPPORTED")
+E           agentloom.errors.ConfigurationError: MODEL_FEATURE_UNSUPPORTED: MODEL_FEATURE_UNSUPPORTED
+
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/public/assembly.py:62: ConfigurationError
+_ test_boolean_and_number_are_distinct_recovery_bindings[file-model_options-planner] _
+
+runtime_store = <agentloom.storage.filesystem.FileRuntimeStore object at 0x10bb69d90>
+role = 'planner', location = 'model_options'
+
+    @pytest.mark.parametrize("role", ["react", "planner", "worker"])
+    @pytest.mark.parametrize("location", ["const", "enum", "variable", "model_options"])
+    async def test_boolean_and_number_are_distinct_recovery_bindings(runtime_store, role, location):
+        original = AgentDefinition("agent", "Mode: {{mode}}", "Perform work", variables={"mode": True})
+        changed = original
+        before_options = after_options = None
+        if location == "const":
+            original = replace(original, output_schema={"const": True})
+            changed = replace(original, output_schema={"const": 1})
+        elif location == "enum":
+            original = replace(original, output_schema={"enum": [{"flags": [False, True]}]})
+            changed = replace(original, output_schema={"enum": [{"flags": [0, 1]}]})
+        elif location == "variable":
+            changed = replace(original, variables={"mode": 1})
+        else:
+            before_options = ModelOptions(parameters={"custom": {"flags": [True, False]}})
+            after_options = ModelOptions(parameters={"custom": {"flags": [1, 0]}})
+>       saved = await suspend(runtime_store, original, role, model_options=before_options)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/tests/test_recovery_binding_contract.py:87: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/tests/test_recovery_binding_contract.py:56: in suspend
+    agent = program(runtime, definition, role, model_options=model_options)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/tests/test_recovery_binding_contract.py:47: in program
+    return (ReactAgent if role == "react" else PlanAgent)(**options)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/public/agents.py:213: in __init__
+    super().__init__(**kwargs)
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/public/agents.py:40: in __init__
+    assembly = AgentAssembly(
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/public/assembly.py:112: in __init__
+    object.__setattr__(self, "budget", resolve_model_budget(model, properties))
+                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+model = <agentloom.models.scripted.ScriptedModel object at 0x10bb6bf50>
+properties = AgentProperties(workspace=WorkspaceBinding(root=PosixPath('/private/var/folders/g6/378nmc5541n9wkbyb0nj9x9r0000gn/T/py...ompt_addendum=''), model_options=ModelOptions(max_output_tokens=None, parameters={'custom': {'flags': (True, False)}}))
+
+    def resolve_model_budget(model, properties):
+        """Validate only supplied metadata/options; never discover or invoke a model."""
+        validate_model_adapter(model)
+        budget = ContextBudget.resolve(
+            model.descriptor, properties.context_policy, properties.model_options
+        )
+        if hasattr(model, "validate_options"):
+            model.validate_options(properties.model_options)
+        elif properties.model_options.parameters:
+>           raise ConfigurationError("MODEL_FEATURE_UNSUPPORTED")
+E           agentloom.errors.ConfigurationError: MODEL_FEATURE_UNSUPPORTED: MODEL_FEATURE_UNSUPPORTED
+
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/public/assembly.py:62: ConfigurationError
+_ test_boolean_and_number_are_distinct_recovery_bindings[file-model_options-worker] _
+
+runtime_store = <agentloom.storage.filesystem.FileRuntimeStore object at 0x10bb03b60>
+role = 'worker', location = 'model_options'
+
+    @pytest.mark.parametrize("role", ["react", "planner", "worker"])
+    @pytest.mark.parametrize("location", ["const", "enum", "variable", "model_options"])
+    async def test_boolean_and_number_are_distinct_recovery_bindings(runtime_store, role, location):
+        original = AgentDefinition("agent", "Mode: {{mode}}", "Perform work", variables={"mode": True})
+        changed = original
+        before_options = after_options = None
+        if location == "const":
+            original = replace(original, output_schema={"const": True})
+            changed = replace(original, output_schema={"const": 1})
+        elif location == "enum":
+            original = replace(original, output_schema={"enum": [{"flags": [False, True]}]})
+            changed = replace(original, output_schema={"enum": [{"flags": [0, 1]}]})
+        elif location == "variable":
+            changed = replace(original, variables={"mode": 1})
+        else:
+            before_options = ModelOptions(parameters={"custom": {"flags": [True, False]}})
+            after_options = ModelOptions(parameters={"custom": {"flags": [1, 0]}})
+>       saved = await suspend(runtime_store, original, role, model_options=before_options)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/tests/test_recovery_binding_contract.py:87: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/tests/test_recovery_binding_contract.py:56: in suspend
+    agent = program(runtime, definition, role, model_options=model_options)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/tests/test_recovery_binding_contract.py:47: in program
+    return (ReactAgent if role == "react" else PlanAgent)(**options)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/public/agents.py:213: in __init__
+    super().__init__(**kwargs)
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/public/agents.py:40: in __init__
+    assembly = AgentAssembly(
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/public/assembly.py:112: in __init__
+    object.__setattr__(self, "budget", resolve_model_budget(model, properties))
+                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+model = <agentloom.models.scripted.ScriptedModel object at 0x10bb01ac0>
+properties = AgentProperties(workspace=WorkspaceBinding(root=PosixPath('/private/var/folders/g6/378nmc5541n9wkbyb0nj9x9r0000gn/T/py...ompt_addendum=''), model_options=ModelOptions(max_output_tokens=None, parameters={'custom': {'flags': (True, False)}}))
+
+    def resolve_model_budget(model, properties):
+        """Validate only supplied metadata/options; never discover or invoke a model."""
+        validate_model_adapter(model)
+        budget = ContextBudget.resolve(
+            model.descriptor, properties.context_policy, properties.model_options
+        )
+        if hasattr(model, "validate_options"):
+            model.validate_options(properties.model_options)
+        elif properties.model_options.parameters:
+>           raise ConfigurationError("MODEL_FEATURE_UNSUPPORTED")
+E           agentloom.errors.ConfigurationError: MODEL_FEATURE_UNSUPPORTED: MODEL_FEATURE_UNSUPPORTED
+
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/public/assembly.py:62: ConfigurationError
+- generated xml file: /Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/evidence/recovery-contracts-20261018/focused.junit.xml -
+=========================== short test summary info ============================
+FAILED agentloom-sdk/tests/test_recovery_binding_contract.py::test_boolean_and_number_are_distinct_recovery_bindings[memory-model_options-react]
+FAILED agentloom-sdk/tests/test_recovery_binding_contract.py::test_boolean_and_number_are_distinct_recovery_bindings[memory-model_options-planner]
+FAILED agentloom-sdk/tests/test_recovery_binding_contract.py::test_boolean_and_number_are_distinct_recovery_bindings[memory-model_options-worker]
+FAILED agentloom-sdk/tests/test_recovery_binding_contract.py::test_boolean_and_number_are_distinct_recovery_bindings[file-model_options-react]
+FAILED agentloom-sdk/tests/test_recovery_binding_contract.py::test_boolean_and_number_are_distinct_recovery_bindings[file-model_options-planner]
+FAILED agentloom-sdk/tests/test_recovery_binding_contract.py::test_boolean_and_number_are_distinct_recovery_bindings[file-model_options-worker]
+6 failed, 164 passed in 8.88s

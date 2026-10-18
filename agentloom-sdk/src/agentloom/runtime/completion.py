@@ -1,5 +1,6 @@
 """Attempt outcomes and synchronous completion receipts, independent of teardown."""
 
+from ..capabilities.invocation import normalize_result
 from ..configuration import json_copy
 from ..errors import AgentLoomError, ConfigurationError, InfrastructureError, error_record
 
@@ -45,14 +46,17 @@ def failed_result(exc):
         if hasattr(exc, field):
             try:
                 value = getattr(exc, field)
-                raw[field] = (
-                    {"value": json_copy(value["value"])}
-                    if field == "invalid_tool_result"
-                    and isinstance(value, dict)
-                    and set(value) == {"value"}
-                    else json_copy(value)
-                )
-            except ConfigurationError:
+                if value is None:
+                    continue
+                if field == "tool_result":
+                    raw[field] = normalize_result(value).envelope
+                elif isinstance(value, dict) and set(value) == {"value"}:
+                    raw[field] = {"value": json_copy(value["value"])}
+            except InfrastructureError:
+                raise
+            except AgentLoomError:
+                # Only validated envelopes reach the Attempt writer. Sidecar
+                # shape errors do not change the established execution fact.
                 pass
     return raw
 

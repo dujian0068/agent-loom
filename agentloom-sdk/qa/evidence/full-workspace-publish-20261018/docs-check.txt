@@ -1,0 +1,2 @@
+Checked 57 HTML pages, 1353 internal links, 489 anchors and 246 asset references; ignored 160 external/special URLs.
+PASS: all checked targets exist (base=/).

@@ -520,6 +520,8 @@ async def run_one_hook(op, stage, binding, ordinal):
 
 返回 JSON 中 `decision` 非 allow/deny、返回结构错误或异常属于 Hook 自身故障；保存诊断并丢本项全部修改。合法决定的 patch 校验失败只丢 patch，deny 仍生效。后置 Hook 不能把 Handler 的 failed/unknown 改成 succeeded，也不能删除错误后让响应变成功。必要提交失败中止推进，不能据此跳到下一 Hook。
 
+system 消息区分可编辑的业务 Prompt 与 SDK 的 `sdk_instructions` 记录。SDK 模式指令可通过受限读取端口查看，但 context_patch 或模型请求 messages 补丁试图覆写它时，返回 HOOK_SYSTEM_PROMPT_IMMUTABLE 并丢弃整项 patch；合法 deny 仍有效。业务 Prompt 的现有修改能力保留。Hook 应根据 role／message_kind／record_id 选择记录，不依赖消息总数或用户输入的固定数组下标。
+
 规范化按以下确定顺序执行：
 
 1. 在 Hook 固定 input_revision 和 mapping_version 上解析 payload/context 的所有 target，验证可见性及挂点可写字段；非法 target 使整项 patch 无效。

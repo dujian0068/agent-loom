@@ -1,0 +1,237 @@
+........FFFF..FF..FF............FFFF..FF..FF....FFFF..F.F.F.F...F.F.F.F. [100%]
+=================================== FAILURES ===================================
+_ test_nested_return_must_finish_or_reject_before_durable_write[memory-465-function] _
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round5.py:151: in test_nested_return_must_finish_or_reject_before_durable_write
+    assert error is None, "Accepted nesting must survive persistence and subsequent reads"
+E   AssertionError: Accepted nesting must survive persistence and subsequent reads
+E   assert 'EXECUTION_DRIVER_FAILED' is None
+----------------------------- Captured stdout call -----------------------------
+{"run_id": "8637668a-7131-4ea7-abb8-ba26530ce972", "operation_id": "4030df10-f28f-5c51-9325-508f751f76d5", "depth": 465, "recursion_limit": 1000, "kind": "function", "driver_error": "EXECUTION_DRIVER_FAILED", "run_status": "running", "raw": {"status": "succeeded", "error": null, "execution_fact": "completed"}, "calls": 1}
+_ test_nested_return_must_finish_or_reject_before_durable_write[memory-465-legacy] _
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round5.py:151: in test_nested_return_must_finish_or_reject_before_durable_write
+    assert error is None, "Accepted nesting must survive persistence and subsequent reads"
+E   AssertionError: Accepted nesting must survive persistence and subsequent reads
+E   assert 'EXECUTION_DRIVER_FAILED' is None
+----------------------------- Captured stdout call -----------------------------
+{"run_id": "ec7ffc9c-a7ce-4740-87b5-8e32e944a7f7", "operation_id": "eb90c372-72c6-58a8-9553-76f800dfb894", "depth": 465, "recursion_limit": 1000, "kind": "legacy", "driver_error": "EXECUTION_DRIVER_FAILED", "run_status": "running", "raw": {"status": "succeeded", "error": null, "execution_fact": "completed"}, "calls": 1}
+_ test_nested_return_must_finish_or_reject_before_durable_write[memory-465-native] _
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round5.py:151: in test_nested_return_must_finish_or_reject_before_durable_write
+    assert error is None, "Accepted nesting must survive persistence and subsequent reads"
+E   AssertionError: Accepted nesting must survive persistence and subsequent reads
+E   assert 'EXECUTION_DRIVER_FAILED' is None
+----------------------------- Captured stdout call -----------------------------
+{"run_id": "37c49560-5402-4bf3-bde8-2e6dbce6330e", "operation_id": "e3a27a16-c03b-5f2a-a1e2-fd3dc7915844", "depth": 465, "recursion_limit": 1000, "kind": "native", "driver_error": "EXECUTION_DRIVER_FAILED", "run_status": "running", "raw": {"status": "succeeded", "error": null, "execution_fact": "completed"}, "calls": 1}
+_ test_nested_return_must_finish_or_reject_before_durable_write[memory-465-callback] _
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round5.py:151: in test_nested_return_must_finish_or_reject_before_durable_write
+    assert error is None, "Accepted nesting must survive persistence and subsequent reads"
+E   AssertionError: Accepted nesting must survive persistence and subsequent reads
+E   assert 'EXECUTION_DRIVER_FAILED' is None
+----------------------------- Captured stdout call -----------------------------
+{"run_id": "588b9f84-2a68-4c5a-9194-6f45d73549d6", "operation_id": "0dda8d35-8f94-511f-9f4e-56d00248e416", "depth": 465, "recursion_limit": 1000, "kind": "callback", "driver_error": "EXECUTION_DRIVER_FAILED", "run_status": "running", "raw": {"status": "succeeded", "error": null, "execution_fact": "completed"}, "calls": 1}
+_ test_nested_return_must_finish_or_reject_before_durable_write[memory-480-native] _
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round5.py:151: in test_nested_return_must_finish_or_reject_before_durable_write
+    assert error is None, "Accepted nesting must survive persistence and subsequent reads"
+E   AssertionError: Accepted nesting must survive persistence and subsequent reads
+E   assert 'EXECUTION_DRIVER_FAILED' is None
+----------------------------- Captured stdout call -----------------------------
+{"run_id": "44294854-33b2-4fdb-a713-2a721ecaad9e", "operation_id": "2a3f6ff3-e5f0-5abf-b6d8-15409e5682cd", "depth": 480, "recursion_limit": 1000, "kind": "native", "driver_error": "EXECUTION_DRIVER_FAILED", "run_status": "running", "raw": null, "calls": 1}
+_ test_nested_return_must_finish_or_reject_before_durable_write[memory-480-callback] _
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round5.py:151: in test_nested_return_must_finish_or_reject_before_durable_write
+    assert error is None, "Accepted nesting must survive persistence and subsequent reads"
+E   AssertionError: Accepted nesting must survive persistence and subsequent reads
+E   assert 'ATTEMPT_COMPLETION_COMMIT_FAILED' is None
+----------------------------- Captured stdout call -----------------------------
+{"run_id": "1122fc46-d048-44de-94d4-b93583e94d57", "operation_id": "26135970-0cd5-550f-bf88-3a42baf2f315", "depth": 480, "recursion_limit": 1000, "kind": "callback", "driver_error": "ATTEMPT_COMPLETION_COMMIT_FAILED", "run_status": "running", "raw": null, "calls": 1}
+_ test_nested_return_must_finish_or_reject_before_durable_write[memory-600-native] _
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round5.py:151: in test_nested_return_must_finish_or_reject_before_durable_write
+    assert error is None, "Accepted nesting must survive persistence and subsequent reads"
+E   AssertionError: Accepted nesting must survive persistence and subsequent reads
+E   assert 'EXECUTION_DRIVER_FAILED' is None
+----------------------------- Captured stdout call -----------------------------
+{"run_id": "4d25b1de-034d-4b7d-99f4-4fa1e7a958e2", "operation_id": "b336aaa7-cf94-50c0-b673-3b07f2a6dc40", "depth": 600, "recursion_limit": 1000, "kind": "native", "driver_error": "EXECUTION_DRIVER_FAILED", "run_status": "running", "raw": null, "calls": 1}
+_ test_nested_return_must_finish_or_reject_before_durable_write[memory-600-callback] _
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round5.py:151: in test_nested_return_must_finish_or_reject_before_durable_write
+    assert error is None, "Accepted nesting must survive persistence and subsequent reads"
+E   AssertionError: Accepted nesting must survive persistence and subsequent reads
+E   assert 'ATTEMPT_COMPLETION_COMMIT_FAILED' is None
+----------------------------- Captured stdout call -----------------------------
+{"run_id": "04e020bb-6f40-442d-b0e0-c41f66004e0f", "operation_id": "45ad188b-c046-5e6d-8528-7c61568a6d6e", "depth": 600, "recursion_limit": 1000, "kind": "callback", "driver_error": "ATTEMPT_COMPLETION_COMMIT_FAILED", "run_status": "running", "raw": null, "calls": 1}
+_ test_nested_return_must_finish_or_reject_before_durable_write[file-465-function] _
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round5.py:151: in test_nested_return_must_finish_or_reject_before_durable_write
+    assert error is None, "Accepted nesting must survive persistence and subsequent reads"
+E   AssertionError: Accepted nesting must survive persistence and subsequent reads
+E   assert 'EXECUTION_DRIVER_FAILED' is None
+----------------------------- Captured stdout call -----------------------------
+{"run_id": "b9b13211-dbf6-46f2-bcd9-4420152d1a47", "operation_id": "63ea4619-da61-5e6e-999a-dee8414e2474", "depth": 465, "recursion_limit": 1000, "kind": "function", "driver_error": "EXECUTION_DRIVER_FAILED", "run_status": "running", "raw": {"status": "succeeded", "error": null, "execution_fact": "completed"}, "calls": 1}
+_ test_nested_return_must_finish_or_reject_before_durable_write[file-465-legacy] _
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round5.py:151: in test_nested_return_must_finish_or_reject_before_durable_write
+    assert error is None, "Accepted nesting must survive persistence and subsequent reads"
+E   AssertionError: Accepted nesting must survive persistence and subsequent reads
+E   assert 'EXECUTION_DRIVER_FAILED' is None
+----------------------------- Captured stdout call -----------------------------
+{"run_id": "a041d720-d5a3-4060-b620-05760282e125", "operation_id": "b3df99b8-a13a-55cd-ad73-d9afb9ee673c", "depth": 465, "recursion_limit": 1000, "kind": "legacy", "driver_error": "EXECUTION_DRIVER_FAILED", "run_status": "running", "raw": {"status": "succeeded", "error": null, "execution_fact": "completed"}, "calls": 1}
+_ test_nested_return_must_finish_or_reject_before_durable_write[file-465-native] _
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round5.py:151: in test_nested_return_must_finish_or_reject_before_durable_write
+    assert error is None, "Accepted nesting must survive persistence and subsequent reads"
+E   AssertionError: Accepted nesting must survive persistence and subsequent reads
+E   assert 'EXECUTION_DRIVER_FAILED' is None
+----------------------------- Captured stdout call -----------------------------
+{"run_id": "e2f65db3-87ef-4514-b0bc-cde83f78303c", "operation_id": "41a47e7e-975c-5fa2-a5df-9df9c1aac457", "depth": 465, "recursion_limit": 1000, "kind": "native", "driver_error": "EXECUTION_DRIVER_FAILED", "run_status": "running", "raw": {"status": "succeeded", "error": null, "execution_fact": "completed"}, "calls": 1}
+_ test_nested_return_must_finish_or_reject_before_durable_write[file-465-callback] _
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round5.py:151: in test_nested_return_must_finish_or_reject_before_durable_write
+    assert error is None, "Accepted nesting must survive persistence and subsequent reads"
+E   AssertionError: Accepted nesting must survive persistence and subsequent reads
+E   assert 'EXECUTION_DRIVER_FAILED' is None
+----------------------------- Captured stdout call -----------------------------
+{"run_id": "8c7120b0-9e4e-4087-87a8-d77906bf417c", "operation_id": "d011f084-aad5-54b9-87d2-34820dd3fc9e", "depth": 465, "recursion_limit": 1000, "kind": "callback", "driver_error": "EXECUTION_DRIVER_FAILED", "run_status": "running", "raw": {"status": "succeeded", "error": null, "execution_fact": "completed"}, "calls": 1}
+_ test_nested_return_must_finish_or_reject_before_durable_write[file-480-native] _
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round5.py:151: in test_nested_return_must_finish_or_reject_before_durable_write
+    assert error is None, "Accepted nesting must survive persistence and subsequent reads"
+E   AssertionError: Accepted nesting must survive persistence and subsequent reads
+E   assert 'EXECUTION_DRIVER_FAILED' is None
+----------------------------- Captured stdout call -----------------------------
+{"run_id": "289161ba-26f9-4734-b02e-7f6be68d43ad", "operation_id": "8431b721-e824-5bbc-81c4-03f54eca1f1f", "depth": 480, "recursion_limit": 1000, "kind": "native", "driver_error": "EXECUTION_DRIVER_FAILED", "run_status": "running", "raw": null, "calls": 1}
+_ test_nested_return_must_finish_or_reject_before_durable_write[file-480-callback] _
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round5.py:151: in test_nested_return_must_finish_or_reject_before_durable_write
+    assert error is None, "Accepted nesting must survive persistence and subsequent reads"
+E   AssertionError: Accepted nesting must survive persistence and subsequent reads
+E   assert 'ATTEMPT_COMPLETION_COMMIT_FAILED' is None
+----------------------------- Captured stdout call -----------------------------
+{"run_id": "3e5f96f2-235d-4622-9183-e8af12e82867", "operation_id": "63ee3f29-db03-584e-b3ee-be14390cba33", "depth": 480, "recursion_limit": 1000, "kind": "callback", "driver_error": "ATTEMPT_COMPLETION_COMMIT_FAILED", "run_status": "running", "raw": null, "calls": 1}
+_ test_nested_return_must_finish_or_reject_before_durable_write[file-600-native] _
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round5.py:151: in test_nested_return_must_finish_or_reject_before_durable_write
+    assert error is None, "Accepted nesting must survive persistence and subsequent reads"
+E   AssertionError: Accepted nesting must survive persistence and subsequent reads
+E   assert 'EXECUTION_DRIVER_FAILED' is None
+----------------------------- Captured stdout call -----------------------------
+{"run_id": "24a8f47e-b369-4e36-aec2-948b50f51ad7", "operation_id": "40f5346b-81c3-598c-88b9-2b0b5183b57e", "depth": 600, "recursion_limit": 1000, "kind": "native", "driver_error": "EXECUTION_DRIVER_FAILED", "run_status": "running", "raw": null, "calls": 1}
+_ test_nested_return_must_finish_or_reject_before_durable_write[file-600-callback] _
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round5.py:151: in test_nested_return_must_finish_or_reject_before_durable_write
+    assert error is None, "Accepted nesting must survive persistence and subsequent reads"
+E   AssertionError: Accepted nesting must survive persistence and subsequent reads
+E   assert 'ATTEMPT_COMPLETION_COMMIT_FAILED' is None
+----------------------------- Captured stdout call -----------------------------
+{"run_id": "6366f865-5c22-4fef-82db-dd1654bcedcb", "operation_id": "2e056053-7a0b-5776-884a-9182de618fa8", "depth": 600, "recursion_limit": 1000, "kind": "callback", "driver_error": "ATTEMPT_COMPLETION_COMMIT_FAILED", "run_status": "running", "raw": null, "calls": 1}
+_ test_saved_nested_result_remains_resumable_and_releases_session[memory-function] _
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round5.py:205: in test_saved_nested_result_remains_resumable_and_releases_session
+    assert all(row["error"] is None and row["status"] == "succeeded" for row in observations), (
+E   AssertionError: The stored result must remain usable after restarting RuntimeEngine
+E   assert False
+E    +  where False = all(<generator object test_saved_nested_result_remains_resumable_and_releases_session.<locals>.<genexpr> at 0x107b95d80>)
+----------------------------- Captured stdout call -----------------------------
+{"cycles": [{"run_id": "471f1610-6ec6-42b2-82ef-6b2411e43c8a", "cycle": "initial", "error": "EXECUTION_DRIVER_FAILED", "status": "running", "raw": {"status": "succeeded", "error": null, "execution_fact": "completed"}}, {"run_id": "471f1610-6ec6-42b2-82ef-6b2411e43c8a", "cycle": "recovered", "error": "EXECUTION_DRIVER_FAILED", "status": "running", "raw": {"status": "succeeded", "error": null, "execution_fact": "completed"}, "next_session_turn": "SESSION_BUSY"}], "calls": 1}
+_ test_saved_nested_result_remains_resumable_and_releases_session[memory-native] _
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round5.py:205: in test_saved_nested_result_remains_resumable_and_releases_session
+    assert all(row["error"] is None and row["status"] == "succeeded" for row in observations), (
+E   AssertionError: The stored result must remain usable after restarting RuntimeEngine
+E   assert False
+E    +  where False = all(<generator object test_saved_nested_result_remains_resumable_and_releases_session.<locals>.<genexpr> at 0x107b5bd30>)
+----------------------------- Captured stdout call -----------------------------
+{"cycles": [{"run_id": "c6461378-a73c-45c9-93f8-d987c7ccce25", "cycle": "initial", "error": "EXECUTION_DRIVER_FAILED", "status": "running", "raw": {"status": "succeeded", "error": null, "execution_fact": "completed"}}, {"run_id": "c6461378-a73c-45c9-93f8-d987c7ccce25", "cycle": "recovered", "error": "EXECUTION_DRIVER_FAILED", "status": "running", "raw": {"status": "succeeded", "error": null, "execution_fact": "completed"}, "next_session_turn": "SESSION_BUSY"}], "calls": 1}
+_ test_saved_nested_result_remains_resumable_and_releases_session[file-function] _
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round5.py:205: in test_saved_nested_result_remains_resumable_and_releases_session
+    assert all(row["error"] is None and row["status"] == "succeeded" for row in observations), (
+E   AssertionError: The stored result must remain usable after restarting RuntimeEngine
+E   assert False
+E    +  where False = all(<generator object test_saved_nested_result_remains_resumable_and_releases_session.<locals>.<genexpr> at 0x107b586c0>)
+----------------------------- Captured stdout call -----------------------------
+{"cycles": [{"run_id": "a5c078b0-c40a-4874-a01d-c1e8d39153aa", "cycle": "initial", "error": "EXECUTION_DRIVER_FAILED", "status": "running", "raw": {"status": "succeeded", "error": null, "execution_fact": "completed"}}, {"run_id": "a5c078b0-c40a-4874-a01d-c1e8d39153aa", "cycle": "recovered", "error": "EXECUTION_DRIVER_FAILED", "status": "running", "raw": {"status": "succeeded", "error": null, "execution_fact": "completed"}, "next_session_turn": "SESSION_BUSY"}], "calls": 1}
+_ test_saved_nested_result_remains_resumable_and_releases_session[file-native] _
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round5.py:205: in test_saved_nested_result_remains_resumable_and_releases_session
+    assert all(row["error"] is None and row["status"] == "succeeded" for row in observations), (
+E   AssertionError: The stored result must remain usable after restarting RuntimeEngine
+E   assert False
+E    +  where False = all(<generator object test_saved_nested_result_remains_resumable_and_releases_session.<locals>.<genexpr> at 0x107adb850>)
+----------------------------- Captured stdout call -----------------------------
+{"cycles": [{"run_id": "3c20c25b-f27f-42bc-8eca-94326f1b607e", "cycle": "initial", "error": "EXECUTION_DRIVER_FAILED", "status": "running", "raw": {"status": "succeeded", "error": null, "execution_fact": "completed"}}, {"run_id": "3c20c25b-f27f-42bc-8eca-94326f1b607e", "cycle": "recovered", "error": "EXECUTION_DRIVER_FAILED", "status": "running", "raw": {"status": "succeeded", "error": null, "execution_fact": "completed"}, "next_session_turn": "SESSION_BUSY"}], "calls": 1}
+_ test_raised_error_fields_do_not_bypass_operation_error_validation[memory-nan-raised] _
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round5.py:245: in test_raised_error_fields_do_not_bypass_operation_error_validation
+    assert result.status == "succeeded", "A malformed tool error must remain a tool failure"
+E   AssertionError: A malformed tool error must remain a tool failure
+E   assert 'failed' == 'succeeded'
+E     
+E     - succeeded
+E     + failed
+----------------------------- Captured stdout call -----------------------------
+{"run_id": "4bc7f476-ea65-434d-905c-c5ca2304cb11", "operation_id": "d4339b5b-9670-56a5-af67-beb71af17dc3", "channel": "raised", "shape": "nan", "run_status": "failed", "run_error": {"code": "INVALID_JSON", "message": "Only finite JSON values are accepted", "category": "business", "phase": "execute", "external_outcome": "known", "retryable_transport": false, "field_path": null}, "raw": null}
+_ test_raised_error_fields_do_not_bypass_operation_error_validation[memory-bad-category-raised] _
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round5.py:252: in test_raised_error_fields_do_not_bypass_operation_error_validation
+    assert error["category"] in {
+E   AssertionError: assert 'outside-enum' in {'business', 'cancelled', 'conflict', 'not_found', 'permission', 'protocol', ...}
+----------------------------- Captured stdout call -----------------------------
+{"run_id": "3d98d416-35a0-4a15-a1a1-ff37bfda11c4", "operation_id": "c1fd7656-7056-5c26-88f0-11efe2c6bd65", "channel": "raised", "shape": "bad-category", "run_status": "succeeded", "run_error": null, "raw": {"status": "failed", "error": {"code": "FAILED", "message": "FAILED", "category": "outside-enum", "phase": "execute", "external_outcome": "known", "retryable_transport": false, "field_path": null}, "execution_fact": "unknown"}}
+_ test_raised_error_fields_do_not_bypass_operation_error_validation[memory-empty-code-raised] _
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round5.py:250: in test_raised_error_fields_do_not_bypass_operation_error_validation
+    assert isinstance(error["code"], str) and error["code"]
+E   AssertionError: assert (True and '')
+E    +  where True = isinstance('', str)
+----------------------------- Captured stdout call -----------------------------
+{"run_id": "6f2758c0-3d0d-413f-9f1e-cbee4c5466da", "operation_id": "22eb2890-0fe7-57ff-a277-7ddcae6350cb", "channel": "raised", "shape": "empty-code", "run_status": "succeeded", "run_error": null, "raw": {"status": "failed", "error": {"code": "", "message": "", "category": "business", "phase": "execute", "external_outcome": "known", "retryable_transport": false, "field_path": null}, "execution_fact": "unknown"}}
+_ test_raised_error_fields_do_not_bypass_operation_error_validation[memory-bool-retryable-raised] _
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round5.py:265: in test_raised_error_fields_do_not_bypass_operation_error_validation
+    assert type(error["retryable_transport"]) is bool
+E   AssertionError: assert <class 'int'> is bool
+E    +  where <class 'int'> = type(1)
+----------------------------- Captured stdout call -----------------------------
+{"run_id": "21b2813f-a9d1-49fd-8683-4806caa8c4be", "operation_id": "25ee2b60-2581-5558-9fa3-c4607888e35b", "channel": "raised", "shape": "bool-retryable", "run_status": "succeeded", "run_error": null, "raw": {"status": "failed", "error": {"code": "FAILED", "message": "FAILED", "category": "business", "phase": "execute", "external_outcome": "known", "retryable_transport": 1, "field_path": null}, "execution_fact": "unknown"}}
+_ test_raised_error_fields_do_not_bypass_operation_error_validation[file-nan-raised] _
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round5.py:245: in test_raised_error_fields_do_not_bypass_operation_error_validation
+    assert result.status == "succeeded", "A malformed tool error must remain a tool failure"
+E   AssertionError: A malformed tool error must remain a tool failure
+E   assert 'failed' == 'succeeded'
+E     
+E     - succeeded
+E     + failed
+----------------------------- Captured stdout call -----------------------------
+{"run_id": "e2b1ec4c-5be7-453e-acd7-63778663b832", "operation_id": "f776143c-7b7a-50b3-9969-73659fc797de", "channel": "raised", "shape": "nan", "run_status": "failed", "run_error": {"category": "business", "code": "INVALID_JSON", "external_outcome": "known", "field_path": null, "message": "Only finite JSON values are accepted", "phase": "execute", "retryable_transport": false}, "raw": null}
+_ test_raised_error_fields_do_not_bypass_operation_error_validation[file-bad-category-raised] _
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round5.py:252: in test_raised_error_fields_do_not_bypass_operation_error_validation
+    assert error["category"] in {
+E   AssertionError: assert 'outside-enum' in {'business', 'cancelled', 'conflict', 'not_found', 'permission', 'protocol', ...}
+----------------------------- Captured stdout call -----------------------------
+{"run_id": "40906167-9932-4f3a-8664-ede600c9b1a3", "operation_id": "9d169baa-8381-5e58-bbc3-58fabed82165", "channel": "raised", "shape": "bad-category", "run_status": "succeeded", "run_error": null, "raw": {"status": "failed", "error": {"category": "outside-enum", "code": "FAILED", "external_outcome": "known", "field_path": null, "message": "FAILED", "phase": "execute", "retryable_transport": false}, "execution_fact": "unknown"}}
+_ test_raised_error_fields_do_not_bypass_operation_error_validation[file-empty-code-raised] _
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round5.py:250: in test_raised_error_fields_do_not_bypass_operation_error_validation
+    assert isinstance(error["code"], str) and error["code"]
+E   AssertionError: assert (True and '')
+E    +  where True = isinstance('', str)
+----------------------------- Captured stdout call -----------------------------
+{"run_id": "87828503-2155-4096-866d-86f9b43337c3", "operation_id": "00bbbf3e-cac1-5e43-90b6-836d7cfe8ff4", "channel": "raised", "shape": "empty-code", "run_status": "succeeded", "run_error": null, "raw": {"status": "failed", "error": {"category": "business", "code": "", "external_outcome": "known", "field_path": null, "message": "", "phase": "execute", "retryable_transport": false}, "execution_fact": "unknown"}}
+_ test_raised_error_fields_do_not_bypass_operation_error_validation[file-bool-retryable-raised] _
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round5.py:265: in test_raised_error_fields_do_not_bypass_operation_error_validation
+    assert type(error["retryable_transport"]) is bool
+E   AssertionError: assert <class 'int'> is bool
+E    +  where <class 'int'> = type(1)
+----------------------------- Captured stdout call -----------------------------
+{"run_id": "5297797a-6a40-411d-82e8-e33b23c604c7", "operation_id": "c23fd569-ee4c-5e91-a68c-07aa62176449", "channel": "raised", "shape": "bool-retryable", "run_status": "succeeded", "run_error": null, "raw": {"status": "failed", "error": {"category": "business", "code": "FAILED", "external_outcome": "known", "field_path": null, "message": "FAILED", "phase": "execute", "retryable_transport": 1}, "execution_fact": "unknown"}}
+--- generated xml file: /tmp/agentloom-review5-20261017/boundaries.junit.xml ---
+=========================== short test summary info ============================
+FAILED agentloom-sdk/qa/test_sdk_review_round5.py::test_nested_return_must_finish_or_reject_before_durable_write[memory-465-function]
+FAILED agentloom-sdk/qa/test_sdk_review_round5.py::test_nested_return_must_finish_or_reject_before_durable_write[memory-465-legacy]
+FAILED agentloom-sdk/qa/test_sdk_review_round5.py::test_nested_return_must_finish_or_reject_before_durable_write[memory-465-native]
+FAILED agentloom-sdk/qa/test_sdk_review_round5.py::test_nested_return_must_finish_or_reject_before_durable_write[memory-465-callback]
+FAILED agentloom-sdk/qa/test_sdk_review_round5.py::test_nested_return_must_finish_or_reject_before_durable_write[memory-480-native]
+FAILED agentloom-sdk/qa/test_sdk_review_round5.py::test_nested_return_must_finish_or_reject_before_durable_write[memory-480-callback]
+FAILED agentloom-sdk/qa/test_sdk_review_round5.py::test_nested_return_must_finish_or_reject_before_durable_write[memory-600-native]
+FAILED agentloom-sdk/qa/test_sdk_review_round5.py::test_nested_return_must_finish_or_reject_before_durable_write[memory-600-callback]
+FAILED agentloom-sdk/qa/test_sdk_review_round5.py::test_nested_return_must_finish_or_reject_before_durable_write[file-465-function]
+FAILED agentloom-sdk/qa/test_sdk_review_round5.py::test_nested_return_must_finish_or_reject_before_durable_write[file-465-legacy]
+FAILED agentloom-sdk/qa/test_sdk_review_round5.py::test_nested_return_must_finish_or_reject_before_durable_write[file-465-native]
+FAILED agentloom-sdk/qa/test_sdk_review_round5.py::test_nested_return_must_finish_or_reject_before_durable_write[file-465-callback]
+FAILED agentloom-sdk/qa/test_sdk_review_round5.py::test_nested_return_must_finish_or_reject_before_durable_write[file-480-native]
+FAILED agentloom-sdk/qa/test_sdk_review_round5.py::test_nested_return_must_finish_or_reject_before_durable_write[file-480-callback]
+FAILED agentloom-sdk/qa/test_sdk_review_round5.py::test_nested_return_must_finish_or_reject_before_durable_write[file-600-native]
+FAILED agentloom-sdk/qa/test_sdk_review_round5.py::test_nested_return_must_finish_or_reject_before_durable_write[file-600-callback]
+FAILED agentloom-sdk/qa/test_sdk_review_round5.py::test_saved_nested_result_remains_resumable_and_releases_session[memory-function]
+FAILED agentloom-sdk/qa/test_sdk_review_round5.py::test_saved_nested_result_remains_resumable_and_releases_session[memory-native]
+FAILED agentloom-sdk/qa/test_sdk_review_round5.py::test_saved_nested_result_remains_resumable_and_releases_session[file-function]
+FAILED agentloom-sdk/qa/test_sdk_review_round5.py::test_saved_nested_result_remains_resumable_and_releases_session[file-native]
+FAILED agentloom-sdk/qa/test_sdk_review_round5.py::test_raised_error_fields_do_not_bypass_operation_error_validation[memory-nan-raised]
+FAILED agentloom-sdk/qa/test_sdk_review_round5.py::test_raised_error_fields_do_not_bypass_operation_error_validation[memory-bad-category-raised]
+FAILED agentloom-sdk/qa/test_sdk_review_round5.py::test_raised_error_fields_do_not_bypass_operation_error_validation[memory-empty-code-raised]
+FAILED agentloom-sdk/qa/test_sdk_review_round5.py::test_raised_error_fields_do_not_bypass_operation_error_validation[memory-bool-retryable-raised]
+FAILED agentloom-sdk/qa/test_sdk_review_round5.py::test_raised_error_fields_do_not_bypass_operation_error_validation[file-nan-raised]
+FAILED agentloom-sdk/qa/test_sdk_review_round5.py::test_raised_error_fields_do_not_bypass_operation_error_validation[file-bad-category-raised]
+FAILED agentloom-sdk/qa/test_sdk_review_round5.py::test_raised_error_fields_do_not_bypass_operation_error_validation[file-empty-code-raised]
+FAILED agentloom-sdk/qa/test_sdk_review_round5.py::test_raised_error_fields_do_not_bypass_operation_error_validation[file-bool-retryable-raised]
+28 failed, 44 passed in 6.36s

@@ -1,0 +1,242 @@
+{
+  "base_head": "2b47ea96111326b3e13d5a0f808583bcf50cc8b4",
+  "scope": "SDK recovery binding type semantics, variable declaration snapshots, public event envelope JSON depth; Workflow excluded",
+  "fixes": [
+    {
+      "issue": "Python Boolean/number equality accepted changed recovery configuration",
+      "implementation": "Canonical JSON comparison before execution ownership or environment preparation; policy projection uses the same JSON semantics"
+    },
+    {
+      "issue": "asdict erased VariableSpec and default-value type semantics",
+      "implementation": "binding_version 2 and per-role variable contracts, shared Definition snapshots for action validation; explicit integer/number default types"
+    },
+    {
+      "issue": "RunEvent rejected valid 127/128-container final values",
+      "implementation": "Freeze committed SDK payloads under the internal 512-container budget; external inputs/outputs stay at 128"
+    }
+  ],
+  "baseline": {
+    "passed": 16,
+    "failed": 57,
+    "command": "pytest with pythonpath pointing at the byte-preserved pre-edit source snapshot",
+    "log": "baseline.txt",
+    "junit": "baseline.junit.xml",
+    "fixture_note": "The initial model-options fixture lacked validate_options. It was corrected to advertise support; initial logs remain under before-model-fixture-correction-*."
+  },
+  "focused": {
+    "passed": 221,
+    "log": "focused.txt"
+  },
+  "full_regression": {
+    "passed": 1483,
+    "failed": 0,
+    "errors": 0,
+    "skipped": 0,
+    "excluded": [],
+    "sdk": 1021,
+    "qa": 462,
+    "elapsed_seconds": 324.42011787497904,
+    "result": "regression-summary.json",
+    "new_cases": {
+      "tests.test_binding_process": 6,
+      "tests.test_definition_snapshots": 4,
+      "tests.test_public_event_depth": 28,
+      "tests.test_recovery_binding_contract": 86
+    }
+  },
+  "source_files": 166,
+  "source_unchanged_after_docs": true,
+  "ruff": {
+    "lint": "passed",
+    "format": "passed",
+    "python_files": 167
+  },
+  "wheel": {
+    "wheel": "/private/tmp/agentloom-recovery-contracts-wheel-wdqfo1nw/dist/agentloom_sdk-0.1.0a1-py3-none-any.whl",
+    "sha256": "651c7b3dcd723b3d6c929092c414d3942b067311904784e914b2424f76f64882",
+    "installed": "/private/tmp/agentloom-recovery-contracts-wheel-wdqfo1nw/install/agentloom",
+    "verified_import": "/private/tmp/agentloom-recovery-contracts-wheel-wdqfo1nw/install/agentloom/__init__.py",
+    "source_files_match": 98,
+    "legacy_source_files_match": 97,
+    "process_recovery": [
+      {
+        "source": "current",
+        "role": "react",
+        "profile": "spec",
+        "changed_configuration": {
+          "error": "RECOVERY_BINDING_MISMATCH",
+          "field": null
+        },
+        "resume": {
+          "status": "succeeded",
+          "loops": 1
+        },
+        "stderr_empty": true
+      },
+      {
+        "source": "current",
+        "role": "worker",
+        "profile": "spec",
+        "changed_configuration": {
+          "error": "RECOVERY_BINDING_MISMATCH",
+          "field": null
+        },
+        "resume": {
+          "status": "succeeded",
+          "loops": 3
+        },
+        "stderr_empty": true
+      },
+      {
+        "source": "legacy",
+        "role": "react",
+        "profile": "plain",
+        "changed_configuration": null,
+        "resume": {
+          "status": "succeeded",
+          "loops": 1
+        },
+        "stderr_empty": true
+      },
+      {
+        "source": "legacy",
+        "role": "react",
+        "profile": "schema",
+        "changed_configuration": {
+          "error": "RECOVERY_BINDING_MISMATCH",
+          "field": null
+        },
+        "resume": {
+          "status": "succeeded",
+          "loops": 1
+        },
+        "stderr_empty": true
+      },
+      {
+        "source": "legacy",
+        "role": "react",
+        "profile": "spec",
+        "changed_configuration": null,
+        "resume": {
+          "error": "RECOVERY_BINDING_MISMATCH",
+          "field": "bindings.definitions.react.variables.mode"
+        },
+        "stderr_empty": true
+      },
+      {
+        "source": "legacy",
+        "role": "react",
+        "profile": "number",
+        "changed_configuration": null,
+        "resume": {
+          "error": "RECOVERY_BINDING_MISMATCH",
+          "field": "bindings.definitions.react.variables.mode"
+        },
+        "stderr_empty": true
+      },
+      {
+        "source": "legacy",
+        "role": "worker",
+        "profile": "plain",
+        "changed_configuration": null,
+        "resume": {
+          "status": "succeeded",
+          "loops": 3
+        },
+        "stderr_empty": true
+      },
+      {
+        "source": "legacy",
+        "role": "worker",
+        "profile": "schema",
+        "changed_configuration": {
+          "error": "RECOVERY_BINDING_MISMATCH",
+          "field": null
+        },
+        "resume": {
+          "status": "succeeded",
+          "loops": 3
+        },
+        "stderr_empty": true
+      },
+      {
+        "source": "legacy",
+        "role": "worker",
+        "profile": "spec",
+        "changed_configuration": null,
+        "resume": {
+          "error": "RECOVERY_BINDING_MISMATCH",
+          "field": "bindings.definitions.worker.variables.mode"
+        },
+        "stderr_empty": true
+      },
+      {
+        "source": "legacy",
+        "role": "worker",
+        "profile": "number",
+        "changed_configuration": null,
+        "resume": {
+          "error": "RECOVERY_BINDING_MISMATCH",
+          "field": "bindings.definitions.worker.variables.mode"
+        },
+        "stderr_empty": true
+      }
+    ],
+    "event_delivery": [
+      {
+        "mode": "react",
+        "backend": "file",
+        "depth": 128,
+        "status": "succeeded",
+        "terminal_event": "run.completed"
+      },
+      {
+        "mode": "react",
+        "backend": "memory",
+        "depth": 128,
+        "status": "succeeded",
+        "terminal_event": "run.completed"
+      },
+      {
+        "mode": "plan",
+        "backend": "file",
+        "depth": 128,
+        "status": "succeeded",
+        "terminal_event": "run.completed"
+      },
+      {
+        "mode": "plan",
+        "backend": "memory",
+        "depth": 128,
+        "status": "succeeded",
+        "terminal_event": "run.completed"
+      }
+    ]
+  },
+  "compatibility": "Legacy nonterminal manifests with ambiguous spec-shaped objects or integral numeric defaults fail closed with RECOVERY_BINDING_MISMATCH and a variable path. Unambiguous original bindings resume without rewriting saved prompts/manifests. Terminal observation remains available.",
+  "docs": {
+    "build": "passed",
+    "links": "passed",
+    "files": {
+      "agentloom-sdk/README.md": "f71ceb4b8e7bbbae44e10b3d397f7e7bfb56fbe42fe2569723f249f6f989414e",
+      "docs/sdk/assembly.md": "63950aa6b6419d886c5a0706ef05a3f95b43384b509bd49c3cf449189d9d1c6e",
+      "docs/sdk/implementation.md": "a7b72e8732a4ae4b73704bf1d7ee8f077271d7bc7a034642d7caaab9a6483efb",
+      "docs/sdk/integration.md": "7ca4f16fc6f387b10f1f31b19ee0680a28e232991010299f857623c04dbc45b7",
+      "docs/sdk/public-api.md": "5ca7df9a4af7d67e471ff331cecf587c188d6d270b04381d71c1ed9fe101be35"
+    },
+    "logs": [
+      "docs-build.txt",
+      "docs-check.txt"
+    ]
+  },
+  "diff_check": "passed",
+  "other_work": {
+    "checked_files": 453,
+    "changed_files": [],
+    "scope": "All pre-existing tests, QA reports/evidence and examples; new regression files are separate."
+  },
+  "limitations": [
+    "Deterministic models and local process/protocol tests; no live LLM or remote-service acceptance"
+  ],
+  "committed_or_pushed": false
+}

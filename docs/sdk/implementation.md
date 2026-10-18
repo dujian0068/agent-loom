@@ -2,7 +2,7 @@
 
 日期：2026-10-18。实现版本：`agentloom-sdk 0.1.0a1`。当前推荐入口是 `PropertiesConfig → AgentLoom → build(AgentDefinition)`，默认使用文件系统保存执行状态。安装、可运行代码和接续步骤见 [SDK 接入指南](integration.md)。Workflow 按当前开发范围暂不接入。
 
-本页先说明当前状态与实现职责，再保留各阶段修复及验证记录。最新实现见[文件提供者 SPI](#文件提供者-spi)。第五轮修复处理 JSON 深度与持久化不一致、直接抛错绕过 OperationError 校验两类问题，具体测试快照见[第五轮记录](#第五轮持久化-json-深度与异常记录修复)。其他 SDK 章节仍含完整目标设计，不能据此推定全部接口已发布。
+本页先说明当前状态与实现职责，再保留各阶段修复及验证记录。最新实现见[文件提供者 SPI](#文件提供者-spi)，此前修复见[恢复绑定与公开事件边界](#恢复绑定与公开事件边界修复)。SDK 已按 LangChain 模板适配 ReAct／Planner／Executor，业务方只填写业务 Prompt，见[LangChain 模板适配](#langchain-模板适配与回归)。首次自动注入与第五轮修复分别保留在[模式提示词实现](#sdk-自动模式提示词)和[第五轮记录](#第五轮持久化-json-深度与异常记录修复)。其他 SDK 章节仍含完整目标设计，不能据此推定全部接口已发布。
 
 ## 当前接口与交付状态
 
@@ -10,6 +10,7 @@
 | --- | --- | --- |
 | 参数与装配 | PropertiesConfig、RuntimeProperties、AgentProperties、ServiceProperties、FileProperties；AgentLoom、AgentBuilder、直接构造共用校验 | 配置不可变，服务实例借用；不提供全局可变参数容器或热更新 |
 | Agent 执行 | ReAct／Plan–Executor、RunHandle、停止、补充、同配置重开、独立角色上下文 | 一个实例绑定一个 Run；AgentNode 是内部适配桥，Workflow／StateGraph 未接入 |
+| 模式提示词 | SDK 自动生成 ReAct／Planner／Executor 指令、输入输出合同，Run 保存固定版本正文 | 业务 Prompt 独立；模式指令受保护并计入预算；Prompt 引导行为，运行时约束实际动作 |
 | 模型 | Chat Completions／Responses、ScriptedModel；ModelAdapter.stream_once、ProviderEvent、ModelDescriptor | 窗口显式提供，未实现统一 ModelAdapter.discover；公开事件不是 token 流 |
 | 能力扩展 | CapabilityAdapter.invoke_once、CapabilityRequest、ToolInvocationContext、ToolResult；目录 for_role／for_node_binding／resolve | 先注册再按角色绑定；旧 invoke 仅作兼容；独立内容引用和 Artifact 授权未实现 |
 | Hook | HookInput、HookContext、HookRecordView／Page、FunctionHookHandler、有序 request／response 链 | 读端口固定版本且可过期；尚无 ScriptHookHandler 和生命周期修改 Hook |
@@ -26,9 +27,12 @@
 | `public.application/properties/builder/assembly` | 启动参数组合、宿主生命周期、从定义 build、统一装配与资源所有权 |
 | `public.agents/handles/projections` | 执行门面、实例绑定、观察／控制和公开结果过滤 |
 | `configuration.properties/models/schemas/actions` | 参数冻结、默认值、数值与 Schema 校验、角色动作权限及恢复清单 |
+| `configuration.definitions/assembly/recovery` | 变量声明类型快照、版本化绑定清单、类型语义比较及旧清单兼容边界 |
 | `configuration.json_values/json_documents`、`operation_errors` | 边界 JSON 与内部文档的统一深度、迭代复制／冻结／RFC 8785；共享 OperationError 校验 |
+| `prompts.roles/protocol/templates/assembly/recovery` | LangChain 三角色适配、原生协议、版本目录、输入输出合同组装、Run 指令快照与恢复校验 |
 | `runtime.host/runner/agent_engine/agent_loop` | 本机宿主、每 Run 执行者、角色激活／批次汇合及独立 Agent Loop |
 | `runtime.calls/completion/handlers/usage` | 准入与重试、Attempt 完成回执、单次适配器调用、原子用量计量 |
+| `runtime.output` | 区分可纠正的模型候选错误与不可由模型修正的 Schema 配置错误 |
 | `runtime.recovery/control/maintenance/cleanup/leases` | 恢复账本核验、停止和截止、撤权与清理重试、执行及清理租约 |
 | `events.hooks/hook_views/hook_reads/patches/control` | 有序 Hook、受限输入视图、读取授权、双补丁提交与无 Agent 控制收束 |
 | `context` | 消息物化、历史与补充顺序、受保护输入、预算、可恢复摘要、大结果读取 |
@@ -63,9 +67,11 @@ flowchart LR
 
 ## 验证口径
 
-文件 SPI 的提交快照基于 `2b47ea9` 独立验证，没有包含工作区其他未提交功能；完整回归 **1075 passed，0 failed，0 skipped**，耗时 292.23 秒；144 个源码／测试／配置文件摘要在运行前后保持一致，见[提交快照回归](../../agentloom-sdk/qa/evidence/workspace-spi-publish-20261018/regression-summary.json)。下文的第五轮数字属于历史验证记录。
+本次统一提交此前所有剩余改动，包括 LangChain 三角色模式提示词、恢复合同与公开事件修复、输出与异常结果校验、测试、文档、示例及历史验证证据。提交前重新完整执行 SDK 与七轮 QA：**1537 passed，0 failed，0 skipped**，其中 SDK 1075 项、QA 462 项，耗时 342.81 秒。189 个源码／资源／测试／示例文件在运行前后保持一致，没有排除用例或功能子集，见[本次完整回归](../../agentloom-sdk/qa/evidence/full-workspace-publish-20261018/regression-summary.json)和[日志](../../agentloom-sdk/qa/evidence/full-workspace-publish-20261018/regression.txt)。
 
-第五轮修复完整回归 **1089 passed**：既有 SDK 与新增修复测试 783 项，原 QA 110 项、复审 QA 24 项、第三轮 QA 44 项、第四轮 QA 56 项、第五轮 QA 72 项；对应[固定源码与测试清单](../../agentloom-sdk/qa/evidence/round5-fixes-20261017/summary.json)。工作区另行新增且持续变化的白盒探针单独验证，不计入此范围；详见[探针快照与测试逻辑核对](../../agentloom-sdk/qa/evidence/round5-fixes-20261017/separate-probe-assessment.json)。948／813 等数字属于历史快照，各轮原始审查和失败证据保留。
+此前文件提供者 SPI 完成时的完整工作区回归 **1537 passed，0 failed，0 skipped**：SDK 1075 项、七轮 QA 462 项，耗时 336.82 秒。该轮新增 54 项测试，完整执行 SDK 与 QA 两个目录，没有排除用例；171 个源码／测试／配置文件摘要在运行前后保持一致，见[固定源码与回归结果](../../agentloom-sdk/qa/evidence/workspace-spi-20261018/regression-summary.json)。
+
+此前恢复绑定与公开事件修复后的 1483 项及 1317／1155／1089／948／813 等数字属于历史快照，各轮原始审查和失败证据保留；前一轮验证见[恢复合同回归记录](../../agentloom-sdk/qa/evidence/recovery-contracts-20261018/regression-summary.json)。
 
 这些验证使用本地确定性模型、协议替身和已有的 MCP stdio／SSE 测试，没有远端模型、远端 MCP、多机或 Workflow 的验收结论。完整目标尚未实现的部分集中列在[设计差异](#与完整目标设计的差异)。
 
@@ -84,7 +90,7 @@ flowchart LR
 - 默认 JSON 文件后端、显式选择的内存后端、幂等提交回执、租约 epoch fencing、独立进程恢复；已保存 raw / Hook result / 子任务 / 批次继续原阶段，没有可靠外部结果的调用标记 unknown。文件后端采用 namespace 文件锁、不可变记录和原子清单，不需要数据库。
 - 独立停止命令与停止前准入关闭，宿主关闭保留现场；终态与 CleanupJob 原子提交，清理独立领取租约、失败重试，不再次激活 Agent。
 
-源码按 `public`、`configuration`、`runtime`、`events`、`context`、`capabilities`、`workspace`、`environment`、`models`、`storage` 分包。具体接入见[接入指南](integration.md)，包安装说明见 [SDK README](../../agentloom-sdk/README.md)。
+源码按 `public`、`configuration`、`prompts`、`runtime`、`events`、`context`、`capabilities`、`workspace`、`environment`、`models`、`storage` 分包。具体接入见[接入指南](integration.md)，包安装说明见 [SDK README](../../agentloom-sdk/README.md)。
 
 ## 文件提供者 SPI
 
@@ -94,11 +100,74 @@ flowchart LR
 
 处理了缺失／重名登记、接口不完整、构造失败、实例方法被覆盖、异步结果、错误 DTO、越权结果、关闭失败重试等边界。恢复比较保留 options 中 bool／int／float 的类型；已保存 raw 的恢复不重复写入。后台清理核对 scope 提供者身份，传递独立 cleanup_job_id／cleanup_lease_epoch 并校验清理租约；持久工作区保留内容。已返回的非法结果与超时结果仍保留 completed 事实，避免把已完成写入误判成 unknown 后重试。
 
-新增的 54 项专项测试实际构建并安装独立提供者包，使用公开接口实现全部操作；包含 ReAct／Plan 跨进程写入后退出、错误配置拒绝和原配置接续验证。
+新增的 54 项测试实际构建并安装独立提供者包，使用公开接口实现全部操作。另有 ReAct／Plan 跨进程写入后退出、错误配置拒绝和原配置接续验证。最终完整回归 **1537 passed，0 failed，0 skipped**，见[回归证据](../../agentloom-sdk/qa/evidence/workspace-spi-20261018/regression-summary.json)和[完整日志](../../agentloom-sdk/qa/evidence/workspace-spi-20261018/regression.txt)。
 
-提交时按修改前备份分离了工作区其他未提交改动，在 `2b47ea9` 上单独验证文件 SPI。独立安装检查发现宿主关闭需要等待维护线程完全退出，因此同时包含该关闭等待修复及对应的 4 项测试，避免提供者或存储关闭后仍有清理任务访问它们。
+SDK 与第三方包均构建为 wheel 并独立安装，108 个 SDK 源码／资源文件与工作区逐字节一致；10 个独立进程场景通过，覆盖两种模式下本地及第三方的全部 11 个操作、写入后进程退出、配置变更拒绝和原配置恢复，见[安装包验证](../../agentloom-sdk/qa/evidence/workspace-spi-20261018/wheel-summary.json)。Ruff lint／format、文档构建和站点检查通过；本轮范围以外的既有修改保持不变。真实 NFS／对象存储、脚本挂载以及 Workflow 不在本轮验收范围。
 
-SDK 与第三方包均构建为 wheel 并独立安装，92 个 SDK 源码／资源文件与提交快照逐字节一致；10 个独立进程场景通过，覆盖两种模式下本地及第三方的全部 11 个操作、写入后进程退出、配置变更拒绝和原配置恢复，见[安装包验证](../../agentloom-sdk/qa/evidence/workspace-spi-publish-20261018/wheel-summary.json)。完整提交快照回归 **1075 passed，0 failed，0 skipped**，见[验证记录](../../agentloom-sdk/qa/evidence/workspace-spi-publish-20261018/regression-summary.json)及[日志](../../agentloom-sdk/qa/evidence/workspace-spi-publish-20261018/regression.txt)。真实 NFS／对象存储、脚本挂载以及 Workflow 不在本轮验收范围。
+## 恢复绑定与公开事件边界修复
+
+确认三类缺陷：直接比较字典会把 `true` 与 `1` 当成相同配置；`asdict()` 不能保留 VariableSpec 与普通字典默认值的区别；RunEvent 再次使用外部 JSON 深度预算会拒绝已经成功交付的深层输出。修复前 73 项复现／对照为 **57 failed、16 passed**，覆盖三角色、双后端及事件观察路径。
+
+| 问题 | 修复及职责 |
+| --- | --- |
+| 恢复误接受布尔／数字替换 | `configuration.recovery` 比较规范 JSON，保留 JSON 类型语义；领取执行权、环境准备和任何模型／工具派发前拒绝不匹配。账本中的策略副本也采用同一规范语义核对 |
+| 变量声明类型丢失 | `configuration.definitions` 保存显式 spec 名称及普通默认值的类型推导，`configuration.assembly` 将其写入 `binding_version=2` 清单。动作／Hook 快照共用这份定义合同，恢复后 `1.0` 的 number 校验不会变成 integer |
+| 公开终态事件深度不足 | RunEvent.payload 改用内部文档的 512 层冻结预算；业务 JSON 上限保持 128 层，所有公开嵌套值仍不可变。wait、events、astream 与终态游标回放使用同一已提交结果 |
+
+新清单完整核对 ReAct、Planner 和所有 Executor，包括尚未创建的角色。旧清单没有保存变量类型的事实，不能仅凭新提供的定义补齐：有 spec 形状的普通对象或整数值数字默认值时，明确返回 `RECOVERY_BINDING_MISMATCH` 和变量路径。无歧义旧绑定可以继续，原清单与 Prompt 不重写；终态读取不触发配置替换或重新执行。旧的无类型 Hook 快照遇到无法确定的变量校验时保留 `HOOK_VARIABLE_VALIDATION_UNAVAILABLE` 诊断，不猜测后接受补丁。
+
+专项回归 **221 passed**，包含已保存类型的规范 JSON 往返、旧格式的安全接续／拒绝、真实进程退出后错误配置被拒绝及原配置继续，以及深层事件的实时观察、关闭重开和 after_seq 回放。原 QA、既有测试和历史报告保留不变。[专项结果](../../agentloom-sdk/qa/evidence/recovery-contracts-20261018/focused.txt)与[修改前基线](../../agentloom-sdk/qa/evidence/recovery-contracts-20261018/baseline.txt)分别保存。
+
+wheel 独立安装后 98 个源码／资源文件与工作区逐字节一致。另执行 10 个真实进程场景，其中 8 个使用修改前源码创建检查点，再由新安装包接管：无歧义配置按原进度完成，错误配置和已丢失变量类型的清单在派发前拒绝。安装目录内的 ReAct／Plan × 内存／文件 4 个场景也能通过 wait 和终态事件交付 128 层结果，见[安装包与兼容验证](../../agentloom-sdk/qa/evidence/recovery-contracts-20261018/wheel-summary.json)。
+
+最终完整回归 **1483 passed，0 failed，0 skipped**，耗时 324.06 秒；166 个源码／测试／配置文件摘要在运行前后保持一致。Ruff lint／format 通过，167 个 Python 文件格式一致。453 个既有测试、QA 报告／证据和示例文件摘要未变化；新增 124 项用例使用四个独立测试文件及一个进程脚本。执行命令、测试清单与结果见[回归证据](../../agentloom-sdk/qa/evidence/recovery-contracts-20261018/regression-summary.json)及[完整日志](../../agentloom-sdk/qa/evidence/recovery-contracts-20261018/regression.txt)。
+
+## LangChain 模板适配与回归
+
+当前模板版本为 `agentloom-langchain-modes-v2`。`AgentDefinition.prompt` 继续只承载业务要求；直接构造、Builder 和 AgentLoom 自动注入角色系统指令。原文对应的固定提交、文件 SHA-256 与 MIT 许可证随安装包保存，运行时不下载模板、不依赖 LangChain 包。详见[来源与适配说明](../../agentloom-sdk/src/agentloom/prompts/NOTICE.md)及[源文件清单](../../agentloom-sdk/src/agentloom/prompts/sources.json)。
+
+| 模块 | 来源与适配 |
+| --- | --- |
+| `prompts.roles.react` | LangChain classic ReAct 的思考、动作、观察、结束循环；工具名称与输入采用原生工具协议，已有消息代替文本 scratchpad |
+| `prompts.roles.planner` | LangGraph 官方 Plan-and-Execute 历史教程的 planner_prompt／replanner_prompt；当前 Planner 循环使用目标、已执行结果和剩余工作继续推进，只有存在 Executor 时才注入委派合同 |
+| `prompts.roles.executor` | LangChain experimental 执行器的当前目标、先前步骤和执行记录组织；委派输入只携带显式传入材料，并复用 ReAct 循环 |
+| `prompts.protocol/templates/assembly/recovery` | SDK 传输与结束规则、不可变角色目录与模板版本、声明 Schema 组装、Run 快照与恢复核验 |
+
+角色标签用于解释控制流程，不要求向用户输出思维过程或 Action 文本。工具产生实际 Observation；无工具调用的完整回复进入原有 output_schema 校验。当前没有新增 Plan／Response 专用规划调用、write_todos 看板、文本动作解析器或 Workflow。规划与重新规划由模板引导，实际授权、调用、结果反馈及预算仍由 SDK 执行。
+
+新增验证覆盖：安装包内来源与许可证、文本标签不会执行工具、Executor 失败后 Planner 接收真实错误并继续委派，以及旧模板在根任务／子任务尚未创建时的真实进程退出与接续。v1 保存的正文在 v2 代码下保持原样，新 Run 使用 v2；SDK 指令的 Hook 保护、摘要排除、角色隔离和窗口计量继续使用原合同。
+
+完整回归同时纳入第六轮 QA 和独立白盒探针。修改前基线为 95 passed／45 failed：第六轮 42 个失败对应两类缺陷，白盒 3 个失败来自夹具／断言；停止测试还存在已披露的时序竞态。此次修正如下：
+
+- `runtime.output` 区分候选数据与 Schema 配置。NaN、溢出数值、非法 Unicode、规范 JSON 边界以及解析递归错误进入格式纠错；真正不可用的 Schema 立即失败。纠错消耗新业务 Loop，受原额度限制，不成为传输重试。
+- `runtime.completion` 复用能力结果合同校验 tool_result，检查 invalid_tool_result 包装形状。非法附带材料不进入 Attempt，已有 completed／unknown 事实不被改写，基础设施异常仍传播。
+- 白盒探针按业务模型调用数决定压缩场景何时结束；修正模型＋工具 Operation 数量，补齐跨角色读取的 run_id，并用事件同步停止发生点。保留压缩、授权拒绝、停止优先及幂等业务断言。
+
+本轮新增 22 项测试，完整执行 `agentloom-sdk/tests` 和 `agentloom-sdk/qa`，不排除白盒或第六轮用例。最终 **1317 passed，0 failed，0 skipped**，耗时 311.19 秒；158 个源码／测试／配置文件摘要在执行前后保持一致。Ruff lint／format 通过，158 个 Python 文件格式一致。
+
+安装包校验包含 96 个源码及资源文件的逐字节比对，确认角色模块、来源清单、许可证和 py.typed 均已打包。真实子进程在根任务／子任务创建前退出后可接续，v1 检查点在 v2 安装包下恢复也保留原指令正文；四个场景均成功且 stderr 为空，见[安装包与恢复记录](../../agentloom-sdk/qa/evidence/langchain-prompts-20261018/wheel-summary.json)。
+
+执行命令、最终结果和固定源码摘要见[回归证据](../../agentloom-sdk/qa/evidence/langchain-prompts-20261018/regression-summary.json)；[完整日志](../../agentloom-sdk/qa/evidence/langchain-prompts-20261018/regression.txt)、[修改前基线](../../agentloom-sdk/qa/evidence/langchain-prompts-20261018/baseline.txt)与[原始上游模板](../../agentloom-sdk/qa/evidence/langchain-prompts-20261018/upstream-prompts.json)独立保存。测试使用确定性模型、协议替身和真实本地子进程，不将这些结果作为真实 LLM 规划质量或远端服务验收。
+
+## SDK 自动模式提示词
+
+本节记录首次 `agentloom-modes-v1` 实现及其验证快照；当前模板见[LangChain 适配](#langchain-模板适配与回归)。
+
+业务方只提供 AgentDefinition.prompt 的业务内容。SDK 自动为独立 ReAct、Plan 的 Planner 及各 Executor 组装不同的系统指令；直接构造、Builder 和 PropertiesConfig／AgentLoom 均使用同一实现，不增加业务方必须填写的系统模板参数。首次模型请求同时说明最终输出 Schema，以及 Planner 所需的 Executor 结构化任务／变量合同。变量只公开 Schema 和必填性，不公开私有默认值；`configuration.variables` 共用普通变量的类型推导，避免提示词与实际校验漂移。
+
+`prompts.templates` 保存版本化角色模板；`prompts.assembly` 生成每个角色的独立指令正文，在接收 Run 时保存为 prompt_contract。`prompts.recovery` 验证快照、角色记录与模型请求，不依据安装版本重新渲染。尚未创建的根任务和 Executor 也使用接收时的快照。旧 Run 没有该字段时维持旧消息布局，不向已冻结请求补插指令。
+
+业务 system 消息保留在首条，SDK system 紧随其后，便于已有业务 Hook 继续编辑原记录；SDK 指令标为 sdk_instructions、fixed、protected，不能被两种 Hook 补丁覆写，也不被压缩或带入下一轮历史。摘要现在插在全部 system 前缀之后。SDK 指令及 Schema 按实际内容参与预算，超窗明确失败。
+
+运行时继续负责动作授权、参数和输出校验、批次等待、额度与停止；Prompt 负责默认行为引导，不以“输出过计划文字”证明已执行。简单 Plan 任务及空 Executor 表仍可直接完成。
+
+本轮测试覆盖三种装配入口、两种存储、Chat／Responses 实际请求体、Planner／Executor 隔离、输入输出 Schema、Hook 修改保护、压缩／历史、固定输入预算、模板升级、旧记录兼容与真实子进程退出恢复。原测试中依赖消息数量或固定下标的选择改为按语义选择，保留原业务断言。另一个任务的白盒探针未修改。
+
+完整回归另暴露一处既有维护关闭竞态：父协程取消 gather 后又在 finally 取消子协程，第二次取消会打断子协程等待扫描线程退出，旧宿主可能在关闭后继续处理新停止请求。`runtime.host` 现在隔离外层取消，在 finally 统一取消一次并等待扫描收束。四个门控测试覆盖控制／清理扫描和两种后端，修复前全部失败，修复后连同原撤权失败重试场景共六项通过；没有放宽等待断言或改动租约规则。
+
+最终固定源码回归 **1155 passed，0 failed，0 skipped**，耗时 295.44 秒；138 个源码／测试／配置文件摘要保持一致。新增维护关闭与恢复子集 34 项通过。Ruff lint／format 通过，146 个 Python 文件格式一致。wheel 安装后 86 个模块逐字节一致，安装包通过根任务／子任务创建前的真实进程退出恢复，且关闭时无未领取的后台异常；旧 `2b47ea9` 源码生成的检查点也由新安装包接续成功，两个工具均只调用一次。
+
+[完整回归日志](../../agentloom-sdk/qa/evidence/mode-prompts-20261018/regression-final.txt)、[命令与源码摘要](../../agentloom-sdk/qa/evidence/mode-prompts-20261018/summary.json)、[安装包验证](../../agentloom-sdk/qa/evidence/mode-prompts-20261018/wheel-summary.json)和[旧检查点接续](../../agentloom-sdk/qa/evidence/mode-prompts-20261018/legacy-recovery.json)独立保存。早期受机器休眠影响的运行、维护竞态复现和中间修改验证均保留原证据；最终回归仅在进程运行期间阻止自动休眠。其他任务的 26 个文件摘要未变化。
 
 ## 第五轮持久化 JSON 深度与异常记录修复
 

@@ -1,0 +1,6 @@
+
+> docs:check
+> python3 docs/.vitepress/check-site.py
+
+Checked 57 HTML pages, 1346 internal links, 481 anchors and 246 asset references; ignored 146 external/special URLs.
+PASS: all checked targets exist (base=/).

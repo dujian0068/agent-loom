@@ -1,0 +1,35 @@
+{
+  "producer_commit": "2b47ea96111326b3e13d5a0f808583bcf50cc8b4",
+  "legacy_source": "/private/tmp/agentloom-prompts-legacy-_y4r22e9/old-src",
+  "first_exit": 73,
+  "recovered": {
+    "status": "succeeded",
+    "loops": 6,
+    "cleanup": "succeeded"
+  },
+  "audit": [
+    "hook:45395122-f01b-52a7-af5f-95ca3d865ee6",
+    "model:planner",
+    "hook:9d462a62-f7ad-5975-9ed5-122b315603aa",
+    "model:worker",
+    "tool:one",
+    "hook:522d3a1c-f885-5553-a299-5c50151c11ed",
+    "model:worker",
+    "hook:317d4e6d-885b-52c1-b135-a1e79714e607",
+    "model:worker",
+    "tool:two",
+    "hook:f140af36-86e1-5497-9178-3688d367a2a7",
+    "model:worker",
+    "hook:5ddb6523-f1a8-530e-a04f-586b56efaf28",
+    "model:planner"
+  ],
+  "state_directory": "/private/tmp/agentloom-prompts-delivery-wheel-37abvw4x/legacy/state",
+  "resumer": "/private/tmp/agentloom-prompts-delivery-wheel-37abvw4x/install/agentloom",
+  "stderr_empty": true,
+  "system_records_per_task": [
+    1,
+    1,
+    1
+  ],
+  "prompt_contract_added": false
+}

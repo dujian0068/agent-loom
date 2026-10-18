@@ -1,0 +1,163 @@
+{
+  "base_head": "2b47ea96111326b3e13d5a0f808583bcf50cc8b4",
+  "worktree_changes_committed": false,
+  "scope": "SDK automatically assembles ReAct, Planner and Executor instructions from business-only definitions. Workflow excluded. A reproducible maintenance shutdown race exposed by regression is also fixed.",
+  "implementation": [
+    "Versioned templates and per-role final-output / executor-input contracts in the prompts package; business configuration needs no new system-prompt field.",
+    "Private executor business prompts and variable defaults are not advertised to Planner; default variable type inference is shared with validation.",
+    "Admission stores all role instructions; later root and child creation and recovery use the saved snapshot. Legacy Runs keep their original layout.",
+    "Fixed SDK instruction records reject both Hook patch routes, survive compaction, and participate in token budgeting.",
+    "Runtime maintenance cancels each scanner once and retrieves all outcomes after draining in-flight threads."
+  ],
+  "full_regression": {
+    "tests": 1155,
+    "passed": 1155,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "seconds": 295.433,
+    "suites": {
+      "qa.test_sdk_audit": 110,
+      "qa.test_sdk_rereview": 24,
+      "qa.test_sdk_review_round3": 44,
+      "qa.test_sdk_review_round4": 56,
+      "qa.test_sdk_review_round5": 72,
+      "tests.test_attempt_completion": 52,
+      "tests.test_builder_contract": 31,
+      "tests.test_capability_public_contract": 30,
+      "tests.test_completion_boundaries": 53,
+      "tests.test_completion_cleanup": 15,
+      "tests.test_completion_recovery": 7,
+      "tests.test_control_and_history": 7,
+      "tests.test_control_reconciliation": 40,
+      "tests.test_design_alignment": 15,
+      "tests.test_environment_contract": 4,
+      "tests.test_execution_contract": 34,
+      "tests.test_file_store_contract": 19,
+      "tests.test_followup_review": 54,
+      "tests.test_history_execution_facts": 2,
+      "tests.test_hook_context_contract": 9,
+      "tests.test_hook_public_contract": 10,
+      "tests.test_json_value_boundaries": 14,
+      "tests.test_maintenance_contract": 17,
+      "tests.test_maintenance_shutdown": 4,
+      "tests.test_mcp_protocol": 3,
+      "tests.test_mcp_retry_contract": 12,
+      "tests.test_mode_prompts": 34,
+      "tests.test_model_material": 60,
+      "tests.test_model_protocols": 11,
+      "tests.test_operation_error_boundaries": 32,
+      "tests.test_persisted_json_depth": 35,
+      "tests.test_persistence_contract": 17,
+      "tests.test_prompt_recovery": 28,
+      "tests.test_properties_contract": 38,
+      "tests.test_public_result_projection": 8,
+      "tests.test_public_validation": 28,
+      "tests.test_recovery_invariants": 16,
+      "tests.test_result_and_scope_contract": 4,
+      "tests.test_review_regressions": 34,
+      "tests.test_schema_contract": 21,
+      "tests.test_skill_profile_contract": 13,
+      "tests.test_usage_accounting": 12,
+      "tests.test_usage_events": 26
+    },
+    "command": [
+      "/Users/bmilk/code/project/agent-loom/.venv/bin/python",
+      "-m",
+      "pytest",
+      "-vv",
+      "agentloom-sdk/tests",
+      "agentloom-sdk/qa/test_sdk_audit.py",
+      "agentloom-sdk/qa/test_sdk_rereview.py",
+      "agentloom-sdk/qa/test_sdk_review_round3.py",
+      "agentloom-sdk/qa/test_sdk_review_round4.py",
+      "agentloom-sdk/qa/test_sdk_review_round5.py",
+      "--ignore=agentloom-sdk/tests/test_review_whitebox_probe.py",
+      "--basetemp=/private/tmp/agentloom-prompts-final-6vj_0e7v",
+      "--tb=short",
+      "--junitxml=/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/evidence/mode-prompts-20261018/regression-final.junit.xml"
+    ],
+    "log": "regression-final.txt",
+    "junit": "regression-final.junit.xml"
+  },
+  "added_cases": {
+    "mode_prompts": 34,
+    "prompt_recovery": 28,
+    "maintenance_shutdown": 4,
+    "total": 66
+  },
+  "focused_mode_schema_history": {
+    "passed": 90,
+    "seconds": 8.51,
+    "note": "Passed before the maintenance shutdown fix; the final regression covers those cases on the final source."
+  },
+  "maintenance_and_recovery": {
+    "passed": 34,
+    "seconds": 5.33,
+    "log": "maintenance-and-recovery.txt",
+    "junit": "maintenance-and-recovery.junit.xml"
+  },
+  "sources": {
+    "files": 138,
+    "unchanged_during_final_regression": true,
+    "before": "final-source-before.json",
+    "after": "final-source-after.json"
+  },
+  "existing_assertion_updates": [
+    "agentloom-sdk/tests/test_hook_context_contract.py: select protected user input explicitly; branch on tool feedback instead of total message count.",
+    "agentloom-sdk/tests/test_execution_contract.py: select the first Planner decision by absence of tool feedback.",
+    "agentloom-sdk/qa/test_sdk_audit.py: locate the user input by role instead of index 1."
+  ],
+  "maintenance_failure": {
+    "initial_regression": {
+      "passed": 1150,
+      "failed": 1,
+      "evidence": "before-shutdown-fix-regression-final-summary.json"
+    },
+    "deterministic_reproduction": "maintenance-shutdown-before.json",
+    "regressions_before": "maintenance-before.txt",
+    "regressions_after": "maintenance-after.txt",
+    "explanation": "Propagating cancellation through gather and then canceling the scanners again interrupts their thread-drain await. The old host can return closed before its maintenance scan finishes; the gated tests reproduce both scanner branches on both stores."
+  },
+  "legacy_checkpoint_recovery": "legacy-recovery.json",
+  "wheel": "wheel-summary.json",
+  "ruff": {
+    "lint": "passed",
+    "format": "passed",
+    "python_files": 146,
+    "excluded_independent_probe": "agentloom-sdk/tests/test_review_whitebox_probe.py"
+  },
+  "foreign_files": {
+    "count": 26,
+    "unchanged": true,
+    "evidence": "foreign-files-check.json"
+  },
+  "independent_probe": {
+    "excluded": "agentloom-sdk/tests/test_review_whitebox_probe.py",
+    "prior_assessment": "../round5-fixes-20261017/separate-probe-assessment.json",
+    "note": "Independently authored work remains untouched and is excluded from the established regression scope."
+  },
+  "documentation": {
+    "build": "docs-build.txt",
+    "check": "docs-check.txt",
+    "build_status": "passed",
+    "check_status": "passed",
+    "html_pages": 57,
+    "internal_links": 1343,
+    "anchors": 478,
+    "assets": 246,
+    "sha256": "documents-sha256.json"
+  },
+  "environment": {
+    "python": "3.12.14 (main, Aug 25 2026, 13:50:33) [Clang 22.1.3 ]",
+    "platform": "macOS-26.7-arm64-arm-64bit"
+  },
+  "validation_limits": "Deterministic models, local HTTP transports, existing MCP protocol tests and real local subprocess exits. No live LLM behavior evaluation, remote MCP, cross-machine persistence or Workflow validation.",
+  "evidence_notes": [
+    "Exploratory focused and full runs were interrupted by macOS maintenance sleeps; logs and sleep-interruption.json are preserved. The final regression ran under process-scoped caffeinate -is, without changing SDK lease or timeout semantics.",
+    "The full regression before the shutdown fix had one real existing failure. Four gated shutdown tests then failed deterministically and passed after the fix; the original test deadline was not relaxed.",
+    "An intermediate installed-package check exposed an unretrieved aggregate cancellation. wheel-shutdown-resume.json preserves it; the final host drains scanners and explicitly retrieves the aggregate outcome. The subprocess recovery test now also requires empty stderr.",
+    "Two partial regressions were intentionally stopped while refining private-default isolation and shutdown outcome retrieval; their logs are separately named and are not final results."
+  ],
+  "ownership": "ownership.json"
+}

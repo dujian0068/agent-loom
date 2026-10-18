@@ -1,0 +1,10 @@
+{
+  "before_root": {
+    "path": "/private/tmp/agentloom-prompt-v1-rbr2dh7c/before_root",
+    "returncode": 75
+  },
+  "before_child": {
+    "path": "/private/tmp/agentloom-prompt-v1-rbr2dh7c/before_child",
+    "returncode": 75
+  }
+}

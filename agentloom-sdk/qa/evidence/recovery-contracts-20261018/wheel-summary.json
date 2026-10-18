@@ -1,0 +1,162 @@
+{
+  "wheel": "/private/tmp/agentloom-recovery-contracts-wheel-wdqfo1nw/dist/agentloom_sdk-0.1.0a1-py3-none-any.whl",
+  "sha256": "651c7b3dcd723b3d6c929092c414d3942b067311904784e914b2424f76f64882",
+  "installed": "/private/tmp/agentloom-recovery-contracts-wheel-wdqfo1nw/install/agentloom",
+  "verified_import": "/private/tmp/agentloom-recovery-contracts-wheel-wdqfo1nw/install/agentloom/__init__.py",
+  "source_files_match": 98,
+  "legacy_source_files_match": 97,
+  "process_recovery": [
+    {
+      "source": "current",
+      "role": "react",
+      "profile": "spec",
+      "changed_configuration": {
+        "error": "RECOVERY_BINDING_MISMATCH",
+        "field": null
+      },
+      "resume": {
+        "status": "succeeded",
+        "loops": 1
+      },
+      "stderr_empty": true
+    },
+    {
+      "source": "current",
+      "role": "worker",
+      "profile": "spec",
+      "changed_configuration": {
+        "error": "RECOVERY_BINDING_MISMATCH",
+        "field": null
+      },
+      "resume": {
+        "status": "succeeded",
+        "loops": 3
+      },
+      "stderr_empty": true
+    },
+    {
+      "source": "legacy",
+      "role": "react",
+      "profile": "plain",
+      "changed_configuration": null,
+      "resume": {
+        "status": "succeeded",
+        "loops": 1
+      },
+      "stderr_empty": true
+    },
+    {
+      "source": "legacy",
+      "role": "react",
+      "profile": "schema",
+      "changed_configuration": {
+        "error": "RECOVERY_BINDING_MISMATCH",
+        "field": null
+      },
+      "resume": {
+        "status": "succeeded",
+        "loops": 1
+      },
+      "stderr_empty": true
+    },
+    {
+      "source": "legacy",
+      "role": "react",
+      "profile": "spec",
+      "changed_configuration": null,
+      "resume": {
+        "error": "RECOVERY_BINDING_MISMATCH",
+        "field": "bindings.definitions.react.variables.mode"
+      },
+      "stderr_empty": true
+    },
+    {
+      "source": "legacy",
+      "role": "react",
+      "profile": "number",
+      "changed_configuration": null,
+      "resume": {
+        "error": "RECOVERY_BINDING_MISMATCH",
+        "field": "bindings.definitions.react.variables.mode"
+      },
+      "stderr_empty": true
+    },
+    {
+      "source": "legacy",
+      "role": "worker",
+      "profile": "plain",
+      "changed_configuration": null,
+      "resume": {
+        "status": "succeeded",
+        "loops": 3
+      },
+      "stderr_empty": true
+    },
+    {
+      "source": "legacy",
+      "role": "worker",
+      "profile": "schema",
+      "changed_configuration": {
+        "error": "RECOVERY_BINDING_MISMATCH",
+        "field": null
+      },
+      "resume": {
+        "status": "succeeded",
+        "loops": 3
+      },
+      "stderr_empty": true
+    },
+    {
+      "source": "legacy",
+      "role": "worker",
+      "profile": "spec",
+      "changed_configuration": null,
+      "resume": {
+        "error": "RECOVERY_BINDING_MISMATCH",
+        "field": "bindings.definitions.worker.variables.mode"
+      },
+      "stderr_empty": true
+    },
+    {
+      "source": "legacy",
+      "role": "worker",
+      "profile": "number",
+      "changed_configuration": null,
+      "resume": {
+        "error": "RECOVERY_BINDING_MISMATCH",
+        "field": "bindings.definitions.worker.variables.mode"
+      },
+      "stderr_empty": true
+    }
+  ],
+  "event_delivery": [
+    {
+      "mode": "react",
+      "backend": "file",
+      "depth": 128,
+      "status": "succeeded",
+      "terminal_event": "run.completed"
+    },
+    {
+      "mode": "react",
+      "backend": "memory",
+      "depth": 128,
+      "status": "succeeded",
+      "terminal_event": "run.completed"
+    },
+    {
+      "mode": "plan",
+      "backend": "file",
+      "depth": 128,
+      "status": "succeeded",
+      "terminal_event": "run.completed"
+    },
+    {
+      "mode": "plan",
+      "backend": "memory",
+      "depth": 128,
+      "status": "succeeded",
+      "terminal_event": "run.completed"
+    }
+  ]
+}

@@ -1,0 +1,11 @@
+[
+  "/Users/bmilk/code/project/agent-loom/.venv/bin/python",
+  "-m",
+  "pytest",
+  "-vv",
+  "agentloom-sdk/tests",
+  "agentloom-sdk/qa",
+  "--tb=short",
+  "--basetemp=/private/tmp/agentloom-recovery-contracts-full-6blgj03n",
+  "--junitxml=/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/evidence/recovery-contracts-20261018/regression.junit.xml"
+]

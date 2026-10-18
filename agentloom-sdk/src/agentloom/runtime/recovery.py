@@ -5,6 +5,7 @@ from uuid import NAMESPACE_URL, uuid5
 from ..configuration.json_documents import document_digest as digest
 from ..configuration.json_values import MAX_JSON_INTEGER
 from ..errors import InfrastructureError
+from ..prompts.recovery import validate_prompt_state
 from .usage import TOKEN_KEYS
 
 
@@ -27,6 +28,7 @@ def validate_recovery(state):
     """
     try:
         _validate(state)
+        validate_prompt_state(state)
     except (KeyError, TypeError, ValueError, AttributeError) as exc:
         raise InfrastructureError(
             "PERSISTENCE_INVARIANT_BROKEN",
@@ -40,7 +42,7 @@ def _validate(state):
     tasks, operations, usage = state["tasks"], state["operations"], state["usage"]
     root = state["root_task_id"]
     _require(root in tasks if root is not None else not tasks and not operations, "root_task_id")
-    _require(state["policy"] == state["bindings"]["execution_policy"], "policy")
+    _require(digest(state["policy"]) == digest(state["bindings"]["execution_policy"]), "policy")
     counts = dict.fromkeys(
         (
             "loops_reserved",

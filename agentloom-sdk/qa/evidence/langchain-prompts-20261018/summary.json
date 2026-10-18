@@ -1,0 +1,174 @@
+{
+  "template_version": "agentloom-langchain-modes-v2",
+  "base_head": "2b47ea96111326b3e13d5a0f808583bcf50cc8b4",
+  "scope": "SDK ReAct, Planner and Executor automatic system instructions; Workflow excluded",
+  "upstream_sources": {
+    "schema_version": 1,
+    "template_version": "agentloom-langchain-modes-v2",
+    "sources": [
+      {
+        "id": "react",
+        "repository": "langchain-ai/langchain",
+        "commit": "bd5b134d876ef47858beef27bd29c81eeda03293",
+        "path": "libs/langchain/langchain_classic/agents/react/agent.py",
+        "sections": [
+          "create_react_agent prompt example"
+        ],
+        "url": "https://github.com/langchain-ai/langchain/blob/bd5b134d876ef47858beef27bd29c81eeda03293/libs/langchain/langchain_classic/agents/react/agent.py",
+        "sha256": "25004bde1caf54dc42c513223d49bb864a2748d066cff64fe1ef6e67e427d399",
+        "license": "MIT"
+      },
+      {
+        "id": "native_tool_calls",
+        "repository": "langchain-ai/langchain",
+        "commit": "bd5b134d876ef47858beef27bd29c81eeda03293",
+        "path": "libs/langchain/langchain_classic/agents/tool_calling_agent/base.py",
+        "sections": [
+          "create_tool_calling_agent message layout and bind_tools"
+        ],
+        "url": "https://github.com/langchain-ai/langchain/blob/bd5b134d876ef47858beef27bd29c81eeda03293/libs/langchain/langchain_classic/agents/tool_calling_agent/base.py",
+        "sha256": "a3f0e1a90e7a397d62bf540e2b821349ab5909372fde4ac031220b7a44bb8f3d",
+        "license": "MIT"
+      },
+      {
+        "id": "planner",
+        "repository": "langchain-ai/langgraph",
+        "commit": "23961cff61a42b52525f3b20b4094d8d2fba1744",
+        "path": "docs/docs/tutorials/plan-and-execute/plan-and-execute.ipynb",
+        "sections": [
+          "planner_prompt",
+          "replanner_prompt"
+        ],
+        "url": "https://github.com/langchain-ai/langgraph/blob/23961cff61a42b52525f3b20b4094d8d2fba1744/docs/docs/tutorials/plan-and-execute/plan-and-execute.ipynb",
+        "sha256": "c9789f6602bcd1184f32521b256f4ded224e2ff93085955c3eadd83b21026cb1",
+        "license": "MIT"
+      },
+      {
+        "id": "executor",
+        "repository": "langchain-ai/langchain-experimental",
+        "commit": "f10d5c3247fb102d4d45d29a35a0266760288542",
+        "path": "libs/experimental/langchain_experimental/plan_and_execute/executors/agent_executor.py",
+        "sections": [
+          "HUMAN_MESSAGE_TEMPLATE",
+          "TASK_PREFIX"
+        ],
+        "url": "https://github.com/langchain-ai/langchain-experimental/blob/f10d5c3247fb102d4d45d29a35a0266760288542/libs/experimental/langchain_experimental/plan_and_execute/executors/agent_executor.py",
+        "sha256": "35dfa2257e007573ede55c69dafa8bae11fb8af557a4e87928a601781aee7991",
+        "license": "MIT"
+      }
+    ]
+  },
+  "tests": {
+    "passed": 1317,
+    "failed": 0,
+    "errors": 0,
+    "skipped": 0,
+    "excluded": [],
+    "sdk": 897,
+    "qa": 420,
+    "elapsed_seconds": 311.4964925420936,
+    "new_cases": 22
+  },
+  "regression": "regression-summary.json",
+  "source_files": 158,
+  "source_unchanged_after_docs": true,
+  "baseline": {
+    "passed": 95,
+    "failed": 45,
+    "sixth_round_qa_failures": 42,
+    "whitebox_failures": 3,
+    "logs": [
+      "baseline.txt",
+      "baseline.junit.xml"
+    ]
+  },
+  "additional_runtime_fixes": [
+    "Correctable final candidate JSON errors remain distinct from unusable schemas",
+    "Validate error result sidecar shape without losing established execution facts"
+  ],
+  "whitebox_fixture_corrections": [
+    "Business model call counter independent of compaction",
+    "Correct operation count",
+    "Run identity before authorized-context lookup",
+    "Event-controlled stop timing"
+  ],
+  "ruff": {
+    "lint": "passed",
+    "format": "passed",
+    "formatted_files": 158
+  },
+  "wheel": {
+    "wheel": "/private/tmp/agentloom-langchain-wheel-6mwfcqq7/dist/agentloom_sdk-0.1.0a1-py3-none-any.whl",
+    "sha256": "a04791205af2beecad98ff6d68625496c90259b323adc429d09f623f051b5d14",
+    "installed": "/private/tmp/agentloom-langchain-wheel-6mwfcqq7/install/agentloom",
+    "verified_import": "/private/tmp/agentloom-langchain-wheel-6mwfcqq7/install/agentloom/__init__.py",
+    "source_files_match": 96,
+    "py_typed": true,
+    "licenses_and_sources_packaged": true,
+    "process_recovery": [
+      {
+        "cut": "before_root",
+        "version": "v2",
+        "resumed": {
+          "status": "succeeded",
+          "loops": 3
+        },
+        "stderr_empty": true
+      },
+      {
+        "cut": "before_child",
+        "version": "v2",
+        "resumed": {
+          "status": "succeeded",
+          "loops": 3
+        },
+        "stderr_empty": true
+      },
+      {
+        "cut": "before_root",
+        "version": "v1-created-before-edits",
+        "resumed": {
+          "status": "succeeded",
+          "loops": 3
+        },
+        "unchanged_instructions": true,
+        "stderr_empty": true
+      },
+      {
+        "cut": "before_child",
+        "version": "v1-created-before-edits",
+        "resumed": {
+          "status": "succeeded",
+          "loops": 3
+        },
+        "unchanged_instructions": true,
+        "stderr_empty": true
+      }
+    ]
+  },
+  "docs": {
+    "build": "passed",
+    "link_check": "passed",
+    "files": {
+      "agentloom-sdk/README.md": "2a634623f9034d3b53e4d2841658f2e66db30f0a5f2c1ce57ed2b4ce1d5e3e4f",
+      "docs/sdk/assembly.md": "e7c51f5b5a6c2be46cd4730f3ff0f51216564ce6208b2e6d547d2cdd84bd7b9a",
+      "docs/sdk/implementation.md": "6bbdc2fe36f62d348863364e28526102433231d5b752421848e7f910b08933d6",
+      "docs/sdk/integration.md": "1953ecb59411a18c49f45199ea4ea82e194f097122d9a036aeb5b2c0c1d43315"
+    },
+    "logs": [
+      "docs-build.txt",
+      "docs-check.txt"
+    ]
+  },
+  "diff_check": "passed",
+  "other_work": {
+    "checked_files": 349,
+    "changed_files": [],
+    "exception": "The existing independent whitebox test fixture was corrected and formatted; its audit reports are preserved."
+  },
+  "limitations": [
+    "Deterministic model and protocol tests; no live LLM behavior evaluation or remote service acceptance",
+    "Planning/replanning instructions run in the existing Planner loop; no separate Plan/Response graph stages"
+  ],
+  "committed_or_pushed": false
+}

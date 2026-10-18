@@ -37,7 +37,9 @@ def materialize(context):
             for r in records
             if r["kind"] != "summary" and r["record_id"] not in snapshot["sources"]
         ]
-        index = 1 if selected and selected[0]["message"]["role"] == "system" else 0
+        index = 0
+        while index < len(selected) and selected[index]["message"]["role"] == "system":
+            index += 1
         selected.insert(index, by_id[snapshot["record_id"]])
     else:
         selected = [r for r in records if r["kind"] != "summary"]

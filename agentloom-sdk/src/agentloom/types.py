@@ -158,7 +158,10 @@ class RunEvent:
     schema_version: int = 1
 
     def __post_init__(self):
-        object.__setattr__(self, "payload", freeze(self.payload))
+        from .configuration.json_documents import freeze_document
+
+        # The committed payload already wraps validated boundary values.
+        object.__setattr__(self, "payload", freeze_document(self.payload))
 
 
 @dataclass(frozen=True)

@@ -1,0 +1,21 @@
+{
+  "returncode": 0,
+  "elapsed_seconds": 324.42011787497904,
+  "wall_elapsed_seconds": 324.4190831184387,
+  "junit": {
+    "name": "pytest",
+    "errors": "0",
+    "failures": "0",
+    "skipped": "0",
+    "tests": "1483",
+    "time": "324.032",
+    "timestamp": "2026-10-18T13:01:03.201190+08:00",
+    "hostname": "bmilk"
+  },
+  "source_files": 166,
+  "source_unchanged": true,
+  "source_changes": [],
+  "excluded_tests": [],
+  "base_head": "2b47ea96111326b3e13d5a0f808583bcf50cc8b4",
+  "sleep_inhibition": "caffeinate -is, scoped to the validation process"
+}

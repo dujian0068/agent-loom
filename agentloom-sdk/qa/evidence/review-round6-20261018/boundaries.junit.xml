@@ -1,0 +1,217 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="42" skipped="0" tests="114" time="7.444" timestamp="2026-10-18T10:15:40.602154+08:00" hostname="bmilk"><testcase classname="qa.test_sdk_review_round6" name="test_noncanonical_final_candidate_uses_format_correction[memory-nan-react]" time="0.013"><failure message="AssertionError: Invalid candidate data must be corrected, not treated as a broken schema&#10;assert 'failed' == 'succeeded'&#10;  &#10;  - succeeded&#10;  + failed">/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round6.py:123: in test_noncanonical_final_candidate_uses_format_correction
+    assert task["status"] == "succeeded", (
+E   AssertionError: Invalid candidate data must be corrected, not treated as a broken schema
+E   assert 'failed' == 'succeeded'
+E     
+E     - succeeded
+E     + failed</failure></testcase><testcase classname="qa.test_sdk_review_round6" name="test_noncanonical_final_candidate_uses_format_correction[memory-nan-planner]" time="0.012"><failure message="AssertionError: Invalid candidate data must be corrected, not treated as a broken schema&#10;assert 'failed' == 'succeeded'&#10;  &#10;  - succeeded&#10;  + failed">/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round6.py:123: in test_noncanonical_final_candidate_uses_format_correction
+    assert task["status"] == "succeeded", (
+E   AssertionError: Invalid candidate data must be corrected, not treated as a broken schema
+E   assert 'failed' == 'succeeded'
+E     
+E     - succeeded
+E     + failed</failure></testcase><testcase classname="qa.test_sdk_review_round6" name="test_noncanonical_final_candidate_uses_format_correction[memory-nan-executor]" time="0.049"><failure message="AssertionError: Invalid candidate data must be corrected, not treated as a broken schema&#10;assert 'failed' == 'succeeded'&#10;  &#10;  - succeeded&#10;  + failed">/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round6.py:123: in test_noncanonical_final_candidate_uses_format_correction
+    assert task["status"] == "succeeded", (
+E   AssertionError: Invalid candidate data must be corrected, not treated as a broken schema
+E   assert 'failed' == 'succeeded'
+E     
+E     - succeeded
+E     + failed</failure></testcase><testcase classname="qa.test_sdk_review_round6" name="test_noncanonical_final_candidate_uses_format_correction[memory-float-overflow-react]" time="0.012"><failure message="AssertionError: Invalid candidate data must be corrected, not treated as a broken schema&#10;assert 'failed' == 'succeeded'&#10;  &#10;  - succeeded&#10;  + failed">/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round6.py:123: in test_noncanonical_final_candidate_uses_format_correction
+    assert task["status"] == "succeeded", (
+E   AssertionError: Invalid candidate data must be corrected, not treated as a broken schema
+E   assert 'failed' == 'succeeded'
+E     
+E     - succeeded
+E     + failed</failure></testcase><testcase classname="qa.test_sdk_review_round6" name="test_noncanonical_final_candidate_uses_format_correction[memory-float-overflow-planner]" time="0.012"><failure message="AssertionError: Invalid candidate data must be corrected, not treated as a broken schema&#10;assert 'failed' == 'succeeded'&#10;  &#10;  - succeeded&#10;  + failed">/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round6.py:123: in test_noncanonical_final_candidate_uses_format_correction
+    assert task["status"] == "succeeded", (
+E   AssertionError: Invalid candidate data must be corrected, not treated as a broken schema
+E   assert 'failed' == 'succeeded'
+E     
+E     - succeeded
+E     + failed</failure></testcase><testcase classname="qa.test_sdk_review_round6" name="test_noncanonical_final_candidate_uses_format_correction[memory-float-overflow-executor]" time="0.047"><failure message="AssertionError: Invalid candidate data must be corrected, not treated as a broken schema&#10;assert 'failed' == 'succeeded'&#10;  &#10;  - succeeded&#10;  + failed">/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round6.py:123: in test_noncanonical_final_candidate_uses_format_correction
+    assert task["status"] == "succeeded", (
+E   AssertionError: Invalid candidate data must be corrected, not treated as a broken schema
+E   assert 'failed' == 'succeeded'
+E     
+E     - succeeded
+E     + failed</failure></testcase><testcase classname="qa.test_sdk_review_round6" name="test_noncanonical_final_candidate_uses_format_correction[memory-unsafe-integer-react]" time="0.012"><failure message="AssertionError: Invalid candidate data must be corrected, not treated as a broken schema&#10;assert 'failed' == 'succeeded'&#10;  &#10;  - succeeded&#10;  + failed">/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round6.py:123: in test_noncanonical_final_candidate_uses_format_correction
+    assert task["status"] == "succeeded", (
+E   AssertionError: Invalid candidate data must be corrected, not treated as a broken schema
+E   assert 'failed' == 'succeeded'
+E     
+E     - succeeded
+E     + failed</failure></testcase><testcase classname="qa.test_sdk_review_round6" name="test_noncanonical_final_candidate_uses_format_correction[memory-unsafe-integer-planner]" time="0.012"><failure message="AssertionError: Invalid candidate data must be corrected, not treated as a broken schema&#10;assert 'failed' == 'succeeded'&#10;  &#10;  - succeeded&#10;  + failed">/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round6.py:123: in test_noncanonical_final_candidate_uses_format_correction
+    assert task["status"] == "succeeded", (
+E   AssertionError: Invalid candidate data must be corrected, not treated as a broken schema
+E   assert 'failed' == 'succeeded'
+E     
+E     - succeeded
+E     + failed</failure></testcase><testcase classname="qa.test_sdk_review_round6" name="test_noncanonical_final_candidate_uses_format_correction[memory-unsafe-integer-executor]" time="0.047"><failure message="AssertionError: Invalid candidate data must be corrected, not treated as a broken schema&#10;assert 'failed' == 'succeeded'&#10;  &#10;  - succeeded&#10;  + failed">/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round6.py:123: in test_noncanonical_final_candidate_uses_format_correction
+    assert task["status"] == "succeeded", (
+E   AssertionError: Invalid candidate data must be corrected, not treated as a broken schema
+E   assert 'failed' == 'succeeded'
+E     
+E     - succeeded
+E     + failed</failure></testcase><testcase classname="qa.test_sdk_review_round6" name="test_noncanonical_final_candidate_uses_format_correction[memory-unpaired-surrogate-react]" time="0.012"><failure message="AssertionError: Invalid candidate data must be corrected, not treated as a broken schema&#10;assert 'failed' == 'succeeded'&#10;  &#10;  - succeeded&#10;  + failed">/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round6.py:123: in test_noncanonical_final_candidate_uses_format_correction
+    assert task["status"] == "succeeded", (
+E   AssertionError: Invalid candidate data must be corrected, not treated as a broken schema
+E   assert 'failed' == 'succeeded'
+E     
+E     - succeeded
+E     + failed</failure></testcase><testcase classname="qa.test_sdk_review_round6" name="test_noncanonical_final_candidate_uses_format_correction[memory-unpaired-surrogate-planner]" time="0.012"><failure message="AssertionError: Invalid candidate data must be corrected, not treated as a broken schema&#10;assert 'failed' == 'succeeded'&#10;  &#10;  - succeeded&#10;  + failed">/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round6.py:123: in test_noncanonical_final_candidate_uses_format_correction
+    assert task["status"] == "succeeded", (
+E   AssertionError: Invalid candidate data must be corrected, not treated as a broken schema
+E   assert 'failed' == 'succeeded'
+E     
+E     - succeeded
+E     + failed</failure></testcase><testcase classname="qa.test_sdk_review_round6" name="test_noncanonical_final_candidate_uses_format_correction[memory-unpaired-surrogate-executor]" time="0.048"><failure message="AssertionError: Invalid candidate data must be corrected, not treated as a broken schema&#10;assert 'failed' == 'succeeded'&#10;  &#10;  - succeeded&#10;  + failed">/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round6.py:123: in test_noncanonical_final_candidate_uses_format_correction
+    assert task["status"] == "succeeded", (
+E   AssertionError: Invalid candidate data must be corrected, not treated as a broken schema
+E   assert 'failed' == 'succeeded'
+E     
+E     - succeeded
+E     + failed</failure></testcase><testcase classname="qa.test_sdk_review_round6" name="test_noncanonical_final_candidate_uses_format_correction[memory-depth-129-react]" time="0.012"><failure message="AssertionError: Invalid candidate data must be corrected, not treated as a broken schema&#10;assert 'failed' == 'succeeded'&#10;  &#10;  - succeeded&#10;  + failed">/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round6.py:123: in test_noncanonical_final_candidate_uses_format_correction
+    assert task["status"] == "succeeded", (
+E   AssertionError: Invalid candidate data must be corrected, not treated as a broken schema
+E   assert 'failed' == 'succeeded'
+E     
+E     - succeeded
+E     + failed</failure></testcase><testcase classname="qa.test_sdk_review_round6" name="test_noncanonical_final_candidate_uses_format_correction[memory-depth-129-planner]" time="0.012"><failure message="AssertionError: Invalid candidate data must be corrected, not treated as a broken schema&#10;assert 'failed' == 'succeeded'&#10;  &#10;  - succeeded&#10;  + failed">/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round6.py:123: in test_noncanonical_final_candidate_uses_format_correction
+    assert task["status"] == "succeeded", (
+E   AssertionError: Invalid candidate data must be corrected, not treated as a broken schema
+E   assert 'failed' == 'succeeded'
+E     
+E     - succeeded
+E     + failed</failure></testcase><testcase classname="qa.test_sdk_review_round6" name="test_noncanonical_final_candidate_uses_format_correction[memory-depth-129-executor]" time="0.049"><failure message="AssertionError: Invalid candidate data must be corrected, not treated as a broken schema&#10;assert 'failed' == 'succeeded'&#10;  &#10;  - succeeded&#10;  + failed">/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round6.py:123: in test_noncanonical_final_candidate_uses_format_correction
+    assert task["status"] == "succeeded", (
+E   AssertionError: Invalid candidate data must be corrected, not treated as a broken schema
+E   assert 'failed' == 'succeeded'
+E     
+E     - succeeded
+E     + failed</failure></testcase><testcase classname="qa.test_sdk_review_round6" name="test_noncanonical_final_candidate_uses_format_correction[file-nan-react]" time="0.075"><failure message="AssertionError: Invalid candidate data must be corrected, not treated as a broken schema&#10;assert 'failed' == 'succeeded'&#10;  &#10;  - succeeded&#10;  + failed">/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round6.py:123: in test_noncanonical_final_candidate_uses_format_correction
+    assert task["status"] == "succeeded", (
+E   AssertionError: Invalid candidate data must be corrected, not treated as a broken schema
+E   assert 'failed' == 'succeeded'
+E     
+E     - succeeded
+E     + failed</failure></testcase><testcase classname="qa.test_sdk_review_round6" name="test_noncanonical_final_candidate_uses_format_correction[file-nan-planner]" time="0.058"><failure message="AssertionError: Invalid candidate data must be corrected, not treated as a broken schema&#10;assert 'failed' == 'succeeded'&#10;  &#10;  - succeeded&#10;  + failed">/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round6.py:123: in test_noncanonical_final_candidate_uses_format_correction
+    assert task["status"] == "succeeded", (
+E   AssertionError: Invalid candidate data must be corrected, not treated as a broken schema
+E   assert 'failed' == 'succeeded'
+E     
+E     - succeeded
+E     + failed</failure></testcase><testcase classname="qa.test_sdk_review_round6" name="test_noncanonical_final_candidate_uses_format_correction[file-nan-executor]" time="0.178"><failure message="AssertionError: Invalid candidate data must be corrected, not treated as a broken schema&#10;assert 'failed' == 'succeeded'&#10;  &#10;  - succeeded&#10;  + failed">/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round6.py:123: in test_noncanonical_final_candidate_uses_format_correction
+    assert task["status"] == "succeeded", (
+E   AssertionError: Invalid candidate data must be corrected, not treated as a broken schema
+E   assert 'failed' == 'succeeded'
+E     
+E     - succeeded
+E     + failed</failure></testcase><testcase classname="qa.test_sdk_review_round6" name="test_noncanonical_final_candidate_uses_format_correction[file-float-overflow-react]" time="0.069"><failure message="AssertionError: Invalid candidate data must be corrected, not treated as a broken schema&#10;assert 'failed' == 'succeeded'&#10;  &#10;  - succeeded&#10;  + failed">/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round6.py:123: in test_noncanonical_final_candidate_uses_format_correction
+    assert task["status"] == "succeeded", (
+E   AssertionError: Invalid candidate data must be corrected, not treated as a broken schema
+E   assert 'failed' == 'succeeded'
+E     
+E     - succeeded
+E     + failed</failure></testcase><testcase classname="qa.test_sdk_review_round6" name="test_noncanonical_final_candidate_uses_format_correction[file-float-overflow-planner]" time="0.071"><failure message="AssertionError: Invalid candidate data must be corrected, not treated as a broken schema&#10;assert 'failed' == 'succeeded'&#10;  &#10;  - succeeded&#10;  + failed">/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round6.py:123: in test_noncanonical_final_candidate_uses_format_correction
+    assert task["status"] == "succeeded", (
+E   AssertionError: Invalid candidate data must be corrected, not treated as a broken schema
+E   assert 'failed' == 'succeeded'
+E     
+E     - succeeded
+E     + failed</failure></testcase><testcase classname="qa.test_sdk_review_round6" name="test_noncanonical_final_candidate_uses_format_correction[file-float-overflow-executor]" time="0.181"><failure message="AssertionError: Invalid candidate data must be corrected, not treated as a broken schema&#10;assert 'failed' == 'succeeded'&#10;  &#10;  - succeeded&#10;  + failed">/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round6.py:123: in test_noncanonical_final_candidate_uses_format_correction
+    assert task["status"] == "succeeded", (
+E   AssertionError: Invalid candidate data must be corrected, not treated as a broken schema
+E   assert 'failed' == 'succeeded'
+E     
+E     - succeeded
+E     + failed</failure></testcase><testcase classname="qa.test_sdk_review_round6" name="test_noncanonical_final_candidate_uses_format_correction[file-unsafe-integer-react]" time="0.064"><failure message="AssertionError: Invalid candidate data must be corrected, not treated as a broken schema&#10;assert 'failed' == 'succeeded'&#10;  &#10;  - succeeded&#10;  + failed">/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round6.py:123: in test_noncanonical_final_candidate_uses_format_correction
+    assert task["status"] == "succeeded", (
+E   AssertionError: Invalid candidate data must be corrected, not treated as a broken schema
+E   assert 'failed' == 'succeeded'
+E     
+E     - succeeded
+E     + failed</failure></testcase><testcase classname="qa.test_sdk_review_round6" name="test_noncanonical_final_candidate_uses_format_correction[file-unsafe-integer-planner]" time="0.071"><failure message="AssertionError: Invalid candidate data must be corrected, not treated as a broken schema&#10;assert 'failed' == 'succeeded'&#10;  &#10;  - succeeded&#10;  + failed">/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round6.py:123: in test_noncanonical_final_candidate_uses_format_correction
+    assert task["status"] == "succeeded", (
+E   AssertionError: Invalid candidate data must be corrected, not treated as a broken schema
+E   assert 'failed' == 'succeeded'
+E     
+E     - succeeded
+E     + failed</failure></testcase><testcase classname="qa.test_sdk_review_round6" name="test_noncanonical_final_candidate_uses_format_correction[file-unsafe-integer-executor]" time="0.188"><failure message="AssertionError: Invalid candidate data must be corrected, not treated as a broken schema&#10;assert 'failed' == 'succeeded'&#10;  &#10;  - succeeded&#10;  + failed">/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round6.py:123: in test_noncanonical_final_candidate_uses_format_correction
+    assert task["status"] == "succeeded", (
+E   AssertionError: Invalid candidate data must be corrected, not treated as a broken schema
+E   assert 'failed' == 'succeeded'
+E     
+E     - succeeded
+E     + failed</failure></testcase><testcase classname="qa.test_sdk_review_round6" name="test_noncanonical_final_candidate_uses_format_correction[file-unpaired-surrogate-react]" time="0.062"><failure message="AssertionError: Invalid candidate data must be corrected, not treated as a broken schema&#10;assert 'failed' == 'succeeded'&#10;  &#10;  - succeeded&#10;  + failed">/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round6.py:123: in test_noncanonical_final_candidate_uses_format_correction
+    assert task["status"] == "succeeded", (
+E   AssertionError: Invalid candidate data must be corrected, not treated as a broken schema
+E   assert 'failed' == 'succeeded'
+E     
+E     - succeeded
+E     + failed</failure></testcase><testcase classname="qa.test_sdk_review_round6" name="test_noncanonical_final_candidate_uses_format_correction[file-unpaired-surrogate-planner]" time="0.071"><failure message="AssertionError: Invalid candidate data must be corrected, not treated as a broken schema&#10;assert 'failed' == 'succeeded'&#10;  &#10;  - succeeded&#10;  + failed">/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round6.py:123: in test_noncanonical_final_candidate_uses_format_correction
+    assert task["status"] == "succeeded", (
+E   AssertionError: Invalid candidate data must be corrected, not treated as a broken schema
+E   assert 'failed' == 'succeeded'
+E     
+E     - succeeded
+E     + failed</failure></testcase><testcase classname="qa.test_sdk_review_round6" name="test_noncanonical_final_candidate_uses_format_correction[file-unpaired-surrogate-executor]" time="0.196"><failure message="AssertionError: Invalid candidate data must be corrected, not treated as a broken schema&#10;assert 'failed' == 'succeeded'&#10;  &#10;  - succeeded&#10;  + failed">/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round6.py:123: in test_noncanonical_final_candidate_uses_format_correction
+    assert task["status"] == "succeeded", (
+E   AssertionError: Invalid candidate data must be corrected, not treated as a broken schema
+E   assert 'failed' == 'succeeded'
+E     
+E     - succeeded
+E     + failed</failure></testcase><testcase classname="qa.test_sdk_review_round6" name="test_noncanonical_final_candidate_uses_format_correction[file-depth-129-react]" time="0.071"><failure message="AssertionError: Invalid candidate data must be corrected, not treated as a broken schema&#10;assert 'failed' == 'succeeded'&#10;  &#10;  - succeeded&#10;  + failed">/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round6.py:123: in test_noncanonical_final_candidate_uses_format_correction
+    assert task["status"] == "succeeded", (
+E   AssertionError: Invalid candidate data must be corrected, not treated as a broken schema
+E   assert 'failed' == 'succeeded'
+E     
+E     - succeeded
+E     + failed</failure></testcase><testcase classname="qa.test_sdk_review_round6" name="test_noncanonical_final_candidate_uses_format_correction[file-depth-129-planner]" time="0.066"><failure message="AssertionError: Invalid candidate data must be corrected, not treated as a broken schema&#10;assert 'failed' == 'succeeded'&#10;  &#10;  - succeeded&#10;  + failed">/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round6.py:123: in test_noncanonical_final_candidate_uses_format_correction
+    assert task["status"] == "succeeded", (
+E   AssertionError: Invalid candidate data must be corrected, not treated as a broken schema
+E   assert 'failed' == 'succeeded'
+E     
+E     - succeeded
+E     + failed</failure></testcase><testcase classname="qa.test_sdk_review_round6" name="test_noncanonical_final_candidate_uses_format_correction[file-depth-129-executor]" time="0.193"><failure message="AssertionError: Invalid candidate data must be corrected, not treated as a broken schema&#10;assert 'failed' == 'succeeded'&#10;  &#10;  - succeeded&#10;  + failed">/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round6.py:123: in test_noncanonical_final_candidate_uses_format_correction
+    assert task["status"] == "succeeded", (
+E   AssertionError: Invalid candidate data must be corrected, not treated as a broken schema
+E   assert 'failed' == 'succeeded'
+E     
+E     - succeeded
+E     + failed</failure></testcase><testcase classname="qa.test_sdk_review_round6" name="test_ordinary_bad_output_still_corrects_as_control[memory-syntax-react]" time="0.026" /><testcase classname="qa.test_sdk_review_round6" name="test_ordinary_bad_output_still_corrects_as_control[memory-syntax-planner]" time="0.027" /><testcase classname="qa.test_sdk_review_round6" name="test_ordinary_bad_output_still_corrects_as_control[memory-syntax-executor]" time="0.063" /><testcase classname="qa.test_sdk_review_round6" name="test_ordinary_bad_output_still_corrects_as_control[memory-schema-mismatch-react]" time="0.026" /><testcase classname="qa.test_sdk_review_round6" name="test_ordinary_bad_output_still_corrects_as_control[memory-schema-mismatch-planner]" time="0.027" /><testcase classname="qa.test_sdk_review_round6" name="test_ordinary_bad_output_still_corrects_as_control[memory-schema-mismatch-executor]" time="0.063" /><testcase classname="qa.test_sdk_review_round6" name="test_ordinary_bad_output_still_corrects_as_control[file-syntax-react]" time="0.099" /><testcase classname="qa.test_sdk_review_round6" name="test_ordinary_bad_output_still_corrects_as_control[file-syntax-planner]" time="0.099" /><testcase classname="qa.test_sdk_review_round6" name="test_ordinary_bad_output_still_corrects_as_control[file-syntax-executor]" time="0.232" /><testcase classname="qa.test_sdk_review_round6" name="test_ordinary_bad_output_still_corrects_as_control[file-schema-mismatch-react]" time="0.099" /><testcase classname="qa.test_sdk_review_round6" name="test_ordinary_bad_output_still_corrects_as_control[file-schema-mismatch-planner]" time="0.098" /><testcase classname="qa.test_sdk_review_round6" name="test_ordinary_bad_output_still_corrects_as_control[file-schema-mismatch-executor]" time="0.240" /><testcase classname="qa.test_sdk_review_round6" name="test_valid_empty_and_limit_outputs_keep_mode_prompt[memory-null-react]" time="0.012" /><testcase classname="qa.test_sdk_review_round6" name="test_valid_empty_and_limit_outputs_keep_mode_prompt[memory-null-planner]" time="0.012" /><testcase classname="qa.test_sdk_review_round6" name="test_valid_empty_and_limit_outputs_keep_mode_prompt[memory-false-react]" time="0.012" /><testcase classname="qa.test_sdk_review_round6" name="test_valid_empty_and_limit_outputs_keep_mode_prompt[memory-false-planner]" time="0.012" /><testcase classname="qa.test_sdk_review_round6" name="test_valid_empty_and_limit_outputs_keep_mode_prompt[memory-zero-react]" time="0.012" /><testcase classname="qa.test_sdk_review_round6" name="test_valid_empty_and_limit_outputs_keep_mode_prompt[memory-zero-planner]" time="0.012" /><testcase classname="qa.test_sdk_review_round6" name="test_valid_empty_and_limit_outputs_keep_mode_prompt[memory-empty-text-react]" time="0.012" /><testcase classname="qa.test_sdk_review_round6" name="test_valid_empty_and_limit_outputs_keep_mode_prompt[memory-empty-text-planner]" time="0.012" /><testcase classname="qa.test_sdk_review_round6" name="test_valid_empty_and_limit_outputs_keep_mode_prompt[memory-empty-list-react]" time="0.012" /><testcase classname="qa.test_sdk_review_round6" name="test_valid_empty_and_limit_outputs_keep_mode_prompt[memory-empty-list-planner]" time="0.012" /><testcase classname="qa.test_sdk_review_round6" name="test_valid_empty_and_limit_outputs_keep_mode_prompt[memory-empty-object-react]" time="0.012" /><testcase classname="qa.test_sdk_review_round6" name="test_valid_empty_and_limit_outputs_keep_mode_prompt[memory-empty-object-planner]" time="0.012" /><testcase classname="qa.test_sdk_review_round6" name="test_valid_empty_and_limit_outputs_keep_mode_prompt[memory-max-safe-integer-react]" time="0.012" /><testcase classname="qa.test_sdk_review_round6" name="test_valid_empty_and_limit_outputs_keep_mode_prompt[memory-max-safe-integer-planner]" time="0.012" /><testcase classname="qa.test_sdk_review_round6" name="test_valid_empty_and_limit_outputs_keep_mode_prompt[memory-depth-128-react]" time="0.018" /><testcase classname="qa.test_sdk_review_round6" name="test_valid_empty_and_limit_outputs_keep_mode_prompt[memory-depth-128-planner]" time="0.030" /><testcase classname="qa.test_sdk_review_round6" name="test_valid_empty_and_limit_outputs_keep_mode_prompt[file-null-react]" time="0.076" /><testcase classname="qa.test_sdk_review_round6" name="test_valid_empty_and_limit_outputs_keep_mode_prompt[file-null-planner]" time="0.070" /><testcase classname="qa.test_sdk_review_round6" name="test_valid_empty_and_limit_outputs_keep_mode_prompt[file-false-react]" time="0.070" /><testcase classname="qa.test_sdk_review_round6" name="test_valid_empty_and_limit_outputs_keep_mode_prompt[file-false-planner]" time="0.061" /><testcase classname="qa.test_sdk_review_round6" name="test_valid_empty_and_limit_outputs_keep_mode_prompt[file-zero-react]" time="0.070" /><testcase classname="qa.test_sdk_review_round6" name="test_valid_empty_and_limit_outputs_keep_mode_prompt[file-zero-planner]" time="0.070" /><testcase classname="qa.test_sdk_review_round6" name="test_valid_empty_and_limit_outputs_keep_mode_prompt[file-empty-text-react]" time="0.060" /><testcase classname="qa.test_sdk_review_round6" name="test_valid_empty_and_limit_outputs_keep_mode_prompt[file-empty-text-planner]" time="0.074" /><testcase classname="qa.test_sdk_review_round6" name="test_valid_empty_and_limit_outputs_keep_mode_prompt[file-empty-list-react]" time="0.057" /><testcase classname="qa.test_sdk_review_round6" name="test_valid_empty_and_limit_outputs_keep_mode_prompt[file-empty-list-planner]" time="0.069" /><testcase classname="qa.test_sdk_review_round6" name="test_valid_empty_and_limit_outputs_keep_mode_prompt[file-empty-object-react]" time="0.069" /><testcase classname="qa.test_sdk_review_round6" name="test_valid_empty_and_limit_outputs_keep_mode_prompt[file-empty-object-planner]" time="0.064" /><testcase classname="qa.test_sdk_review_round6" name="test_valid_empty_and_limit_outputs_keep_mode_prompt[file-max-safe-integer-react]" time="0.064" /><testcase classname="qa.test_sdk_review_round6" name="test_valid_empty_and_limit_outputs_keep_mode_prompt[file-max-safe-integer-planner]" time="0.069" /><testcase classname="qa.test_sdk_review_round6" name="test_valid_empty_and_limit_outputs_keep_mode_prompt[file-depth-128-react]" time="0.070" /><testcase classname="qa.test_sdk_review_round6" name="test_valid_empty_and_limit_outputs_keep_mode_prompt[file-depth-128-planner]" time="0.070" /><testcase classname="qa.test_sdk_review_round6" name="test_error_sidecar_shape_cannot_break_attempt_commit[memory-absent-tool_result-raised]" time="0.035" /><testcase classname="qa.test_sdk_review_round6" name="test_error_sidecar_shape_cannot_break_attempt_commit[memory-absent-tool_result-reported]" time="0.035" /><testcase classname="qa.test_sdk_review_round6" name="test_error_sidecar_shape_cannot_break_attempt_commit[memory-absent-invalid_tool_result-raised]" time="0.034" /><testcase classname="qa.test_sdk_review_round6" name="test_error_sidecar_shape_cannot_break_attempt_commit[memory-absent-invalid_tool_result-reported]" time="0.035" /><testcase classname="qa.test_sdk_review_round6" name="test_error_sidecar_shape_cannot_break_attempt_commit[memory-empty-list-tool_result-raised]" time="0.025"><failure message="AssertionError: Malformed adapter sidecars must not break host persistence&#10;assert 'EXECUTION_DRIVER_FAILED' is None">/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round6.py:277: in test_error_sidecar_shape_cannot_break_attempt_commit
+    assert driver_error is None, "Malformed adapter sidecars must not break host persistence"
+E   AssertionError: Malformed adapter sidecars must not break host persistence
+E   assert 'EXECUTION_DRIVER_FAILED' is None</failure></testcase><testcase classname="qa.test_sdk_review_round6" name="test_error_sidecar_shape_cannot_break_attempt_commit[memory-empty-list-tool_result-reported]" time="0.035" /><testcase classname="qa.test_sdk_review_round6" name="test_error_sidecar_shape_cannot_break_attempt_commit[memory-empty-list-invalid_tool_result-raised]" time="0.025"><failure message="AssertionError: Malformed adapter sidecars must not break host persistence&#10;assert 'EXECUTION_DRIVER_FAILED' is None">/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round6.py:277: in test_error_sidecar_shape_cannot_break_attempt_commit
+    assert driver_error is None, "Malformed adapter sidecars must not break host persistence"
+E   AssertionError: Malformed adapter sidecars must not break host persistence
+E   assert 'EXECUTION_DRIVER_FAILED' is None</failure></testcase><testcase classname="qa.test_sdk_review_round6" name="test_error_sidecar_shape_cannot_break_attempt_commit[memory-empty-list-invalid_tool_result-reported]" time="0.035" /><testcase classname="qa.test_sdk_review_round6" name="test_error_sidecar_shape_cannot_break_attempt_commit[memory-empty-object-tool_result-raised]" time="0.025"><failure message="AssertionError: Malformed adapter sidecars must not break host persistence&#10;assert 'EXECUTION_DRIVER_FAILED' is None">/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round6.py:277: in test_error_sidecar_shape_cannot_break_attempt_commit
+    assert driver_error is None, "Malformed adapter sidecars must not break host persistence"
+E   AssertionError: Malformed adapter sidecars must not break host persistence
+E   assert 'EXECUTION_DRIVER_FAILED' is None</failure></testcase><testcase classname="qa.test_sdk_review_round6" name="test_error_sidecar_shape_cannot_break_attempt_commit[memory-empty-object-tool_result-reported]" time="0.035" /><testcase classname="qa.test_sdk_review_round6" name="test_error_sidecar_shape_cannot_break_attempt_commit[memory-empty-object-invalid_tool_result-raised]" time="0.025"><failure message="AssertionError: Malformed adapter sidecars must not break host persistence&#10;assert 'EXECUTION_DRIVER_FAILED' is None">/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round6.py:277: in test_error_sidecar_shape_cannot_break_attempt_commit
+    assert driver_error is None, "Malformed adapter sidecars must not break host persistence"
+E   AssertionError: Malformed adapter sidecars must not break host persistence
+E   assert 'EXECUTION_DRIVER_FAILED' is None</failure></testcase><testcase classname="qa.test_sdk_review_round6" name="test_error_sidecar_shape_cannot_break_attempt_commit[memory-empty-object-invalid_tool_result-reported]" time="0.035" /><testcase classname="qa.test_sdk_review_round6" name="test_error_sidecar_shape_cannot_break_attempt_commit[memory-text-tool_result-raised]" time="0.025"><failure message="AssertionError: Malformed adapter sidecars must not break host persistence&#10;assert 'EXECUTION_DRIVER_FAILED' is None">/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round6.py:277: in test_error_sidecar_shape_cannot_break_attempt_commit
+    assert driver_error is None, "Malformed adapter sidecars must not break host persistence"
+E   AssertionError: Malformed adapter sidecars must not break host persistence
+E   assert 'EXECUTION_DRIVER_FAILED' is None</failure></testcase><testcase classname="qa.test_sdk_review_round6" name="test_error_sidecar_shape_cannot_break_attempt_commit[memory-text-tool_result-reported]" time="0.035" /><testcase classname="qa.test_sdk_review_round6" name="test_error_sidecar_shape_cannot_break_attempt_commit[memory-text-invalid_tool_result-raised]" time="0.025"><failure message="AssertionError: Malformed adapter sidecars must not break host persistence&#10;assert 'EXECUTION_DRIVER_FAILED' is None">/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round6.py:277: in test_error_sidecar_shape_cannot_break_attempt_commit
+    assert driver_error is None, "Malformed adapter sidecars must not break host persistence"
+E   AssertionError: Malformed adapter sidecars must not break host persistence
+E   assert 'EXECUTION_DRIVER_FAILED' is None</failure></testcase><testcase classname="qa.test_sdk_review_round6" name="test_error_sidecar_shape_cannot_break_attempt_commit[memory-text-invalid_tool_result-reported]" time="0.035" /><testcase classname="qa.test_sdk_review_round6" name="test_error_sidecar_shape_cannot_break_attempt_commit[memory-valid-tool_result-raised]" time="0.035" /><testcase classname="qa.test_sdk_review_round6" name="test_error_sidecar_shape_cannot_break_attempt_commit[memory-valid-tool_result-reported]" time="0.035" /><testcase classname="qa.test_sdk_review_round6" name="test_error_sidecar_shape_cannot_break_attempt_commit[memory-valid-invalid_tool_result-raised]" time="0.034" /><testcase classname="qa.test_sdk_review_round6" name="test_error_sidecar_shape_cannot_break_attempt_commit[memory-valid-invalid_tool_result-reported]" time="0.035" /><testcase classname="qa.test_sdk_review_round6" name="test_error_sidecar_shape_cannot_break_attempt_commit[file-absent-tool_result-raised]" time="0.127" /><testcase classname="qa.test_sdk_review_round6" name="test_error_sidecar_shape_cannot_break_attempt_commit[file-absent-tool_result-reported]" time="0.116" /><testcase classname="qa.test_sdk_review_round6" name="test_error_sidecar_shape_cannot_break_attempt_commit[file-absent-invalid_tool_result-raised]" time="0.118" /><testcase classname="qa.test_sdk_review_round6" name="test_error_sidecar_shape_cannot_break_attempt_commit[file-absent-invalid_tool_result-reported]" time="0.127" /><testcase classname="qa.test_sdk_review_round6" name="test_error_sidecar_shape_cannot_break_attempt_commit[file-empty-list-tool_result-raised]" time="0.072"><failure message="AssertionError: Malformed adapter sidecars must not break host persistence&#10;assert 'EXECUTION_DRIVER_FAILED' is None">/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round6.py:277: in test_error_sidecar_shape_cannot_break_attempt_commit
+    assert driver_error is None, "Malformed adapter sidecars must not break host persistence"
+E   AssertionError: Malformed adapter sidecars must not break host persistence
+E   assert 'EXECUTION_DRIVER_FAILED' is None</failure></testcase><testcase classname="qa.test_sdk_review_round6" name="test_error_sidecar_shape_cannot_break_attempt_commit[file-empty-list-tool_result-reported]" time="0.127" /><testcase classname="qa.test_sdk_review_round6" name="test_error_sidecar_shape_cannot_break_attempt_commit[file-empty-list-invalid_tool_result-raised]" time="0.085"><failure message="AssertionError: Malformed adapter sidecars must not break host persistence&#10;assert 'EXECUTION_DRIVER_FAILED' is None">/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round6.py:277: in test_error_sidecar_shape_cannot_break_attempt_commit
+    assert driver_error is None, "Malformed adapter sidecars must not break host persistence"
+E   AssertionError: Malformed adapter sidecars must not break host persistence
+E   assert 'EXECUTION_DRIVER_FAILED' is None</failure></testcase><testcase classname="qa.test_sdk_review_round6" name="test_error_sidecar_shape_cannot_break_attempt_commit[file-empty-list-invalid_tool_result-reported]" time="0.139" /><testcase classname="qa.test_sdk_review_round6" name="test_error_sidecar_shape_cannot_break_attempt_commit[file-empty-object-tool_result-raised]" time="0.086"><failure message="AssertionError: Malformed adapter sidecars must not break host persistence&#10;assert 'EXECUTION_DRIVER_FAILED' is None">/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round6.py:277: in test_error_sidecar_shape_cannot_break_attempt_commit
+    assert driver_error is None, "Malformed adapter sidecars must not break host persistence"
+E   AssertionError: Malformed adapter sidecars must not break host persistence
+E   assert 'EXECUTION_DRIVER_FAILED' is None</failure></testcase><testcase classname="qa.test_sdk_review_round6" name="test_error_sidecar_shape_cannot_break_attempt_commit[file-empty-object-tool_result-reported]" time="0.128" /><testcase classname="qa.test_sdk_review_round6" name="test_error_sidecar_shape_cannot_break_attempt_commit[file-empty-object-invalid_tool_result-raised]" time="0.085"><failure message="AssertionError: Malformed adapter sidecars must not break host persistence&#10;assert 'EXECUTION_DRIVER_FAILED' is None">/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round6.py:277: in test_error_sidecar_shape_cannot_break_attempt_commit
+    assert driver_error is None, "Malformed adapter sidecars must not break host persistence"
+E   AssertionError: Malformed adapter sidecars must not break host persistence
+E   assert 'EXECUTION_DRIVER_FAILED' is None</failure></testcase><testcase classname="qa.test_sdk_review_round6" name="test_error_sidecar_shape_cannot_break_attempt_commit[file-empty-object-invalid_tool_result-reported]" time="0.130" /><testcase classname="qa.test_sdk_review_round6" name="test_error_sidecar_shape_cannot_break_attempt_commit[file-text-tool_result-raised]" time="0.070"><failure message="AssertionError: Malformed adapter sidecars must not break host persistence&#10;assert 'EXECUTION_DRIVER_FAILED' is None">/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round6.py:277: in test_error_sidecar_shape_cannot_break_attempt_commit
+    assert driver_error is None, "Malformed adapter sidecars must not break host persistence"
+E   AssertionError: Malformed adapter sidecars must not break host persistence
+E   assert 'EXECUTION_DRIVER_FAILED' is None</failure></testcase><testcase classname="qa.test_sdk_review_round6" name="test_error_sidecar_shape_cannot_break_attempt_commit[file-text-tool_result-reported]" time="0.128" /><testcase classname="qa.test_sdk_review_round6" name="test_error_sidecar_shape_cannot_break_attempt_commit[file-text-invalid_tool_result-raised]" time="0.083"><failure message="AssertionError: Malformed adapter sidecars must not break host persistence&#10;assert 'EXECUTION_DRIVER_FAILED' is None">/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round6.py:277: in test_error_sidecar_shape_cannot_break_attempt_commit
+    assert driver_error is None, "Malformed adapter sidecars must not break host persistence"
+E   AssertionError: Malformed adapter sidecars must not break host persistence
+E   assert 'EXECUTION_DRIVER_FAILED' is None</failure></testcase><testcase classname="qa.test_sdk_review_round6" name="test_error_sidecar_shape_cannot_break_attempt_commit[file-text-invalid_tool_result-reported]" time="0.130" /><testcase classname="qa.test_sdk_review_round6" name="test_error_sidecar_shape_cannot_break_attempt_commit[file-valid-tool_result-raised]" time="0.114" /><testcase classname="qa.test_sdk_review_round6" name="test_error_sidecar_shape_cannot_break_attempt_commit[file-valid-tool_result-reported]" time="0.128" /><testcase classname="qa.test_sdk_review_round6" name="test_error_sidecar_shape_cannot_break_attempt_commit[file-valid-invalid_tool_result-raised]" time="0.129" /><testcase classname="qa.test_sdk_review_round6" name="test_error_sidecar_shape_cannot_break_attempt_commit[file-valid-invalid_tool_result-reported]" time="0.128" /></testsuite></testsuites>

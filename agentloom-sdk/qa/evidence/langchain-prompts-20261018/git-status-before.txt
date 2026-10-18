@@ -1,0 +1,32 @@
+ M agentloom-sdk/README.md
+ M agentloom-sdk/qa/test_sdk_audit.py
+ M agentloom-sdk/src/agentloom/configuration/models.py
+ M agentloom-sdk/src/agentloom/context/records.py
+ M agentloom-sdk/src/agentloom/events/patches.py
+ M agentloom-sdk/src/agentloom/runtime/host.py
+ M agentloom-sdk/src/agentloom/runtime/recovery.py
+ M agentloom-sdk/src/agentloom/runtime/runner.py
+ M agentloom-sdk/tests/test_execution_contract.py
+ M agentloom-sdk/tests/test_hook_context_contract.py
+ M docs/sdk/assembly.md
+ M docs/sdk/context.md
+ M docs/sdk/definitions.md
+ M docs/sdk/event-bus.md
+ M docs/sdk/implementation.md
+ M docs/sdk/integration.md
+?? agentloom-sdk/qa/REVIEW_RESULTS_2026-10-17_ROUND5.md
+?? agentloom-sdk/qa/REVIEW_RESULTS_2026-10-18_ROUND6.md
+?? agentloom-sdk/qa/evidence/langchain-prompts-20261018/
+?? agentloom-sdk/qa/evidence/mode-prompts-20261018/
+?? agentloom-sdk/qa/evidence/review-round5-20261017/
+?? agentloom-sdk/qa/evidence/review-round6-20261018/
+?? agentloom-sdk/qa/test_sdk_review_round5.py
+?? agentloom-sdk/qa/test_sdk_review_round6.py
+?? agentloom-sdk/src/agentloom/configuration/variables.py
+?? agentloom-sdk/src/agentloom/prompts/
+?? agentloom-sdk/tests/support/prompt_process.py
+?? agentloom-sdk/tests/test_maintenance_shutdown.py
+?? agentloom-sdk/tests/test_mode_prompts.py
+?? agentloom-sdk/tests/test_prompt_recovery.py
+?? agentloom-sdk/tests/test_review_whitebox_probe.py
+?? examples/

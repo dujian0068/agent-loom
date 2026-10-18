@@ -1,0 +1,62 @@
+{
+  "langchain": {
+    "commit": "bd5b134d876ef47858beef27bd29c81eeda03293",
+    "files": [
+      {
+        "path": "libs/langchain/langchain_classic/agents/react/agent.py",
+        "url": "https://raw.githubusercontent.com/langchain-ai/langchain/bd5b134d876ef47858beef27bd29c81eeda03293/libs/langchain/langchain_classic/agents/react/agent.py",
+        "sha256": "25004bde1caf54dc42c513223d49bb864a2748d066cff64fe1ef6e67e427d399"
+      },
+      {
+        "path": "libs/langchain/langchain_classic/agents/tool_calling_agent/base.py",
+        "url": "https://raw.githubusercontent.com/langchain-ai/langchain/bd5b134d876ef47858beef27bd29c81eeda03293/libs/langchain/langchain_classic/agents/tool_calling_agent/base.py",
+        "sha256": "a3f0e1a90e7a397d62bf540e2b821349ab5909372fde4ac031220b7a44bb8f3d"
+      },
+      {
+        "path": "libs/langchain_v1/langchain/agents/middleware/todo.py",
+        "url": "https://raw.githubusercontent.com/langchain-ai/langchain/bd5b134d876ef47858beef27bd29c81eeda03293/libs/langchain_v1/langchain/agents/middleware/todo.py",
+        "sha256": "dca1e724b2ef40a5a045bd4cf2902e128e1006c5e77e130a664d77f44d4e1abe"
+      },
+      {
+        "path": "LICENSE",
+        "url": "https://raw.githubusercontent.com/langchain-ai/langchain/bd5b134d876ef47858beef27bd29c81eeda03293/LICENSE",
+        "sha256": "4ec67e4ca6e6721dba849b2ca82261597c86a61ee214bbf21416006b7b2d0478"
+      }
+    ]
+  },
+  "langchain-experimental": {
+    "commit": "f10d5c3247fb102d4d45d29a35a0266760288542",
+    "files": [
+      {
+        "path": "libs/experimental/langchain_experimental/plan_and_execute/planners/chat_planner.py",
+        "url": "https://raw.githubusercontent.com/langchain-ai/langchain-experimental/f10d5c3247fb102d4d45d29a35a0266760288542/libs/experimental/langchain_experimental/plan_and_execute/planners/chat_planner.py",
+        "sha256": "5ba23311e3b526d72bc2860d67705610d37661d04dabf66bc0bca487e30b4b3e"
+      },
+      {
+        "path": "libs/experimental/langchain_experimental/plan_and_execute/executors/agent_executor.py",
+        "url": "https://raw.githubusercontent.com/langchain-ai/langchain-experimental/f10d5c3247fb102d4d45d29a35a0266760288542/libs/experimental/langchain_experimental/plan_and_execute/executors/agent_executor.py",
+        "sha256": "35dfa2257e007573ede55c69dafa8bae11fb8af557a4e87928a601781aee7991"
+      },
+      {
+        "path": "LICENSE",
+        "url": "https://raw.githubusercontent.com/langchain-ai/langchain-experimental/f10d5c3247fb102d4d45d29a35a0266760288542/LICENSE",
+        "sha256": "a01dcffdc1291b4043f2a81d249a9f3e45c9036f2308c9cdfeefe18371371e80"
+      }
+    ]
+  },
+  "langgraph": {
+    "commit": "23961cff61a42b52525f3b20b4094d8d2fba1744",
+    "files": [
+      {
+        "path": "docs/docs/tutorials/plan-and-execute/plan-and-execute.ipynb",
+        "url": "https://raw.githubusercontent.com/langchain-ai/langgraph/23961cff61a42b52525f3b20b4094d8d2fba1744/docs/docs/tutorials/plan-and-execute/plan-and-execute.ipynb",
+        "sha256": "c9789f6602bcd1184f32521b256f4ded224e2ff93085955c3eadd83b21026cb1"
+      },
+      {
+        "path": "LICENSE",
+        "url": "https://raw.githubusercontent.com/langchain-ai/langgraph/23961cff61a42b52525f3b20b4094d8d2fba1744/LICENSE",
+        "sha256": "d9bb52f2e3540d60ff50d8f0f5b6ba649b7fd346948c4c3d086c8afb120763c7"
+      }
+    ]
+  }
+}

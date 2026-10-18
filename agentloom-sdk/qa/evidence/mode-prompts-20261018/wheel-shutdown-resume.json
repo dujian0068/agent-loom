@@ -1,0 +1,6 @@
+{
+  "cut": "resume",
+  "returncode": 0,
+  "stdout": "{\"status\": \"succeeded\", \"loops\": 3}\n",
+  "stderr": "_GatheringFuture exception was never retrieved\nfuture: <_GatheringFuture finished exception=CancelledError()>\nTraceback (most recent call last):\n  File \"/private/tmp/agentloom-prompts-delivery-wheel-xi0wkrmp/install/agentloom/runtime/maintenance.py\", line 24, in scan_forever\n    await asyncio.shield(work)\nasyncio.exceptions.CancelledError\n"
+}

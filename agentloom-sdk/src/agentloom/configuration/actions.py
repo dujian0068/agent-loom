@@ -1,40 +1,9 @@
 """Serializable action admission rules shared by live calls and saved Hook patches."""
 
-from dataclasses import asdict
-
 from ..errors import AgentLoomError
+from .definitions import definition_snapshot, restore_definition
 from .json_documents import copy_document as json_copy
-from .models import AgentDefinition, VariableSpec
 from .schemas import validate_schema
-
-
-def definition_snapshot(definition):
-    return {
-        "definition": asdict(definition),
-        "variable_specs": [
-            key for key, value in definition.variables.items() if isinstance(value, VariableSpec)
-        ],
-    }
-
-
-def restore_definition(snapshot):
-    value = snapshot["definition"]
-    variables = dict(value["variables"])
-    if snapshot.get("legacy_variables") and any(
-        isinstance(v, dict) and set(v) == {"schema", "default", "required"}
-        for v in variables.values()
-    ):
-        raise AgentLoomError("HOOK_VARIABLE_VALIDATION_UNAVAILABLE")
-    for key in snapshot["variable_specs"]:
-        variables[key] = VariableSpec(**variables[key])
-    return AgentDefinition(
-        value["name"],
-        value["prompt"],
-        value["description"],
-        variables=variables,
-        input_schema=value["input_schema"],
-        output_schema=value["output_schema"],
-    )
 
 
 def action_contract(program, role, tools):

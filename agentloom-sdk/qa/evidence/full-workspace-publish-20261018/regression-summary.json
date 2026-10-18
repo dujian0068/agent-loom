@@ -1,0 +1,30 @@
+{
+  "tests": 1537,
+  "errors": 0,
+  "failures": 0,
+  "skipped": 0,
+  "base_commit": "4b8a9b453d65a54ebad65b392f04f032a17dd456",
+  "duration_seconds": 342.788,
+  "areas": {
+    "tests": 1075,
+    "qa": 462
+  },
+  "source_files_checked": 189,
+  "source_unchanged_during_regression": true,
+  "excluded_tests": [],
+  "scope": "Complete SDK tests and all seven QA rounds on the entire workspace; all remaining changes included for publication",
+  "command": [
+    "caffeinate",
+    "-is",
+    ".venv/bin/python",
+    "-m",
+    "pytest",
+    "-q",
+    "agentloom-sdk/tests",
+    "agentloom-sdk/qa",
+    "--tb=short",
+    "--durations=10",
+    "--junitxml=agentloom-sdk/qa/evidence/full-workspace-publish-20261018/regression.junit.xml"
+  ],
+  "passed": 1537
+}

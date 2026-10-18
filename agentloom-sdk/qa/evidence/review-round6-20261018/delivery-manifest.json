@@ -1,0 +1,30 @@
+{
+  "captured_at": "2026-10-18T10:18:38.141687+08:00",
+  "report_links_checked": 31,
+  "baseline_files_unchanged": 156,
+  "files": {
+    "agentloom-sdk/qa/REVIEW_RESULTS_2026-10-18_ROUND6.md": "8d85bf5962571d7bc8feb4e13a57b6ebf68a201487008ee497cecd7ad7137ce4",
+    "agentloom-sdk/qa/test_sdk_review_round6.py": "68287b814ad7b590438fea855eeaffeb041501a8f421912ba26f4fe164f7f7e0",
+    "agentloom-sdk/qa/evidence/review-round6-20261018/boundaries.junit.xml": "897f3d75aa4281cb5733a2fd9e512c2840814d8fca0d0eadc8c2b40aa7b410d8",
+    "agentloom-sdk/qa/evidence/review-round6-20261018/boundaries.txt": "30bea11417ea1ea10143d25954ca35762fb7a7c03035188d72a8fd417759d2d4",
+    "agentloom-sdk/qa/evidence/review-round6-20261018/exploratory-probe-source.txt": "f4d68896b574b3b3b198629558c3a49e558cc708dfb243fc2dada11f21d1e951",
+    "agentloom-sdk/qa/evidence/review-round6-20261018/probe_remaining.txt": "6750e8475de9d579077fc6df98377a06850afc00fbed263eb6afd57db308470e",
+    "agentloom-sdk/qa/evidence/review-round6-20261018/regression.junit.xml": "5b9870bb62f00517bc3ec15414e13815767a26606a8391bea3f62469e143493a",
+    "agentloom-sdk/qa/evidence/review-round6-20261018/regression.txt": "1771570d6d9e4f169c79660f64104e329cda92fbcc9fa91f45b2cbddb4a81f17",
+    "agentloom-sdk/qa/evidence/review-round6-20261018/reviewed-source.diff": "0bc98d05cf298b9d63a7ff5206fe7b356a8e443d57089ff0a5e98911aa2816b3",
+    "agentloom-sdk/qa/evidence/review-round6-20261018/ruff-format.txt": "c98b86154f37b741528126f09d3e8f3665921b1c314835ab85d52088185e14af",
+    "agentloom-sdk/qa/evidence/review-round6-20261018/ruff-lint.txt": "82b3e6a6c090a57601d22943bd23fca9218d1031dbe5a7b754092f9a156b4f18",
+    "agentloom-sdk/qa/evidence/review-round6-20261018/source-after.json": "ed931cbf219e07c38f62395d1e25062fb6b05172c73588c90106c5e29ed11d9d",
+    "agentloom-sdk/qa/evidence/review-round6-20261018/source-before.json": "8516c762f897092889afc03a56f61532c2be2f359035b6c01a8372a9cf9d288c",
+    "agentloom-sdk/qa/evidence/review-round6-20261018/summary.json": "b18caf5f8753ac69c50b3c84e018f7343666359e47c0cd5f978fed5f0b37ddb1",
+    "agentloom-sdk/qa/evidence/review-round6-20261018/whitebox-conftest-source.txt": "5f704140075e100794201216eb5019e80a8e9043e6d664bd3a11f8f43abd630b",
+    "agentloom-sdk/qa/evidence/review-round6-20261018/whitebox-corrected-source.txt": "5bbd72f817d4cd453aedd661ebec6d8c844f55dda291b98f4ced2b51cd41b696",
+    "agentloom-sdk/qa/evidence/review-round6-20261018/whitebox-corrected.junit.xml": "e081b05b5c699591dbd03220844637fdfc96a8739669254be09b09cf37a9cb76",
+    "agentloom-sdk/qa/evidence/review-round6-20261018/whitebox-corrected.txt": "34a88a774c13fc19bdac4c2d26f6dd93767d67cff0123411de657a60553734a6",
+    "agentloom-sdk/qa/evidence/review-round6-20261018/whitebox-fixture-corrections.diff": "2a15388f9e31a267575fef006f163ef1dd7ffe3dd0acc7ab3c32609ab0abf71b",
+    "agentloom-sdk/qa/evidence/review-round6-20261018/whitebox-pytest.ini.txt": "bd93c0612c6b92b08c22d4d96f460adc0c1ff8734bc21ef985ab1181c88fa397",
+    "agentloom-sdk/qa/evidence/review-round6-20261018/whitebox-ruff.txt": "d31ef320772b773f8c05eb4a7f0b822e56f5935a32cf6709a7cedd846284d2b5",
+    "agentloom-sdk/qa/evidence/review-round6-20261018/whitebox.junit.xml": "c63a992d425ff4bc37a49a584f260b1bd72b1bb3d9b690a51d88ba840b7ddcb2",
+    "agentloom-sdk/qa/evidence/review-round6-20261018/whitebox.txt": "b075796512671a57b760091fa5c0f0a558afa861f05a49795a29decc1bf33f4e"
+  }
+}

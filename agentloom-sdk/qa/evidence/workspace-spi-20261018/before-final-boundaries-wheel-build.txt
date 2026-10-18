@@ -1,0 +1,17 @@
+Processing ./sdk
+  Preparing metadata (pyproject.toml): started
+  Preparing metadata (pyproject.toml): finished with status 'done'
+Processing ./provider
+  Preparing metadata (pyproject.toml): started
+  Preparing metadata (pyproject.toml): finished with status 'done'
+Building wheels for collected packages: agentloom-sdk, agentloom-test-file-provider
+  Building wheel for agentloom-sdk (pyproject.toml): started
+  Building wheel for agentloom-sdk (pyproject.toml): finished with status 'done'
+  Created wheel for agentloom-sdk: filename=agentloom_sdk-0.1.0a1-py3-none-any.whl size=169170 sha256=b4f148ce8aedc9494dc497625f66133e5a7aac919855d4531c0d4fde7b73a954
+  Stored in directory: /private/var/folders/g6/378nmc5541n9wkbyb0nj9x9r0000gn/T/pip-ephem-wheel-cache-jubknw15/wheels/c9/58/12/38d2bde15e8c547aaaa0566857beff10b1bada8118ca8defa5
+  Building wheel for agentloom-test-file-provider (pyproject.toml): started
+  Building wheel for agentloom-test-file-provider (pyproject.toml): finished with status 'done'
+  Created wheel for agentloom-test-file-provider: filename=agentloom_test_file_provider-1.2.3-py3-none-any.whl size=4524 sha256=89fadd315d58751b1495db6ae98786a27b0cb057247693bc5d55db660144719d
+  Stored in directory: /private/var/folders/g6/378nmc5541n9wkbyb0nj9x9r0000gn/T/pip-ephem-wheel-cache-jubknw15/wheels/0e/3c/1b/f07112ebda50ebd4ee466041afb6235ab250e977897d2c9791
+Successfully built agentloom-sdk agentloom-test-file-provider
+WARNING: The directory '/Users/bmilk/Library/Caches/pip' or its parent directory is not owned or is not writable by the current user. The cache has been disabled. Check the permissions and owner of that directory. If executing pip with sudo, you should use sudo's -H flag.

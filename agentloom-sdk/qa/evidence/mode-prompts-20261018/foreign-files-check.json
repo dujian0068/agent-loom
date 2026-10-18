@@ -1,0 +1,32 @@
+{
+  "baseline": "prior push ownership snapshot",
+  "sha256": {
+    "agentloom-sdk/qa/REVIEW_RESULTS_2026-10-17_ROUND5.md": "e22ed53d88c2f4e619ec4a9b9f5f8c533e097a22bf4c06543e0dcf3f85d45262",
+    "agentloom-sdk/qa/evidence/review-round5-20261017/boundaries.junit.xml": "898e66c035c32350904fc0c07a6790f8dbdea810670dbb200a3469faf44076e6",
+    "agentloom-sdk/qa/evidence/review-round5-20261017/boundaries.txt": "1d625c206f7c72c85ff35c869628df907130da296f0cafc4a405cb5804c0ca39",
+    "agentloom-sdk/qa/evidence/review-round5-20261017/environment.json": "2cbfd68df04c8b01180f4f1268a0b3a6b66b61e0fda5ada5bf0b15b654cedd56",
+    "agentloom-sdk/qa/evidence/review-round5-20261017/recovery-probe-source.txt": "1394382a67664791fcd3fbf20066e8ef04751b7c942ffae91a492c3338ed71e6",
+    "agentloom-sdk/qa/evidence/review-round5-20261017/recovery-probe.txt": "0a92dd9fff042f02c3a2447f5c8181c6c5ed9bf4cc0e1dc33b63363400a53d15",
+    "agentloom-sdk/qa/evidence/review-round5-20261017/regression.junit.xml": "65cd00afc7213ee2cba59ac1a4f039edadd1156e6cd9bcf5f8adb7919bfdb976",
+    "agentloom-sdk/qa/evidence/review-round5-20261017/regression.txt": "618c68283b67fb1bb93dfd0c1a9df5f5d2db8176b4cc1353b38cc4c0358d2a5a",
+    "agentloom-sdk/qa/evidence/review-round5-20261017/ruff-check.txt": "82b3e6a6c090a57601d22943bd23fca9218d1031dbe5a7b754092f9a156b4f18",
+    "agentloom-sdk/qa/evidence/review-round5-20261017/ruff-format.txt": "18ba381e222ff2e3d590e705f8802e5d9fe3aab8d52c82662caf0509de82dddc",
+    "agentloom-sdk/qa/evidence/review-round5-20261017/source-after.json": "8cffef87085daa40b8e8ba9fbd581917ce586938c847a4dbce9495b92a31eaa4",
+    "agentloom-sdk/qa/evidence/review-round5-20261017/source-before.json": "de32ea1f90bbee860c59cb59c9388262d4c0b78188f97abf22f80499a9f6f686",
+    "agentloom-sdk/qa/evidence/review-round5-20261017/source-delivery.json": "4e9ece0ea85f62a9344072879b2e03b8c7e01965b816b37c5dc5318102d1d8d8",
+    "agentloom-sdk/qa/evidence/review-round5-20261017/summary.json": "4bd779c55beb61909301061160431a7e2471b3a9ae6c8eca83912d79a608168c",
+    "agentloom-sdk/qa/test_sdk_review_round5.py": "847277f082d0416baecc4ec486ab09f1f44425e655ca557bf942ed20fdd6fa02",
+    "agentloom-sdk/tests/test_review_whitebox_probe.py": "2c59595cd8b8ec79ef482e209e24e6956e6e7e4fdf9319ab591dfdba6a2352d7",
+    "examples/agents/requirements-assistant/knowledge/meeting-room-rules.md": "2bac7c2e78b8f9d76be061742bad82077bf860969bc6bc1b552c9154e0249b69",
+    "examples/agents/requirements-assistant/prompt.md": "728076cef4d6febad1e5c567e7ededf65295646fdc198c53d14ab56550c851e9",
+    "examples/agents/requirements-assistant/reviewer-prompt.md": "31827639a523d62fff908dbba8d71d0eec02c75e20604e317d23d1bf06500c43",
+    "examples/agents/requirements-assistant/skills/acceptance-design/SKILL.md": "f3d08f8266e11bbea1149a20b7a1d14e48a71cc4436e1b1463c5bd2049b2cbd2",
+    "examples/agents/requirements-assistant/skills/acceptance-design/assets/acceptance-template.md": "64adcb7fdef37942a06032c2f13f4ac09d093fce9037a4d2746c424401cf0622",
+    "examples/agents/requirements-assistant/skills/requirement-review/SKILL.md": "4eb8187513dd756714d48b69873b0f4709ab8cc682a0d312f5a2faa311b22677",
+    "examples/agents/requirements-assistant/skills/requirement-review/assets/requirements-template.md": "e56942ba5bd85d6dce6d6d589e998ffc5010352ea700440ee861249dc5b81008",
+    "examples/agents/requirements-assistant/skills/solution-outline/SKILL.md": "5fb5d6af1b89cf4d3432e270397fc7b25baf6d4c03371c276a3a9e9df798f402",
+    "examples/agents/requirements-assistant/skills/solution-outline/assets/solution-template.md": "61d401c9f6492b8ba955054c76dbd7d25ed5be551f5e6178f1329bc847ac7365",
+    "examples/agents/requirements-assistant/smoke-input.txt": "551b90ba1630ac0e9f058d1b354e5688debaea1ad83bdcd9c47ea142c57fec00"
+  },
+  "changed_since_prior_push": []
+}

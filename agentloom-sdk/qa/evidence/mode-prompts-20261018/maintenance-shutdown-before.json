@@ -1,0 +1,6 @@
+{
+  "close_returned_before_worker_released": true,
+  "followup_worker_observed_host_status": [
+    "closed"
+  ]
+}

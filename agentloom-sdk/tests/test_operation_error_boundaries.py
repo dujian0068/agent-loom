@@ -13,6 +13,7 @@ from agentloom import (
     ModelDescriptor,
     RetryPolicy,
     RuntimeEngine,
+    ToolResult,
 )
 from agentloom.capabilities.invocation import normalize_completion, normalize_error_completion
 from agentloom.errors import LeaseLost, error_record
@@ -135,6 +136,39 @@ def test_exception_sidecars_cannot_poison_attempt_storage(shape):
     assert raw["execution_fact"] == "completed" and raw["result"] is None
     assert raw["error"]["code"] == "ADAPTER_ERROR_INVALID"
     assert "tool_result" not in raw and "invalid_tool_result" not in raw
+
+
+@pytest.mark.parametrize("completed", [False, True])
+@pytest.mark.parametrize(
+    "sidecar",
+    [
+        {"status": "unknown"},
+        {"status": "failed", "content": [], "metadata": {}, "artifacts": [], "error": None},
+        {"status": "succeeded", "content": [{}], "metadata": {}, "artifacts": [], "error": None},
+        {"status": [], "content": [], "metadata": {}, "artifacts": [], "error": None},
+    ],
+)
+def test_error_sidecar_uses_complete_tool_contract_without_changing_facts(completed, sidecar):
+    error = AgentLoomError("FAILED")
+    if completed:
+        error.execution_fact = "completed"
+    error.tool_result = sidecar
+    error.invalid_tool_result = {"wrong_key": None}
+    raw = failed_result(error)
+    assert raw["error"]["code"] == "FAILED"
+    assert raw["execution_fact"] == ("completed" if completed else "unknown")
+    assert "tool_result" not in raw and "invalid_tool_result" not in raw
+
+
+def test_infrastructure_error_from_sidecar_serialization_propagates():
+    class BrokenReceipt(ToolResult):
+        def to_dict(self):
+            raise InfrastructureError("RECEIPT_STORAGE_FAILED")
+
+    error = AgentLoomError("FAILED")
+    error.tool_result = BrokenReceipt()
+    with pytest.raises(InfrastructureError, match="RECEIPT_STORAGE_FAILED"):
+        failed_result(error)
 
 
 async def test_invalid_exception_is_delivered_once_without_retry(runtime_store, build):

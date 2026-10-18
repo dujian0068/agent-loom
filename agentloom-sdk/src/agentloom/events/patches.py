@@ -8,6 +8,7 @@ from ..context.budget import estimate
 from ..context.records import materialize, revise_call_arguments
 from ..context.results import PREVIEW_BYTES
 from ..errors import AgentLoomError, InfrastructureError
+from ..prompts.assembly import PROMPT_RECORD_KIND
 from .patch_contract import legacy_patch_contract
 
 
@@ -51,6 +52,8 @@ class PatchValidator:
         for key, content in patches.items():
             if key not in originals or key not in current or not isinstance(content, str):
                 raise AgentLoomError("HOOK_CONTEXT_FORBIDDEN")
+            if current[key]["kind"] == PROMPT_RECORD_KIND:
+                raise AgentLoomError("HOOK_SYSTEM_PROMPT_IMMUTABLE")
             if current[key]["protected"]:
                 raise AgentLoomError("HOOK_PROTECTED_INPUT")
             if current[key]["message"] != originals[key]["message"]:
@@ -86,6 +89,8 @@ class PatchValidator:
                 }:
                     raise AgentLoomError("HOOK_PROTOCOL_CHANGED")
                 if original.get("content") != message.get("content"):
+                    if current[rid]["kind"] == PROMPT_RECORD_KIND:
+                        raise AgentLoomError("HOOK_SYSTEM_PROMPT_IMMUTABLE")
                     if current[rid]["protected"]:
                         raise AgentLoomError("HOOK_PROTECTED_INPUT")
                     if rid in patches and patches[rid] != message.get("content"):

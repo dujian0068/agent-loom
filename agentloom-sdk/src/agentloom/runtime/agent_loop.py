@@ -1,13 +1,12 @@
 """A ReactAgent's resumable model/action/feedback loop, driven in its task scope."""
 
 import asyncio
-import json
 
-from ..configuration import json_copy, validate_schema
 from ..configuration.json_documents import canonical_document as canonical
 from ..context import append
 from ..context.results import project_result
-from ..errors import AgentLoomError, ConfigurationError, InfrastructureError
+from ..errors import AgentLoomError, InfrastructureError, RequestError
+from .output import validate_output
 
 
 def assistant_message(response):
@@ -142,20 +141,8 @@ class AgentLoop:
                 if task["stage"] == "validate":
                     definition = self.agent.definition
                     try:
-                        value = (
-                            json_copy(json.loads(task["candidate"]))
-                            if definition.output_schema is not None
-                            else task["candidate"]
-                        )
-                        validate_schema(
-                            value, definition.output_schema, code="OUTPUT_SCHEMA_INVALID"
-                        )
-                        if definition.output_schema is None and not value.strip():
-                            raise AgentLoomError("OUTPUT_EMPTY")
-                    except ConfigurationError:
-                        # A broken schema cannot be repaired by another model response.
-                        raise
-                    except (ValueError, AgentLoomError):
+                        value = validate_output(task["candidate"], definition.output_schema)
+                    except RequestError:
 
                         def correction(s):
                             current = s["tasks"][task_id]

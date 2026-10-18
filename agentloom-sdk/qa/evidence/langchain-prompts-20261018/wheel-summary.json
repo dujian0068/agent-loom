@@ -1,0 +1,49 @@
+{
+  "wheel": "/private/tmp/agentloom-langchain-wheel-6mwfcqq7/dist/agentloom_sdk-0.1.0a1-py3-none-any.whl",
+  "sha256": "a04791205af2beecad98ff6d68625496c90259b323adc429d09f623f051b5d14",
+  "installed": "/private/tmp/agentloom-langchain-wheel-6mwfcqq7/install/agentloom",
+  "verified_import": "/private/tmp/agentloom-langchain-wheel-6mwfcqq7/install/agentloom/__init__.py",
+  "source_files_match": 96,
+  "py_typed": true,
+  "licenses_and_sources_packaged": true,
+  "process_recovery": [
+    {
+      "cut": "before_root",
+      "version": "v2",
+      "resumed": {
+        "status": "succeeded",
+        "loops": 3
+      },
+      "stderr_empty": true
+    },
+    {
+      "cut": "before_child",
+      "version": "v2",
+      "resumed": {
+        "status": "succeeded",
+        "loops": 3
+      },
+      "stderr_empty": true
+    },
+    {
+      "cut": "before_root",
+      "version": "v1-created-before-edits",
+      "resumed": {
+        "status": "succeeded",
+        "loops": 3
+      },
+      "unchanged_instructions": true,
+      "stderr_empty": true
+    },
+    {
+      "cut": "before_child",
+      "version": "v1-created-before-edits",
+      "resumed": {
+        "status": "succeeded",
+        "loops": 3
+      },
+      "unchanged_instructions": true,
+      "stderr_empty": true
+    }
+  ]
+}

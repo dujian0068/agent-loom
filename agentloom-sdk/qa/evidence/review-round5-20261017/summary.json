@@ -1,0 +1,147 @@
+{
+  "review": "SDK round 5",
+  "generated_at": "2026-10-17T23:13:44.423890+08:00",
+  "head": "bfe582adaea6960c80f7e4620eed6a0b6050ca5a",
+  "scope": "SDK excluding Workflow, default tools/SPI and Platform",
+  "baseline_file_count": 141,
+  "baseline_files_changed_during_review": [],
+  "environment": {
+    "python": "3.12.14 (main, Aug 25 2026, 13:50:33) [Clang 22.1.3 ]",
+    "platform": "macOS-26.7-arm64-arm-64bit",
+    "recursion_limit": 1000,
+    "versions": {
+      "pytest": "8.4.2",
+      "pytest-asyncio": "1.4.0",
+      "ruff": "0.16.9",
+      "httpx": "0.28.1",
+      "mcp": "1.30.0",
+      "rfc8785": "0.1.4"
+    }
+  },
+  "results": {
+    "baseline": {
+      "name": "pytest",
+      "errors": "0",
+      "failures": "0",
+      "skipped": "0",
+      "tests": "948",
+      "time": "265.040",
+      "timestamp": "2026-10-17T23:07:58.088100+08:00",
+      "hostname": "bmilk",
+      "passed": 948,
+      "classes": {
+        "tests.test_attempt_completion": 52,
+        "tests.test_builder_contract": 31,
+        "tests.test_capability_public_contract": 30,
+        "tests.test_completion_boundaries": 53,
+        "tests.test_completion_cleanup": 15,
+        "tests.test_completion_recovery": 5,
+        "tests.test_control_and_history": 7,
+        "tests.test_control_reconciliation": 40,
+        "tests.test_design_alignment": 15,
+        "tests.test_environment_contract": 4,
+        "tests.test_execution_contract": 34,
+        "tests.test_file_store_contract": 19,
+        "tests.test_followup_review": 54,
+        "tests.test_history_execution_facts": 2,
+        "tests.test_hook_context_contract": 9,
+        "tests.test_hook_public_contract": 10,
+        "tests.test_json_value_boundaries": 14,
+        "tests.test_maintenance_contract": 17,
+        "tests.test_mcp_protocol": 3,
+        "tests.test_mcp_retry_contract": 12,
+        "tests.test_model_material": 60,
+        "tests.test_model_protocols": 11,
+        "tests.test_persistence_contract": 17,
+        "tests.test_properties_contract": 38,
+        "tests.test_public_result_projection": 8,
+        "tests.test_public_validation": 28,
+        "tests.test_recovery_invariants": 16,
+        "tests.test_result_and_scope_contract": 4,
+        "tests.test_review_regressions": 34,
+        "tests.test_schema_contract": 21,
+        "tests.test_skill_profile_contract": 13,
+        "tests.test_usage_accounting": 12,
+        "tests.test_usage_events": 26,
+        "qa.test_sdk_audit": 110,
+        "qa.test_sdk_rereview": 24,
+        "qa.test_sdk_review_round3": 44,
+        "qa.test_sdk_review_round4": 56
+      },
+      "failed_cases": []
+    },
+    "new_boundaries": {
+      "name": "pytest",
+      "errors": "0",
+      "failures": "28",
+      "skipped": "0",
+      "tests": "72",
+      "time": "6.356",
+      "timestamp": "2026-10-17T23:12:11.083362+08:00",
+      "hostname": "bmilk",
+      "passed": 44,
+      "classes": {
+        "qa.test_sdk_review_round5": 72
+      },
+      "failed_cases": [
+        "test_nested_return_must_finish_or_reject_before_durable_write[memory-465-function]",
+        "test_nested_return_must_finish_or_reject_before_durable_write[memory-465-legacy]",
+        "test_nested_return_must_finish_or_reject_before_durable_write[memory-465-native]",
+        "test_nested_return_must_finish_or_reject_before_durable_write[memory-465-callback]",
+        "test_nested_return_must_finish_or_reject_before_durable_write[memory-480-native]",
+        "test_nested_return_must_finish_or_reject_before_durable_write[memory-480-callback]",
+        "test_nested_return_must_finish_or_reject_before_durable_write[memory-600-native]",
+        "test_nested_return_must_finish_or_reject_before_durable_write[memory-600-callback]",
+        "test_nested_return_must_finish_or_reject_before_durable_write[file-465-function]",
+        "test_nested_return_must_finish_or_reject_before_durable_write[file-465-legacy]",
+        "test_nested_return_must_finish_or_reject_before_durable_write[file-465-native]",
+        "test_nested_return_must_finish_or_reject_before_durable_write[file-465-callback]",
+        "test_nested_return_must_finish_or_reject_before_durable_write[file-480-native]",
+        "test_nested_return_must_finish_or_reject_before_durable_write[file-480-callback]",
+        "test_nested_return_must_finish_or_reject_before_durable_write[file-600-native]",
+        "test_nested_return_must_finish_or_reject_before_durable_write[file-600-callback]",
+        "test_saved_nested_result_remains_resumable_and_releases_session[memory-function]",
+        "test_saved_nested_result_remains_resumable_and_releases_session[memory-native]",
+        "test_saved_nested_result_remains_resumable_and_releases_session[file-function]",
+        "test_saved_nested_result_remains_resumable_and_releases_session[file-native]",
+        "test_raised_error_fields_do_not_bypass_operation_error_validation[memory-nan-raised]",
+        "test_raised_error_fields_do_not_bypass_operation_error_validation[memory-bad-category-raised]",
+        "test_raised_error_fields_do_not_bypass_operation_error_validation[memory-empty-code-raised]",
+        "test_raised_error_fields_do_not_bypass_operation_error_validation[memory-bool-retryable-raised]",
+        "test_raised_error_fields_do_not_bypass_operation_error_validation[file-nan-raised]",
+        "test_raised_error_fields_do_not_bypass_operation_error_validation[file-bad-category-raised]",
+        "test_raised_error_fields_do_not_bypass_operation_error_validation[file-empty-code-raised]",
+        "test_raised_error_fields_do_not_bypass_operation_error_validation[file-bool-retryable-raised]"
+      ]
+    }
+  },
+  "findings": {
+    "R5-01": {
+      "priority": "P1",
+      "failed_cases": 20,
+      "topic": "Nesting accepted by JSON normalization can fail durable copying or post-completion reads; a saved result can also prevent resumed progress"
+    },
+    "R5-02": {
+      "priority": "P2",
+      "failed_cases": 8,
+      "topic": "Raised AgentLoomError bypasses error DTO validation; invalid fields persist and NaN aborts the Run"
+    }
+  },
+  "commands": [
+    ".venv/bin/python -m pytest -q agentloom-sdk/tests agentloom-sdk/qa/test_sdk_audit.py agentloom-sdk/qa/test_sdk_rereview.py agentloom-sdk/qa/test_sdk_review_round3.py agentloom-sdk/qa/test_sdk_review_round4.py --tb=short --junitxml=/tmp/agentloom-review5-20261017/regression.junit.xml",
+    ".venv/bin/python -m pytest -q agentloom-sdk/qa/test_sdk_review_round5.py --tb=short --junitxml=/tmp/agentloom-review5-20261017/boundaries.junit.xml",
+    ".venv/bin/python -m ruff check agentloom-sdk/src agentloom-sdk/tests agentloom-sdk/qa/test_sdk*.py",
+    ".venv/bin/python -m ruff format --check agentloom-sdk/src agentloom-sdk/tests agentloom-sdk/qa/test_sdk*.py"
+  ],
+  "ruff": {
+    "lint": "passed",
+    "format": "passed",
+    "python_files": 124
+  },
+  "production_code_changed_by_reviewer": false,
+  "counting_note": "Only the final baseline and final boundary runs are counted. Exploratory depth sweeps and earlier versions of the new tests are not added to the totals. The supplementary standalone probe uses 480 levels; the pytest reproduction uses 465 because stack depth differs. Both use the unchanged default recursion limit of 1000.",
+  "delivery_note": "This test file appeared after the completed regression and lint runs. It was not authored or modified by this review and is outside the recorded 948-test baseline.",
+  "new_unreviewed_files_at_delivery": [
+    "agentloom-sdk/tests/test_review_whitebox_probe.py"
+  ]
+}

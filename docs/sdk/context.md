@@ -183,6 +183,8 @@ prepare_context固定本轮input_cutoff，压缩与Hook处理期间不刷新这�
 
 ## 4. 模型视图、协议组与预算
 
+每个新角色任务的固定前缀包含业务 system 和 SDK 模式 system 两条记录。后者的 message_kind 为 `sdk_instructions`，不可被 Hook 改写、摘要替换或跨轮历史再次导入；摘要插在整个 system 前缀之后。模式指令、最终输出 Schema 与 Planner 所需的 Executor 输入合同全部纳入完整请求计量，固定部分超窗时在供应商 Attempt 前明确失败。Run 保存指令快照，恢复及后续创建的 Executor 不重新读取当前版本模板，详见[模式指令装配](assembly.md#25-sdk-模式指令与业务-prompt)。
+
 ### 4.1 视图结构
 
 `ModelMessage` 字段为 `message_id, role, content_blocks[], tool_calls[], tool_call_id?, source_record_refs[], protected_input_refs[], projection_kind:original|effective|summary|protocol_marker`。

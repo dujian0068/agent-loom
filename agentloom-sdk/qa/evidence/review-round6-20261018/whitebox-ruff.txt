@@ -1,0 +1,117 @@
+I001 [*] Import block is un-sorted or un-formatted
+  --> agentloom-sdk/tests/test_review_whitebox_probe.py:8:1
+   |
+ 6 |   """
+ 7 |
+ 8 | / import asyncio
+ 9 | | import json
+10 | |
+11 | | import pytest
+12 | | from conftest import binding, tool
+13 | |
+14 | | from agentloom import (
+15 | |     AgentDefinition,
+16 | |     AgentLoomError,
+17 | |     CapabilityBinding,
+18 | |     CapabilityRegistration,
+19 | |     CapabilityRegistry,
+20 | |     CapabilitySpec,
+21 | |     CapabilitySpec,
+22 | |     ContextPolicy,
+23 | |     ExecutionPolicy,
+24 | |     FunctionToolAdapter,
+25 | |     ModelDescriptor,
+26 | |     ModelOptions,
+27 | |     ModelResponse,
+28 | |     PlanAgent,
+29 | |     ProviderEvent,
+30 | |     RequestError,
+31 | |     RetryPolicy,
+32 | |     RuntimeEngine,
+33 | |     ScriptedModel,
+34 | |     ToolCall,
+35 | |     WorkspaceBinding,
+36 | | )
+   | |_^
+37 |
+38 |   def _tool_definition(name="assistant", prompt="SYSTEM", binding_key="echo", description=""):
+   |
+help: Organize imports
+   |
+20 |     CapabilitySpec,
+   -     CapabilitySpec,
+21 |     ContextPolicy,
+--------------------------------------------------------------------------------
+36 |
+37 +
+38 | def _tool_definition(name="assistant", prompt="SYSTEM", binding_key="echo", description=""):
+   |
+
+F401 [*] `agentloom.CapabilityBinding` imported but unused
+  --> agentloom-sdk/tests/test_review_whitebox_probe.py:17:5
+   |
+15 |     AgentDefinition,
+16 |     AgentLoomError,
+17 |     CapabilityBinding,
+   |     ^^^^^^^^^^^^^^^^^
+18 |     CapabilityRegistration,
+19 |     CapabilityRegistry,
+   |
+help: Remove unused import: `agentloom.CapabilityBinding`
+   |
+16 |     AgentLoomError,
+   -     CapabilityBinding,
+17 |     CapabilityRegistration,
+   |
+
+F811 [*] Redefinition of unused `CapabilitySpec` from line 20
+  --> agentloom-sdk/tests/test_review_whitebox_probe.py:21:5
+   |
+18 |     CapabilityRegistration,
+19 |     CapabilityRegistry,
+20 |     CapabilitySpec,
+   |     -------------- previous definition of `CapabilitySpec` here
+21 |     CapabilitySpec,
+   |     ^^^^^^^^^^^^^^ `CapabilitySpec` redefined here
+22 |     ContextPolicy,
+23 |     ExecutionPolicy,
+   |
+help: Remove definition: `CapabilitySpec`
+   |
+20 |     CapabilitySpec,
+   -     CapabilitySpec,
+21 |     ContextPolicy,
+   |
+
+F841 Local variable `calls` is assigned to but never used
+   --> agentloom-sdk/tests/test_review_whitebox_probe.py:398:5
+    |
+396 |     from agentloom import FunctionHookHandler, HookBinding, HookDecision, HookSet
+397 |
+398 |     calls = {"n": 0}
+    |     ^^^^^
+399 |
+400 |     async def hook(event, context):
+    |
+help: Remove assignment to unused variable `calls`
+
+F401 [*] `agentloom.HookDecision` imported but unused
+   --> agentloom-sdk/tests/test_review_whitebox_probe.py:522:61
+    |
+520 | async def test_hook_timeout_or_crash_fails_open(build):
+521 |     """requirements.md §5: hook failure/timeout/illegal patch must not stop the main flow."""
+522 |     from agentloom import FunctionHookHandler, HookBinding, HookDecision, HookSet
+    |                                                             ^^^^^^^^^^^^
+523 |
+524 |     async def boom(event, context):
+    |
+help: Remove unused import: `agentloom.HookDecision`
+    |
+521 |     """requirements.md §5: hook failure/timeout/illegal patch must not stop the main flow."""
+    -     from agentloom import FunctionHookHandler, HookBinding, HookDecision, HookSet
+522 +     from agentloom import FunctionHookHandler, HookBinding, HookSet
+523 |
+    |
+
+Found 5 errors.
+[*] 4 fixable with the `--fix` option (1 hidden fix can be enabled with the `--unsafe-fixes` option).

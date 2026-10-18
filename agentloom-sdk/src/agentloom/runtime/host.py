@@ -8,7 +8,9 @@ from ..configuration.assembly import recovery_manifest
 from ..configuration.json_documents import canonical_document as canonical
 from ..configuration.json_documents import document_digest as digest
 from ..configuration.properties import UNSET, resolve_properties
+from ..configuration.recovery import require_same_bindings
 from ..errors import InfrastructureError, RequestError
+from ..prompts.assembly import create_prompt_contract
 from ..public.handles import RunHandle
 from ..public.validation import identity
 from ..storage import TERMINAL, CommitCoordinator, FileRuntimeStore, claim
@@ -191,13 +193,8 @@ class RuntimeEngine:
                     raise RequestError("INPUT_CONFLICT")
                 if state["mode"] != program.mode:
                     raise RequestError("RECOVERY_BINDING_MISMATCH")
-                if state["status"] not in TERMINAL and state["bindings"] != recovery_manifest(
-                    program
-                ):
-                    raise RequestError(
-                        "RECOVERY_BINDING_MISMATCH",
-                        "Reconstruct the original execution configuration and resource manifests",
-                    )
+                if state["status"] not in TERMINAL:
+                    require_same_bindings(state["bindings"], recovery_manifest(program))
             else:
                 if tx.get("admission", run_id):
                     raise RequestError("RUN_ADMISSION_CLOSED")
@@ -273,6 +270,7 @@ class RuntimeEngine:
                     "deadline_at": tx.now + program.execution_policy.run_timeout_seconds,
                     "policy": asdict(program.execution_policy),
                     "bindings": recovery_manifest(program),
+                    "prompt_contract": create_prompt_contract(program),
                     "lease": None,
                     "workspace": None,
                     "graph_id": new_id(),

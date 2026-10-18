@@ -1,0 +1,9 @@
+Processing ./project
+  Preparing metadata (pyproject.toml): started
+  Preparing metadata (pyproject.toml): finished with status 'done'
+Building wheels for collected packages: agentloom-sdk
+  Building wheel for agentloom-sdk (pyproject.toml): started
+  Building wheel for agentloom-sdk (pyproject.toml): finished with status 'done'
+  Created wheel for agentloom-sdk: filename=agentloom_sdk-0.1.0a1-py3-none-any.whl size=152522 sha256=a04791205af2beecad98ff6d68625496c90259b323adc429d09f623f051b5d14
+  Stored in directory: /private/var/folders/g6/378nmc5541n9wkbyb0nj9x9r0000gn/T/pip-ephem-wheel-cache-0uu4v6a6/wheels/e0/05/92/2d31f81f2f0e41b75baad6c3d9b2a39e642cecb6e4b092216e
+Successfully built agentloom-sdk

@@ -1,0 +1,2178 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="57" skipped="0" tests="73" time="2.917" timestamp="2026-10-18T12:58:39.138160+08:00" hostname="bmilk"><testcase classname="tests.test_recovery_binding_contract" name="test_boolean_and_number_are_distinct_recovery_bindings[memory-const-react]" time="0.015"><failure message="Failed: DID NOT RAISE &lt;class 'agentloom.errors.RequestError'&gt;">runtime_store = &lt;agentloom.storage.memory.MemoryRuntimeStore object at 0x10bc5b890&gt;
+role = 'react', location = 'const'
+
+    @pytest.mark.parametrize("role", ["react", "planner", "worker"])
+    @pytest.mark.parametrize("location", ["const", "enum", "variable", "model_options"])
+    async def test_boolean_and_number_are_distinct_recovery_bindings(runtime_store, role, location):
+        original = AgentDefinition("agent", "Mode: {{mode}}", "Perform work", variables={"mode": True})
+        changed = original
+        before_options = after_options = None
+        if location == "const":
+            original = replace(original, output_schema={"const": True})
+            changed = replace(original, output_schema={"const": 1})
+        elif location == "enum":
+            original = replace(original, output_schema={"enum": [{"flags": [False, True]}]})
+            changed = replace(original, output_schema={"enum": [{"flags": [0, 1]}]})
+        elif location == "variable":
+            changed = replace(original, variables={"mode": 1})
+        else:
+            before_options = ModelOptions(parameters={"custom": {"flags": [True, False]}})
+            after_options = ModelOptions(parameters={"custom": {"flags": [1, 0]}})
+        saved = await suspend(runtime_store, original, role, model_options=before_options)
+        async with RuntimeEngine(store=runtime_store, environment=NoPreparation()) as runtime:
+            agent = program(runtime, changed, role, model_options=after_options)
+&gt;           with pytest.raises(RequestError, match="RECOVERY_BINDING_MISMATCH"):
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E           Failed: DID NOT RAISE &lt;class 'agentloom.errors.RequestError'&gt;
+
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/tests/test_recovery_binding_contract.py:97: Failed</failure></testcase><testcase classname="tests.test_recovery_binding_contract" name="test_boolean_and_number_are_distinct_recovery_bindings[memory-const-planner]" time="0.014"><failure message="Failed: DID NOT RAISE &lt;class 'agentloom.errors.RequestError'&gt;">runtime_store = &lt;agentloom.storage.memory.MemoryRuntimeStore object at 0x10bd4f9e0&gt;
+role = 'planner', location = 'const'
+
+    @pytest.mark.parametrize("role", ["react", "planner", "worker"])
+    @pytest.mark.parametrize("location", ["const", "enum", "variable", "model_options"])
+    async def test_boolean_and_number_are_distinct_recovery_bindings(runtime_store, role, location):
+        original = AgentDefinition("agent", "Mode: {{mode}}", "Perform work", variables={"mode": True})
+        changed = original
+        before_options = after_options = None
+        if location == "const":
+            original = replace(original, output_schema={"const": True})
+            changed = replace(original, output_schema={"const": 1})
+        elif location == "enum":
+            original = replace(original, output_schema={"enum": [{"flags": [False, True]}]})
+            changed = replace(original, output_schema={"enum": [{"flags": [0, 1]}]})
+        elif location == "variable":
+            changed = replace(original, variables={"mode": 1})
+        else:
+            before_options = ModelOptions(parameters={"custom": {"flags": [True, False]}})
+            after_options = ModelOptions(parameters={"custom": {"flags": [1, 0]}})
+        saved = await suspend(runtime_store, original, role, model_options=before_options)
+        async with RuntimeEngine(store=runtime_store, environment=NoPreparation()) as runtime:
+            agent = program(runtime, changed, role, model_options=after_options)
+&gt;           with pytest.raises(RequestError, match="RECOVERY_BINDING_MISMATCH"):
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E           Failed: DID NOT RAISE &lt;class 'agentloom.errors.RequestError'&gt;
+
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/tests/test_recovery_binding_contract.py:97: Failed</failure></testcase><testcase classname="tests.test_recovery_binding_contract" name="test_boolean_and_number_are_distinct_recovery_bindings[memory-const-worker]" time="0.013"><failure message="Failed: DID NOT RAISE &lt;class 'agentloom.errors.RequestError'&gt;">runtime_store = &lt;agentloom.storage.memory.MemoryRuntimeStore object at 0x10bd22480&gt;
+role = 'worker', location = 'const'
+
+    @pytest.mark.parametrize("role", ["react", "planner", "worker"])
+    @pytest.mark.parametrize("location", ["const", "enum", "variable", "model_options"])
+    async def test_boolean_and_number_are_distinct_recovery_bindings(runtime_store, role, location):
+        original = AgentDefinition("agent", "Mode: {{mode}}", "Perform work", variables={"mode": True})
+        changed = original
+        before_options = after_options = None
+        if location == "const":
+            original = replace(original, output_schema={"const": True})
+            changed = replace(original, output_schema={"const": 1})
+        elif location == "enum":
+            original = replace(original, output_schema={"enum": [{"flags": [False, True]}]})
+            changed = replace(original, output_schema={"enum": [{"flags": [0, 1]}]})
+        elif location == "variable":
+            changed = replace(original, variables={"mode": 1})
+        else:
+            before_options = ModelOptions(parameters={"custom": {"flags": [True, False]}})
+            after_options = ModelOptions(parameters={"custom": {"flags": [1, 0]}})
+        saved = await suspend(runtime_store, original, role, model_options=before_options)
+        async with RuntimeEngine(store=runtime_store, environment=NoPreparation()) as runtime:
+            agent = program(runtime, changed, role, model_options=after_options)
+&gt;           with pytest.raises(RequestError, match="RECOVERY_BINDING_MISMATCH"):
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E           Failed: DID NOT RAISE &lt;class 'agentloom.errors.RequestError'&gt;
+
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/tests/test_recovery_binding_contract.py:97: Failed</failure></testcase><testcase classname="tests.test_recovery_binding_contract" name="test_boolean_and_number_are_distinct_recovery_bindings[memory-enum-react]" time="0.013"><failure message="Failed: DID NOT RAISE &lt;class 'agentloom.errors.RequestError'&gt;">runtime_store = &lt;agentloom.storage.memory.MemoryRuntimeStore object at 0x10bdb4bf0&gt;
+role = 'react', location = 'enum'
+
+    @pytest.mark.parametrize("role", ["react", "planner", "worker"])
+    @pytest.mark.parametrize("location", ["const", "enum", "variable", "model_options"])
+    async def test_boolean_and_number_are_distinct_recovery_bindings(runtime_store, role, location):
+        original = AgentDefinition("agent", "Mode: {{mode}}", "Perform work", variables={"mode": True})
+        changed = original
+        before_options = after_options = None
+        if location == "const":
+            original = replace(original, output_schema={"const": True})
+            changed = replace(original, output_schema={"const": 1})
+        elif location == "enum":
+            original = replace(original, output_schema={"enum": [{"flags": [False, True]}]})
+            changed = replace(original, output_schema={"enum": [{"flags": [0, 1]}]})
+        elif location == "variable":
+            changed = replace(original, variables={"mode": 1})
+        else:
+            before_options = ModelOptions(parameters={"custom": {"flags": [True, False]}})
+            after_options = ModelOptions(parameters={"custom": {"flags": [1, 0]}})
+        saved = await suspend(runtime_store, original, role, model_options=before_options)
+        async with RuntimeEngine(store=runtime_store, environment=NoPreparation()) as runtime:
+            agent = program(runtime, changed, role, model_options=after_options)
+&gt;           with pytest.raises(RequestError, match="RECOVERY_BINDING_MISMATCH"):
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E           Failed: DID NOT RAISE &lt;class 'agentloom.errors.RequestError'&gt;
+
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/tests/test_recovery_binding_contract.py:97: Failed</failure></testcase><testcase classname="tests.test_recovery_binding_contract" name="test_boolean_and_number_are_distinct_recovery_bindings[memory-enum-planner]" time="0.013"><failure message="Failed: DID NOT RAISE &lt;class 'agentloom.errors.RequestError'&gt;">runtime_store = &lt;agentloom.storage.memory.MemoryRuntimeStore object at 0x10bd9d9d0&gt;
+role = 'planner', location = 'enum'
+
+    @pytest.mark.parametrize("role", ["react", "planner", "worker"])
+    @pytest.mark.parametrize("location", ["const", "enum", "variable", "model_options"])
+    async def test_boolean_and_number_are_distinct_recovery_bindings(runtime_store, role, location):
+        original = AgentDefinition("agent", "Mode: {{mode}}", "Perform work", variables={"mode": True})
+        changed = original
+        before_options = after_options = None
+        if location == "const":
+            original = replace(original, output_schema={"const": True})
+            changed = replace(original, output_schema={"const": 1})
+        elif location == "enum":
+            original = replace(original, output_schema={"enum": [{"flags": [False, True]}]})
+            changed = replace(original, output_schema={"enum": [{"flags": [0, 1]}]})
+        elif location == "variable":
+            changed = replace(original, variables={"mode": 1})
+        else:
+            before_options = ModelOptions(parameters={"custom": {"flags": [True, False]}})
+            after_options = ModelOptions(parameters={"custom": {"flags": [1, 0]}})
+        saved = await suspend(runtime_store, original, role, model_options=before_options)
+        async with RuntimeEngine(store=runtime_store, environment=NoPreparation()) as runtime:
+            agent = program(runtime, changed, role, model_options=after_options)
+&gt;           with pytest.raises(RequestError, match="RECOVERY_BINDING_MISMATCH"):
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E           Failed: DID NOT RAISE &lt;class 'agentloom.errors.RequestError'&gt;
+
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/tests/test_recovery_binding_contract.py:97: Failed</failure></testcase><testcase classname="tests.test_recovery_binding_contract" name="test_boolean_and_number_are_distinct_recovery_bindings[memory-enum-worker]" time="0.013"><failure message="Failed: DID NOT RAISE &lt;class 'agentloom.errors.RequestError'&gt;">runtime_store = &lt;agentloom.storage.memory.MemoryRuntimeStore object at 0x10bdb7c50&gt;
+role = 'worker', location = 'enum'
+
+    @pytest.mark.parametrize("role", ["react", "planner", "worker"])
+    @pytest.mark.parametrize("location", ["const", "enum", "variable", "model_options"])
+    async def test_boolean_and_number_are_distinct_recovery_bindings(runtime_store, role, location):
+        original = AgentDefinition("agent", "Mode: {{mode}}", "Perform work", variables={"mode": True})
+        changed = original
+        before_options = after_options = None
+        if location == "const":
+            original = replace(original, output_schema={"const": True})
+            changed = replace(original, output_schema={"const": 1})
+        elif location == "enum":
+            original = replace(original, output_schema={"enum": [{"flags": [False, True]}]})
+            changed = replace(original, output_schema={"enum": [{"flags": [0, 1]}]})
+        elif location == "variable":
+            changed = replace(original, variables={"mode": 1})
+        else:
+            before_options = ModelOptions(parameters={"custom": {"flags": [True, False]}})
+            after_options = ModelOptions(parameters={"custom": {"flags": [1, 0]}})
+        saved = await suspend(runtime_store, original, role, model_options=before_options)
+        async with RuntimeEngine(store=runtime_store, environment=NoPreparation()) as runtime:
+            agent = program(runtime, changed, role, model_options=after_options)
+&gt;           with pytest.raises(RequestError, match="RECOVERY_BINDING_MISMATCH"):
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E           Failed: DID NOT RAISE &lt;class 'agentloom.errors.RequestError'&gt;
+
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/tests/test_recovery_binding_contract.py:97: Failed</failure></testcase><testcase classname="tests.test_recovery_binding_contract" name="test_boolean_and_number_are_distinct_recovery_bindings[memory-variable-react]" time="0.013"><failure message="Failed: DID NOT RAISE &lt;class 'agentloom.errors.RequestError'&gt;">runtime_store = &lt;agentloom.storage.memory.MemoryRuntimeStore object at 0x10bd21a30&gt;
+role = 'react', location = 'variable'
+
+    @pytest.mark.parametrize("role", ["react", "planner", "worker"])
+    @pytest.mark.parametrize("location", ["const", "enum", "variable", "model_options"])
+    async def test_boolean_and_number_are_distinct_recovery_bindings(runtime_store, role, location):
+        original = AgentDefinition("agent", "Mode: {{mode}}", "Perform work", variables={"mode": True})
+        changed = original
+        before_options = after_options = None
+        if location == "const":
+            original = replace(original, output_schema={"const": True})
+            changed = replace(original, output_schema={"const": 1})
+        elif location == "enum":
+            original = replace(original, output_schema={"enum": [{"flags": [False, True]}]})
+            changed = replace(original, output_schema={"enum": [{"flags": [0, 1]}]})
+        elif location == "variable":
+            changed = replace(original, variables={"mode": 1})
+        else:
+            before_options = ModelOptions(parameters={"custom": {"flags": [True, False]}})
+            after_options = ModelOptions(parameters={"custom": {"flags": [1, 0]}})
+        saved = await suspend(runtime_store, original, role, model_options=before_options)
+        async with RuntimeEngine(store=runtime_store, environment=NoPreparation()) as runtime:
+            agent = program(runtime, changed, role, model_options=after_options)
+&gt;           with pytest.raises(RequestError, match="RECOVERY_BINDING_MISMATCH"):
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E           Failed: DID NOT RAISE &lt;class 'agentloom.errors.RequestError'&gt;
+
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/tests/test_recovery_binding_contract.py:97: Failed</failure></testcase><testcase classname="tests.test_recovery_binding_contract" name="test_boolean_and_number_are_distinct_recovery_bindings[memory-variable-planner]" time="0.013"><failure message="Failed: DID NOT RAISE &lt;class 'agentloom.errors.RequestError'&gt;">runtime_store = &lt;agentloom.storage.memory.MemoryRuntimeStore object at 0x10bbbb4a0&gt;
+role = 'planner', location = 'variable'
+
+    @pytest.mark.parametrize("role", ["react", "planner", "worker"])
+    @pytest.mark.parametrize("location", ["const", "enum", "variable", "model_options"])
+    async def test_boolean_and_number_are_distinct_recovery_bindings(runtime_store, role, location):
+        original = AgentDefinition("agent", "Mode: {{mode}}", "Perform work", variables={"mode": True})
+        changed = original
+        before_options = after_options = None
+        if location == "const":
+            original = replace(original, output_schema={"const": True})
+            changed = replace(original, output_schema={"const": 1})
+        elif location == "enum":
+            original = replace(original, output_schema={"enum": [{"flags": [False, True]}]})
+            changed = replace(original, output_schema={"enum": [{"flags": [0, 1]}]})
+        elif location == "variable":
+            changed = replace(original, variables={"mode": 1})
+        else:
+            before_options = ModelOptions(parameters={"custom": {"flags": [True, False]}})
+            after_options = ModelOptions(parameters={"custom": {"flags": [1, 0]}})
+        saved = await suspend(runtime_store, original, role, model_options=before_options)
+        async with RuntimeEngine(store=runtime_store, environment=NoPreparation()) as runtime:
+            agent = program(runtime, changed, role, model_options=after_options)
+&gt;           with pytest.raises(RequestError, match="RECOVERY_BINDING_MISMATCH"):
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E           Failed: DID NOT RAISE &lt;class 'agentloom.errors.RequestError'&gt;
+
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/tests/test_recovery_binding_contract.py:97: Failed</failure></testcase><testcase classname="tests.test_recovery_binding_contract" name="test_boolean_and_number_are_distinct_recovery_bindings[memory-variable-worker]" time="0.013"><failure message="Failed: DID NOT RAISE &lt;class 'agentloom.errors.RequestError'&gt;">runtime_store = &lt;agentloom.storage.memory.MemoryRuntimeStore object at 0x10bd9d160&gt;
+role = 'worker', location = 'variable'
+
+    @pytest.mark.parametrize("role", ["react", "planner", "worker"])
+    @pytest.mark.parametrize("location", ["const", "enum", "variable", "model_options"])
+    async def test_boolean_and_number_are_distinct_recovery_bindings(runtime_store, role, location):
+        original = AgentDefinition("agent", "Mode: {{mode}}", "Perform work", variables={"mode": True})
+        changed = original
+        before_options = after_options = None
+        if location == "const":
+            original = replace(original, output_schema={"const": True})
+            changed = replace(original, output_schema={"const": 1})
+        elif location == "enum":
+            original = replace(original, output_schema={"enum": [{"flags": [False, True]}]})
+            changed = replace(original, output_schema={"enum": [{"flags": [0, 1]}]})
+        elif location == "variable":
+            changed = replace(original, variables={"mode": 1})
+        else:
+            before_options = ModelOptions(parameters={"custom": {"flags": [True, False]}})
+            after_options = ModelOptions(parameters={"custom": {"flags": [1, 0]}})
+        saved = await suspend(runtime_store, original, role, model_options=before_options)
+        async with RuntimeEngine(store=runtime_store, environment=NoPreparation()) as runtime:
+            agent = program(runtime, changed, role, model_options=after_options)
+&gt;           with pytest.raises(RequestError, match="RECOVERY_BINDING_MISMATCH"):
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E           Failed: DID NOT RAISE &lt;class 'agentloom.errors.RequestError'&gt;
+
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/tests/test_recovery_binding_contract.py:97: Failed</failure></testcase><testcase classname="tests.test_recovery_binding_contract" name="test_boolean_and_number_are_distinct_recovery_bindings[memory-model_options-react]" time="0.013"><failure message="Failed: DID NOT RAISE &lt;class 'agentloom.errors.RequestError'&gt;">runtime_store = &lt;agentloom.storage.memory.MemoryRuntimeStore object at 0x10bdc5220&gt;
+role = 'react', location = 'model_options'
+
+    @pytest.mark.parametrize("role", ["react", "planner", "worker"])
+    @pytest.mark.parametrize("location", ["const", "enum", "variable", "model_options"])
+    async def test_boolean_and_number_are_distinct_recovery_bindings(runtime_store, role, location):
+        original = AgentDefinition("agent", "Mode: {{mode}}", "Perform work", variables={"mode": True})
+        changed = original
+        before_options = after_options = None
+        if location == "const":
+            original = replace(original, output_schema={"const": True})
+            changed = replace(original, output_schema={"const": 1})
+        elif location == "enum":
+            original = replace(original, output_schema={"enum": [{"flags": [False, True]}]})
+            changed = replace(original, output_schema={"enum": [{"flags": [0, 1]}]})
+        elif location == "variable":
+            changed = replace(original, variables={"mode": 1})
+        else:
+            before_options = ModelOptions(parameters={"custom": {"flags": [True, False]}})
+            after_options = ModelOptions(parameters={"custom": {"flags": [1, 0]}})
+        saved = await suspend(runtime_store, original, role, model_options=before_options)
+        async with RuntimeEngine(store=runtime_store, environment=NoPreparation()) as runtime:
+            agent = program(runtime, changed, role, model_options=after_options)
+&gt;           with pytest.raises(RequestError, match="RECOVERY_BINDING_MISMATCH"):
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E           Failed: DID NOT RAISE &lt;class 'agentloom.errors.RequestError'&gt;
+
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/tests/test_recovery_binding_contract.py:97: Failed</failure></testcase><testcase classname="tests.test_recovery_binding_contract" name="test_boolean_and_number_are_distinct_recovery_bindings[memory-model_options-planner]" time="0.013"><failure message="Failed: DID NOT RAISE &lt;class 'agentloom.errors.RequestError'&gt;">runtime_store = &lt;agentloom.storage.memory.MemoryRuntimeStore object at 0x10bd9fa40&gt;
+role = 'planner', location = 'model_options'
+
+    @pytest.mark.parametrize("role", ["react", "planner", "worker"])
+    @pytest.mark.parametrize("location", ["const", "enum", "variable", "model_options"])
+    async def test_boolean_and_number_are_distinct_recovery_bindings(runtime_store, role, location):
+        original = AgentDefinition("agent", "Mode: {{mode}}", "Perform work", variables={"mode": True})
+        changed = original
+        before_options = after_options = None
+        if location == "const":
+            original = replace(original, output_schema={"const": True})
+            changed = replace(original, output_schema={"const": 1})
+        elif location == "enum":
+            original = replace(original, output_schema={"enum": [{"flags": [False, True]}]})
+            changed = replace(original, output_schema={"enum": [{"flags": [0, 1]}]})
+        elif location == "variable":
+            changed = replace(original, variables={"mode": 1})
+        else:
+            before_options = ModelOptions(parameters={"custom": {"flags": [True, False]}})
+            after_options = ModelOptions(parameters={"custom": {"flags": [1, 0]}})
+        saved = await suspend(runtime_store, original, role, model_options=before_options)
+        async with RuntimeEngine(store=runtime_store, environment=NoPreparation()) as runtime:
+            agent = program(runtime, changed, role, model_options=after_options)
+&gt;           with pytest.raises(RequestError, match="RECOVERY_BINDING_MISMATCH"):
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E           Failed: DID NOT RAISE &lt;class 'agentloom.errors.RequestError'&gt;
+
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/tests/test_recovery_binding_contract.py:97: Failed</failure></testcase><testcase classname="tests.test_recovery_binding_contract" name="test_boolean_and_number_are_distinct_recovery_bindings[memory-model_options-worker]" time="0.012"><failure message="Failed: DID NOT RAISE &lt;class 'agentloom.errors.RequestError'&gt;">runtime_store = &lt;agentloom.storage.memory.MemoryRuntimeStore object at 0x10bd4d5b0&gt;
+role = 'worker', location = 'model_options'
+
+    @pytest.mark.parametrize("role", ["react", "planner", "worker"])
+    @pytest.mark.parametrize("location", ["const", "enum", "variable", "model_options"])
+    async def test_boolean_and_number_are_distinct_recovery_bindings(runtime_store, role, location):
+        original = AgentDefinition("agent", "Mode: {{mode}}", "Perform work", variables={"mode": True})
+        changed = original
+        before_options = after_options = None
+        if location == "const":
+            original = replace(original, output_schema={"const": True})
+            changed = replace(original, output_schema={"const": 1})
+        elif location == "enum":
+            original = replace(original, output_schema={"enum": [{"flags": [False, True]}]})
+            changed = replace(original, output_schema={"enum": [{"flags": [0, 1]}]})
+        elif location == "variable":
+            changed = replace(original, variables={"mode": 1})
+        else:
+            before_options = ModelOptions(parameters={"custom": {"flags": [True, False]}})
+            after_options = ModelOptions(parameters={"custom": {"flags": [1, 0]}})
+        saved = await suspend(runtime_store, original, role, model_options=before_options)
+        async with RuntimeEngine(store=runtime_store, environment=NoPreparation()) as runtime:
+            agent = program(runtime, changed, role, model_options=after_options)
+&gt;           with pytest.raises(RequestError, match="RECOVERY_BINDING_MISMATCH"):
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E           Failed: DID NOT RAISE &lt;class 'agentloom.errors.RequestError'&gt;
+
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/tests/test_recovery_binding_contract.py:97: Failed</failure></testcase><testcase classname="tests.test_recovery_binding_contract" name="test_boolean_and_number_are_distinct_recovery_bindings[file-const-react]" time="0.022"><failure message="Failed: DID NOT RAISE &lt;class 'agentloom.errors.RequestError'&gt;">runtime_store = &lt;agentloom.storage.filesystem.FileRuntimeStore object at 0x10bd20b30&gt;
+role = 'react', location = 'const'
+
+    @pytest.mark.parametrize("role", ["react", "planner", "worker"])
+    @pytest.mark.parametrize("location", ["const", "enum", "variable", "model_options"])
+    async def test_boolean_and_number_are_distinct_recovery_bindings(runtime_store, role, location):
+        original = AgentDefinition("agent", "Mode: {{mode}}", "Perform work", variables={"mode": True})
+        changed = original
+        before_options = after_options = None
+        if location == "const":
+            original = replace(original, output_schema={"const": True})
+            changed = replace(original, output_schema={"const": 1})
+        elif location == "enum":
+            original = replace(original, output_schema={"enum": [{"flags": [False, True]}]})
+            changed = replace(original, output_schema={"enum": [{"flags": [0, 1]}]})
+        elif location == "variable":
+            changed = replace(original, variables={"mode": 1})
+        else:
+            before_options = ModelOptions(parameters={"custom": {"flags": [True, False]}})
+            after_options = ModelOptions(parameters={"custom": {"flags": [1, 0]}})
+        saved = await suspend(runtime_store, original, role, model_options=before_options)
+        async with RuntimeEngine(store=runtime_store, environment=NoPreparation()) as runtime:
+            agent = program(runtime, changed, role, model_options=after_options)
+&gt;           with pytest.raises(RequestError, match="RECOVERY_BINDING_MISMATCH"):
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E           Failed: DID NOT RAISE &lt;class 'agentloom.errors.RequestError'&gt;
+
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/tests/test_recovery_binding_contract.py:97: Failed</failure></testcase><testcase classname="tests.test_recovery_binding_contract" name="test_boolean_and_number_are_distinct_recovery_bindings[file-const-planner]" time="0.022"><failure message="Failed: DID NOT RAISE &lt;class 'agentloom.errors.RequestError'&gt;">runtime_store = &lt;agentloom.storage.filesystem.FileRuntimeStore object at 0x10bdc74a0&gt;
+role = 'planner', location = 'const'
+
+    @pytest.mark.parametrize("role", ["react", "planner", "worker"])
+    @pytest.mark.parametrize("location", ["const", "enum", "variable", "model_options"])
+    async def test_boolean_and_number_are_distinct_recovery_bindings(runtime_store, role, location):
+        original = AgentDefinition("agent", "Mode: {{mode}}", "Perform work", variables={"mode": True})
+        changed = original
+        before_options = after_options = None
+        if location == "const":
+            original = replace(original, output_schema={"const": True})
+            changed = replace(original, output_schema={"const": 1})
+        elif location == "enum":
+            original = replace(original, output_schema={"enum": [{"flags": [False, True]}]})
+            changed = replace(original, output_schema={"enum": [{"flags": [0, 1]}]})
+        elif location == "variable":
+            changed = replace(original, variables={"mode": 1})
+        else:
+            before_options = ModelOptions(parameters={"custom": {"flags": [True, False]}})
+            after_options = ModelOptions(parameters={"custom": {"flags": [1, 0]}})
+        saved = await suspend(runtime_store, original, role, model_options=before_options)
+        async with RuntimeEngine(store=runtime_store, environment=NoPreparation()) as runtime:
+            agent = program(runtime, changed, role, model_options=after_options)
+&gt;           with pytest.raises(RequestError, match="RECOVERY_BINDING_MISMATCH"):
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E           Failed: DID NOT RAISE &lt;class 'agentloom.errors.RequestError'&gt;
+
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/tests/test_recovery_binding_contract.py:97: Failed</failure></testcase><testcase classname="tests.test_recovery_binding_contract" name="test_boolean_and_number_are_distinct_recovery_bindings[file-const-worker]" time="0.076"><failure message="Failed: DID NOT RAISE &lt;class 'agentloom.errors.RequestError'&gt;">runtime_store = &lt;agentloom.storage.filesystem.FileRuntimeStore object at 0x10be53440&gt;
+role = 'worker', location = 'const'
+
+    @pytest.mark.parametrize("role", ["react", "planner", "worker"])
+    @pytest.mark.parametrize("location", ["const", "enum", "variable", "model_options"])
+    async def test_boolean_and_number_are_distinct_recovery_bindings(runtime_store, role, location):
+        original = AgentDefinition("agent", "Mode: {{mode}}", "Perform work", variables={"mode": True})
+        changed = original
+        before_options = after_options = None
+        if location == "const":
+            original = replace(original, output_schema={"const": True})
+            changed = replace(original, output_schema={"const": 1})
+        elif location == "enum":
+            original = replace(original, output_schema={"enum": [{"flags": [False, True]}]})
+            changed = replace(original, output_schema={"enum": [{"flags": [0, 1]}]})
+        elif location == "variable":
+            changed = replace(original, variables={"mode": 1})
+        else:
+            before_options = ModelOptions(parameters={"custom": {"flags": [True, False]}})
+            after_options = ModelOptions(parameters={"custom": {"flags": [1, 0]}})
+        saved = await suspend(runtime_store, original, role, model_options=before_options)
+        async with RuntimeEngine(store=runtime_store, environment=NoPreparation()) as runtime:
+            agent = program(runtime, changed, role, model_options=after_options)
+&gt;           with pytest.raises(RequestError, match="RECOVERY_BINDING_MISMATCH"):
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E           Failed: DID NOT RAISE &lt;class 'agentloom.errors.RequestError'&gt;
+
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/tests/test_recovery_binding_contract.py:97: Failed</failure></testcase><testcase classname="tests.test_recovery_binding_contract" name="test_boolean_and_number_are_distinct_recovery_bindings[file-enum-react]" time="0.022"><failure message="Failed: DID NOT RAISE &lt;class 'agentloom.errors.RequestError'&gt;">runtime_store = &lt;agentloom.storage.filesystem.FileRuntimeStore object at 0x10be52ed0&gt;
+role = 'react', location = 'enum'
+
+    @pytest.mark.parametrize("role", ["react", "planner", "worker"])
+    @pytest.mark.parametrize("location", ["const", "enum", "variable", "model_options"])
+    async def test_boolean_and_number_are_distinct_recovery_bindings(runtime_store, role, location):
+        original = AgentDefinition("agent", "Mode: {{mode}}", "Perform work", variables={"mode": True})
+        changed = original
+        before_options = after_options = None
+        if location == "const":
+            original = replace(original, output_schema={"const": True})
+            changed = replace(original, output_schema={"const": 1})
+        elif location == "enum":
+            original = replace(original, output_schema={"enum": [{"flags": [False, True]}]})
+            changed = replace(original, output_schema={"enum": [{"flags": [0, 1]}]})
+        elif location == "variable":
+            changed = replace(original, variables={"mode": 1})
+        else:
+            before_options = ModelOptions(parameters={"custom": {"flags": [True, False]}})
+            after_options = ModelOptions(parameters={"custom": {"flags": [1, 0]}})
+        saved = await suspend(runtime_store, original, role, model_options=before_options)
+        async with RuntimeEngine(store=runtime_store, environment=NoPreparation()) as runtime:
+            agent = program(runtime, changed, role, model_options=after_options)
+&gt;           with pytest.raises(RequestError, match="RECOVERY_BINDING_MISMATCH"):
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E           Failed: DID NOT RAISE &lt;class 'agentloom.errors.RequestError'&gt;
+
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/tests/test_recovery_binding_contract.py:97: Failed</failure></testcase><testcase classname="tests.test_recovery_binding_contract" name="test_boolean_and_number_are_distinct_recovery_bindings[file-enum-planner]" time="0.020"><failure message="Failed: DID NOT RAISE &lt;class 'agentloom.errors.RequestError'&gt;">runtime_store = &lt;agentloom.storage.filesystem.FileRuntimeStore object at 0x10be534a0&gt;
+role = 'planner', location = 'enum'
+
+    @pytest.mark.parametrize("role", ["react", "planner", "worker"])
+    @pytest.mark.parametrize("location", ["const", "enum", "variable", "model_options"])
+    async def test_boolean_and_number_are_distinct_recovery_bindings(runtime_store, role, location):
+        original = AgentDefinition("agent", "Mode: {{mode}}", "Perform work", variables={"mode": True})
+        changed = original
+        before_options = after_options = None
+        if location == "const":
+            original = replace(original, output_schema={"const": True})
+            changed = replace(original, output_schema={"const": 1})
+        elif location == "enum":
+            original = replace(original, output_schema={"enum": [{"flags": [False, True]}]})
+            changed = replace(original, output_schema={"enum": [{"flags": [0, 1]}]})
+        elif location == "variable":
+            changed = replace(original, variables={"mode": 1})
+        else:
+            before_options = ModelOptions(parameters={"custom": {"flags": [True, False]}})
+            after_options = ModelOptions(parameters={"custom": {"flags": [1, 0]}})
+        saved = await suspend(runtime_store, original, role, model_options=before_options)
+        async with RuntimeEngine(store=runtime_store, environment=NoPreparation()) as runtime:
+            agent = program(runtime, changed, role, model_options=after_options)
+&gt;           with pytest.raises(RequestError, match="RECOVERY_BINDING_MISMATCH"):
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E           Failed: DID NOT RAISE &lt;class 'agentloom.errors.RequestError'&gt;
+
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/tests/test_recovery_binding_contract.py:97: Failed</failure></testcase><testcase classname="tests.test_recovery_binding_contract" name="test_boolean_and_number_are_distinct_recovery_bindings[file-enum-worker]" time="0.060"><failure message="Failed: DID NOT RAISE &lt;class 'agentloom.errors.RequestError'&gt;">runtime_store = &lt;agentloom.storage.filesystem.FileRuntimeStore object at 0x10bd235f0&gt;
+role = 'worker', location = 'enum'
+
+    @pytest.mark.parametrize("role", ["react", "planner", "worker"])
+    @pytest.mark.parametrize("location", ["const", "enum", "variable", "model_options"])
+    async def test_boolean_and_number_are_distinct_recovery_bindings(runtime_store, role, location):
+        original = AgentDefinition("agent", "Mode: {{mode}}", "Perform work", variables={"mode": True})
+        changed = original
+        before_options = after_options = None
+        if location == "const":
+            original = replace(original, output_schema={"const": True})
+            changed = replace(original, output_schema={"const": 1})
+        elif location == "enum":
+            original = replace(original, output_schema={"enum": [{"flags": [False, True]}]})
+            changed = replace(original, output_schema={"enum": [{"flags": [0, 1]}]})
+        elif location == "variable":
+            changed = replace(original, variables={"mode": 1})
+        else:
+            before_options = ModelOptions(parameters={"custom": {"flags": [True, False]}})
+            after_options = ModelOptions(parameters={"custom": {"flags": [1, 0]}})
+        saved = await suspend(runtime_store, original, role, model_options=before_options)
+        async with RuntimeEngine(store=runtime_store, environment=NoPreparation()) as runtime:
+            agent = program(runtime, changed, role, model_options=after_options)
+&gt;           with pytest.raises(RequestError, match="RECOVERY_BINDING_MISMATCH"):
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E           Failed: DID NOT RAISE &lt;class 'agentloom.errors.RequestError'&gt;
+
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/tests/test_recovery_binding_contract.py:97: Failed</failure></testcase><testcase classname="tests.test_recovery_binding_contract" name="test_boolean_and_number_are_distinct_recovery_bindings[file-variable-react]" time="0.021"><failure message="Failed: DID NOT RAISE &lt;class 'agentloom.errors.RequestError'&gt;">runtime_store = &lt;agentloom.storage.filesystem.FileRuntimeStore object at 0x10be97ec0&gt;
+role = 'react', location = 'variable'
+
+    @pytest.mark.parametrize("role", ["react", "planner", "worker"])
+    @pytest.mark.parametrize("location", ["const", "enum", "variable", "model_options"])
+    async def test_boolean_and_number_are_distinct_recovery_bindings(runtime_store, role, location):
+        original = AgentDefinition("agent", "Mode: {{mode}}", "Perform work", variables={"mode": True})
+        changed = original
+        before_options = after_options = None
+        if location == "const":
+            original = replace(original, output_schema={"const": True})
+            changed = replace(original, output_schema={"const": 1})
+        elif location == "enum":
+            original = replace(original, output_schema={"enum": [{"flags": [False, True]}]})
+            changed = replace(original, output_schema={"enum": [{"flags": [0, 1]}]})
+        elif location == "variable":
+            changed = replace(original, variables={"mode": 1})
+        else:
+            before_options = ModelOptions(parameters={"custom": {"flags": [True, False]}})
+            after_options = ModelOptions(parameters={"custom": {"flags": [1, 0]}})
+        saved = await suspend(runtime_store, original, role, model_options=before_options)
+        async with RuntimeEngine(store=runtime_store, environment=NoPreparation()) as runtime:
+            agent = program(runtime, changed, role, model_options=after_options)
+&gt;           with pytest.raises(RequestError, match="RECOVERY_BINDING_MISMATCH"):
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E           Failed: DID NOT RAISE &lt;class 'agentloom.errors.RequestError'&gt;
+
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/tests/test_recovery_binding_contract.py:97: Failed</failure></testcase><testcase classname="tests.test_recovery_binding_contract" name="test_boolean_and_number_are_distinct_recovery_bindings[file-variable-planner]" time="0.023"><failure message="Failed: DID NOT RAISE &lt;class 'agentloom.errors.RequestError'&gt;">runtime_store = &lt;agentloom.storage.filesystem.FileRuntimeStore object at 0x10be91c70&gt;
+role = 'planner', location = 'variable'
+
+    @pytest.mark.parametrize("role", ["react", "planner", "worker"])
+    @pytest.mark.parametrize("location", ["const", "enum", "variable", "model_options"])
+    async def test_boolean_and_number_are_distinct_recovery_bindings(runtime_store, role, location):
+        original = AgentDefinition("agent", "Mode: {{mode}}", "Perform work", variables={"mode": True})
+        changed = original
+        before_options = after_options = None
+        if location == "const":
+            original = replace(original, output_schema={"const": True})
+            changed = replace(original, output_schema={"const": 1})
+        elif location == "enum":
+            original = replace(original, output_schema={"enum": [{"flags": [False, True]}]})
+            changed = replace(original, output_schema={"enum": [{"flags": [0, 1]}]})
+        elif location == "variable":
+            changed = replace(original, variables={"mode": 1})
+        else:
+            before_options = ModelOptions(parameters={"custom": {"flags": [True, False]}})
+            after_options = ModelOptions(parameters={"custom": {"flags": [1, 0]}})
+        saved = await suspend(runtime_store, original, role, model_options=before_options)
+        async with RuntimeEngine(store=runtime_store, environment=NoPreparation()) as runtime:
+            agent = program(runtime, changed, role, model_options=after_options)
+&gt;           with pytest.raises(RequestError, match="RECOVERY_BINDING_MISMATCH"):
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E           Failed: DID NOT RAISE &lt;class 'agentloom.errors.RequestError'&gt;
+
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/tests/test_recovery_binding_contract.py:97: Failed</failure></testcase><testcase classname="tests.test_recovery_binding_contract" name="test_boolean_and_number_are_distinct_recovery_bindings[file-variable-worker]" time="0.075"><failure message="Failed: DID NOT RAISE &lt;class 'agentloom.errors.RequestError'&gt;">runtime_store = &lt;agentloom.storage.filesystem.FileRuntimeStore object at 0x10be92a80&gt;
+role = 'worker', location = 'variable'
+
+    @pytest.mark.parametrize("role", ["react", "planner", "worker"])
+    @pytest.mark.parametrize("location", ["const", "enum", "variable", "model_options"])
+    async def test_boolean_and_number_are_distinct_recovery_bindings(runtime_store, role, location):
+        original = AgentDefinition("agent", "Mode: {{mode}}", "Perform work", variables={"mode": True})
+        changed = original
+        before_options = after_options = None
+        if location == "const":
+            original = replace(original, output_schema={"const": True})
+            changed = replace(original, output_schema={"const": 1})
+        elif location == "enum":
+            original = replace(original, output_schema={"enum": [{"flags": [False, True]}]})
+            changed = replace(original, output_schema={"enum": [{"flags": [0, 1]}]})
+        elif location == "variable":
+            changed = replace(original, variables={"mode": 1})
+        else:
+            before_options = ModelOptions(parameters={"custom": {"flags": [True, False]}})
+            after_options = ModelOptions(parameters={"custom": {"flags": [1, 0]}})
+        saved = await suspend(runtime_store, original, role, model_options=before_options)
+        async with RuntimeEngine(store=runtime_store, environment=NoPreparation()) as runtime:
+            agent = program(runtime, changed, role, model_options=after_options)
+&gt;           with pytest.raises(RequestError, match="RECOVERY_BINDING_MISMATCH"):
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E           Failed: DID NOT RAISE &lt;class 'agentloom.errors.RequestError'&gt;
+
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/tests/test_recovery_binding_contract.py:97: Failed</failure></testcase><testcase classname="tests.test_recovery_binding_contract" name="test_boolean_and_number_are_distinct_recovery_bindings[file-model_options-react]" time="0.023"><failure message="Failed: DID NOT RAISE &lt;class 'agentloom.errors.RequestError'&gt;">runtime_store = &lt;agentloom.storage.filesystem.FileRuntimeStore object at 0x10be97860&gt;
+role = 'react', location = 'model_options'
+
+    @pytest.mark.parametrize("role", ["react", "planner", "worker"])
+    @pytest.mark.parametrize("location", ["const", "enum", "variable", "model_options"])
+    async def test_boolean_and_number_are_distinct_recovery_bindings(runtime_store, role, location):
+        original = AgentDefinition("agent", "Mode: {{mode}}", "Perform work", variables={"mode": True})
+        changed = original
+        before_options = after_options = None
+        if location == "const":
+            original = replace(original, output_schema={"const": True})
+            changed = replace(original, output_schema={"const": 1})
+        elif location == "enum":
+            original = replace(original, output_schema={"enum": [{"flags": [False, True]}]})
+            changed = replace(original, output_schema={"enum": [{"flags": [0, 1]}]})
+        elif location == "variable":
+            changed = replace(original, variables={"mode": 1})
+        else:
+            before_options = ModelOptions(parameters={"custom": {"flags": [True, False]}})
+            after_options = ModelOptions(parameters={"custom": {"flags": [1, 0]}})
+        saved = await suspend(runtime_store, original, role, model_options=before_options)
+        async with RuntimeEngine(store=runtime_store, environment=NoPreparation()) as runtime:
+            agent = program(runtime, changed, role, model_options=after_options)
+&gt;           with pytest.raises(RequestError, match="RECOVERY_BINDING_MISMATCH"):
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E           Failed: DID NOT RAISE &lt;class 'agentloom.errors.RequestError'&gt;
+
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/tests/test_recovery_binding_contract.py:97: Failed</failure></testcase><testcase classname="tests.test_recovery_binding_contract" name="test_boolean_and_number_are_distinct_recovery_bindings[file-model_options-planner]" time="0.023"><failure message="Failed: DID NOT RAISE &lt;class 'agentloom.errors.RequestError'&gt;">runtime_store = &lt;agentloom.storage.filesystem.FileRuntimeStore object at 0x10bdb7f20&gt;
+role = 'planner', location = 'model_options'
+
+    @pytest.mark.parametrize("role", ["react", "planner", "worker"])
+    @pytest.mark.parametrize("location", ["const", "enum", "variable", "model_options"])
+    async def test_boolean_and_number_are_distinct_recovery_bindings(runtime_store, role, location):
+        original = AgentDefinition("agent", "Mode: {{mode}}", "Perform work", variables={"mode": True})
+        changed = original
+        before_options = after_options = None
+        if location == "const":
+            original = replace(original, output_schema={"const": True})
+            changed = replace(original, output_schema={"const": 1})
+        elif location == "enum":
+            original = replace(original, output_schema={"enum": [{"flags": [False, True]}]})
+            changed = replace(original, output_schema={"enum": [{"flags": [0, 1]}]})
+        elif location == "variable":
+            changed = replace(original, variables={"mode": 1})
+        else:
+            before_options = ModelOptions(parameters={"custom": {"flags": [True, False]}})
+            after_options = ModelOptions(parameters={"custom": {"flags": [1, 0]}})
+        saved = await suspend(runtime_store, original, role, model_options=before_options)
+        async with RuntimeEngine(store=runtime_store, environment=NoPreparation()) as runtime:
+            agent = program(runtime, changed, role, model_options=after_options)
+&gt;           with pytest.raises(RequestError, match="RECOVERY_BINDING_MISMATCH"):
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E           Failed: DID NOT RAISE &lt;class 'agentloom.errors.RequestError'&gt;
+
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/tests/test_recovery_binding_contract.py:97: Failed</failure></testcase><testcase classname="tests.test_recovery_binding_contract" name="test_boolean_and_number_are_distinct_recovery_bindings[file-model_options-worker]" time="0.074"><failure message="Failed: DID NOT RAISE &lt;class 'agentloom.errors.RequestError'&gt;">runtime_store = &lt;agentloom.storage.filesystem.FileRuntimeStore object at 0x10be52a80&gt;
+role = 'worker', location = 'model_options'
+
+    @pytest.mark.parametrize("role", ["react", "planner", "worker"])
+    @pytest.mark.parametrize("location", ["const", "enum", "variable", "model_options"])
+    async def test_boolean_and_number_are_distinct_recovery_bindings(runtime_store, role, location):
+        original = AgentDefinition("agent", "Mode: {{mode}}", "Perform work", variables={"mode": True})
+        changed = original
+        before_options = after_options = None
+        if location == "const":
+            original = replace(original, output_schema={"const": True})
+            changed = replace(original, output_schema={"const": 1})
+        elif location == "enum":
+            original = replace(original, output_schema={"enum": [{"flags": [False, True]}]})
+            changed = replace(original, output_schema={"enum": [{"flags": [0, 1]}]})
+        elif location == "variable":
+            changed = replace(original, variables={"mode": 1})
+        else:
+            before_options = ModelOptions(parameters={"custom": {"flags": [True, False]}})
+            after_options = ModelOptions(parameters={"custom": {"flags": [1, 0]}})
+        saved = await suspend(runtime_store, original, role, model_options=before_options)
+        async with RuntimeEngine(store=runtime_store, environment=NoPreparation()) as runtime:
+            agent = program(runtime, changed, role, model_options=after_options)
+&gt;           with pytest.raises(RequestError, match="RECOVERY_BINDING_MISMATCH"):
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E           Failed: DID NOT RAISE &lt;class 'agentloom.errors.RequestError'&gt;
+
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/tests/test_recovery_binding_contract.py:97: Failed</failure></testcase><testcase classname="tests.test_recovery_binding_contract" name="test_variable_spec_and_dictionary_default_cannot_replace_each_other[memory-False-react]" time="0.013"><failure message="AssertionError: assert '772ca06e44d9884726d92c3f37ee6942d7bd9967b257aac358e202af5593af78' != '772ca06e44d9884726d92c3f37ee6942d7bd9967b257aac358e202af5593af78'&#10; +  where '772ca06e44d9884726d92c3f37ee6942d7bd9967b257aac358e202af5593af78' = &lt;agentloom.public.agents.ReactAgent object at 0x10bdb6cf0&gt;.program_key&#10; +  and   '772ca06e44d9884726d92c3f37ee6942d7bd9967b257aac358e202af5593af78' = &lt;agentloom.public.agents.ReactAgent object at 0x10bdb48c0&gt;.program_key&#10; +    where &lt;agentloom.public.agents.ReactAgent object at 0x10bdb48c0&gt; = program(&lt;agentloom.runtime.host.RuntimeEngine object at 0x10bdb7380&gt;, AgentDefinition(name='agent', prompt='Mode: {{mode}}', description='Perform work', variables={'mode': VariableSpec(schema={'type': 'string'}, default='SAFE', required=False)}, capabilities=(), input_schema=None, output_schema=None), 'react')">runtime_store = &lt;agentloom.storage.memory.MemoryRuntimeStore object at 0x10bdc7cb0&gt;
+role = 'react', reverse = False
+
+    @pytest.mark.parametrize("role", ["react", "planner", "worker"])
+    @pytest.mark.parametrize("reverse", [False, True])
+    async def test_variable_spec_and_dictionary_default_cannot_replace_each_other(
+        runtime_store, role, reverse
+    ):
+        spec = VariableSpec({"type": "string"}, default="SAFE", required=False)
+        original = AgentDefinition("agent", "Mode: {{mode}}", "Perform work", variables={"mode": spec})
+        changed = replace(original, variables={"mode": asdict(spec)})
+        if reverse:
+            original, changed = changed, original
+        assert original.render() != changed.render()
+        saved = await suspend(runtime_store, original, role)
+        async with RuntimeEngine(store=runtime_store, environment=NoPreparation()) as runtime:
+            agent = program(runtime, changed, role)
+&gt;           assert agent.program_key != program(runtime, original, role).program_key
+E           AssertionError: assert '772ca06e44d9884726d92c3f37ee6942d7bd9967b257aac358e202af5593af78' != '772ca06e44d9884726d92c3f37ee6942d7bd9967b257aac358e202af5593af78'
+E            +  where '772ca06e44d9884726d92c3f37ee6942d7bd9967b257aac358e202af5593af78' = &lt;agentloom.public.agents.ReactAgent object at 0x10bdb6cf0&gt;.program_key
+E            +  and   '772ca06e44d9884726d92c3f37ee6942d7bd9967b257aac358e202af5593af78' = &lt;agentloom.public.agents.ReactAgent object at 0x10bdb48c0&gt;.program_key
+E            +    where &lt;agentloom.public.agents.ReactAgent object at 0x10bdb48c0&gt; = program(&lt;agentloom.runtime.host.RuntimeEngine object at 0x10bdb7380&gt;, AgentDefinition(name='agent', prompt='Mode: {{mode}}', description='Perform work', variables={'mode': VariableSpec(schema={'type': 'string'}, default='SAFE', required=False)}, capabilities=(), input_schema=None, output_schema=None), 'react')
+
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/tests/test_recovery_binding_contract.py:117: AssertionError</failure></testcase><testcase classname="tests.test_recovery_binding_contract" name="test_variable_spec_and_dictionary_default_cannot_replace_each_other[memory-False-planner]" time="0.014"><failure message="AssertionError: assert 'bf666589e66fdaf987ed8362061023f07a9c236cd794dbf0c86ee190872e8478' != 'bf666589e66fdaf987ed8362061023f07a9c236cd794dbf0c86ee190872e8478'&#10; +  where 'bf666589e66fdaf987ed8362061023f07a9c236cd794dbf0c86ee190872e8478' = &lt;agentloom.public.agents.PlanAgent object at 0x10bd9c920&gt;.program_key&#10; +  and   'bf666589e66fdaf987ed8362061023f07a9c236cd794dbf0c86ee190872e8478' = &lt;agentloom.public.agents.PlanAgent object at 0x10be942f0&gt;.program_key&#10; +    where &lt;agentloom.public.agents.PlanAgent object at 0x10be942f0&gt; = program(&lt;agentloom.runtime.host.RuntimeEngine object at 0x10bd9fa40&gt;, AgentDefinition(name='agent', prompt='Mode: {{mode}}', description='Perform work', variables={'mode': VariableSpec(schema={'type': 'string'}, default='SAFE', required=False)}, capabilities=(), input_schema=None, output_schema=None), 'planner')">runtime_store = &lt;agentloom.storage.memory.MemoryRuntimeStore object at 0x10beb2960&gt;
+role = 'planner', reverse = False
+
+    @pytest.mark.parametrize("role", ["react", "planner", "worker"])
+    @pytest.mark.parametrize("reverse", [False, True])
+    async def test_variable_spec_and_dictionary_default_cannot_replace_each_other(
+        runtime_store, role, reverse
+    ):
+        spec = VariableSpec({"type": "string"}, default="SAFE", required=False)
+        original = AgentDefinition("agent", "Mode: {{mode}}", "Perform work", variables={"mode": spec})
+        changed = replace(original, variables={"mode": asdict(spec)})
+        if reverse:
+            original, changed = changed, original
+        assert original.render() != changed.render()
+        saved = await suspend(runtime_store, original, role)
+        async with RuntimeEngine(store=runtime_store, environment=NoPreparation()) as runtime:
+            agent = program(runtime, changed, role)
+&gt;           assert agent.program_key != program(runtime, original, role).program_key
+E           AssertionError: assert 'bf666589e66fdaf987ed8362061023f07a9c236cd794dbf0c86ee190872e8478' != 'bf666589e66fdaf987ed8362061023f07a9c236cd794dbf0c86ee190872e8478'
+E            +  where 'bf666589e66fdaf987ed8362061023f07a9c236cd794dbf0c86ee190872e8478' = &lt;agentloom.public.agents.PlanAgent object at 0x10bd9c920&gt;.program_key
+E            +  and   'bf666589e66fdaf987ed8362061023f07a9c236cd794dbf0c86ee190872e8478' = &lt;agentloom.public.agents.PlanAgent object at 0x10be942f0&gt;.program_key
+E            +    where &lt;agentloom.public.agents.PlanAgent object at 0x10be942f0&gt; = program(&lt;agentloom.runtime.host.RuntimeEngine object at 0x10bd9fa40&gt;, AgentDefinition(name='agent', prompt='Mode: {{mode}}', description='Perform work', variables={'mode': VariableSpec(schema={'type': 'string'}, default='SAFE', required=False)}, capabilities=(), input_schema=None, output_schema=None), 'planner')
+
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/tests/test_recovery_binding_contract.py:117: AssertionError</failure></testcase><testcase classname="tests.test_recovery_binding_contract" name="test_variable_spec_and_dictionary_default_cannot_replace_each_other[memory-False-worker]" time="0.013"><failure message="AssertionError: assert 'f5f364c82e32b0772adca0e39d27d00de1cd5f2ffe448c7339d32b2d4dd6c930' != 'f5f364c82e32b0772adca0e39d27d00de1cd5f2ffe448c7339d32b2d4dd6c930'&#10; +  where 'f5f364c82e32b0772adca0e39d27d00de1cd5f2ffe448c7339d32b2d4dd6c930' = &lt;agentloom.public.agents.PlanAgent object at 0x10be966c0&gt;.program_key&#10; +  and   'f5f364c82e32b0772adca0e39d27d00de1cd5f2ffe448c7339d32b2d4dd6c930' = &lt;agentloom.public.agents.PlanAgent object at 0x10be96ba0&gt;.program_key&#10; +    where &lt;agentloom.public.agents.PlanAgent object at 0x10be96ba0&gt; = program(&lt;agentloom.runtime.host.RuntimeEngine object at 0x10be96930&gt;, AgentDefinition(name='agent', prompt='Mode: {{mode}}', description='Perform work', variables={'mode': VariableSpec(schema={'type': 'string'}, default='SAFE', required=False)}, capabilities=(), input_schema=None, output_schema=None), 'worker')">runtime_store = &lt;agentloom.storage.memory.MemoryRuntimeStore object at 0x10be96060&gt;
+role = 'worker', reverse = False
+
+    @pytest.mark.parametrize("role", ["react", "planner", "worker"])
+    @pytest.mark.parametrize("reverse", [False, True])
+    async def test_variable_spec_and_dictionary_default_cannot_replace_each_other(
+        runtime_store, role, reverse
+    ):
+        spec = VariableSpec({"type": "string"}, default="SAFE", required=False)
+        original = AgentDefinition("agent", "Mode: {{mode}}", "Perform work", variables={"mode": spec})
+        changed = replace(original, variables={"mode": asdict(spec)})
+        if reverse:
+            original, changed = changed, original
+        assert original.render() != changed.render()
+        saved = await suspend(runtime_store, original, role)
+        async with RuntimeEngine(store=runtime_store, environment=NoPreparation()) as runtime:
+            agent = program(runtime, changed, role)
+&gt;           assert agent.program_key != program(runtime, original, role).program_key
+E           AssertionError: assert 'f5f364c82e32b0772adca0e39d27d00de1cd5f2ffe448c7339d32b2d4dd6c930' != 'f5f364c82e32b0772adca0e39d27d00de1cd5f2ffe448c7339d32b2d4dd6c930'
+E            +  where 'f5f364c82e32b0772adca0e39d27d00de1cd5f2ffe448c7339d32b2d4dd6c930' = &lt;agentloom.public.agents.PlanAgent object at 0x10be966c0&gt;.program_key
+E            +  and   'f5f364c82e32b0772adca0e39d27d00de1cd5f2ffe448c7339d32b2d4dd6c930' = &lt;agentloom.public.agents.PlanAgent object at 0x10be96ba0&gt;.program_key
+E            +    where &lt;agentloom.public.agents.PlanAgent object at 0x10be96ba0&gt; = program(&lt;agentloom.runtime.host.RuntimeEngine object at 0x10be96930&gt;, AgentDefinition(name='agent', prompt='Mode: {{mode}}', description='Perform work', variables={'mode': VariableSpec(schema={'type': 'string'}, default='SAFE', required=False)}, capabilities=(), input_schema=None, output_schema=None), 'worker')
+
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/tests/test_recovery_binding_contract.py:117: AssertionError</failure></testcase><testcase classname="tests.test_recovery_binding_contract" name="test_variable_spec_and_dictionary_default_cannot_replace_each_other[memory-True-react]" time="0.013"><failure message="AssertionError: assert 'cbb50d168ea142ffa29b14665be9d0feff0f4afc49295d8f7a04eaabbcbb150d' != 'cbb50d168ea142ffa29b14665be9d0feff0f4afc49295d8f7a04eaabbcbb150d'&#10; +  where 'cbb50d168ea142ffa29b14665be9d0feff0f4afc49295d8f7a04eaabbcbb150d' = &lt;agentloom.public.agents.ReactAgent object at 0x10bd20920&gt;.program_key&#10; +  and   'cbb50d168ea142ffa29b14665be9d0feff0f4afc49295d8f7a04eaabbcbb150d' = &lt;agentloom.public.agents.ReactAgent object at 0x10bd20b30&gt;.program_key&#10; +    where &lt;agentloom.public.agents.ReactAgent object at 0x10bd20b30&gt; = program(&lt;agentloom.runtime.host.RuntimeEngine object at 0x10bd23530&gt;, AgentDefinition(name='agent', prompt='Mode: {{mode}}', description='Perform work', variables={'mode': {'schema': {'type': 'string'}, 'default': 'SAFE', 'required': False}}, capabilities=(), input_schema=None, output_schema=None), 'react')">runtime_store = &lt;agentloom.storage.memory.MemoryRuntimeStore object at 0x10bd4ee10&gt;
+role = 'react', reverse = True
+
+    @pytest.mark.parametrize("role", ["react", "planner", "worker"])
+    @pytest.mark.parametrize("reverse", [False, True])
+    async def test_variable_spec_and_dictionary_default_cannot_replace_each_other(
+        runtime_store, role, reverse
+    ):
+        spec = VariableSpec({"type": "string"}, default="SAFE", required=False)
+        original = AgentDefinition("agent", "Mode: {{mode}}", "Perform work", variables={"mode": spec})
+        changed = replace(original, variables={"mode": asdict(spec)})
+        if reverse:
+            original, changed = changed, original
+        assert original.render() != changed.render()
+        saved = await suspend(runtime_store, original, role)
+        async with RuntimeEngine(store=runtime_store, environment=NoPreparation()) as runtime:
+            agent = program(runtime, changed, role)
+&gt;           assert agent.program_key != program(runtime, original, role).program_key
+E           AssertionError: assert 'cbb50d168ea142ffa29b14665be9d0feff0f4afc49295d8f7a04eaabbcbb150d' != 'cbb50d168ea142ffa29b14665be9d0feff0f4afc49295d8f7a04eaabbcbb150d'
+E            +  where 'cbb50d168ea142ffa29b14665be9d0feff0f4afc49295d8f7a04eaabbcbb150d' = &lt;agentloom.public.agents.ReactAgent object at 0x10bd20920&gt;.program_key
+E            +  and   'cbb50d168ea142ffa29b14665be9d0feff0f4afc49295d8f7a04eaabbcbb150d' = &lt;agentloom.public.agents.ReactAgent object at 0x10bd20b30&gt;.program_key
+E            +    where &lt;agentloom.public.agents.ReactAgent object at 0x10bd20b30&gt; = program(&lt;agentloom.runtime.host.RuntimeEngine object at 0x10bd23530&gt;, AgentDefinition(name='agent', prompt='Mode: {{mode}}', description='Perform work', variables={'mode': {'schema': {'type': 'string'}, 'default': 'SAFE', 'required': False}}, capabilities=(), input_schema=None, output_schema=None), 'react')
+
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/tests/test_recovery_binding_contract.py:117: AssertionError</failure></testcase><testcase classname="tests.test_recovery_binding_contract" name="test_variable_spec_and_dictionary_default_cannot_replace_each_other[memory-True-planner]" time="0.013"><failure message="AssertionError: assert 'b6db3d25758743ba9a7515da2fd66458061b9aa1f2a0a4f33915643d76a03992' != 'b6db3d25758743ba9a7515da2fd66458061b9aa1f2a0a4f33915643d76a03992'&#10; +  where 'b6db3d25758743ba9a7515da2fd66458061b9aa1f2a0a4f33915643d76a03992' = &lt;agentloom.public.agents.PlanAgent object at 0x10be78cb0&gt;.program_key&#10; +  and   'b6db3d25758743ba9a7515da2fd66458061b9aa1f2a0a4f33915643d76a03992' = &lt;agentloom.public.agents.PlanAgent object at 0x10be79d30&gt;.program_key&#10; +    where &lt;agentloom.public.agents.PlanAgent object at 0x10be79d30&gt; = program(&lt;agentloom.runtime.host.RuntimeEngine object at 0x10be79d90&gt;, AgentDefinition(name='agent', prompt='Mode: {{mode}}', description='Perform work', variables={'mode': {'schema': {'type': 'string'}, 'default': 'SAFE', 'required': False}}, capabilities=(), input_schema=None, output_schema=None), 'planner')">runtime_store = &lt;agentloom.storage.memory.MemoryRuntimeStore object at 0x10be7ab40&gt;
+role = 'planner', reverse = True
+
+    @pytest.mark.parametrize("role", ["react", "planner", "worker"])
+    @pytest.mark.parametrize("reverse", [False, True])
+    async def test_variable_spec_and_dictionary_default_cannot_replace_each_other(
+        runtime_store, role, reverse
+    ):
+        spec = VariableSpec({"type": "string"}, default="SAFE", required=False)
+        original = AgentDefinition("agent", "Mode: {{mode}}", "Perform work", variables={"mode": spec})
+        changed = replace(original, variables={"mode": asdict(spec)})
+        if reverse:
+            original, changed = changed, original
+        assert original.render() != changed.render()
+        saved = await suspend(runtime_store, original, role)
+        async with RuntimeEngine(store=runtime_store, environment=NoPreparation()) as runtime:
+            agent = program(runtime, changed, role)
+&gt;           assert agent.program_key != program(runtime, original, role).program_key
+E           AssertionError: assert 'b6db3d25758743ba9a7515da2fd66458061b9aa1f2a0a4f33915643d76a03992' != 'b6db3d25758743ba9a7515da2fd66458061b9aa1f2a0a4f33915643d76a03992'
+E            +  where 'b6db3d25758743ba9a7515da2fd66458061b9aa1f2a0a4f33915643d76a03992' = &lt;agentloom.public.agents.PlanAgent object at 0x10be78cb0&gt;.program_key
+E            +  and   'b6db3d25758743ba9a7515da2fd66458061b9aa1f2a0a4f33915643d76a03992' = &lt;agentloom.public.agents.PlanAgent object at 0x10be79d30&gt;.program_key
+E            +    where &lt;agentloom.public.agents.PlanAgent object at 0x10be79d30&gt; = program(&lt;agentloom.runtime.host.RuntimeEngine object at 0x10be79d90&gt;, AgentDefinition(name='agent', prompt='Mode: {{mode}}', description='Perform work', variables={'mode': {'schema': {'type': 'string'}, 'default': 'SAFE', 'required': False}}, capabilities=(), input_schema=None, output_schema=None), 'planner')
+
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/tests/test_recovery_binding_contract.py:117: AssertionError</failure></testcase><testcase classname="tests.test_recovery_binding_contract" name="test_variable_spec_and_dictionary_default_cannot_replace_each_other[memory-True-worker]" time="0.013"><failure message="AssertionError: assert '88c0c5a86e0f58bc98ea109eb6f69e3da3a252d6bcff6717324e04948134b875' != '88c0c5a86e0f58bc98ea109eb6f69e3da3a252d6bcff6717324e04948134b875'&#10; +  where '88c0c5a86e0f58bc98ea109eb6f69e3da3a252d6bcff6717324e04948134b875' = &lt;agentloom.public.agents.PlanAgent object at 0x10bd23830&gt;.program_key&#10; +  and   '88c0c5a86e0f58bc98ea109eb6f69e3da3a252d6bcff6717324e04948134b875' = &lt;agentloom.public.agents.PlanAgent object at 0x10bd202c0&gt;.program_key&#10; +    where &lt;agentloom.public.agents.PlanAgent object at 0x10bd202c0&gt; = program(&lt;agentloom.runtime.host.RuntimeEngine object at 0x10bbbb710&gt;, AgentDefinition(name='agent', prompt='Mode: {{mode}}', description='Perform work', variables={'mode': {'schema': {'type': 'string'}, 'default': 'SAFE', 'required': False}}, capabilities=(), input_schema=None, output_schema=None), 'worker')">runtime_store = &lt;agentloom.storage.memory.MemoryRuntimeStore object at 0x10be7a480&gt;
+role = 'worker', reverse = True
+
+    @pytest.mark.parametrize("role", ["react", "planner", "worker"])
+    @pytest.mark.parametrize("reverse", [False, True])
+    async def test_variable_spec_and_dictionary_default_cannot_replace_each_other(
+        runtime_store, role, reverse
+    ):
+        spec = VariableSpec({"type": "string"}, default="SAFE", required=False)
+        original = AgentDefinition("agent", "Mode: {{mode}}", "Perform work", variables={"mode": spec})
+        changed = replace(original, variables={"mode": asdict(spec)})
+        if reverse:
+            original, changed = changed, original
+        assert original.render() != changed.render()
+        saved = await suspend(runtime_store, original, role)
+        async with RuntimeEngine(store=runtime_store, environment=NoPreparation()) as runtime:
+            agent = program(runtime, changed, role)
+&gt;           assert agent.program_key != program(runtime, original, role).program_key
+E           AssertionError: assert '88c0c5a86e0f58bc98ea109eb6f69e3da3a252d6bcff6717324e04948134b875' != '88c0c5a86e0f58bc98ea109eb6f69e3da3a252d6bcff6717324e04948134b875'
+E            +  where '88c0c5a86e0f58bc98ea109eb6f69e3da3a252d6bcff6717324e04948134b875' = &lt;agentloom.public.agents.PlanAgent object at 0x10bd23830&gt;.program_key
+E            +  and   '88c0c5a86e0f58bc98ea109eb6f69e3da3a252d6bcff6717324e04948134b875' = &lt;agentloom.public.agents.PlanAgent object at 0x10bd202c0&gt;.program_key
+E            +    where &lt;agentloom.public.agents.PlanAgent object at 0x10bd202c0&gt; = program(&lt;agentloom.runtime.host.RuntimeEngine object at 0x10bbbb710&gt;, AgentDefinition(name='agent', prompt='Mode: {{mode}}', description='Perform work', variables={'mode': {'schema': {'type': 'string'}, 'default': 'SAFE', 'required': False}}, capabilities=(), input_schema=None, output_schema=None), 'worker')
+
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/tests/test_recovery_binding_contract.py:117: AssertionError</failure></testcase><testcase classname="tests.test_recovery_binding_contract" name="test_variable_spec_and_dictionary_default_cannot_replace_each_other[file-False-react]" time="0.022"><failure message="AssertionError: assert '27e4952f4ba035473201610939130a900a388f5142d3be910ffb5091499d1400' != '27e4952f4ba035473201610939130a900a388f5142d3be910ffb5091499d1400'&#10; +  where '27e4952f4ba035473201610939130a900a388f5142d3be910ffb5091499d1400' = &lt;agentloom.public.agents.ReactAgent object at 0x10be94fb0&gt;.program_key&#10; +  and   '27e4952f4ba035473201610939130a900a388f5142d3be910ffb5091499d1400' = &lt;agentloom.public.agents.ReactAgent object at 0x10be95610&gt;.program_key&#10; +    where &lt;agentloom.public.agents.ReactAgent object at 0x10be95610&gt; = program(&lt;agentloom.runtime.host.RuntimeEngine object at 0x10beb3f50&gt;, AgentDefinition(name='agent', prompt='Mode: {{mode}}', description='Perform work', variables={'mode': VariableSpec(schema={'type': 'string'}, default='SAFE', required=False)}, capabilities=(), input_schema=None, output_schema=None), 'react')">runtime_store = &lt;agentloom.storage.filesystem.FileRuntimeStore object at 0x10bd4e7b0&gt;
+role = 'react', reverse = False
+
+    @pytest.mark.parametrize("role", ["react", "planner", "worker"])
+    @pytest.mark.parametrize("reverse", [False, True])
+    async def test_variable_spec_and_dictionary_default_cannot_replace_each_other(
+        runtime_store, role, reverse
+    ):
+        spec = VariableSpec({"type": "string"}, default="SAFE", required=False)
+        original = AgentDefinition("agent", "Mode: {{mode}}", "Perform work", variables={"mode": spec})
+        changed = replace(original, variables={"mode": asdict(spec)})
+        if reverse:
+            original, changed = changed, original
+        assert original.render() != changed.render()
+        saved = await suspend(runtime_store, original, role)
+        async with RuntimeEngine(store=runtime_store, environment=NoPreparation()) as runtime:
+            agent = program(runtime, changed, role)
+&gt;           assert agent.program_key != program(runtime, original, role).program_key
+E           AssertionError: assert '27e4952f4ba035473201610939130a900a388f5142d3be910ffb5091499d1400' != '27e4952f4ba035473201610939130a900a388f5142d3be910ffb5091499d1400'
+E            +  where '27e4952f4ba035473201610939130a900a388f5142d3be910ffb5091499d1400' = &lt;agentloom.public.agents.ReactAgent object at 0x10be94fb0&gt;.program_key
+E            +  and   '27e4952f4ba035473201610939130a900a388f5142d3be910ffb5091499d1400' = &lt;agentloom.public.agents.ReactAgent object at 0x10be95610&gt;.program_key
+E            +    where &lt;agentloom.public.agents.ReactAgent object at 0x10be95610&gt; = program(&lt;agentloom.runtime.host.RuntimeEngine object at 0x10beb3f50&gt;, AgentDefinition(name='agent', prompt='Mode: {{mode}}', description='Perform work', variables={'mode': VariableSpec(schema={'type': 'string'}, default='SAFE', required=False)}, capabilities=(), input_schema=None, output_schema=None), 'react')
+
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/tests/test_recovery_binding_contract.py:117: AssertionError</failure></testcase><testcase classname="tests.test_recovery_binding_contract" name="test_variable_spec_and_dictionary_default_cannot_replace_each_other[file-False-planner]" time="0.021"><failure message="AssertionError: assert '5e03529f54a73b1064eb026faafcc8a38ad1e0208f3b039fd4ace3fd3b884fa9' != '5e03529f54a73b1064eb026faafcc8a38ad1e0208f3b039fd4ace3fd3b884fa9'&#10; +  where '5e03529f54a73b1064eb026faafcc8a38ad1e0208f3b039fd4ace3fd3b884fa9' = &lt;agentloom.public.agents.PlanAgent object at 0x10bdc73e0&gt;.program_key&#10; +  and   '5e03529f54a73b1064eb026faafcc8a38ad1e0208f3b039fd4ace3fd3b884fa9' = &lt;agentloom.public.agents.PlanAgent object at 0x10bdb62d0&gt;.program_key&#10; +    where &lt;agentloom.public.agents.PlanAgent object at 0x10bdb62d0&gt; = program(&lt;agentloom.runtime.host.RuntimeEngine object at 0x10be925d0&gt;, AgentDefinition(name='agent', prompt='Mode: {{mode}}', description='Perform work', variables={'mode': VariableSpec(schema={'type': 'string'}, default='SAFE', required=False)}, capabilities=(), input_schema=None, output_schema=None), 'planner')">runtime_store = &lt;agentloom.storage.filesystem.FileRuntimeStore object at 0x10be95700&gt;
+role = 'planner', reverse = False
+
+    @pytest.mark.parametrize("role", ["react", "planner", "worker"])
+    @pytest.mark.parametrize("reverse", [False, True])
+    async def test_variable_spec_and_dictionary_default_cannot_replace_each_other(
+        runtime_store, role, reverse
+    ):
+        spec = VariableSpec({"type": "string"}, default="SAFE", required=False)
+        original = AgentDefinition("agent", "Mode: {{mode}}", "Perform work", variables={"mode": spec})
+        changed = replace(original, variables={"mode": asdict(spec)})
+        if reverse:
+            original, changed = changed, original
+        assert original.render() != changed.render()
+        saved = await suspend(runtime_store, original, role)
+        async with RuntimeEngine(store=runtime_store, environment=NoPreparation()) as runtime:
+            agent = program(runtime, changed, role)
+&gt;           assert agent.program_key != program(runtime, original, role).program_key
+E           AssertionError: assert '5e03529f54a73b1064eb026faafcc8a38ad1e0208f3b039fd4ace3fd3b884fa9' != '5e03529f54a73b1064eb026faafcc8a38ad1e0208f3b039fd4ace3fd3b884fa9'
+E            +  where '5e03529f54a73b1064eb026faafcc8a38ad1e0208f3b039fd4ace3fd3b884fa9' = &lt;agentloom.public.agents.PlanAgent object at 0x10bdc73e0&gt;.program_key
+E            +  and   '5e03529f54a73b1064eb026faafcc8a38ad1e0208f3b039fd4ace3fd3b884fa9' = &lt;agentloom.public.agents.PlanAgent object at 0x10bdb62d0&gt;.program_key
+E            +    where &lt;agentloom.public.agents.PlanAgent object at 0x10bdb62d0&gt; = program(&lt;agentloom.runtime.host.RuntimeEngine object at 0x10be925d0&gt;, AgentDefinition(name='agent', prompt='Mode: {{mode}}', description='Perform work', variables={'mode': VariableSpec(schema={'type': 'string'}, default='SAFE', required=False)}, capabilities=(), input_schema=None, output_schema=None), 'planner')
+
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/tests/test_recovery_binding_contract.py:117: AssertionError</failure></testcase><testcase classname="tests.test_recovery_binding_contract" name="test_variable_spec_and_dictionary_default_cannot_replace_each_other[file-False-worker]" time="0.067"><failure message="AssertionError: assert 'bdd096245541ce615a742670b6ba716355df865457b9e97d7140b27aa15a24ff' != 'bdd096245541ce615a742670b6ba716355df865457b9e97d7140b27aa15a24ff'&#10; +  where 'bdd096245541ce615a742670b6ba716355df865457b9e97d7140b27aa15a24ff' = &lt;agentloom.public.agents.PlanAgent object at 0x10bf674a0&gt;.program_key&#10; +  and   'bdd096245541ce615a742670b6ba716355df865457b9e97d7140b27aa15a24ff' = &lt;agentloom.public.agents.PlanAgent object at 0x10bf64ce0&gt;.program_key&#10; +    where &lt;agentloom.public.agents.PlanAgent object at 0x10bf64ce0&gt; = program(&lt;agentloom.runtime.host.RuntimeEngine object at 0x10bf662d0&gt;, AgentDefinition(name='agent', prompt='Mode: {{mode}}', description='Perform work', variables={'mode': VariableSpec(schema={'type': 'string'}, default='SAFE', required=False)}, capabilities=(), input_schema=None, output_schema=None), 'worker')">runtime_store = &lt;agentloom.storage.filesystem.FileRuntimeStore object at 0x10be92de0&gt;
+role = 'worker', reverse = False
+
+    @pytest.mark.parametrize("role", ["react", "planner", "worker"])
+    @pytest.mark.parametrize("reverse", [False, True])
+    async def test_variable_spec_and_dictionary_default_cannot_replace_each_other(
+        runtime_store, role, reverse
+    ):
+        spec = VariableSpec({"type": "string"}, default="SAFE", required=False)
+        original = AgentDefinition("agent", "Mode: {{mode}}", "Perform work", variables={"mode": spec})
+        changed = replace(original, variables={"mode": asdict(spec)})
+        if reverse:
+            original, changed = changed, original
+        assert original.render() != changed.render()
+        saved = await suspend(runtime_store, original, role)
+        async with RuntimeEngine(store=runtime_store, environment=NoPreparation()) as runtime:
+            agent = program(runtime, changed, role)
+&gt;           assert agent.program_key != program(runtime, original, role).program_key
+E           AssertionError: assert 'bdd096245541ce615a742670b6ba716355df865457b9e97d7140b27aa15a24ff' != 'bdd096245541ce615a742670b6ba716355df865457b9e97d7140b27aa15a24ff'
+E            +  where 'bdd096245541ce615a742670b6ba716355df865457b9e97d7140b27aa15a24ff' = &lt;agentloom.public.agents.PlanAgent object at 0x10bf674a0&gt;.program_key
+E            +  and   'bdd096245541ce615a742670b6ba716355df865457b9e97d7140b27aa15a24ff' = &lt;agentloom.public.agents.PlanAgent object at 0x10bf64ce0&gt;.program_key
+E            +    where &lt;agentloom.public.agents.PlanAgent object at 0x10bf64ce0&gt; = program(&lt;agentloom.runtime.host.RuntimeEngine object at 0x10bf662d0&gt;, AgentDefinition(name='agent', prompt='Mode: {{mode}}', description='Perform work', variables={'mode': VariableSpec(schema={'type': 'string'}, default='SAFE', required=False)}, capabilities=(), input_schema=None, output_schema=None), 'worker')
+
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/tests/test_recovery_binding_contract.py:117: AssertionError</failure></testcase><testcase classname="tests.test_recovery_binding_contract" name="test_variable_spec_and_dictionary_default_cannot_replace_each_other[file-True-react]" time="0.025"><failure message="AssertionError: assert '00e34410294d52697aa0965ac4133b51915d8b9e262c0af8beaa5ed129a88d29' != '00e34410294d52697aa0965ac4133b51915d8b9e262c0af8beaa5ed129a88d29'&#10; +  where '00e34410294d52697aa0965ac4133b51915d8b9e262c0af8beaa5ed129a88d29' = &lt;agentloom.public.agents.ReactAgent object at 0x10bf661b0&gt;.program_key&#10; +  and   '00e34410294d52697aa0965ac4133b51915d8b9e262c0af8beaa5ed129a88d29' = &lt;agentloom.public.agents.ReactAgent object at 0x10bf65100&gt;.program_key&#10; +    where &lt;agentloom.public.agents.ReactAgent object at 0x10bf65100&gt; = program(&lt;agentloom.runtime.host.RuntimeEngine object at 0x10bf67f80&gt;, AgentDefinition(name='agent', prompt='Mode: {{mode}}', description='Perform work', variables={'mode': {'schema': {'type': 'string'}, 'default': 'SAFE', 'required': False}}, capabilities=(), input_schema=None, output_schema=None), 'react')">runtime_store = &lt;agentloom.storage.filesystem.FileRuntimeStore object at 0x10bf27140&gt;
+role = 'react', reverse = True
+
+    @pytest.mark.parametrize("role", ["react", "planner", "worker"])
+    @pytest.mark.parametrize("reverse", [False, True])
+    async def test_variable_spec_and_dictionary_default_cannot_replace_each_other(
+        runtime_store, role, reverse
+    ):
+        spec = VariableSpec({"type": "string"}, default="SAFE", required=False)
+        original = AgentDefinition("agent", "Mode: {{mode}}", "Perform work", variables={"mode": spec})
+        changed = replace(original, variables={"mode": asdict(spec)})
+        if reverse:
+            original, changed = changed, original
+        assert original.render() != changed.render()
+        saved = await suspend(runtime_store, original, role)
+        async with RuntimeEngine(store=runtime_store, environment=NoPreparation()) as runtime:
+            agent = program(runtime, changed, role)
+&gt;           assert agent.program_key != program(runtime, original, role).program_key
+E           AssertionError: assert '00e34410294d52697aa0965ac4133b51915d8b9e262c0af8beaa5ed129a88d29' != '00e34410294d52697aa0965ac4133b51915d8b9e262c0af8beaa5ed129a88d29'
+E            +  where '00e34410294d52697aa0965ac4133b51915d8b9e262c0af8beaa5ed129a88d29' = &lt;agentloom.public.agents.ReactAgent object at 0x10bf661b0&gt;.program_key
+E            +  and   '00e34410294d52697aa0965ac4133b51915d8b9e262c0af8beaa5ed129a88d29' = &lt;agentloom.public.agents.ReactAgent object at 0x10bf65100&gt;.program_key
+E            +    where &lt;agentloom.public.agents.ReactAgent object at 0x10bf65100&gt; = program(&lt;agentloom.runtime.host.RuntimeEngine object at 0x10bf67f80&gt;, AgentDefinition(name='agent', prompt='Mode: {{mode}}', description='Perform work', variables={'mode': {'schema': {'type': 'string'}, 'default': 'SAFE', 'required': False}}, capabilities=(), input_schema=None, output_schema=None), 'react')
+
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/tests/test_recovery_binding_contract.py:117: AssertionError</failure></testcase><testcase classname="tests.test_recovery_binding_contract" name="test_variable_spec_and_dictionary_default_cannot_replace_each_other[file-True-planner]" time="0.022"><failure message="AssertionError: assert '3585c9a720818bdeea86c465adcf6a5004456d42b2fe871e878cf7225d9a081d' != '3585c9a720818bdeea86c465adcf6a5004456d42b2fe871e878cf7225d9a081d'&#10; +  where '3585c9a720818bdeea86c465adcf6a5004456d42b2fe871e878cf7225d9a081d' = &lt;agentloom.public.agents.PlanAgent object at 0x10bdc6630&gt;.program_key&#10; +  and   '3585c9a720818bdeea86c465adcf6a5004456d42b2fe871e878cf7225d9a081d' = &lt;agentloom.public.agents.PlanAgent object at 0x10bdc6d80&gt;.program_key&#10; +    where &lt;agentloom.public.agents.PlanAgent object at 0x10bdc6d80&gt; = program(&lt;agentloom.runtime.host.RuntimeEngine object at 0x10bf67860&gt;, AgentDefinition(name='agent', prompt='Mode: {{mode}}', description='Perform work', variables={'mode': {'schema': {'type': 'string'}, 'default': 'SAFE', 'required': False}}, capabilities=(), input_schema=None, output_schema=None), 'planner')">runtime_store = &lt;agentloom.storage.filesystem.FileRuntimeStore object at 0x10bf64440&gt;
+role = 'planner', reverse = True
+
+    @pytest.mark.parametrize("role", ["react", "planner", "worker"])
+    @pytest.mark.parametrize("reverse", [False, True])
+    async def test_variable_spec_and_dictionary_default_cannot_replace_each_other(
+        runtime_store, role, reverse
+    ):
+        spec = VariableSpec({"type": "string"}, default="SAFE", required=False)
+        original = AgentDefinition("agent", "Mode: {{mode}}", "Perform work", variables={"mode": spec})
+        changed = replace(original, variables={"mode": asdict(spec)})
+        if reverse:
+            original, changed = changed, original
+        assert original.render() != changed.render()
+        saved = await suspend(runtime_store, original, role)
+        async with RuntimeEngine(store=runtime_store, environment=NoPreparation()) as runtime:
+            agent = program(runtime, changed, role)
+&gt;           assert agent.program_key != program(runtime, original, role).program_key
+E           AssertionError: assert '3585c9a720818bdeea86c465adcf6a5004456d42b2fe871e878cf7225d9a081d' != '3585c9a720818bdeea86c465adcf6a5004456d42b2fe871e878cf7225d9a081d'
+E            +  where '3585c9a720818bdeea86c465adcf6a5004456d42b2fe871e878cf7225d9a081d' = &lt;agentloom.public.agents.PlanAgent object at 0x10bdc6630&gt;.program_key
+E            +  and   '3585c9a720818bdeea86c465adcf6a5004456d42b2fe871e878cf7225d9a081d' = &lt;agentloom.public.agents.PlanAgent object at 0x10bdc6d80&gt;.program_key
+E            +    where &lt;agentloom.public.agents.PlanAgent object at 0x10bdc6d80&gt; = program(&lt;agentloom.runtime.host.RuntimeEngine object at 0x10bf67860&gt;, AgentDefinition(name='agent', prompt='Mode: {{mode}}', description='Perform work', variables={'mode': {'schema': {'type': 'string'}, 'default': 'SAFE', 'required': False}}, capabilities=(), input_schema=None, output_schema=None), 'planner')
+
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/tests/test_recovery_binding_contract.py:117: AssertionError</failure></testcase><testcase classname="tests.test_recovery_binding_contract" name="test_variable_spec_and_dictionary_default_cannot_replace_each_other[file-True-worker]" time="0.058"><failure message="AssertionError: assert '30de9644c02616234b33e35a61b020f5eabaf34a90c08906428841be9d3e8da9' != '30de9644c02616234b33e35a61b020f5eabaf34a90c08906428841be9d3e8da9'&#10; +  where '30de9644c02616234b33e35a61b020f5eabaf34a90c08906428841be9d3e8da9' = &lt;agentloom.public.agents.PlanAgent object at 0x10be95e20&gt;.program_key&#10; +  and   '30de9644c02616234b33e35a61b020f5eabaf34a90c08906428841be9d3e8da9' = &lt;agentloom.public.agents.PlanAgent object at 0x10bd9f260&gt;.program_key&#10; +    where &lt;agentloom.public.agents.PlanAgent object at 0x10bd9f260&gt; = program(&lt;agentloom.runtime.host.RuntimeEngine object at 0x10bc37d70&gt;, AgentDefinition(name='agent', prompt='Mode: {{mode}}', description='Perform work', variables={'mode': {'schema': {'type': 'string'}, 'default': 'SAFE', 'required': False}}, capabilities=(), input_schema=None, output_schema=None), 'worker')">runtime_store = &lt;agentloom.storage.filesystem.FileRuntimeStore object at 0x10bdc6840&gt;
+role = 'worker', reverse = True
+
+    @pytest.mark.parametrize("role", ["react", "planner", "worker"])
+    @pytest.mark.parametrize("reverse", [False, True])
+    async def test_variable_spec_and_dictionary_default_cannot_replace_each_other(
+        runtime_store, role, reverse
+    ):
+        spec = VariableSpec({"type": "string"}, default="SAFE", required=False)
+        original = AgentDefinition("agent", "Mode: {{mode}}", "Perform work", variables={"mode": spec})
+        changed = replace(original, variables={"mode": asdict(spec)})
+        if reverse:
+            original, changed = changed, original
+        assert original.render() != changed.render()
+        saved = await suspend(runtime_store, original, role)
+        async with RuntimeEngine(store=runtime_store, environment=NoPreparation()) as runtime:
+            agent = program(runtime, changed, role)
+&gt;           assert agent.program_key != program(runtime, original, role).program_key
+E           AssertionError: assert '30de9644c02616234b33e35a61b020f5eabaf34a90c08906428841be9d3e8da9' != '30de9644c02616234b33e35a61b020f5eabaf34a90c08906428841be9d3e8da9'
+E            +  where '30de9644c02616234b33e35a61b020f5eabaf34a90c08906428841be9d3e8da9' = &lt;agentloom.public.agents.PlanAgent object at 0x10be95e20&gt;.program_key
+E            +  and   '30de9644c02616234b33e35a61b020f5eabaf34a90c08906428841be9d3e8da9' = &lt;agentloom.public.agents.PlanAgent object at 0x10bd9f260&gt;.program_key
+E            +    where &lt;agentloom.public.agents.PlanAgent object at 0x10bd9f260&gt; = program(&lt;agentloom.runtime.host.RuntimeEngine object at 0x10bc37d70&gt;, AgentDefinition(name='agent', prompt='Mode: {{mode}}', description='Perform work', variables={'mode': {'schema': {'type': 'string'}, 'default': 'SAFE', 'required': False}}, capabilities=(), input_schema=None, output_schema=None), 'worker')
+
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/tests/test_recovery_binding_contract.py:117: AssertionError</failure></testcase><testcase classname="tests.test_recovery_binding_contract" name="test_original_variable_types_and_dictionary_order_can_resume[memory-react-1.0]" time="0.024" /><testcase classname="tests.test_recovery_binding_contract" name="test_original_variable_types_and_dictionary_order_can_resume[memory-react-default1]" time="0.024" /><testcase classname="tests.test_recovery_binding_contract" name="test_original_variable_types_and_dictionary_order_can_resume[memory-worker-1.0]" time="0.048" /><testcase classname="tests.test_recovery_binding_contract" name="test_original_variable_types_and_dictionary_order_can_resume[memory-worker-default1]" time="0.046" /><testcase classname="tests.test_recovery_binding_contract" name="test_original_variable_types_and_dictionary_order_can_resume[file-react-1.0]" time="0.069" /><testcase classname="tests.test_recovery_binding_contract" name="test_original_variable_types_and_dictionary_order_can_resume[file-react-default1]" time="0.087" /><testcase classname="tests.test_recovery_binding_contract" name="test_original_variable_types_and_dictionary_order_can_resume[file-worker-1.0]" time="0.211" /><testcase classname="tests.test_recovery_binding_contract" name="test_original_variable_types_and_dictionary_order_can_resume[file-worker-default1]" time="0.201" /><testcase classname="tests.test_recovery_binding_contract" name="test_integral_number_default_cannot_turn_into_integer_default[memory]" time="0.013"><failure message="Failed: DID NOT RAISE &lt;class 'agentloom.errors.RequestError'&gt;">runtime_store = &lt;agentloom.storage.memory.MemoryRuntimeStore object at 0x10bf64260&gt;
+
+    async def test_integral_number_default_cannot_turn_into_integer_default(runtime_store):
+        definition = AgentDefinition("agent", "Value {{v}}", variables={"v": 1.0})
+        await suspend(runtime_store, definition, "react")
+        async with RuntimeEngine(store=runtime_store) as runtime:
+            agent = program(runtime, replace(definition, variables={"v": 1}), "react")
+&gt;           with pytest.raises(RequestError, match="RECOVERY_BINDING_MISMATCH"):
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E           Failed: DID NOT RAISE &lt;class 'agentloom.errors.RequestError'&gt;
+
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/tests/test_recovery_binding_contract.py:147: Failed</failure></testcase><testcase classname="tests.test_recovery_binding_contract" name="test_integral_number_default_cannot_turn_into_integer_default[file]" time="0.021"><failure message="Failed: DID NOT RAISE &lt;class 'agentloom.errors.RequestError'&gt;">runtime_store = &lt;agentloom.storage.filesystem.FileRuntimeStore object at 0x10be970b0&gt;
+
+    async def test_integral_number_default_cannot_turn_into_integer_default(runtime_store):
+        definition = AgentDefinition("agent", "Value {{v}}", variables={"v": 1.0})
+        await suspend(runtime_store, definition, "react")
+        async with RuntimeEngine(store=runtime_store) as runtime:
+            agent = program(runtime, replace(definition, variables={"v": 1}), "react")
+&gt;           with pytest.raises(RequestError, match="RECOVERY_BINDING_MISMATCH"):
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E           Failed: DID NOT RAISE &lt;class 'agentloom.errors.RequestError'&gt;
+
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/tests/test_recovery_binding_contract.py:147: Failed</failure></testcase><testcase classname="tests.test_public_event_depth" name="test_completed_output_survives_events_and_reopened_cursor[memory-list-126-ReactAgent]" time="0.015" /><testcase classname="tests.test_public_event_depth" name="test_completed_output_survives_events_and_reopened_cursor[memory-list-126-PlanAgent]" time="0.014" /><testcase classname="tests.test_public_event_depth" name="test_completed_output_survives_events_and_reopened_cursor[memory-list-127-ReactAgent]" time="0.012"><failure message="agentloom.errors.ConfigurationError: INVALID_JSON: JSON nesting exceeds the supported depth of 128">runtime_store = &lt;agentloom.storage.memory.MemoryRuntimeStore object at 0x10be5c320&gt;
+build = &lt;function build.&lt;locals&gt;.factory at 0x10bdd68e0&gt;
+cls = &lt;class 'agentloom.public.agents.ReactAgent'&gt;, depth = 127, shape = 'list'
+
+    @pytest.mark.parametrize("cls", [ReactAgent, PlanAgent])
+    @pytest.mark.parametrize("depth", [126, 127, 128])
+    @pytest.mark.parametrize("shape", ["list", "mixed"])
+    async def test_completed_output_survives_events_and_reopened_cursor(
+        runtime_store, build, cls, depth, shape
+    ):
+        value = nested(depth, shape)
+        definition = AgentDefinition("deep", "Return JSON.", output_schema={})
+        async with RuntimeEngine(store=runtime_store) as runtime:
+            agent = build(
+                runtime,
+                lambda r: ModelResponse(canonical_document(value)),
+                cls=cls,
+                definition=definition,
+            )
+            handle = await agent.start("go", run_id="event-depth")
+            result = await handle.wait(timeout_s=3)
+            assert result.status == "succeeded"
+            assert canonical_document(result.output.value) == canonical_document(value)
+&gt;           events = [event async for event in handle.events()]
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/tests/test_public_event_depth.py:45: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/private/tmp/agentloom-recovery-contract-legacy-7atgyovs/src/agentloom/public/handles.py:77: in events
+    yield RunEvent(**event)
+          ^^^^^^^^^^^^^^^^^
+&lt;string&gt;:10: in __init__
+    ???
+/private/tmp/agentloom-recovery-contract-legacy-7atgyovs/src/agentloom/types.py:161: in __post_init__
+    object.__setattr__(self, "payload", freeze(self.payload))
+                                        ^^^^^^^^^^^^^^^^^^^^
+/private/tmp/agentloom-recovery-contract-legacy-7atgyovs/src/agentloom/configuration/json_values.py:99: in freeze
+    return _copy(value, frozen=True, max_depth=max_depth)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+value = {'error': None, 'output': {'kind': 'json', 'source_ref': {'task_id': '3119cbb4-e203-4059-be60-2b796bc17e2a'}, 'value': [[[[[...]]]]]}, 'status': 'succeeded'}
+
+    def _copy(value, *, frozen, max_depth):
+        """Walk with an explicit stack; shared children are values, cycles are errors."""
+        root, ancestors = [None], set()
+        # A finish item freezes a container only after all its children were copied.
+        pending = [(False, value, root, 0, 0)]
+        while pending:
+            finish, item, parent, key, depth = pending.pop()
+            if finish:
+                ancestors.remove(item)
+                if frozen:
+                    result = parent[key]
+                    parent[key] = FrozenDict(result) if isinstance(result, dict) else tuple(result)
+                continue
+            if not isinstance(item, (list, tuple, Mapping)):
+                parent[key] = _scalar(item)
+                continue
+            if id(item) in ancestors:
+                raise ConfigurationError("INVALID_JSON", "Circular containers are not JSON values")
+            if depth &gt;= max_depth:
+&gt;               raise ConfigurationError(
+                    "INVALID_JSON", f"JSON nesting exceeds the supported depth of {max_depth}"
+                )
+E               agentloom.errors.ConfigurationError: INVALID_JSON: JSON nesting exceeds the supported depth of 128
+
+/private/tmp/agentloom-recovery-contract-legacy-7atgyovs/src/agentloom/configuration/json_values.py:73: ConfigurationError</failure></testcase><testcase classname="tests.test_public_event_depth" name="test_completed_output_survives_events_and_reopened_cursor[memory-list-127-PlanAgent]" time="0.013"><failure message="agentloom.errors.ConfigurationError: INVALID_JSON: JSON nesting exceeds the supported depth of 128">runtime_store = &lt;agentloom.storage.memory.MemoryRuntimeStore object at 0x10be949b0&gt;
+build = &lt;function build.&lt;locals&gt;.factory at 0x10bdd56c0&gt;
+cls = &lt;class 'agentloom.public.agents.PlanAgent'&gt;, depth = 127, shape = 'list'
+
+    @pytest.mark.parametrize("cls", [ReactAgent, PlanAgent])
+    @pytest.mark.parametrize("depth", [126, 127, 128])
+    @pytest.mark.parametrize("shape", ["list", "mixed"])
+    async def test_completed_output_survives_events_and_reopened_cursor(
+        runtime_store, build, cls, depth, shape
+    ):
+        value = nested(depth, shape)
+        definition = AgentDefinition("deep", "Return JSON.", output_schema={})
+        async with RuntimeEngine(store=runtime_store) as runtime:
+            agent = build(
+                runtime,
+                lambda r: ModelResponse(canonical_document(value)),
+                cls=cls,
+                definition=definition,
+            )
+            handle = await agent.start("go", run_id="event-depth")
+            result = await handle.wait(timeout_s=3)
+            assert result.status == "succeeded"
+            assert canonical_document(result.output.value) == canonical_document(value)
+&gt;           events = [event async for event in handle.events()]
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/tests/test_public_event_depth.py:45: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/private/tmp/agentloom-recovery-contract-legacy-7atgyovs/src/agentloom/public/handles.py:77: in events
+    yield RunEvent(**event)
+          ^^^^^^^^^^^^^^^^^
+&lt;string&gt;:10: in __init__
+    ???
+/private/tmp/agentloom-recovery-contract-legacy-7atgyovs/src/agentloom/types.py:161: in __post_init__
+    object.__setattr__(self, "payload", freeze(self.payload))
+                                        ^^^^^^^^^^^^^^^^^^^^
+/private/tmp/agentloom-recovery-contract-legacy-7atgyovs/src/agentloom/configuration/json_values.py:99: in freeze
+    return _copy(value, frozen=True, max_depth=max_depth)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+value = {'error': None, 'output': {'kind': 'json', 'source_ref': {'task_id': 'd86e550d-1e8e-4dc0-b535-2f95f6c6573d'}, 'value': [[[[[...]]]]]}, 'status': 'succeeded'}
+
+    def _copy(value, *, frozen, max_depth):
+        """Walk with an explicit stack; shared children are values, cycles are errors."""
+        root, ancestors = [None], set()
+        # A finish item freezes a container only after all its children were copied.
+        pending = [(False, value, root, 0, 0)]
+        while pending:
+            finish, item, parent, key, depth = pending.pop()
+            if finish:
+                ancestors.remove(item)
+                if frozen:
+                    result = parent[key]
+                    parent[key] = FrozenDict(result) if isinstance(result, dict) else tuple(result)
+                continue
+            if not isinstance(item, (list, tuple, Mapping)):
+                parent[key] = _scalar(item)
+                continue
+            if id(item) in ancestors:
+                raise ConfigurationError("INVALID_JSON", "Circular containers are not JSON values")
+            if depth &gt;= max_depth:
+&gt;               raise ConfigurationError(
+                    "INVALID_JSON", f"JSON nesting exceeds the supported depth of {max_depth}"
+                )
+E               agentloom.errors.ConfigurationError: INVALID_JSON: JSON nesting exceeds the supported depth of 128
+
+/private/tmp/agentloom-recovery-contract-legacy-7atgyovs/src/agentloom/configuration/json_values.py:73: ConfigurationError</failure></testcase><testcase classname="tests.test_public_event_depth" name="test_completed_output_survives_events_and_reopened_cursor[memory-list-128-ReactAgent]" time="0.013"><failure message="agentloom.errors.ConfigurationError: INVALID_JSON: JSON nesting exceeds the supported depth of 128">runtime_store = &lt;agentloom.storage.memory.MemoryRuntimeStore object at 0x10bf3e300&gt;
+build = &lt;function build.&lt;locals&gt;.factory at 0x10bdd4ea0&gt;
+cls = &lt;class 'agentloom.public.agents.ReactAgent'&gt;, depth = 128, shape = 'list'
+
+    @pytest.mark.parametrize("cls", [ReactAgent, PlanAgent])
+    @pytest.mark.parametrize("depth", [126, 127, 128])
+    @pytest.mark.parametrize("shape", ["list", "mixed"])
+    async def test_completed_output_survives_events_and_reopened_cursor(
+        runtime_store, build, cls, depth, shape
+    ):
+        value = nested(depth, shape)
+        definition = AgentDefinition("deep", "Return JSON.", output_schema={})
+        async with RuntimeEngine(store=runtime_store) as runtime:
+            agent = build(
+                runtime,
+                lambda r: ModelResponse(canonical_document(value)),
+                cls=cls,
+                definition=definition,
+            )
+            handle = await agent.start("go", run_id="event-depth")
+            result = await handle.wait(timeout_s=3)
+            assert result.status == "succeeded"
+            assert canonical_document(result.output.value) == canonical_document(value)
+&gt;           events = [event async for event in handle.events()]
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/tests/test_public_event_depth.py:45: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/private/tmp/agentloom-recovery-contract-legacy-7atgyovs/src/agentloom/public/handles.py:77: in events
+    yield RunEvent(**event)
+          ^^^^^^^^^^^^^^^^^
+&lt;string&gt;:10: in __init__
+    ???
+/private/tmp/agentloom-recovery-contract-legacy-7atgyovs/src/agentloom/types.py:161: in __post_init__
+    object.__setattr__(self, "payload", freeze(self.payload))
+                                        ^^^^^^^^^^^^^^^^^^^^
+/private/tmp/agentloom-recovery-contract-legacy-7atgyovs/src/agentloom/configuration/json_values.py:99: in freeze
+    return _copy(value, frozen=True, max_depth=max_depth)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+value = {'error': None, 'output': {'kind': 'json', 'source_ref': {'task_id': '9709ac6a-0101-4ce1-a4b3-205b2064bef8'}, 'value': [[[[[...]]]]]}, 'status': 'succeeded'}
+
+    def _copy(value, *, frozen, max_depth):
+        """Walk with an explicit stack; shared children are values, cycles are errors."""
+        root, ancestors = [None], set()
+        # A finish item freezes a container only after all its children were copied.
+        pending = [(False, value, root, 0, 0)]
+        while pending:
+            finish, item, parent, key, depth = pending.pop()
+            if finish:
+                ancestors.remove(item)
+                if frozen:
+                    result = parent[key]
+                    parent[key] = FrozenDict(result) if isinstance(result, dict) else tuple(result)
+                continue
+            if not isinstance(item, (list, tuple, Mapping)):
+                parent[key] = _scalar(item)
+                continue
+            if id(item) in ancestors:
+                raise ConfigurationError("INVALID_JSON", "Circular containers are not JSON values")
+            if depth &gt;= max_depth:
+&gt;               raise ConfigurationError(
+                    "INVALID_JSON", f"JSON nesting exceeds the supported depth of {max_depth}"
+                )
+E               agentloom.errors.ConfigurationError: INVALID_JSON: JSON nesting exceeds the supported depth of 128
+
+/private/tmp/agentloom-recovery-contract-legacy-7atgyovs/src/agentloom/configuration/json_values.py:73: ConfigurationError</failure></testcase><testcase classname="tests.test_public_event_depth" name="test_completed_output_survives_events_and_reopened_cursor[memory-list-128-PlanAgent]" time="0.013"><failure message="agentloom.errors.ConfigurationError: INVALID_JSON: JSON nesting exceeds the supported depth of 128">runtime_store = &lt;agentloom.storage.memory.MemoryRuntimeStore object at 0x10bed3620&gt;
+build = &lt;function build.&lt;locals&gt;.factory at 0x10bdd6160&gt;
+cls = &lt;class 'agentloom.public.agents.PlanAgent'&gt;, depth = 128, shape = 'list'
+
+    @pytest.mark.parametrize("cls", [ReactAgent, PlanAgent])
+    @pytest.mark.parametrize("depth", [126, 127, 128])
+    @pytest.mark.parametrize("shape", ["list", "mixed"])
+    async def test_completed_output_survives_events_and_reopened_cursor(
+        runtime_store, build, cls, depth, shape
+    ):
+        value = nested(depth, shape)
+        definition = AgentDefinition("deep", "Return JSON.", output_schema={})
+        async with RuntimeEngine(store=runtime_store) as runtime:
+            agent = build(
+                runtime,
+                lambda r: ModelResponse(canonical_document(value)),
+                cls=cls,
+                definition=definition,
+            )
+            handle = await agent.start("go", run_id="event-depth")
+            result = await handle.wait(timeout_s=3)
+            assert result.status == "succeeded"
+            assert canonical_document(result.output.value) == canonical_document(value)
+&gt;           events = [event async for event in handle.events()]
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/tests/test_public_event_depth.py:45: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/private/tmp/agentloom-recovery-contract-legacy-7atgyovs/src/agentloom/public/handles.py:77: in events
+    yield RunEvent(**event)
+          ^^^^^^^^^^^^^^^^^
+&lt;string&gt;:10: in __init__
+    ???
+/private/tmp/agentloom-recovery-contract-legacy-7atgyovs/src/agentloom/types.py:161: in __post_init__
+    object.__setattr__(self, "payload", freeze(self.payload))
+                                        ^^^^^^^^^^^^^^^^^^^^
+/private/tmp/agentloom-recovery-contract-legacy-7atgyovs/src/agentloom/configuration/json_values.py:99: in freeze
+    return _copy(value, frozen=True, max_depth=max_depth)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+value = {'error': None, 'output': {'kind': 'json', 'source_ref': {'task_id': '67773246-0ae1-489d-9625-b6951255e088'}, 'value': [[[[[...]]]]]}, 'status': 'succeeded'}
+
+    def _copy(value, *, frozen, max_depth):
+        """Walk with an explicit stack; shared children are values, cycles are errors."""
+        root, ancestors = [None], set()
+        # A finish item freezes a container only after all its children were copied.
+        pending = [(False, value, root, 0, 0)]
+        while pending:
+            finish, item, parent, key, depth = pending.pop()
+            if finish:
+                ancestors.remove(item)
+                if frozen:
+                    result = parent[key]
+                    parent[key] = FrozenDict(result) if isinstance(result, dict) else tuple(result)
+                continue
+            if not isinstance(item, (list, tuple, Mapping)):
+                parent[key] = _scalar(item)
+                continue
+            if id(item) in ancestors:
+                raise ConfigurationError("INVALID_JSON", "Circular containers are not JSON values")
+            if depth &gt;= max_depth:
+&gt;               raise ConfigurationError(
+                    "INVALID_JSON", f"JSON nesting exceeds the supported depth of {max_depth}"
+                )
+E               agentloom.errors.ConfigurationError: INVALID_JSON: JSON nesting exceeds the supported depth of 128
+
+/private/tmp/agentloom-recovery-contract-legacy-7atgyovs/src/agentloom/configuration/json_values.py:73: ConfigurationError</failure></testcase><testcase classname="tests.test_public_event_depth" name="test_completed_output_survives_events_and_reopened_cursor[memory-mixed-126-ReactAgent]" time="0.015" /><testcase classname="tests.test_public_event_depth" name="test_completed_output_survives_events_and_reopened_cursor[memory-mixed-126-PlanAgent]" time="0.015" /><testcase classname="tests.test_public_event_depth" name="test_completed_output_survives_events_and_reopened_cursor[memory-mixed-127-ReactAgent]" time="0.013"><failure message="agentloom.errors.ConfigurationError: INVALID_JSON: JSON nesting exceeds the supported depth of 128">runtime_store = &lt;agentloom.storage.memory.MemoryRuntimeStore object at 0x10bd4ef90&gt;
+build = &lt;function build.&lt;locals&gt;.factory at 0x10bd31120&gt;
+cls = &lt;class 'agentloom.public.agents.ReactAgent'&gt;, depth = 127, shape = 'mixed'
+
+    @pytest.mark.parametrize("cls", [ReactAgent, PlanAgent])
+    @pytest.mark.parametrize("depth", [126, 127, 128])
+    @pytest.mark.parametrize("shape", ["list", "mixed"])
+    async def test_completed_output_survives_events_and_reopened_cursor(
+        runtime_store, build, cls, depth, shape
+    ):
+        value = nested(depth, shape)
+        definition = AgentDefinition("deep", "Return JSON.", output_schema={})
+        async with RuntimeEngine(store=runtime_store) as runtime:
+            agent = build(
+                runtime,
+                lambda r: ModelResponse(canonical_document(value)),
+                cls=cls,
+                definition=definition,
+            )
+            handle = await agent.start("go", run_id="event-depth")
+            result = await handle.wait(timeout_s=3)
+            assert result.status == "succeeded"
+            assert canonical_document(result.output.value) == canonical_document(value)
+&gt;           events = [event async for event in handle.events()]
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/tests/test_public_event_depth.py:45: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/private/tmp/agentloom-recovery-contract-legacy-7atgyovs/src/agentloom/public/handles.py:77: in events
+    yield RunEvent(**event)
+          ^^^^^^^^^^^^^^^^^
+&lt;string&gt;:10: in __init__
+    ???
+/private/tmp/agentloom-recovery-contract-legacy-7atgyovs/src/agentloom/types.py:161: in __post_init__
+    object.__setattr__(self, "payload", freeze(self.payload))
+                                        ^^^^^^^^^^^^^^^^^^^^
+/private/tmp/agentloom-recovery-contract-legacy-7atgyovs/src/agentloom/configuration/json_values.py:99: in freeze
+    return _copy(value, frozen=True, max_depth=max_depth)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+value = {'error': None, 'output': {'kind': 'json', 'source_ref': {'task_id': 'd6dae170-e036-4d25-a0a1-d81f86b74d8f'}, 'value': [{'child': [{'child': [...]}]}]}, 'status': 'succeeded'}
+
+    def _copy(value, *, frozen, max_depth):
+        """Walk with an explicit stack; shared children are values, cycles are errors."""
+        root, ancestors = [None], set()
+        # A finish item freezes a container only after all its children were copied.
+        pending = [(False, value, root, 0, 0)]
+        while pending:
+            finish, item, parent, key, depth = pending.pop()
+            if finish:
+                ancestors.remove(item)
+                if frozen:
+                    result = parent[key]
+                    parent[key] = FrozenDict(result) if isinstance(result, dict) else tuple(result)
+                continue
+            if not isinstance(item, (list, tuple, Mapping)):
+                parent[key] = _scalar(item)
+                continue
+            if id(item) in ancestors:
+                raise ConfigurationError("INVALID_JSON", "Circular containers are not JSON values")
+            if depth &gt;= max_depth:
+&gt;               raise ConfigurationError(
+                    "INVALID_JSON", f"JSON nesting exceeds the supported depth of {max_depth}"
+                )
+E               agentloom.errors.ConfigurationError: INVALID_JSON: JSON nesting exceeds the supported depth of 128
+
+/private/tmp/agentloom-recovery-contract-legacy-7atgyovs/src/agentloom/configuration/json_values.py:73: ConfigurationError</failure></testcase><testcase classname="tests.test_public_event_depth" name="test_completed_output_survives_events_and_reopened_cursor[memory-mixed-127-PlanAgent]" time="0.013"><failure message="agentloom.errors.ConfigurationError: INVALID_JSON: JSON nesting exceeds the supported depth of 128">runtime_store = &lt;agentloom.storage.memory.MemoryRuntimeStore object at 0x10bf3d490&gt;
+build = &lt;function build.&lt;locals&gt;.factory at 0x10bdd68e0&gt;
+cls = &lt;class 'agentloom.public.agents.PlanAgent'&gt;, depth = 127, shape = 'mixed'
+
+    @pytest.mark.parametrize("cls", [ReactAgent, PlanAgent])
+    @pytest.mark.parametrize("depth", [126, 127, 128])
+    @pytest.mark.parametrize("shape", ["list", "mixed"])
+    async def test_completed_output_survives_events_and_reopened_cursor(
+        runtime_store, build, cls, depth, shape
+    ):
+        value = nested(depth, shape)
+        definition = AgentDefinition("deep", "Return JSON.", output_schema={})
+        async with RuntimeEngine(store=runtime_store) as runtime:
+            agent = build(
+                runtime,
+                lambda r: ModelResponse(canonical_document(value)),
+                cls=cls,
+                definition=definition,
+            )
+            handle = await agent.start("go", run_id="event-depth")
+            result = await handle.wait(timeout_s=3)
+            assert result.status == "succeeded"
+            assert canonical_document(result.output.value) == canonical_document(value)
+&gt;           events = [event async for event in handle.events()]
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/tests/test_public_event_depth.py:45: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/private/tmp/agentloom-recovery-contract-legacy-7atgyovs/src/agentloom/public/handles.py:77: in events
+    yield RunEvent(**event)
+          ^^^^^^^^^^^^^^^^^
+&lt;string&gt;:10: in __init__
+    ???
+/private/tmp/agentloom-recovery-contract-legacy-7atgyovs/src/agentloom/types.py:161: in __post_init__
+    object.__setattr__(self, "payload", freeze(self.payload))
+                                        ^^^^^^^^^^^^^^^^^^^^
+/private/tmp/agentloom-recovery-contract-legacy-7atgyovs/src/agentloom/configuration/json_values.py:99: in freeze
+    return _copy(value, frozen=True, max_depth=max_depth)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+value = {'error': None, 'output': {'kind': 'json', 'source_ref': {'task_id': 'edb30a01-5d4b-4133-900b-9ba3a3650536'}, 'value': [{'child': [{'child': [...]}]}]}, 'status': 'succeeded'}
+
+    def _copy(value, *, frozen, max_depth):
+        """Walk with an explicit stack; shared children are values, cycles are errors."""
+        root, ancestors = [None], set()
+        # A finish item freezes a container only after all its children were copied.
+        pending = [(False, value, root, 0, 0)]
+        while pending:
+            finish, item, parent, key, depth = pending.pop()
+            if finish:
+                ancestors.remove(item)
+                if frozen:
+                    result = parent[key]
+                    parent[key] = FrozenDict(result) if isinstance(result, dict) else tuple(result)
+                continue
+            if not isinstance(item, (list, tuple, Mapping)):
+                parent[key] = _scalar(item)
+                continue
+            if id(item) in ancestors:
+                raise ConfigurationError("INVALID_JSON", "Circular containers are not JSON values")
+            if depth &gt;= max_depth:
+&gt;               raise ConfigurationError(
+                    "INVALID_JSON", f"JSON nesting exceeds the supported depth of {max_depth}"
+                )
+E               agentloom.errors.ConfigurationError: INVALID_JSON: JSON nesting exceeds the supported depth of 128
+
+/private/tmp/agentloom-recovery-contract-legacy-7atgyovs/src/agentloom/configuration/json_values.py:73: ConfigurationError</failure></testcase><testcase classname="tests.test_public_event_depth" name="test_completed_output_survives_events_and_reopened_cursor[memory-mixed-128-ReactAgent]" time="0.013"><failure message="agentloom.errors.ConfigurationError: INVALID_JSON: JSON nesting exceeds the supported depth of 128">runtime_store = &lt;agentloom.storage.memory.MemoryRuntimeStore object at 0x10bc59130&gt;
+build = &lt;function build.&lt;locals&gt;.factory at 0x10bea7ec0&gt;
+cls = &lt;class 'agentloom.public.agents.ReactAgent'&gt;, depth = 128, shape = 'mixed'
+
+    @pytest.mark.parametrize("cls", [ReactAgent, PlanAgent])
+    @pytest.mark.parametrize("depth", [126, 127, 128])
+    @pytest.mark.parametrize("shape", ["list", "mixed"])
+    async def test_completed_output_survives_events_and_reopened_cursor(
+        runtime_store, build, cls, depth, shape
+    ):
+        value = nested(depth, shape)
+        definition = AgentDefinition("deep", "Return JSON.", output_schema={})
+        async with RuntimeEngine(store=runtime_store) as runtime:
+            agent = build(
+                runtime,
+                lambda r: ModelResponse(canonical_document(value)),
+                cls=cls,
+                definition=definition,
+            )
+            handle = await agent.start("go", run_id="event-depth")
+            result = await handle.wait(timeout_s=3)
+            assert result.status == "succeeded"
+            assert canonical_document(result.output.value) == canonical_document(value)
+&gt;           events = [event async for event in handle.events()]
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/tests/test_public_event_depth.py:45: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/private/tmp/agentloom-recovery-contract-legacy-7atgyovs/src/agentloom/public/handles.py:77: in events
+    yield RunEvent(**event)
+          ^^^^^^^^^^^^^^^^^
+&lt;string&gt;:10: in __init__
+    ???
+/private/tmp/agentloom-recovery-contract-legacy-7atgyovs/src/agentloom/types.py:161: in __post_init__
+    object.__setattr__(self, "payload", freeze(self.payload))
+                                        ^^^^^^^^^^^^^^^^^^^^
+/private/tmp/agentloom-recovery-contract-legacy-7atgyovs/src/agentloom/configuration/json_values.py:99: in freeze
+    return _copy(value, frozen=True, max_depth=max_depth)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+value = {'error': None, 'output': {'kind': 'json', 'source_ref': {'task_id': '72377b43-0913-4645-b1ef-866cab061603'}, 'value': {'child': [{'child': [{...}]}]}}, 'status': 'succeeded'}
+
+    def _copy(value, *, frozen, max_depth):
+        """Walk with an explicit stack; shared children are values, cycles are errors."""
+        root, ancestors = [None], set()
+        # A finish item freezes a container only after all its children were copied.
+        pending = [(False, value, root, 0, 0)]
+        while pending:
+            finish, item, parent, key, depth = pending.pop()
+            if finish:
+                ancestors.remove(item)
+                if frozen:
+                    result = parent[key]
+                    parent[key] = FrozenDict(result) if isinstance(result, dict) else tuple(result)
+                continue
+            if not isinstance(item, (list, tuple, Mapping)):
+                parent[key] = _scalar(item)
+                continue
+            if id(item) in ancestors:
+                raise ConfigurationError("INVALID_JSON", "Circular containers are not JSON values")
+            if depth &gt;= max_depth:
+&gt;               raise ConfigurationError(
+                    "INVALID_JSON", f"JSON nesting exceeds the supported depth of {max_depth}"
+                )
+E               agentloom.errors.ConfigurationError: INVALID_JSON: JSON nesting exceeds the supported depth of 128
+
+/private/tmp/agentloom-recovery-contract-legacy-7atgyovs/src/agentloom/configuration/json_values.py:73: ConfigurationError</failure></testcase><testcase classname="tests.test_public_event_depth" name="test_completed_output_survives_events_and_reopened_cursor[memory-mixed-128-PlanAgent]" time="0.013"><failure message="agentloom.errors.ConfigurationError: INVALID_JSON: JSON nesting exceeds the supported depth of 128">runtime_store = &lt;agentloom.storage.memory.MemoryRuntimeStore object at 0x10bdb41d0&gt;
+build = &lt;function build.&lt;locals&gt;.factory at 0x10bea5440&gt;
+cls = &lt;class 'agentloom.public.agents.PlanAgent'&gt;, depth = 128, shape = 'mixed'
+
+    @pytest.mark.parametrize("cls", [ReactAgent, PlanAgent])
+    @pytest.mark.parametrize("depth", [126, 127, 128])
+    @pytest.mark.parametrize("shape", ["list", "mixed"])
+    async def test_completed_output_survives_events_and_reopened_cursor(
+        runtime_store, build, cls, depth, shape
+    ):
+        value = nested(depth, shape)
+        definition = AgentDefinition("deep", "Return JSON.", output_schema={})
+        async with RuntimeEngine(store=runtime_store) as runtime:
+            agent = build(
+                runtime,
+                lambda r: ModelResponse(canonical_document(value)),
+                cls=cls,
+                definition=definition,
+            )
+            handle = await agent.start("go", run_id="event-depth")
+            result = await handle.wait(timeout_s=3)
+            assert result.status == "succeeded"
+            assert canonical_document(result.output.value) == canonical_document(value)
+&gt;           events = [event async for event in handle.events()]
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/tests/test_public_event_depth.py:45: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/private/tmp/agentloom-recovery-contract-legacy-7atgyovs/src/agentloom/public/handles.py:77: in events
+    yield RunEvent(**event)
+          ^^^^^^^^^^^^^^^^^
+&lt;string&gt;:10: in __init__
+    ???
+/private/tmp/agentloom-recovery-contract-legacy-7atgyovs/src/agentloom/types.py:161: in __post_init__
+    object.__setattr__(self, "payload", freeze(self.payload))
+                                        ^^^^^^^^^^^^^^^^^^^^
+/private/tmp/agentloom-recovery-contract-legacy-7atgyovs/src/agentloom/configuration/json_values.py:99: in freeze
+    return _copy(value, frozen=True, max_depth=max_depth)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+value = {'error': None, 'output': {'kind': 'json', 'source_ref': {'task_id': '1f6171da-6ae2-4c30-8657-b55c250ac0a8'}, 'value': {'child': [{'child': [{...}]}]}}, 'status': 'succeeded'}
+
+    def _copy(value, *, frozen, max_depth):
+        """Walk with an explicit stack; shared children are values, cycles are errors."""
+        root, ancestors = [None], set()
+        # A finish item freezes a container only after all its children were copied.
+        pending = [(False, value, root, 0, 0)]
+        while pending:
+            finish, item, parent, key, depth = pending.pop()
+            if finish:
+                ancestors.remove(item)
+                if frozen:
+                    result = parent[key]
+                    parent[key] = FrozenDict(result) if isinstance(result, dict) else tuple(result)
+                continue
+            if not isinstance(item, (list, tuple, Mapping)):
+                parent[key] = _scalar(item)
+                continue
+            if id(item) in ancestors:
+                raise ConfigurationError("INVALID_JSON", "Circular containers are not JSON values")
+            if depth &gt;= max_depth:
+&gt;               raise ConfigurationError(
+                    "INVALID_JSON", f"JSON nesting exceeds the supported depth of {max_depth}"
+                )
+E               agentloom.errors.ConfigurationError: INVALID_JSON: JSON nesting exceeds the supported depth of 128
+
+/private/tmp/agentloom-recovery-contract-legacy-7atgyovs/src/agentloom/configuration/json_values.py:73: ConfigurationError</failure></testcase><testcase classname="tests.test_public_event_depth" name="test_completed_output_survives_events_and_reopened_cursor[file-list-126-ReactAgent]" time="0.075" /><testcase classname="tests.test_public_event_depth" name="test_completed_output_survives_events_and_reopened_cursor[file-list-126-PlanAgent]" time="0.074" /><testcase classname="tests.test_public_event_depth" name="test_completed_output_survives_events_and_reopened_cursor[file-list-127-ReactAgent]" time="0.077"><failure message="agentloom.errors.ConfigurationError: INVALID_JSON: JSON nesting exceeds the supported depth of 128">runtime_store = &lt;agentloom.storage.filesystem.FileRuntimeStore object at 0x10be782c0&gt;
+build = &lt;function build.&lt;locals&gt;.factory at 0x10bea56c0&gt;
+cls = &lt;class 'agentloom.public.agents.ReactAgent'&gt;, depth = 127, shape = 'list'
+
+    @pytest.mark.parametrize("cls", [ReactAgent, PlanAgent])
+    @pytest.mark.parametrize("depth", [126, 127, 128])
+    @pytest.mark.parametrize("shape", ["list", "mixed"])
+    async def test_completed_output_survives_events_and_reopened_cursor(
+        runtime_store, build, cls, depth, shape
+    ):
+        value = nested(depth, shape)
+        definition = AgentDefinition("deep", "Return JSON.", output_schema={})
+        async with RuntimeEngine(store=runtime_store) as runtime:
+            agent = build(
+                runtime,
+                lambda r: ModelResponse(canonical_document(value)),
+                cls=cls,
+                definition=definition,
+            )
+            handle = await agent.start("go", run_id="event-depth")
+            result = await handle.wait(timeout_s=3)
+            assert result.status == "succeeded"
+            assert canonical_document(result.output.value) == canonical_document(value)
+&gt;           events = [event async for event in handle.events()]
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/tests/test_public_event_depth.py:45: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/private/tmp/agentloom-recovery-contract-legacy-7atgyovs/src/agentloom/public/handles.py:77: in events
+    yield RunEvent(**event)
+          ^^^^^^^^^^^^^^^^^
+&lt;string&gt;:10: in __init__
+    ???
+/private/tmp/agentloom-recovery-contract-legacy-7atgyovs/src/agentloom/types.py:161: in __post_init__
+    object.__setattr__(self, "payload", freeze(self.payload))
+                                        ^^^^^^^^^^^^^^^^^^^^
+/private/tmp/agentloom-recovery-contract-legacy-7atgyovs/src/agentloom/configuration/json_values.py:99: in freeze
+    return _copy(value, frozen=True, max_depth=max_depth)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+value = {'error': None, 'output': {'kind': 'json', 'source_ref': {'task_id': '3d9f4aef-0efe-4a17-b15c-382e747cf97e'}, 'value': [[[[[...]]]]]}, 'status': 'succeeded'}
+
+    def _copy(value, *, frozen, max_depth):
+        """Walk with an explicit stack; shared children are values, cycles are errors."""
+        root, ancestors = [None], set()
+        # A finish item freezes a container only after all its children were copied.
+        pending = [(False, value, root, 0, 0)]
+        while pending:
+            finish, item, parent, key, depth = pending.pop()
+            if finish:
+                ancestors.remove(item)
+                if frozen:
+                    result = parent[key]
+                    parent[key] = FrozenDict(result) if isinstance(result, dict) else tuple(result)
+                continue
+            if not isinstance(item, (list, tuple, Mapping)):
+                parent[key] = _scalar(item)
+                continue
+            if id(item) in ancestors:
+                raise ConfigurationError("INVALID_JSON", "Circular containers are not JSON values")
+            if depth &gt;= max_depth:
+&gt;               raise ConfigurationError(
+                    "INVALID_JSON", f"JSON nesting exceeds the supported depth of {max_depth}"
+                )
+E               agentloom.errors.ConfigurationError: INVALID_JSON: JSON nesting exceeds the supported depth of 128
+
+/private/tmp/agentloom-recovery-contract-legacy-7atgyovs/src/agentloom/configuration/json_values.py:73: ConfigurationError</failure></testcase><testcase classname="tests.test_public_event_depth" name="test_completed_output_survives_events_and_reopened_cursor[file-list-127-PlanAgent]" time="0.067"><failure message="agentloom.errors.ConfigurationError: INVALID_JSON: JSON nesting exceeds the supported depth of 128">runtime_store = &lt;agentloom.storage.filesystem.FileRuntimeStore object at 0x10bc36180&gt;
+build = &lt;function build.&lt;locals&gt;.factory at 0x10bd776a0&gt;
+cls = &lt;class 'agentloom.public.agents.PlanAgent'&gt;, depth = 127, shape = 'list'
+
+    @pytest.mark.parametrize("cls", [ReactAgent, PlanAgent])
+    @pytest.mark.parametrize("depth", [126, 127, 128])
+    @pytest.mark.parametrize("shape", ["list", "mixed"])
+    async def test_completed_output_survives_events_and_reopened_cursor(
+        runtime_store, build, cls, depth, shape
+    ):
+        value = nested(depth, shape)
+        definition = AgentDefinition("deep", "Return JSON.", output_schema={})
+        async with RuntimeEngine(store=runtime_store) as runtime:
+            agent = build(
+                runtime,
+                lambda r: ModelResponse(canonical_document(value)),
+                cls=cls,
+                definition=definition,
+            )
+            handle = await agent.start("go", run_id="event-depth")
+            result = await handle.wait(timeout_s=3)
+            assert result.status == "succeeded"
+            assert canonical_document(result.output.value) == canonical_document(value)
+&gt;           events = [event async for event in handle.events()]
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/tests/test_public_event_depth.py:45: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/private/tmp/agentloom-recovery-contract-legacy-7atgyovs/src/agentloom/public/handles.py:77: in events
+    yield RunEvent(**event)
+          ^^^^^^^^^^^^^^^^^
+&lt;string&gt;:10: in __init__
+    ???
+/private/tmp/agentloom-recovery-contract-legacy-7atgyovs/src/agentloom/types.py:161: in __post_init__
+    object.__setattr__(self, "payload", freeze(self.payload))
+                                        ^^^^^^^^^^^^^^^^^^^^
+/private/tmp/agentloom-recovery-contract-legacy-7atgyovs/src/agentloom/configuration/json_values.py:99: in freeze
+    return _copy(value, frozen=True, max_depth=max_depth)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+value = {'error': None, 'output': {'kind': 'json', 'source_ref': {'task_id': '7df6e1f6-518d-4dc9-ab4f-7ce319af4f24'}, 'value': [[[[[...]]]]]}, 'status': 'succeeded'}
+
+    def _copy(value, *, frozen, max_depth):
+        """Walk with an explicit stack; shared children are values, cycles are errors."""
+        root, ancestors = [None], set()
+        # A finish item freezes a container only after all its children were copied.
+        pending = [(False, value, root, 0, 0)]
+        while pending:
+            finish, item, parent, key, depth = pending.pop()
+            if finish:
+                ancestors.remove(item)
+                if frozen:
+                    result = parent[key]
+                    parent[key] = FrozenDict(result) if isinstance(result, dict) else tuple(result)
+                continue
+            if not isinstance(item, (list, tuple, Mapping)):
+                parent[key] = _scalar(item)
+                continue
+            if id(item) in ancestors:
+                raise ConfigurationError("INVALID_JSON", "Circular containers are not JSON values")
+            if depth &gt;= max_depth:
+&gt;               raise ConfigurationError(
+                    "INVALID_JSON", f"JSON nesting exceeds the supported depth of {max_depth}"
+                )
+E               agentloom.errors.ConfigurationError: INVALID_JSON: JSON nesting exceeds the supported depth of 128
+
+/private/tmp/agentloom-recovery-contract-legacy-7atgyovs/src/agentloom/configuration/json_values.py:73: ConfigurationError</failure></testcase><testcase classname="tests.test_public_event_depth" name="test_completed_output_survives_events_and_reopened_cursor[file-list-128-ReactAgent]" time="0.071"><failure message="agentloom.errors.ConfigurationError: INVALID_JSON: JSON nesting exceeds the supported depth of 128">runtime_store = &lt;agentloom.storage.filesystem.FileRuntimeStore object at 0x10bd4d8e0&gt;
+build = &lt;function build.&lt;locals&gt;.factory at 0x10bd31120&gt;
+cls = &lt;class 'agentloom.public.agents.ReactAgent'&gt;, depth = 128, shape = 'list'
+
+    @pytest.mark.parametrize("cls", [ReactAgent, PlanAgent])
+    @pytest.mark.parametrize("depth", [126, 127, 128])
+    @pytest.mark.parametrize("shape", ["list", "mixed"])
+    async def test_completed_output_survives_events_and_reopened_cursor(
+        runtime_store, build, cls, depth, shape
+    ):
+        value = nested(depth, shape)
+        definition = AgentDefinition("deep", "Return JSON.", output_schema={})
+        async with RuntimeEngine(store=runtime_store) as runtime:
+            agent = build(
+                runtime,
+                lambda r: ModelResponse(canonical_document(value)),
+                cls=cls,
+                definition=definition,
+            )
+            handle = await agent.start("go", run_id="event-depth")
+            result = await handle.wait(timeout_s=3)
+            assert result.status == "succeeded"
+            assert canonical_document(result.output.value) == canonical_document(value)
+&gt;           events = [event async for event in handle.events()]
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/tests/test_public_event_depth.py:45: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/private/tmp/agentloom-recovery-contract-legacy-7atgyovs/src/agentloom/public/handles.py:77: in events
+    yield RunEvent(**event)
+          ^^^^^^^^^^^^^^^^^
+&lt;string&gt;:10: in __init__
+    ???
+/private/tmp/agentloom-recovery-contract-legacy-7atgyovs/src/agentloom/types.py:161: in __post_init__
+    object.__setattr__(self, "payload", freeze(self.payload))
+                                        ^^^^^^^^^^^^^^^^^^^^
+/private/tmp/agentloom-recovery-contract-legacy-7atgyovs/src/agentloom/configuration/json_values.py:99: in freeze
+    return _copy(value, frozen=True, max_depth=max_depth)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+value = {'error': None, 'output': {'kind': 'json', 'source_ref': {'task_id': '9fe7ede8-9502-472c-ac19-e5528ae059c6'}, 'value': [[[[[...]]]]]}, 'status': 'succeeded'}
+
+    def _copy(value, *, frozen, max_depth):
+        """Walk with an explicit stack; shared children are values, cycles are errors."""
+        root, ancestors = [None], set()
+        # A finish item freezes a container only after all its children were copied.
+        pending = [(False, value, root, 0, 0)]
+        while pending:
+            finish, item, parent, key, depth = pending.pop()
+            if finish:
+                ancestors.remove(item)
+                if frozen:
+                    result = parent[key]
+                    parent[key] = FrozenDict(result) if isinstance(result, dict) else tuple(result)
+                continue
+            if not isinstance(item, (list, tuple, Mapping)):
+                parent[key] = _scalar(item)
+                continue
+            if id(item) in ancestors:
+                raise ConfigurationError("INVALID_JSON", "Circular containers are not JSON values")
+            if depth &gt;= max_depth:
+&gt;               raise ConfigurationError(
+                    "INVALID_JSON", f"JSON nesting exceeds the supported depth of {max_depth}"
+                )
+E               agentloom.errors.ConfigurationError: INVALID_JSON: JSON nesting exceeds the supported depth of 128
+
+/private/tmp/agentloom-recovery-contract-legacy-7atgyovs/src/agentloom/configuration/json_values.py:73: ConfigurationError</failure></testcase><testcase classname="tests.test_public_event_depth" name="test_completed_output_survives_events_and_reopened_cursor[file-list-128-PlanAgent]" time="0.073"><failure message="agentloom.errors.ConfigurationError: INVALID_JSON: JSON nesting exceeds the supported depth of 128">runtime_store = &lt;agentloom.storage.filesystem.FileRuntimeStore object at 0x10be66810&gt;
+build = &lt;function build.&lt;locals&gt;.factory at 0x10bdd7d80&gt;
+cls = &lt;class 'agentloom.public.agents.PlanAgent'&gt;, depth = 128, shape = 'list'
+
+    @pytest.mark.parametrize("cls", [ReactAgent, PlanAgent])
+    @pytest.mark.parametrize("depth", [126, 127, 128])
+    @pytest.mark.parametrize("shape", ["list", "mixed"])
+    async def test_completed_output_survives_events_and_reopened_cursor(
+        runtime_store, build, cls, depth, shape
+    ):
+        value = nested(depth, shape)
+        definition = AgentDefinition("deep", "Return JSON.", output_schema={})
+        async with RuntimeEngine(store=runtime_store) as runtime:
+            agent = build(
+                runtime,
+                lambda r: ModelResponse(canonical_document(value)),
+                cls=cls,
+                definition=definition,
+            )
+            handle = await agent.start("go", run_id="event-depth")
+            result = await handle.wait(timeout_s=3)
+            assert result.status == "succeeded"
+            assert canonical_document(result.output.value) == canonical_document(value)
+&gt;           events = [event async for event in handle.events()]
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/tests/test_public_event_depth.py:45: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/private/tmp/agentloom-recovery-contract-legacy-7atgyovs/src/agentloom/public/handles.py:77: in events
+    yield RunEvent(**event)
+          ^^^^^^^^^^^^^^^^^
+&lt;string&gt;:10: in __init__
+    ???
+/private/tmp/agentloom-recovery-contract-legacy-7atgyovs/src/agentloom/types.py:161: in __post_init__
+    object.__setattr__(self, "payload", freeze(self.payload))
+                                        ^^^^^^^^^^^^^^^^^^^^
+/private/tmp/agentloom-recovery-contract-legacy-7atgyovs/src/agentloom/configuration/json_values.py:99: in freeze
+    return _copy(value, frozen=True, max_depth=max_depth)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+value = {'error': None, 'output': {'kind': 'json', 'source_ref': {'task_id': 'a2907d5e-097d-46df-9761-8ee5d9f34112'}, 'value': [[[[[...]]]]]}, 'status': 'succeeded'}
+
+    def _copy(value, *, frozen, max_depth):
+        """Walk with an explicit stack; shared children are values, cycles are errors."""
+        root, ancestors = [None], set()
+        # A finish item freezes a container only after all its children were copied.
+        pending = [(False, value, root, 0, 0)]
+        while pending:
+            finish, item, parent, key, depth = pending.pop()
+            if finish:
+                ancestors.remove(item)
+                if frozen:
+                    result = parent[key]
+                    parent[key] = FrozenDict(result) if isinstance(result, dict) else tuple(result)
+                continue
+            if not isinstance(item, (list, tuple, Mapping)):
+                parent[key] = _scalar(item)
+                continue
+            if id(item) in ancestors:
+                raise ConfigurationError("INVALID_JSON", "Circular containers are not JSON values")
+            if depth &gt;= max_depth:
+&gt;               raise ConfigurationError(
+                    "INVALID_JSON", f"JSON nesting exceeds the supported depth of {max_depth}"
+                )
+E               agentloom.errors.ConfigurationError: INVALID_JSON: JSON nesting exceeds the supported depth of 128
+
+/private/tmp/agentloom-recovery-contract-legacy-7atgyovs/src/agentloom/configuration/json_values.py:73: ConfigurationError</failure></testcase><testcase classname="tests.test_public_event_depth" name="test_completed_output_survives_events_and_reopened_cursor[file-mixed-126-ReactAgent]" time="0.076" /><testcase classname="tests.test_public_event_depth" name="test_completed_output_survives_events_and_reopened_cursor[file-mixed-126-PlanAgent]" time="0.076" /><testcase classname="tests.test_public_event_depth" name="test_completed_output_survives_events_and_reopened_cursor[file-mixed-127-ReactAgent]" time="0.058"><failure message="agentloom.errors.ConfigurationError: INVALID_JSON: JSON nesting exceeds the supported depth of 128">runtime_store = &lt;agentloom.storage.filesystem.FileRuntimeStore object at 0x10bdc5fd0&gt;
+build = &lt;function build.&lt;locals&gt;.factory at 0x10bdd6f20&gt;
+cls = &lt;class 'agentloom.public.agents.ReactAgent'&gt;, depth = 127, shape = 'mixed'
+
+    @pytest.mark.parametrize("cls", [ReactAgent, PlanAgent])
+    @pytest.mark.parametrize("depth", [126, 127, 128])
+    @pytest.mark.parametrize("shape", ["list", "mixed"])
+    async def test_completed_output_survives_events_and_reopened_cursor(
+        runtime_store, build, cls, depth, shape
+    ):
+        value = nested(depth, shape)
+        definition = AgentDefinition("deep", "Return JSON.", output_schema={})
+        async with RuntimeEngine(store=runtime_store) as runtime:
+            agent = build(
+                runtime,
+                lambda r: ModelResponse(canonical_document(value)),
+                cls=cls,
+                definition=definition,
+            )
+            handle = await agent.start("go", run_id="event-depth")
+            result = await handle.wait(timeout_s=3)
+            assert result.status == "succeeded"
+            assert canonical_document(result.output.value) == canonical_document(value)
+&gt;           events = [event async for event in handle.events()]
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/tests/test_public_event_depth.py:45: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/private/tmp/agentloom-recovery-contract-legacy-7atgyovs/src/agentloom/public/handles.py:77: in events
+    yield RunEvent(**event)
+          ^^^^^^^^^^^^^^^^^
+&lt;string&gt;:10: in __init__
+    ???
+/private/tmp/agentloom-recovery-contract-legacy-7atgyovs/src/agentloom/types.py:161: in __post_init__
+    object.__setattr__(self, "payload", freeze(self.payload))
+                                        ^^^^^^^^^^^^^^^^^^^^
+/private/tmp/agentloom-recovery-contract-legacy-7atgyovs/src/agentloom/configuration/json_values.py:99: in freeze
+    return _copy(value, frozen=True, max_depth=max_depth)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+value = {'error': None, 'output': {'kind': 'json', 'source_ref': {'task_id': 'c2a67b5f-c7f0-42b2-9e35-0a4dec52d031'}, 'value': [{'child': [{'child': [...]}]}]}, 'status': 'succeeded'}
+
+    def _copy(value, *, frozen, max_depth):
+        """Walk with an explicit stack; shared children are values, cycles are errors."""
+        root, ancestors = [None], set()
+        # A finish item freezes a container only after all its children were copied.
+        pending = [(False, value, root, 0, 0)]
+        while pending:
+            finish, item, parent, key, depth = pending.pop()
+            if finish:
+                ancestors.remove(item)
+                if frozen:
+                    result = parent[key]
+                    parent[key] = FrozenDict(result) if isinstance(result, dict) else tuple(result)
+                continue
+            if not isinstance(item, (list, tuple, Mapping)):
+                parent[key] = _scalar(item)
+                continue
+            if id(item) in ancestors:
+                raise ConfigurationError("INVALID_JSON", "Circular containers are not JSON values")
+            if depth &gt;= max_depth:
+&gt;               raise ConfigurationError(
+                    "INVALID_JSON", f"JSON nesting exceeds the supported depth of {max_depth}"
+                )
+E               agentloom.errors.ConfigurationError: INVALID_JSON: JSON nesting exceeds the supported depth of 128
+
+/private/tmp/agentloom-recovery-contract-legacy-7atgyovs/src/agentloom/configuration/json_values.py:73: ConfigurationError</failure></testcase><testcase classname="tests.test_public_event_depth" name="test_completed_output_survives_events_and_reopened_cursor[file-mixed-127-PlanAgent]" time="0.058"><failure message="agentloom.errors.ConfigurationError: INVALID_JSON: JSON nesting exceeds the supported depth of 128">runtime_store = &lt;agentloom.storage.filesystem.FileRuntimeStore object at 0x10bdc5310&gt;
+build = &lt;function build.&lt;locals&gt;.factory at 0x10bea7a60&gt;
+cls = &lt;class 'agentloom.public.agents.PlanAgent'&gt;, depth = 127, shape = 'mixed'
+
+    @pytest.mark.parametrize("cls", [ReactAgent, PlanAgent])
+    @pytest.mark.parametrize("depth", [126, 127, 128])
+    @pytest.mark.parametrize("shape", ["list", "mixed"])
+    async def test_completed_output_survives_events_and_reopened_cursor(
+        runtime_store, build, cls, depth, shape
+    ):
+        value = nested(depth, shape)
+        definition = AgentDefinition("deep", "Return JSON.", output_schema={})
+        async with RuntimeEngine(store=runtime_store) as runtime:
+            agent = build(
+                runtime,
+                lambda r: ModelResponse(canonical_document(value)),
+                cls=cls,
+                definition=definition,
+            )
+            handle = await agent.start("go", run_id="event-depth")
+            result = await handle.wait(timeout_s=3)
+            assert result.status == "succeeded"
+            assert canonical_document(result.output.value) == canonical_document(value)
+&gt;           events = [event async for event in handle.events()]
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/tests/test_public_event_depth.py:45: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/private/tmp/agentloom-recovery-contract-legacy-7atgyovs/src/agentloom/public/handles.py:77: in events
+    yield RunEvent(**event)
+          ^^^^^^^^^^^^^^^^^
+&lt;string&gt;:10: in __init__
+    ???
+/private/tmp/agentloom-recovery-contract-legacy-7atgyovs/src/agentloom/types.py:161: in __post_init__
+    object.__setattr__(self, "payload", freeze(self.payload))
+                                        ^^^^^^^^^^^^^^^^^^^^
+/private/tmp/agentloom-recovery-contract-legacy-7atgyovs/src/agentloom/configuration/json_values.py:99: in freeze
+    return _copy(value, frozen=True, max_depth=max_depth)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+value = {'error': None, 'output': {'kind': 'json', 'source_ref': {'task_id': '4e3e0b53-7728-497f-bb9f-b26264be81d1'}, 'value': [{'child': [{'child': [...]}]}]}, 'status': 'succeeded'}
+
+    def _copy(value, *, frozen, max_depth):
+        """Walk with an explicit stack; shared children are values, cycles are errors."""
+        root, ancestors = [None], set()
+        # A finish item freezes a container only after all its children were copied.
+        pending = [(False, value, root, 0, 0)]
+        while pending:
+            finish, item, parent, key, depth = pending.pop()
+            if finish:
+                ancestors.remove(item)
+                if frozen:
+                    result = parent[key]
+                    parent[key] = FrozenDict(result) if isinstance(result, dict) else tuple(result)
+                continue
+            if not isinstance(item, (list, tuple, Mapping)):
+                parent[key] = _scalar(item)
+                continue
+            if id(item) in ancestors:
+                raise ConfigurationError("INVALID_JSON", "Circular containers are not JSON values")
+            if depth &gt;= max_depth:
+&gt;               raise ConfigurationError(
+                    "INVALID_JSON", f"JSON nesting exceeds the supported depth of {max_depth}"
+                )
+E               agentloom.errors.ConfigurationError: INVALID_JSON: JSON nesting exceeds the supported depth of 128
+
+/private/tmp/agentloom-recovery-contract-legacy-7atgyovs/src/agentloom/configuration/json_values.py:73: ConfigurationError</failure></testcase><testcase classname="tests.test_public_event_depth" name="test_completed_output_survives_events_and_reopened_cursor[file-mixed-128-ReactAgent]" time="0.072"><failure message="agentloom.errors.ConfigurationError: INVALID_JSON: JSON nesting exceeds the supported depth of 128">runtime_store = &lt;agentloom.storage.filesystem.FileRuntimeStore object at 0x10bd22450&gt;
+build = &lt;function build.&lt;locals&gt;.factory at 0x10bea7240&gt;
+cls = &lt;class 'agentloom.public.agents.ReactAgent'&gt;, depth = 128, shape = 'mixed'
+
+    @pytest.mark.parametrize("cls", [ReactAgent, PlanAgent])
+    @pytest.mark.parametrize("depth", [126, 127, 128])
+    @pytest.mark.parametrize("shape", ["list", "mixed"])
+    async def test_completed_output_survives_events_and_reopened_cursor(
+        runtime_store, build, cls, depth, shape
+    ):
+        value = nested(depth, shape)
+        definition = AgentDefinition("deep", "Return JSON.", output_schema={})
+        async with RuntimeEngine(store=runtime_store) as runtime:
+            agent = build(
+                runtime,
+                lambda r: ModelResponse(canonical_document(value)),
+                cls=cls,
+                definition=definition,
+            )
+            handle = await agent.start("go", run_id="event-depth")
+            result = await handle.wait(timeout_s=3)
+            assert result.status == "succeeded"
+            assert canonical_document(result.output.value) == canonical_document(value)
+&gt;           events = [event async for event in handle.events()]
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/tests/test_public_event_depth.py:45: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/private/tmp/agentloom-recovery-contract-legacy-7atgyovs/src/agentloom/public/handles.py:77: in events
+    yield RunEvent(**event)
+          ^^^^^^^^^^^^^^^^^
+&lt;string&gt;:10: in __init__
+    ???
+/private/tmp/agentloom-recovery-contract-legacy-7atgyovs/src/agentloom/types.py:161: in __post_init__
+    object.__setattr__(self, "payload", freeze(self.payload))
+                                        ^^^^^^^^^^^^^^^^^^^^
+/private/tmp/agentloom-recovery-contract-legacy-7atgyovs/src/agentloom/configuration/json_values.py:99: in freeze
+    return _copy(value, frozen=True, max_depth=max_depth)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+value = {'error': None, 'output': {'kind': 'json', 'source_ref': {'task_id': '5de6218f-4dc2-4ff6-86e4-67e1364a7199'}, 'value': {'child': [{'child': [{...}]}]}}, 'status': 'succeeded'}
+
+    def _copy(value, *, frozen, max_depth):
+        """Walk with an explicit stack; shared children are values, cycles are errors."""
+        root, ancestors = [None], set()
+        # A finish item freezes a container only after all its children were copied.
+        pending = [(False, value, root, 0, 0)]
+        while pending:
+            finish, item, parent, key, depth = pending.pop()
+            if finish:
+                ancestors.remove(item)
+                if frozen:
+                    result = parent[key]
+                    parent[key] = FrozenDict(result) if isinstance(result, dict) else tuple(result)
+                continue
+            if not isinstance(item, (list, tuple, Mapping)):
+                parent[key] = _scalar(item)
+                continue
+            if id(item) in ancestors:
+                raise ConfigurationError("INVALID_JSON", "Circular containers are not JSON values")
+            if depth &gt;= max_depth:
+&gt;               raise ConfigurationError(
+                    "INVALID_JSON", f"JSON nesting exceeds the supported depth of {max_depth}"
+                )
+E               agentloom.errors.ConfigurationError: INVALID_JSON: JSON nesting exceeds the supported depth of 128
+
+/private/tmp/agentloom-recovery-contract-legacy-7atgyovs/src/agentloom/configuration/json_values.py:73: ConfigurationError</failure></testcase><testcase classname="tests.test_public_event_depth" name="test_completed_output_survives_events_and_reopened_cursor[file-mixed-128-PlanAgent]" time="0.077"><failure message="agentloom.errors.ConfigurationError: INVALID_JSON: JSON nesting exceeds the supported depth of 128">runtime_store = &lt;agentloom.storage.filesystem.FileRuntimeStore object at 0x10beb3740&gt;
+build = &lt;function build.&lt;locals&gt;.factory at 0x10bea7560&gt;
+cls = &lt;class 'agentloom.public.agents.PlanAgent'&gt;, depth = 128, shape = 'mixed'
+
+    @pytest.mark.parametrize("cls", [ReactAgent, PlanAgent])
+    @pytest.mark.parametrize("depth", [126, 127, 128])
+    @pytest.mark.parametrize("shape", ["list", "mixed"])
+    async def test_completed_output_survives_events_and_reopened_cursor(
+        runtime_store, build, cls, depth, shape
+    ):
+        value = nested(depth, shape)
+        definition = AgentDefinition("deep", "Return JSON.", output_schema={})
+        async with RuntimeEngine(store=runtime_store) as runtime:
+            agent = build(
+                runtime,
+                lambda r: ModelResponse(canonical_document(value)),
+                cls=cls,
+                definition=definition,
+            )
+            handle = await agent.start("go", run_id="event-depth")
+            result = await handle.wait(timeout_s=3)
+            assert result.status == "succeeded"
+            assert canonical_document(result.output.value) == canonical_document(value)
+&gt;           events = [event async for event in handle.events()]
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/tests/test_public_event_depth.py:45: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/private/tmp/agentloom-recovery-contract-legacy-7atgyovs/src/agentloom/public/handles.py:77: in events
+    yield RunEvent(**event)
+          ^^^^^^^^^^^^^^^^^
+&lt;string&gt;:10: in __init__
+    ???
+/private/tmp/agentloom-recovery-contract-legacy-7atgyovs/src/agentloom/types.py:161: in __post_init__
+    object.__setattr__(self, "payload", freeze(self.payload))
+                                        ^^^^^^^^^^^^^^^^^^^^
+/private/tmp/agentloom-recovery-contract-legacy-7atgyovs/src/agentloom/configuration/json_values.py:99: in freeze
+    return _copy(value, frozen=True, max_depth=max_depth)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+value = {'error': None, 'output': {'kind': 'json', 'source_ref': {'task_id': 'c9ad1088-5b38-4bc5-baec-a6d656611153'}, 'value': {'child': [{'child': [{...}]}]}}, 'status': 'succeeded'}
+
+    def _copy(value, *, frozen, max_depth):
+        """Walk with an explicit stack; shared children are values, cycles are errors."""
+        root, ancestors = [None], set()
+        # A finish item freezes a container only after all its children were copied.
+        pending = [(False, value, root, 0, 0)]
+        while pending:
+            finish, item, parent, key, depth = pending.pop()
+            if finish:
+                ancestors.remove(item)
+                if frozen:
+                    result = parent[key]
+                    parent[key] = FrozenDict(result) if isinstance(result, dict) else tuple(result)
+                continue
+            if not isinstance(item, (list, tuple, Mapping)):
+                parent[key] = _scalar(item)
+                continue
+            if id(item) in ancestors:
+                raise ConfigurationError("INVALID_JSON", "Circular containers are not JSON values")
+            if depth &gt;= max_depth:
+&gt;               raise ConfigurationError(
+                    "INVALID_JSON", f"JSON nesting exceeds the supported depth of {max_depth}"
+                )
+E               agentloom.errors.ConfigurationError: INVALID_JSON: JSON nesting exceeds the supported depth of 128
+
+/private/tmp/agentloom-recovery-contract-legacy-7atgyovs/src/agentloom/configuration/json_values.py:73: ConfigurationError</failure></testcase><testcase classname="tests.test_public_event_depth" name="test_live_astream_delivers_terminal_with_maximum_depth[memory]" time="0.012"><failure message="agentloom.errors.ConfigurationError: INVALID_JSON: JSON nesting exceeds the supported depth of 128">runtime_store = &lt;agentloom.storage.memory.MemoryRuntimeStore object at 0x10be975c0&gt;
+build = &lt;function build.&lt;locals&gt;.factory at 0x10bdd72e0&gt;
+
+    async def test_live_astream_delivers_terminal_with_maximum_depth(runtime_store, build):
+        value = nested(MAX_JSON_DEPTH, "mixed")
+        async with RuntimeEngine(store=runtime_store) as runtime:
+            agent = build(
+                runtime,
+                lambda r: ModelResponse(canonical_document(value)),
+                definition=AgentDefinition("a", "Return JSON.", output_schema={}),
+            )
+&gt;           events = [event async for event in agent.astream("go")]
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/tests/test_public_event_depth.py:73: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/private/tmp/agentloom-recovery-contract-legacy-7atgyovs/src/agentloom/public/agents.py:159: in astream
+    async for event in handle.events(after_seq=after_seq):
+/private/tmp/agentloom-recovery-contract-legacy-7atgyovs/src/agentloom/public/handles.py:77: in events
+    yield RunEvent(**event)
+          ^^^^^^^^^^^^^^^^^
+&lt;string&gt;:10: in __init__
+    ???
+/private/tmp/agentloom-recovery-contract-legacy-7atgyovs/src/agentloom/types.py:161: in __post_init__
+    object.__setattr__(self, "payload", freeze(self.payload))
+                                        ^^^^^^^^^^^^^^^^^^^^
+/private/tmp/agentloom-recovery-contract-legacy-7atgyovs/src/agentloom/configuration/json_values.py:99: in freeze
+    return _copy(value, frozen=True, max_depth=max_depth)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+value = {'error': None, 'output': {'kind': 'json', 'source_ref': {'task_id': '521e8a25-5592-4a80-bc77-d64754861865'}, 'value': {'child': [{'child': [{...}]}]}}, 'status': 'succeeded'}
+
+    def _copy(value, *, frozen, max_depth):
+        """Walk with an explicit stack; shared children are values, cycles are errors."""
+        root, ancestors = [None], set()
+        # A finish item freezes a container only after all its children were copied.
+        pending = [(False, value, root, 0, 0)]
+        while pending:
+            finish, item, parent, key, depth = pending.pop()
+            if finish:
+                ancestors.remove(item)
+                if frozen:
+                    result = parent[key]
+                    parent[key] = FrozenDict(result) if isinstance(result, dict) else tuple(result)
+                continue
+            if not isinstance(item, (list, tuple, Mapping)):
+                parent[key] = _scalar(item)
+                continue
+            if id(item) in ancestors:
+                raise ConfigurationError("INVALID_JSON", "Circular containers are not JSON values")
+            if depth &gt;= max_depth:
+&gt;               raise ConfigurationError(
+                    "INVALID_JSON", f"JSON nesting exceeds the supported depth of {max_depth}"
+                )
+E               agentloom.errors.ConfigurationError: INVALID_JSON: JSON nesting exceeds the supported depth of 128
+
+/private/tmp/agentloom-recovery-contract-legacy-7atgyovs/src/agentloom/configuration/json_values.py:73: ConfigurationError</failure></testcase><testcase classname="tests.test_public_event_depth" name="test_live_astream_delivers_terminal_with_maximum_depth[file]" time="0.057"><failure message="agentloom.errors.ConfigurationError: INVALID_JSON: JSON nesting exceeds the supported depth of 128">runtime_store = &lt;agentloom.storage.filesystem.FileRuntimeStore object at 0x10bdb5880&gt;
+build = &lt;function build.&lt;locals&gt;.factory at 0x10bdd42c0&gt;
+
+    async def test_live_astream_delivers_terminal_with_maximum_depth(runtime_store, build):
+        value = nested(MAX_JSON_DEPTH, "mixed")
+        async with RuntimeEngine(store=runtime_store) as runtime:
+            agent = build(
+                runtime,
+                lambda r: ModelResponse(canonical_document(value)),
+                definition=AgentDefinition("a", "Return JSON.", output_schema={}),
+            )
+&gt;           events = [event async for event in agent.astream("go")]
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/tests/test_public_event_depth.py:73: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/private/tmp/agentloom-recovery-contract-legacy-7atgyovs/src/agentloom/public/agents.py:159: in astream
+    async for event in handle.events(after_seq=after_seq):
+/private/tmp/agentloom-recovery-contract-legacy-7atgyovs/src/agentloom/public/handles.py:77: in events
+    yield RunEvent(**event)
+          ^^^^^^^^^^^^^^^^^
+&lt;string&gt;:10: in __init__
+    ???
+/private/tmp/agentloom-recovery-contract-legacy-7atgyovs/src/agentloom/types.py:161: in __post_init__
+    object.__setattr__(self, "payload", freeze(self.payload))
+                                        ^^^^^^^^^^^^^^^^^^^^
+/private/tmp/agentloom-recovery-contract-legacy-7atgyovs/src/agentloom/configuration/json_values.py:99: in freeze
+    return _copy(value, frozen=True, max_depth=max_depth)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+value = {'error': None, 'output': {'kind': 'json', 'source_ref': {'task_id': '549148ed-de8d-42d6-9970-e991f41879bd'}, 'value': {'child': [{'child': [{...}]}]}}, 'status': 'succeeded'}
+
+    def _copy(value, *, frozen, max_depth):
+        """Walk with an explicit stack; shared children are values, cycles are errors."""
+        root, ancestors = [None], set()
+        # A finish item freezes a container only after all its children were copied.
+        pending = [(False, value, root, 0, 0)]
+        while pending:
+            finish, item, parent, key, depth = pending.pop()
+            if finish:
+                ancestors.remove(item)
+                if frozen:
+                    result = parent[key]
+                    parent[key] = FrozenDict(result) if isinstance(result, dict) else tuple(result)
+                continue
+            if not isinstance(item, (list, tuple, Mapping)):
+                parent[key] = _scalar(item)
+                continue
+            if id(item) in ancestors:
+                raise ConfigurationError("INVALID_JSON", "Circular containers are not JSON values")
+            if depth &gt;= max_depth:
+&gt;               raise ConfigurationError(
+                    "INVALID_JSON", f"JSON nesting exceeds the supported depth of {max_depth}"
+                )
+E               agentloom.errors.ConfigurationError: INVALID_JSON: JSON nesting exceeds the supported depth of 128
+
+/private/tmp/agentloom-recovery-contract-legacy-7atgyovs/src/agentloom/configuration/json_values.py:73: ConfigurationError</failure></testcase><testcase classname="tests.test_public_event_depth" name="test_event_wrappers_do_not_relax_external_material_limit" time="0.001"><failure message="agentloom.errors.ConfigurationError: INVALID_JSON: JSON nesting exceeds the supported depth of 128">def test_event_wrappers_do_not_relax_external_material_limit():
+        with pytest.raises(ConfigurationError, match="supported depth of 128"):
+            AgentInput(nested(MAX_JSON_DEPTH + 1, "list"))
+        value = nested(MAX_JSON_DEPTH, "mixed")
+&gt;       event = RunEvent("event", "run", 1, "run.completed", {"output": {"value": value}}, 0)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/tests/test_public_event_depth.py:85: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+&lt;string&gt;:10: in __init__
+    ???
+/private/tmp/agentloom-recovery-contract-legacy-7atgyovs/src/agentloom/types.py:161: in __post_init__
+    object.__setattr__(self, "payload", freeze(self.payload))
+                                        ^^^^^^^^^^^^^^^^^^^^
+/private/tmp/agentloom-recovery-contract-legacy-7atgyovs/src/agentloom/configuration/json_values.py:99: in freeze
+    return _copy(value, frozen=True, max_depth=max_depth)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+value = {'output': {'value': {'child': [{'child': [{...}]}]}}}
+
+    def _copy(value, *, frozen, max_depth):
+        """Walk with an explicit stack; shared children are values, cycles are errors."""
+        root, ancestors = [None], set()
+        # A finish item freezes a container only after all its children were copied.
+        pending = [(False, value, root, 0, 0)]
+        while pending:
+            finish, item, parent, key, depth = pending.pop()
+            if finish:
+                ancestors.remove(item)
+                if frozen:
+                    result = parent[key]
+                    parent[key] = FrozenDict(result) if isinstance(result, dict) else tuple(result)
+                continue
+            if not isinstance(item, (list, tuple, Mapping)):
+                parent[key] = _scalar(item)
+                continue
+            if id(item) in ancestors:
+                raise ConfigurationError("INVALID_JSON", "Circular containers are not JSON values")
+            if depth &gt;= max_depth:
+&gt;               raise ConfigurationError(
+                    "INVALID_JSON", f"JSON nesting exceeds the supported depth of {max_depth}"
+                )
+E               agentloom.errors.ConfigurationError: INVALID_JSON: JSON nesting exceeds the supported depth of 128
+
+/private/tmp/agentloom-recovery-contract-legacy-7atgyovs/src/agentloom/configuration/json_values.py:73: ConfigurationError</failure></testcase></testsuite></testsuites>

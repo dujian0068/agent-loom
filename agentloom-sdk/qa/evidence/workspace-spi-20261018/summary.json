@@ -1,0 +1,42 @@
+{
+  "date": "2026-10-18",
+  "scope": "File provider SPI; Workflow excluded",
+  "regression": {
+    "passed": 1537,
+    "failed": 0,
+    "errors": 0,
+    "skipped": 0,
+    "duration_seconds": 336.796,
+    "evidence": "regression-summary.json"
+  },
+  "focused": {
+    "passed": 54,
+    "evidence": "focused.txt"
+  },
+  "installed_wheel": {
+    "source_resource_files_matched": 108,
+    "process_checks": 10,
+    "evidence": "wheel-summary.json"
+  },
+  "ruff": {
+    "lint": "passed",
+    "format": "passed",
+    "evidence": [
+      "ruff.txt",
+      "ruff-format.txt"
+    ]
+  },
+  "documentation": {
+    "build": "passed",
+    "site_check": "passed",
+    "evidence": [
+      "docs-build.txt",
+      "docs-check.txt"
+    ]
+  },
+  "preserved_other_work": true,
+  "limitations": [
+    "Third-party provider is a contract fixture, not a production remote storage driver",
+    "Environment/Sandbox SPI, multiple backend mounts, and Workflow are outside this delivery"
+  ]
+}

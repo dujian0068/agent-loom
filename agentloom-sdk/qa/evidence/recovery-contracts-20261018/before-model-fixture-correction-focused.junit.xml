@@ -1,0 +1,327 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="6" skipped="0" tests="170" time="8.876" timestamp="2026-10-18T12:58:02.516078+08:00" hostname="bmilk"><testcase classname="tests.test_recovery_binding_contract" name="test_boolean_and_number_are_distinct_recovery_bindings[memory-const-react]" time="0.015" /><testcase classname="tests.test_recovery_binding_contract" name="test_boolean_and_number_are_distinct_recovery_bindings[memory-const-planner]" time="0.014" /><testcase classname="tests.test_recovery_binding_contract" name="test_boolean_and_number_are_distinct_recovery_bindings[memory-const-worker]" time="0.014" /><testcase classname="tests.test_recovery_binding_contract" name="test_boolean_and_number_are_distinct_recovery_bindings[memory-enum-react]" time="0.014" /><testcase classname="tests.test_recovery_binding_contract" name="test_boolean_and_number_are_distinct_recovery_bindings[memory-enum-planner]" time="0.014" /><testcase classname="tests.test_recovery_binding_contract" name="test_boolean_and_number_are_distinct_recovery_bindings[memory-enum-worker]" time="0.014" /><testcase classname="tests.test_recovery_binding_contract" name="test_boolean_and_number_are_distinct_recovery_bindings[memory-variable-react]" time="0.013" /><testcase classname="tests.test_recovery_binding_contract" name="test_boolean_and_number_are_distinct_recovery_bindings[memory-variable-planner]" time="0.014" /><testcase classname="tests.test_recovery_binding_contract" name="test_boolean_and_number_are_distinct_recovery_bindings[memory-variable-worker]" time="0.014" /><testcase classname="tests.test_recovery_binding_contract" name="test_boolean_and_number_are_distinct_recovery_bindings[memory-model_options-react]" time="0.001"><failure message="agentloom.errors.ConfigurationError: MODEL_FEATURE_UNSUPPORTED: MODEL_FEATURE_UNSUPPORTED">runtime_store = &lt;agentloom.storage.memory.MemoryRuntimeStore object at 0x10bb02f30&gt;
+role = 'react', location = 'model_options'
+
+    @pytest.mark.parametrize("role", ["react", "planner", "worker"])
+    @pytest.mark.parametrize("location", ["const", "enum", "variable", "model_options"])
+    async def test_boolean_and_number_are_distinct_recovery_bindings(runtime_store, role, location):
+        original = AgentDefinition("agent", "Mode: {{mode}}", "Perform work", variables={"mode": True})
+        changed = original
+        before_options = after_options = None
+        if location == "const":
+            original = replace(original, output_schema={"const": True})
+            changed = replace(original, output_schema={"const": 1})
+        elif location == "enum":
+            original = replace(original, output_schema={"enum": [{"flags": [False, True]}]})
+            changed = replace(original, output_schema={"enum": [{"flags": [0, 1]}]})
+        elif location == "variable":
+            changed = replace(original, variables={"mode": 1})
+        else:
+            before_options = ModelOptions(parameters={"custom": {"flags": [True, False]}})
+            after_options = ModelOptions(parameters={"custom": {"flags": [1, 0]}})
+&gt;       saved = await suspend(runtime_store, original, role, model_options=before_options)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/tests/test_recovery_binding_contract.py:87: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/tests/test_recovery_binding_contract.py:56: in suspend
+    agent = program(runtime, definition, role, model_options=model_options)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/tests/test_recovery_binding_contract.py:47: in program
+    return (ReactAgent if role == "react" else PlanAgent)(**options)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/public/agents.py:40: in __init__
+    assembly = AgentAssembly(
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/public/assembly.py:112: in __init__
+    object.__setattr__(self, "budget", resolve_model_budget(model, properties))
+                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+model = &lt;agentloom.models.scripted.ScriptedModel object at 0x10bb022d0&gt;
+properties = AgentProperties(workspace=WorkspaceBinding(root=PosixPath('/private/var/folders/g6/378nmc5541n9wkbyb0nj9x9r0000gn/T/py...ompt_addendum=''), model_options=ModelOptions(max_output_tokens=None, parameters={'custom': {'flags': (True, False)}}))
+
+    def resolve_model_budget(model, properties):
+        """Validate only supplied metadata/options; never discover or invoke a model."""
+        validate_model_adapter(model)
+        budget = ContextBudget.resolve(
+            model.descriptor, properties.context_policy, properties.model_options
+        )
+        if hasattr(model, "validate_options"):
+            model.validate_options(properties.model_options)
+        elif properties.model_options.parameters:
+&gt;           raise ConfigurationError("MODEL_FEATURE_UNSUPPORTED")
+E           agentloom.errors.ConfigurationError: MODEL_FEATURE_UNSUPPORTED: MODEL_FEATURE_UNSUPPORTED
+
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/public/assembly.py:62: ConfigurationError</failure></testcase><testcase classname="tests.test_recovery_binding_contract" name="test_boolean_and_number_are_distinct_recovery_bindings[memory-model_options-planner]" time="0.001"><failure message="agentloom.errors.ConfigurationError: MODEL_FEATURE_UNSUPPORTED: MODEL_FEATURE_UNSUPPORTED">runtime_store = &lt;agentloom.storage.memory.MemoryRuntimeStore object at 0x10b9706b0&gt;
+role = 'planner', location = 'model_options'
+
+    @pytest.mark.parametrize("role", ["react", "planner", "worker"])
+    @pytest.mark.parametrize("location", ["const", "enum", "variable", "model_options"])
+    async def test_boolean_and_number_are_distinct_recovery_bindings(runtime_store, role, location):
+        original = AgentDefinition("agent", "Mode: {{mode}}", "Perform work", variables={"mode": True})
+        changed = original
+        before_options = after_options = None
+        if location == "const":
+            original = replace(original, output_schema={"const": True})
+            changed = replace(original, output_schema={"const": 1})
+        elif location == "enum":
+            original = replace(original, output_schema={"enum": [{"flags": [False, True]}]})
+            changed = replace(original, output_schema={"enum": [{"flags": [0, 1]}]})
+        elif location == "variable":
+            changed = replace(original, variables={"mode": 1})
+        else:
+            before_options = ModelOptions(parameters={"custom": {"flags": [True, False]}})
+            after_options = ModelOptions(parameters={"custom": {"flags": [1, 0]}})
+&gt;       saved = await suspend(runtime_store, original, role, model_options=before_options)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/tests/test_recovery_binding_contract.py:87: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/tests/test_recovery_binding_contract.py:56: in suspend
+    agent = program(runtime, definition, role, model_options=model_options)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/tests/test_recovery_binding_contract.py:47: in program
+    return (ReactAgent if role == "react" else PlanAgent)(**options)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/public/agents.py:213: in __init__
+    super().__init__(**kwargs)
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/public/agents.py:40: in __init__
+    assembly = AgentAssembly(
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/public/assembly.py:112: in __init__
+    object.__setattr__(self, "budget", resolve_model_budget(model, properties))
+                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+model = &lt;agentloom.models.scripted.ScriptedModel object at 0x10bba7bc0&gt;
+properties = AgentProperties(workspace=WorkspaceBinding(root=PosixPath('/private/var/folders/g6/378nmc5541n9wkbyb0nj9x9r0000gn/T/py...ompt_addendum=''), model_options=ModelOptions(max_output_tokens=None, parameters={'custom': {'flags': (True, False)}}))
+
+    def resolve_model_budget(model, properties):
+        """Validate only supplied metadata/options; never discover or invoke a model."""
+        validate_model_adapter(model)
+        budget = ContextBudget.resolve(
+            model.descriptor, properties.context_policy, properties.model_options
+        )
+        if hasattr(model, "validate_options"):
+            model.validate_options(properties.model_options)
+        elif properties.model_options.parameters:
+&gt;           raise ConfigurationError("MODEL_FEATURE_UNSUPPORTED")
+E           agentloom.errors.ConfigurationError: MODEL_FEATURE_UNSUPPORTED: MODEL_FEATURE_UNSUPPORTED
+
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/public/assembly.py:62: ConfigurationError</failure></testcase><testcase classname="tests.test_recovery_binding_contract" name="test_boolean_and_number_are_distinct_recovery_bindings[memory-model_options-worker]" time="0.001"><failure message="agentloom.errors.ConfigurationError: MODEL_FEATURE_UNSUPPORTED: MODEL_FEATURE_UNSUPPORTED">runtime_store = &lt;agentloom.storage.memory.MemoryRuntimeStore object at 0x10bb03140&gt;
+role = 'worker', location = 'model_options'
+
+    @pytest.mark.parametrize("role", ["react", "planner", "worker"])
+    @pytest.mark.parametrize("location", ["const", "enum", "variable", "model_options"])
+    async def test_boolean_and_number_are_distinct_recovery_bindings(runtime_store, role, location):
+        original = AgentDefinition("agent", "Mode: {{mode}}", "Perform work", variables={"mode": True})
+        changed = original
+        before_options = after_options = None
+        if location == "const":
+            original = replace(original, output_schema={"const": True})
+            changed = replace(original, output_schema={"const": 1})
+        elif location == "enum":
+            original = replace(original, output_schema={"enum": [{"flags": [False, True]}]})
+            changed = replace(original, output_schema={"enum": [{"flags": [0, 1]}]})
+        elif location == "variable":
+            changed = replace(original, variables={"mode": 1})
+        else:
+            before_options = ModelOptions(parameters={"custom": {"flags": [True, False]}})
+            after_options = ModelOptions(parameters={"custom": {"flags": [1, 0]}})
+&gt;       saved = await suspend(runtime_store, original, role, model_options=before_options)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/tests/test_recovery_binding_contract.py:87: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/tests/test_recovery_binding_contract.py:56: in suspend
+    agent = program(runtime, definition, role, model_options=model_options)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/tests/test_recovery_binding_contract.py:47: in program
+    return (ReactAgent if role == "react" else PlanAgent)(**options)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/public/agents.py:213: in __init__
+    super().__init__(**kwargs)
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/public/agents.py:40: in __init__
+    assembly = AgentAssembly(
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/public/assembly.py:112: in __init__
+    object.__setattr__(self, "budget", resolve_model_budget(model, properties))
+                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+model = &lt;agentloom.models.scripted.ScriptedModel object at 0x10bb023f0&gt;
+properties = AgentProperties(workspace=WorkspaceBinding(root=PosixPath('/private/var/folders/g6/378nmc5541n9wkbyb0nj9x9r0000gn/T/py...ompt_addendum=''), model_options=ModelOptions(max_output_tokens=None, parameters={'custom': {'flags': (True, False)}}))
+
+    def resolve_model_budget(model, properties):
+        """Validate only supplied metadata/options; never discover or invoke a model."""
+        validate_model_adapter(model)
+        budget = ContextBudget.resolve(
+            model.descriptor, properties.context_policy, properties.model_options
+        )
+        if hasattr(model, "validate_options"):
+            model.validate_options(properties.model_options)
+        elif properties.model_options.parameters:
+&gt;           raise ConfigurationError("MODEL_FEATURE_UNSUPPORTED")
+E           agentloom.errors.ConfigurationError: MODEL_FEATURE_UNSUPPORTED: MODEL_FEATURE_UNSUPPORTED
+
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/public/assembly.py:62: ConfigurationError</failure></testcase><testcase classname="tests.test_recovery_binding_contract" name="test_boolean_and_number_are_distinct_recovery_bindings[file-const-react]" time="0.022" /><testcase classname="tests.test_recovery_binding_contract" name="test_boolean_and_number_are_distinct_recovery_bindings[file-const-planner]" time="0.023" /><testcase classname="tests.test_recovery_binding_contract" name="test_boolean_and_number_are_distinct_recovery_bindings[file-const-worker]" time="0.061" /><testcase classname="tests.test_recovery_binding_contract" name="test_boolean_and_number_are_distinct_recovery_bindings[file-enum-react]" time="0.023" /><testcase classname="tests.test_recovery_binding_contract" name="test_boolean_and_number_are_distinct_recovery_bindings[file-enum-planner]" time="0.023" /><testcase classname="tests.test_recovery_binding_contract" name="test_boolean_and_number_are_distinct_recovery_bindings[file-enum-worker]" time="0.078" /><testcase classname="tests.test_recovery_binding_contract" name="test_boolean_and_number_are_distinct_recovery_bindings[file-variable-react]" time="0.022" /><testcase classname="tests.test_recovery_binding_contract" name="test_boolean_and_number_are_distinct_recovery_bindings[file-variable-planner]" time="0.023" /><testcase classname="tests.test_recovery_binding_contract" name="test_boolean_and_number_are_distinct_recovery_bindings[file-variable-worker]" time="0.077" /><testcase classname="tests.test_recovery_binding_contract" name="test_boolean_and_number_are_distinct_recovery_bindings[file-model_options-react]" time="0.001"><failure message="agentloom.errors.ConfigurationError: MODEL_FEATURE_UNSUPPORTED: MODEL_FEATURE_UNSUPPORTED">runtime_store = &lt;agentloom.storage.filesystem.FileRuntimeStore object at 0x10bc3d490&gt;
+role = 'react', location = 'model_options'
+
+    @pytest.mark.parametrize("role", ["react", "planner", "worker"])
+    @pytest.mark.parametrize("location", ["const", "enum", "variable", "model_options"])
+    async def test_boolean_and_number_are_distinct_recovery_bindings(runtime_store, role, location):
+        original = AgentDefinition("agent", "Mode: {{mode}}", "Perform work", variables={"mode": True})
+        changed = original
+        before_options = after_options = None
+        if location == "const":
+            original = replace(original, output_schema={"const": True})
+            changed = replace(original, output_schema={"const": 1})
+        elif location == "enum":
+            original = replace(original, output_schema={"enum": [{"flags": [False, True]}]})
+            changed = replace(original, output_schema={"enum": [{"flags": [0, 1]}]})
+        elif location == "variable":
+            changed = replace(original, variables={"mode": 1})
+        else:
+            before_options = ModelOptions(parameters={"custom": {"flags": [True, False]}})
+            after_options = ModelOptions(parameters={"custom": {"flags": [1, 0]}})
+&gt;       saved = await suspend(runtime_store, original, role, model_options=before_options)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/tests/test_recovery_binding_contract.py:87: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/tests/test_recovery_binding_contract.py:56: in suspend
+    agent = program(runtime, definition, role, model_options=model_options)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/tests/test_recovery_binding_contract.py:47: in program
+    return (ReactAgent if role == "react" else PlanAgent)(**options)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/public/agents.py:40: in __init__
+    assembly = AgentAssembly(
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/public/assembly.py:112: in __init__
+    object.__setattr__(self, "budget", resolve_model_budget(model, properties))
+                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+model = &lt;agentloom.models.scripted.ScriptedModel object at 0x10bc3dfd0&gt;
+properties = AgentProperties(workspace=WorkspaceBinding(root=PosixPath('/private/var/folders/g6/378nmc5541n9wkbyb0nj9x9r0000gn/T/py...ompt_addendum=''), model_options=ModelOptions(max_output_tokens=None, parameters={'custom': {'flags': (True, False)}}))
+
+    def resolve_model_budget(model, properties):
+        """Validate only supplied metadata/options; never discover or invoke a model."""
+        validate_model_adapter(model)
+        budget = ContextBudget.resolve(
+            model.descriptor, properties.context_policy, properties.model_options
+        )
+        if hasattr(model, "validate_options"):
+            model.validate_options(properties.model_options)
+        elif properties.model_options.parameters:
+&gt;           raise ConfigurationError("MODEL_FEATURE_UNSUPPORTED")
+E           agentloom.errors.ConfigurationError: MODEL_FEATURE_UNSUPPORTED: MODEL_FEATURE_UNSUPPORTED
+
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/public/assembly.py:62: ConfigurationError</failure></testcase><testcase classname="tests.test_recovery_binding_contract" name="test_boolean_and_number_are_distinct_recovery_bindings[file-model_options-planner]" time="0.001"><failure message="agentloom.errors.ConfigurationError: MODEL_FEATURE_UNSUPPORTED: MODEL_FEATURE_UNSUPPORTED">runtime_store = &lt;agentloom.storage.filesystem.FileRuntimeStore object at 0x10bb69d90&gt;
+role = 'planner', location = 'model_options'
+
+    @pytest.mark.parametrize("role", ["react", "planner", "worker"])
+    @pytest.mark.parametrize("location", ["const", "enum", "variable", "model_options"])
+    async def test_boolean_and_number_are_distinct_recovery_bindings(runtime_store, role, location):
+        original = AgentDefinition("agent", "Mode: {{mode}}", "Perform work", variables={"mode": True})
+        changed = original
+        before_options = after_options = None
+        if location == "const":
+            original = replace(original, output_schema={"const": True})
+            changed = replace(original, output_schema={"const": 1})
+        elif location == "enum":
+            original = replace(original, output_schema={"enum": [{"flags": [False, True]}]})
+            changed = replace(original, output_schema={"enum": [{"flags": [0, 1]}]})
+        elif location == "variable":
+            changed = replace(original, variables={"mode": 1})
+        else:
+            before_options = ModelOptions(parameters={"custom": {"flags": [True, False]}})
+            after_options = ModelOptions(parameters={"custom": {"flags": [1, 0]}})
+&gt;       saved = await suspend(runtime_store, original, role, model_options=before_options)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/tests/test_recovery_binding_contract.py:87: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/tests/test_recovery_binding_contract.py:56: in suspend
+    agent = program(runtime, definition, role, model_options=model_options)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/tests/test_recovery_binding_contract.py:47: in program
+    return (ReactAgent if role == "react" else PlanAgent)(**options)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/public/agents.py:213: in __init__
+    super().__init__(**kwargs)
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/public/agents.py:40: in __init__
+    assembly = AgentAssembly(
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/public/assembly.py:112: in __init__
+    object.__setattr__(self, "budget", resolve_model_budget(model, properties))
+                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+model = &lt;agentloom.models.scripted.ScriptedModel object at 0x10bb6bf50&gt;
+properties = AgentProperties(workspace=WorkspaceBinding(root=PosixPath('/private/var/folders/g6/378nmc5541n9wkbyb0nj9x9r0000gn/T/py...ompt_addendum=''), model_options=ModelOptions(max_output_tokens=None, parameters={'custom': {'flags': (True, False)}}))
+
+    def resolve_model_budget(model, properties):
+        """Validate only supplied metadata/options; never discover or invoke a model."""
+        validate_model_adapter(model)
+        budget = ContextBudget.resolve(
+            model.descriptor, properties.context_policy, properties.model_options
+        )
+        if hasattr(model, "validate_options"):
+            model.validate_options(properties.model_options)
+        elif properties.model_options.parameters:
+&gt;           raise ConfigurationError("MODEL_FEATURE_UNSUPPORTED")
+E           agentloom.errors.ConfigurationError: MODEL_FEATURE_UNSUPPORTED: MODEL_FEATURE_UNSUPPORTED
+
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/public/assembly.py:62: ConfigurationError</failure></testcase><testcase classname="tests.test_recovery_binding_contract" name="test_boolean_and_number_are_distinct_recovery_bindings[file-model_options-worker]" time="0.001"><failure message="agentloom.errors.ConfigurationError: MODEL_FEATURE_UNSUPPORTED: MODEL_FEATURE_UNSUPPORTED">runtime_store = &lt;agentloom.storage.filesystem.FileRuntimeStore object at 0x10bb03b60&gt;
+role = 'worker', location = 'model_options'
+
+    @pytest.mark.parametrize("role", ["react", "planner", "worker"])
+    @pytest.mark.parametrize("location", ["const", "enum", "variable", "model_options"])
+    async def test_boolean_and_number_are_distinct_recovery_bindings(runtime_store, role, location):
+        original = AgentDefinition("agent", "Mode: {{mode}}", "Perform work", variables={"mode": True})
+        changed = original
+        before_options = after_options = None
+        if location == "const":
+            original = replace(original, output_schema={"const": True})
+            changed = replace(original, output_schema={"const": 1})
+        elif location == "enum":
+            original = replace(original, output_schema={"enum": [{"flags": [False, True]}]})
+            changed = replace(original, output_schema={"enum": [{"flags": [0, 1]}]})
+        elif location == "variable":
+            changed = replace(original, variables={"mode": 1})
+        else:
+            before_options = ModelOptions(parameters={"custom": {"flags": [True, False]}})
+            after_options = ModelOptions(parameters={"custom": {"flags": [1, 0]}})
+&gt;       saved = await suspend(runtime_store, original, role, model_options=before_options)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/tests/test_recovery_binding_contract.py:87: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/tests/test_recovery_binding_contract.py:56: in suspend
+    agent = program(runtime, definition, role, model_options=model_options)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/tests/test_recovery_binding_contract.py:47: in program
+    return (ReactAgent if role == "react" else PlanAgent)(**options)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/public/agents.py:213: in __init__
+    super().__init__(**kwargs)
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/public/agents.py:40: in __init__
+    assembly = AgentAssembly(
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/public/assembly.py:112: in __init__
+    object.__setattr__(self, "budget", resolve_model_budget(model, properties))
+                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+model = &lt;agentloom.models.scripted.ScriptedModel object at 0x10bb01ac0&gt;
+properties = AgentProperties(workspace=WorkspaceBinding(root=PosixPath('/private/var/folders/g6/378nmc5541n9wkbyb0nj9x9r0000gn/T/py...ompt_addendum=''), model_options=ModelOptions(max_output_tokens=None, parameters={'custom': {'flags': (True, False)}}))
+
+    def resolve_model_budget(model, properties):
+        """Validate only supplied metadata/options; never discover or invoke a model."""
+        validate_model_adapter(model)
+        budget = ContextBudget.resolve(
+            model.descriptor, properties.context_policy, properties.model_options
+        )
+        if hasattr(model, "validate_options"):
+            model.validate_options(properties.model_options)
+        elif properties.model_options.parameters:
+&gt;           raise ConfigurationError("MODEL_FEATURE_UNSUPPORTED")
+E           agentloom.errors.ConfigurationError: MODEL_FEATURE_UNSUPPORTED: MODEL_FEATURE_UNSUPPORTED
+
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/public/assembly.py:62: ConfigurationError</failure></testcase><testcase classname="tests.test_recovery_binding_contract" name="test_variable_spec_and_dictionary_default_cannot_replace_each_other[memory-False-react]" time="0.014" /><testcase classname="tests.test_recovery_binding_contract" name="test_variable_spec_and_dictionary_default_cannot_replace_each_other[memory-False-planner]" time="0.014" /><testcase classname="tests.test_recovery_binding_contract" name="test_variable_spec_and_dictionary_default_cannot_replace_each_other[memory-False-worker]" time="0.014" /><testcase classname="tests.test_recovery_binding_contract" name="test_variable_spec_and_dictionary_default_cannot_replace_each_other[memory-True-react]" time="0.014" /><testcase classname="tests.test_recovery_binding_contract" name="test_variable_spec_and_dictionary_default_cannot_replace_each_other[memory-True-planner]" time="0.014" /><testcase classname="tests.test_recovery_binding_contract" name="test_variable_spec_and_dictionary_default_cannot_replace_each_other[memory-True-worker]" time="0.015" /><testcase classname="tests.test_recovery_binding_contract" name="test_variable_spec_and_dictionary_default_cannot_replace_each_other[file-False-react]" time="0.023" /><testcase classname="tests.test_recovery_binding_contract" name="test_variable_spec_and_dictionary_default_cannot_replace_each_other[file-False-planner]" time="0.024" /><testcase classname="tests.test_recovery_binding_contract" name="test_variable_spec_and_dictionary_default_cannot_replace_each_other[file-False-worker]" time="0.079" /><testcase classname="tests.test_recovery_binding_contract" name="test_variable_spec_and_dictionary_default_cannot_replace_each_other[file-True-react]" time="0.024" /><testcase classname="tests.test_recovery_binding_contract" name="test_variable_spec_and_dictionary_default_cannot_replace_each_other[file-True-planner]" time="0.023" /><testcase classname="tests.test_recovery_binding_contract" name="test_variable_spec_and_dictionary_default_cannot_replace_each_other[file-True-worker]" time="0.077" /><testcase classname="tests.test_recovery_binding_contract" name="test_original_variable_types_and_dictionary_order_can_resume[memory-react-1.0]" time="0.024" /><testcase classname="tests.test_recovery_binding_contract" name="test_original_variable_types_and_dictionary_order_can_resume[memory-react-default1]" time="0.024" /><testcase classname="tests.test_recovery_binding_contract" name="test_original_variable_types_and_dictionary_order_can_resume[memory-worker-1.0]" time="0.048" /><testcase classname="tests.test_recovery_binding_contract" name="test_original_variable_types_and_dictionary_order_can_resume[memory-worker-default1]" time="0.058" /><testcase classname="tests.test_recovery_binding_contract" name="test_original_variable_types_and_dictionary_order_can_resume[file-react-1.0]" time="0.097" /><testcase classname="tests.test_recovery_binding_contract" name="test_original_variable_types_and_dictionary_order_can_resume[file-react-default1]" time="0.099" /><testcase classname="tests.test_recovery_binding_contract" name="test_original_variable_types_and_dictionary_order_can_resume[file-worker-1.0]" time="0.314" /><testcase classname="tests.test_recovery_binding_contract" name="test_original_variable_types_and_dictionary_order_can_resume[file-worker-default1]" time="0.223" /><testcase classname="tests.test_recovery_binding_contract" name="test_integral_number_default_cannot_turn_into_integer_default[memory]" time="0.013" /><testcase classname="tests.test_recovery_binding_contract" name="test_integral_number_default_cannot_turn_into_integer_default[file]" time="0.022" /><testcase classname="tests.test_public_event_depth" name="test_completed_output_survives_events_and_reopened_cursor[memory-list-126-ReactAgent]" time="0.030" /><testcase classname="tests.test_public_event_depth" name="test_completed_output_survives_events_and_reopened_cursor[memory-list-126-PlanAgent]" time="0.015" /><testcase classname="tests.test_public_event_depth" name="test_completed_output_survives_events_and_reopened_cursor[memory-list-127-ReactAgent]" time="0.014" /><testcase classname="tests.test_public_event_depth" name="test_completed_output_survives_events_and_reopened_cursor[memory-list-127-PlanAgent]" time="0.014" /><testcase classname="tests.test_public_event_depth" name="test_completed_output_survives_events_and_reopened_cursor[memory-list-128-ReactAgent]" time="0.014" /><testcase classname="tests.test_public_event_depth" name="test_completed_output_survives_events_and_reopened_cursor[memory-list-128-PlanAgent]" time="0.014" /><testcase classname="tests.test_public_event_depth" name="test_completed_output_survives_events_and_reopened_cursor[memory-mixed-126-ReactAgent]" time="0.015" /><testcase classname="tests.test_public_event_depth" name="test_completed_output_survives_events_and_reopened_cursor[memory-mixed-126-PlanAgent]" time="0.015" /><testcase classname="tests.test_public_event_depth" name="test_completed_output_survives_events_and_reopened_cursor[memory-mixed-127-ReactAgent]" time="0.015" /><testcase classname="tests.test_public_event_depth" name="test_completed_output_survives_events_and_reopened_cursor[memory-mixed-127-PlanAgent]" time="0.015" /><testcase classname="tests.test_public_event_depth" name="test_completed_output_survives_events_and_reopened_cursor[memory-mixed-128-ReactAgent]" time="0.015" /><testcase classname="tests.test_public_event_depth" name="test_completed_output_survives_events_and_reopened_cursor[memory-mixed-128-PlanAgent]" time="0.015" /><testcase classname="tests.test_public_event_depth" name="test_completed_output_survives_events_and_reopened_cursor[file-list-126-ReactAgent]" time="0.078" /><testcase classname="tests.test_public_event_depth" name="test_completed_output_survives_events_and_reopened_cursor[file-list-126-PlanAgent]" time="0.093" /><testcase classname="tests.test_public_event_depth" name="test_completed_output_survives_events_and_reopened_cursor[file-list-127-ReactAgent]" time="0.076" /><testcase classname="tests.test_public_event_depth" name="test_completed_output_survives_events_and_reopened_cursor[file-list-127-PlanAgent]" time="0.068" /><testcase classname="tests.test_public_event_depth" name="test_completed_output_survives_events_and_reopened_cursor[file-list-128-ReactAgent]" time="0.079" /><testcase classname="tests.test_public_event_depth" name="test_completed_output_survives_events_and_reopened_cursor[file-list-128-PlanAgent]" time="0.074" /><testcase classname="tests.test_public_event_depth" name="test_completed_output_survives_events_and_reopened_cursor[file-mixed-126-ReactAgent]" time="0.073" /><testcase classname="tests.test_public_event_depth" name="test_completed_output_survives_events_and_reopened_cursor[file-mixed-126-PlanAgent]" time="0.061" /><testcase classname="tests.test_public_event_depth" name="test_completed_output_survives_events_and_reopened_cursor[file-mixed-127-ReactAgent]" time="0.073" /><testcase classname="tests.test_public_event_depth" name="test_completed_output_survives_events_and_reopened_cursor[file-mixed-127-PlanAgent]" time="0.076" /><testcase classname="tests.test_public_event_depth" name="test_completed_output_survives_events_and_reopened_cursor[file-mixed-128-ReactAgent]" time="0.060" /><testcase classname="tests.test_public_event_depth" name="test_completed_output_survives_events_and_reopened_cursor[file-mixed-128-PlanAgent]" time="0.074" /><testcase classname="tests.test_public_event_depth" name="test_live_astream_delivers_terminal_with_maximum_depth[memory]" time="0.012" /><testcase classname="tests.test_public_event_depth" name="test_live_astream_delivers_terminal_with_maximum_depth[file]" time="0.070" /><testcase classname="tests.test_public_event_depth" name="test_event_wrappers_do_not_relax_external_material_limit" time="0.001" /><testcase classname="tests.test_prompt_recovery" name="test_real_process_exit_and_template_upgrade[before_root]" time="0.754" /><testcase classname="tests.test_prompt_recovery" name="test_real_process_exit_and_template_upgrade[before_child]" time="0.752" /><testcase classname="tests.test_prompt_recovery" name="test_upgrade_uses_admission_snapshot_for_new_root_and_child[memory-environment:]" time="0.113" /><testcase classname="tests.test_prompt_recovery" name="test_upgrade_uses_admission_snapshot_for_new_root_and_child[memory-decision:]" time="0.094" /><testcase classname="tests.test_prompt_recovery" name="test_upgrade_uses_admission_snapshot_for_new_root_and_child[file-environment:]" time="0.377" /><testcase classname="tests.test_prompt_recovery" name="test_upgrade_uses_admission_snapshot_for_new_root_and_child[file-decision:]" time="0.379" /><testcase classname="tests.test_prompt_recovery" name="test_legacy_run_keeps_old_layout_for_later_executor[memory]" time="0.049" /><testcase classname="tests.test_prompt_recovery" name="test_legacy_run_keeps_old_layout_for_later_executor[file]" time="0.189" /><testcase classname="tests.test_prompt_recovery" name="test_prompt_corruption_fails_before_dispatch[memory-contract]" time="0.025" /><testcase classname="tests.test_prompt_recovery" name="test_prompt_corruption_fails_before_dispatch[memory-version]" time="0.025" /><testcase classname="tests.test_prompt_recovery" name="test_prompt_corruption_fails_before_dispatch[memory-roles]" time="0.025" /><testcase classname="tests.test_prompt_recovery" name="test_prompt_corruption_fails_before_dispatch[memory-profile]" time="0.024" /><testcase classname="tests.test_prompt_recovery" name="test_prompt_corruption_fails_before_dispatch[memory-text]" time="0.025" /><testcase classname="tests.test_prompt_recovery" name="test_prompt_corruption_fails_before_dispatch[memory-record]" time="0.025" /><testcase classname="tests.test_prompt_recovery" name="test_prompt_corruption_fails_before_dispatch[memory-flags]" time="0.024" /><testcase classname="tests.test_prompt_recovery" name="test_prompt_corruption_fails_before_dispatch[memory-position]" time="0.025" /><testcase classname="tests.test_prompt_recovery" name="test_prompt_corruption_fails_before_dispatch[memory-summary]" time="0.024" /><testcase classname="tests.test_prompt_recovery" name="test_prompt_corruption_fails_before_dispatch[memory-request]" time="0.025" /><testcase classname="tests.test_prompt_recovery" name="test_prompt_corruption_fails_before_dispatch[file-contract]" time="0.055" /><testcase classname="tests.test_prompt_recovery" name="test_prompt_corruption_fails_before_dispatch[file-version]" time="0.071" /><testcase classname="tests.test_prompt_recovery" name="test_prompt_corruption_fails_before_dispatch[file-roles]" time="0.073" /><testcase classname="tests.test_prompt_recovery" name="test_prompt_corruption_fails_before_dispatch[file-profile]" time="0.056" /><testcase classname="tests.test_prompt_recovery" name="test_prompt_corruption_fails_before_dispatch[file-text]" time="0.058" /><testcase classname="tests.test_prompt_recovery" name="test_prompt_corruption_fails_before_dispatch[file-record]" time="0.058" /><testcase classname="tests.test_prompt_recovery" name="test_prompt_corruption_fails_before_dispatch[file-flags]" time="0.056" /><testcase classname="tests.test_prompt_recovery" name="test_prompt_corruption_fails_before_dispatch[file-position]" time="0.071" /><testcase classname="tests.test_prompt_recovery" name="test_prompt_corruption_fails_before_dispatch[file-summary]" time="0.058" /><testcase classname="tests.test_prompt_recovery" name="test_prompt_corruption_fails_before_dispatch[file-request]" time="0.067" /><testcase classname="tests.test_builder_contract" name="test_build_is_local_and_requires_no_open_runtime" time="0.001" /><testcase classname="tests.test_builder_contract" name="test_explicit_and_inferred_modes_keep_direct_recovery_identity[options0-ReactAgent]" time="0.001" /><testcase classname="tests.test_builder_contract" name="test_explicit_and_inferred_modes_keep_direct_recovery_identity[options1-ReactAgent]" time="0.001" /><testcase classname="tests.test_builder_contract" name="test_explicit_and_inferred_modes_keep_direct_recovery_identity[options2-PlanAgent]" time="0.001" /><testcase classname="tests.test_builder_contract" name="test_explicit_and_inferred_modes_keep_direct_recovery_identity[options3-PlanAgent]" time="0.001" /><testcase classname="tests.test_builder_contract" name="test_explicit_and_inferred_modes_keep_direct_recovery_identity[options4-PlanAgent]" time="0.001" /><testcase classname="tests.test_builder_contract" name="test_invalid_build_does_not_poison_reusable_builder[options0-AGENT_MODE_INVALID]" time="0.001" /><testcase classname="tests.test_builder_contract" name="test_invalid_build_does_not_poison_reusable_builder[options1-AGENT_MODE_INVALID]" time="0.001" /><testcase classname="tests.test_builder_contract" name="test_invalid_build_does_not_poison_reusable_builder[options2-EXECUTORS_UNSUPPORTED]" time="0.001" /><testcase classname="tests.test_builder_contract" name="test_invalid_build_does_not_poison_reusable_builder[options3-EXECUTORS_INVALID]" time="0.001" /><testcase classname="tests.test_builder_contract" name="test_invalid_build_does_not_poison_reusable_builder[options4-EXECUTOR_KEY_INVALID]" time="0.001" /><testcase classname="tests.test_builder_contract" name="test_invalid_build_does_not_poison_reusable_builder[options5-EXECUTOR_DEFINITION_INVALID]" time="0.001" /><testcase classname="tests.test_builder_contract" name="test_builder_and_derivation_reuse_constructor_validation[options0-MODEL_ADAPTER_INVALID]" time="0.001" /><testcase classname="tests.test_builder_contract" name="test_builder_and_derivation_reuse_constructor_validation[options1-WORKSPACE_BINDING_REQUIRED]" time="0.001" /><testcase classname="tests.test_builder_contract" name="test_builder_and_derivation_reuse_constructor_validation[options2-RUNTIME_ENGINE_REQUIRED]" time="0.001" /><testcase classname="tests.test_builder_contract" name="test_builder_and_derivation_reuse_constructor_validation[options3-INVALID_CONFIGURATION]" time="0.001" /><testcase classname="tests.test_builder_contract" name="test_builder_and_derivation_reuse_constructor_validation[options4-INVALID_CONFIGURATION]" time="0.001" /><testcase classname="tests.test_builder_contract" name="test_builder_and_derivation_reuse_constructor_validation[options5-INVALID_CONFIGURATION]" time="0.001" /><testcase classname="tests.test_builder_contract" name="test_builder_and_derivation_reuse_constructor_validation[options6-INVALID_CONFIGURATION]" time="0.001" /><testcase classname="tests.test_builder_contract" name="test_builder_and_derivation_reuse_constructor_validation[options7-INVALID_CONFIGURATION]" time="0.001" /><testcase classname="tests.test_builder_contract" name="test_builder_and_derivation_reuse_constructor_validation[options8-MODEL_FEATURE_UNSUPPORTED]" time="0.001" /><testcase classname="tests.test_builder_contract" name="test_derivation_replaces_and_resets_without_mutating_prior_agents" time="0.002" /><testcase classname="tests.test_builder_contract" name="test_build_validates_definitions_and_role_matchers" time="0.001" /><testcase classname="tests.test_builder_contract" name="test_derived_settings_cannot_rebind_an_active_run[memory]" time="0.020" /><testcase classname="tests.test_builder_contract" name="test_derived_settings_cannot_rebind_an_active_run[file]" time="0.071" /><testcase classname="tests.test_builder_contract" name="test_repeated_builds_are_independent_runs_and_preserve_structured_definition[memory]" time="0.040" /><testcase classname="tests.test_builder_contract" name="test_repeated_builds_are_independent_runs_and_preserve_structured_definition[file]" time="0.176" /><testcase classname="tests.test_builder_contract" name="test_plan_builder_keeps_role_grants_hooks_and_executor_definitions_isolated[memory]" time="0.163" /><testcase classname="tests.test_builder_contract" name="test_plan_builder_keeps_role_grants_hooks_and_executor_definitions_isolated[file]" time="0.451" /><testcase classname="tests.test_builder_contract" name="test_runtime_ownership_and_closed_host_errors_remain_explicit[memory]" time="0.023" /><testcase classname="tests.test_builder_contract" name="test_runtime_ownership_and_closed_host_errors_remain_explicit[file]" time="0.140" /><testcase classname="tests.test_properties_contract" name="test_startup_configuration_is_local_frozen_and_does_not_open_services" time="0.001" /><testcase classname="tests.test_properties_contract" name="test_runtime_parameters_reject_invalid_values_locally[values0-STORAGE_NAMESPACE_INVALID]" time="0.000" /><testcase classname="tests.test_properties_contract" name="test_runtime_parameters_reject_invalid_values_locally[values1-INVALID_CONFIGURATION]" time="0.000" /><testcase classname="tests.test_properties_contract" name="test_runtime_parameters_reject_invalid_values_locally[values2-INVALID_CONFIGURATION]" time="0.000" /><testcase classname="tests.test_properties_contract" name="test_runtime_parameters_reject_invalid_values_locally[values3-INVALID_CONFIGURATION]" time="0.000" /><testcase classname="tests.test_properties_contract" name="test_runtime_parameters_reject_invalid_values_locally[values4-STATE_DIRECTORY_INVALID]" time="0.000" /><testcase classname="tests.test_properties_contract" name="test_runtime_parameters_reject_invalid_values_locally[values5-STATE_DIRECTORY_INVALID]" time="0.000" /><testcase classname="tests.test_properties_contract" name="test_runtime_parameters_reject_invalid_values_locally[values6-STORE_LOCK_TIMEOUT_INVALID]" time="0.000" /><testcase classname="tests.test_properties_contract" name="test_runtime_parameters_reject_invalid_values_locally[values7-STORE_LOCK_TIMEOUT_INVALID]" time="0.000" /><testcase classname="tests.test_properties_contract" name="test_runtime_parameters_reject_invalid_values_locally[values8-STORE_LOCK_TIMEOUT_INVALID]" time="0.000" /><testcase classname="tests.test_properties_contract" name="test_injected_service_contracts_are_checked_without_calling_them[values0-MODEL_ADAPTER_INVALID]" time="0.000" /><testcase classname="tests.test_properties_contract" name="test_injected_service_contracts_are_checked_without_calling_them[values1-INVALID_CONFIGURATION]" time="0.000" /><testcase classname="tests.test_properties_contract" name="test_injected_service_contracts_are_checked_without_calling_them[values2-INVALID_CONFIGURATION]" time="0.000" /><testcase classname="tests.test_properties_contract" name="test_injected_service_contracts_are_checked_without_calling_them[values3-RUNTIME_STORE_INVALID]" time="0.000" /><testcase classname="tests.test_properties_contract" name="test_injected_service_contracts_are_checked_without_calling_them[values4-ENVIRONMENT_INVALID]" time="0.000" /><testcase classname="tests.test_properties_contract" name="test_injected_service_contracts_are_checked_without_calling_them[values5-CHECKPOINT_CALLBACK_INVALID]" time="0.000" /><testcase classname="tests.test_properties_contract" name="test_model_metadata_and_async_checkpoint_callback_are_rejected" time="0.000" /><testcase classname="tests.test_properties_contract" name="test_invalid_groups_and_root_derivation_do_not_mutate_source[runtime]" time="0.000" /><testcase classname="tests.test_properties_contract" name="test_invalid_groups_and_root_derivation_do_not_mutate_source[defaults]" time="0.000" /><testcase classname="tests.test_properties_contract" name="test_invalid_groups_and_root_derivation_do_not_mutate_source[services]" time="0.000" /><testcase classname="tests.test_properties_contract" name="test_cross_group_budget_validation_precedes_host_creation" time="0.000" /><testcase classname="tests.test_properties_contract" name="test_grouped_parameters_and_legacy_constructors_have_one_recovery_contract[memory]" time="0.013" /><testcase classname="tests.test_properties_contract" name="test_grouped_parameters_and_legacy_constructors_have_one_recovery_contract[file]" time="0.071" /><testcase classname="tests.test_properties_contract" name="test_mixed_parameter_sources_fail_before_creating_default_storage" time="0.001" /><testcase classname="tests.test_properties_contract" name="test_single_agent_overrides_are_frozen_and_do_not_change_startup_or_active_run[memory]" time="0.018" /><testcase classname="tests.test_properties_contract" name="test_single_agent_overrides_are_frozen_and_do_not_change_startup_or_active_run[file]" time="0.066" /><testcase classname="tests.test_properties_contract" name="test_plan_authorization_and_hooks_are_resolved_from_startup_services[memory]" time="0.160" /><testcase classname="tests.test_properties_contract" name="test_plan_authorization_and_hooks_are_resolved_from_startup_services[file]" time="0.444" /><testcase classname="tests.test_properties_contract" name="test_default_file_parameters_ownership_and_facade_lifecycle" time="0.070" /><testcase classname="tests.test_properties_contract" name="test_multiple_facades_share_injected_services_without_sharing_parameters_or_runs[memory]" time="0.038" /><testcase classname="tests.test_properties_contract" name="test_multiple_facades_share_injected_services_without_sharing_parameters_or_runs[file]" time="0.151" /><testcase classname="tests.test_properties_contract" name="test_startup_failure_closes_created_store_and_retains_primary_error" time="0.001" /><testcase classname="tests.test_properties_contract" name="test_shutdown_failure_preserves_body_error_and_can_be_retried[memory]" time="0.001" /><testcase classname="tests.test_properties_contract" name="test_shutdown_failure_preserves_body_error_and_can_be_retried[file]" time="0.001" /><testcase classname="tests.test_properties_contract" name="test_startup_cleanup_failure_retains_primary_and_can_be_retried" time="0.001" /><testcase classname="tests.test_properties_contract" name="test_injected_model_and_environment_remain_caller_owned" time="0.054" /><testcase classname="tests.test_properties_contract" name="test_facade_close_preserves_run_and_reopen_does_not_repeat_unknown_attempt[memory]" time="0.018" /><testcase classname="tests.test_properties_contract" name="test_facade_close_preserves_run_and_reopen_does_not_repeat_unknown_attempt[file]" time="0.087" /></testsuite></testsuites>

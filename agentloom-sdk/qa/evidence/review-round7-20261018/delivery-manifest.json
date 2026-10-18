@@ -1,0 +1,27 @@
+{
+  "captured_at": "2026-10-18T12:02:23.050940+08:00",
+  "combined_collection": 1359,
+  "files": {
+    "agentloom-sdk/qa/REVIEW_RESULTS_2026-10-18_ROUND7.md": "9b136a838dc9de3de11f046ce30e46ff468576564f5b7bbb303e387ec98f5f52",
+    "agentloom-sdk/qa/test_sdk_review_round7.py": "494cda059d51f4700bfd62fcc4427be5ad7c9a8d45b8985c0f3f8e37676c01c6",
+    "agentloom-sdk/qa/evidence/review-round7-20261018/boundaries.junit.xml": "02bf7e7b522281b3a6c4e05ac23d3a25eb4dfb4ee04d00b839f5b148e7c67774",
+    "agentloom-sdk/qa/evidence/review-round7-20261018/boundaries.txt": "56d6477fe670fe0001301a7dbff4354ab4909271555947061d82ef62f3202f5b",
+    "agentloom-sdk/qa/evidence/review-round7-20261018/changes-from-round6.json": "ae27169ea37b6b5ff265dbddad5dbe938ac561e2c7241d57231b09bc980faba1",
+    "agentloom-sdk/qa/evidence/review-round7-20261018/collection.txt": "a0b8f274341d8e7bbb036a5b97571ca10307c9663e8f021ecc95c9cdd36b49e2",
+    "agentloom-sdk/qa/evidence/review-round7-20261018/installed-probe-source.txt": "4b7d2e1c175406ca8e27e37d33ef5aa521c6a886e1a9ae32a93a8c5ab445eaf3",
+    "agentloom-sdk/qa/evidence/review-round7-20261018/installed-results.json": "909df4222277e49e4e4671354d74ed775a3d29dad6df9315430f7c98dfa3e465",
+    "agentloom-sdk/qa/evidence/review-round7-20261018/installed.txt": "909df4222277e49e4e4671354d74ed775a3d29dad6df9315430f7c98dfa3e465",
+    "agentloom-sdk/qa/evidence/review-round7-20261018/legacy-reconstruction.json": "2dde20621fe0563016bc890aac299811d9e939c1619e6ab7b75591b4cf3fb7db",
+    "agentloom-sdk/qa/evidence/review-round7-20261018/migration-process-source.txt": "848c8b21b7494a69e85b2f798069d08dbb7ba1c018c48756fbc21a6391171d0a",
+    "agentloom-sdk/qa/evidence/review-round7-20261018/regression.junit.xml": "8c9e33222e33ad50b25e8605f8af1812b3c615984b6ea8b1cf12b96d72689e65",
+    "agentloom-sdk/qa/evidence/review-round7-20261018/regression.txt": "51eb553b90035fb631d1d5bd2b57fc07d37cea2cd004f1e4cfaed9d5f0124859",
+    "agentloom-sdk/qa/evidence/review-round7-20261018/reviewed-source.diff": "14f0e6961f23dd3d22ea23960c473c2f7815fef8098c5c9a2e553b9b418cba37",
+    "agentloom-sdk/qa/evidence/review-round7-20261018/ruff-format.txt": "7a340da38ae65b1fde7d1e27b294de067e2bd0ac37ef92c9f1edbe0cafbed9ba",
+    "agentloom-sdk/qa/evidence/review-round7-20261018/ruff-lint.txt": "82b3e6a6c090a57601d22943bd23fca9218d1031dbe5a7b754092f9a156b4f18",
+    "agentloom-sdk/qa/evidence/review-round7-20261018/source-after.json": "0b993b311db1f8d218287cc4ada1f73441dd0c9c850365a034eb78a8245a8bb7",
+    "agentloom-sdk/qa/evidence/review-round7-20261018/source-before.json": "e84b70cc63e3e2721911f454043a1bcb34b251e35a2815f15c30fc38171f2ab6",
+    "agentloom-sdk/qa/evidence/review-round7-20261018/summary.json": "2e8350b02dc905eeef6a1966145d43cc59ef9f388172c4ee1fd7eb348bbdc47b",
+    "agentloom-sdk/qa/evidence/review-round7-20261018/wheel-build.txt": "7bf19e35932ce8836d70e69c8adf37afe68ebb31281ccb4dc1bcc955279321d1",
+    "agentloom-sdk/qa/evidence/review-round7-20261018/wheel-manifest.json": "ee0112967b8a4a13255dbf9e35c2300ce9f6ed76a4af8b61d7b9f666d338129f"
+  }
+}

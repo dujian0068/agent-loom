@@ -255,7 +255,11 @@ async with AgentLoom(properties) as app:
 | 当前角色的能力与 Hook | 通过 Builder 装配的绑定目录与 HookSet；注册不自动授权 |
 | 用户输入、变量、身份、消息、截止与租约现场 | 原 AgentInput／Run／Task／Context，独立于启动参数 |
 
-RuntimeEngine 与 Agent 的旧参数属性变为只读转发，不保存独立副本。各模块依赖对应参数组和受限服务，不能用整个启动容器绕过角色授权。恢复清单保持原字段和格式；服务实例与 PropertiesConfig 对象不进入检查点，同配置可在统一入口、Builder、直接构造之间接续。
+RuntimeEngine 与 Agent 的旧参数属性变为只读转发，不保存独立副本。各模块依赖对应参数组和受限服务，不能用整个启动容器绕过角色授权。服务实例与 PropertiesConfig 对象不进入检查点，同配置可在统一入口、Builder、直接构造之间接续。
+
+当前恢复清单使用 `binding_version=2`，保留原定义／策略字段，另存各角色的变量声明合同。`VariableSpec` 与普通字典默认值分别标记；普通默认值的推导类型也独立保存，避免规范 JSON 把 `1.0` 写成 `1` 后改变变量校验。恢复以规范 JSON 比较完整清单，布尔与数字不同，字典键顺序不影响匹配。检查发生在领取执行权和准备环境之前；已终态 Run 仍只读取原结果。
+
+旧清单缺少声明类型时，仅接续能无歧义核对的配置；含 `schema/default/required` 三字段的变量对象，以及整数值的数字默认值，都无法证明原声明类型，返回 `RECOVERY_BINDING_MISMATCH` 并给出变量路径。不会用新传入的 Definition 推断旧声明，也不改写历史清单。此类旧活动任务可以用原版本续完，或通过控制接口停止后以新 run_id 发起执行；旧终态仍可观察。
 
 覆盖规则：`app.build(..., properties=custom)` 整体替换该 Agent 的参数组；`app.builder.with_options(...)` 派生单项覆盖，其余值继承。`properties.with_options(...)` 则整组替换启动参数，组内修改使用 `dataclasses.replace()`。覆盖重新校验并冻结，不影响先前实例；可选策略显式 None 使用 SDK 默认。根参数组与必需依赖不能置空。直接构造同时提供 properties 和旧形式的对应参数时返回 `PARAMETERS_CONFLICT`，不会静默选择优先级。
 
@@ -264,6 +268,28 @@ RuntimeEngine 与 Agent 的旧参数属性变为只读转发，不保存独立�
 默认文件目录与锁等待参数只作用于宿主创建的 FileRuntimeStore；注入的 store 使用自身参数。相对路径在参数构造时固定为绝对路径，不受稍后 chdir 影响。Workflow 不在本入口本轮实现范围。
 
 `files: FileProperties` 为文件提供者参数组，默认 `provider="local", options={}`。SDK 从安装包登记元数据选择唯一实现类，以 `类(**options)` 创建；所有 11 个方法为普通方法。第三方内置地址时无需业务传 root；默认本地仍校验 WorkspaceBinding.root。详见[注册与装配](builtin-tools-spi.md#8-python-包注册与配置加载)。
+
+### 2.5 SDK 模式指令与业务 Prompt
+
+`AgentDefinition.prompt` 只承载业务目标、领域要求和表达方式。调用方选择 ReactAgent／PlanAgent，或 Builder 的 mode／executors 后，SDK 自动选择 ReAct、Planner、Executor 模式指令；业务方不需要编写执行协议，也不需要在 PropertiesConfig 注入系统模板。直接构造、AgentBuilder 和 AgentLoom 使用同一条装配路径。
+
+当前模板版本为 `agentloom-langchain-modes-v2`，来源是 LangChain 的 ReAct、experimental Executor 和 LangGraph Plan-and-Execute 教程。按角色拆分在 `prompts.roles.react/planner/executor`；`prompts.protocol` 维护 SDK 原生动作／结束协议，`prompts.templates` 只登记版本和角色。固定源码版本、MIT 许可证和逐项改动见[来源与适配说明](../../agentloom-sdk/src/agentloom/prompts/NOTICE.md)，安装包包含同一份说明和来源清单，运行时不联网获取模板。
+
+| 角色 | SDK 自动提供的行为 |
+| --- | --- |
+| ReAct | 按任务需要调用授权工具、读取真实结果、根据结果继续行动或给出答案；不委派 |
+| Planner | 拆解多步骤任务、按 Executor 职责选择委派目标、交付自包含任务和材料、检查反馈并汇总；简单任务可直接完成，空 Executor 表仍合法 |
+| Executor | 使用自己的能力完成明确的委派任务，返回结果、证据和未解决事项；不继承 Planner 私有对话、不递归委派 |
+
+SDK 同时提供通用动作／反馈规则、未知副作用处理和最终输出约束。有 output_schema 时，首次请求就包含 JSON 格式与 Schema 要求；有结构化 Executor 输入或变量声明时，Planner 自动获得任务 Schema、变量 Schema 与必填性，内容不包含 Executor 的私有业务 Prompt 或变量定义上的默认值。省略可选变量时仍由 Executor 使用自己的默认值；普通默认变量的类型规则与运行时校验共用同一实现。
+
+每个角色的消息前缀依次为渲染后的业务 system 消息、独立 SDK system 消息，随后才是历史和任务输入。业务消息继续遵守现有 Hook 编辑合同；SDK 记录的 message_kind 为 `sdk_instructions`，固定、受保护，不接受 Hook 覆写，不进入摘要来源。两个 system 消息和附加 Schema 都计入窗口预算，不能通过省略模式指令满足窗口限制。
+
+Run 接收事务保存 `prompt_contract={schema_version:1,roles:{role_key:{profile,template_version,content}}}`，包含所有绑定角色，包括尚未创建的 Executor。初始化和委派只读取该快照，不在恢复时重新生成模板。重启校验角色、固定记录和已组装请求的一致性；损坏时在环境准备／模型调用前报 PERSISTENCE_INVARIANT_BROKEN。旧记录没有 prompt_contract 时维持原提示词布局，新 Run 才采用内置模板，不能改变已经冻结的旧请求。
+
+模式指令负责模型的行为引导；能力授权、参数校验、Loop／截止、批次等待和输出格式由运行时执行。Plan 不强制每次创建子任务，也不把模型输出的一段计划文字当作已执行动作。
+
+LangChain 原模板中的 Action／Action Input 映射到原生 tool_calls，Observation 映射到实际工具消息，scratchpad 映射到角色私有历史。标签不要求打印；SDK 不解析正文中的 Action，也不增加 TERMINATE／END_OF_PLAN 结束标记。最终无工具调用的候选交给原输出校验。Planner 在现有循环内参考目标、计划和已执行结果更新剩余步骤，失败不等于完成；当前没有另建 Plan／Response 结构化规划调用或任务看板。空 Executor 表只注入本地执行规则，有 Executor 时才注入 delegate_task 合同。v1 检查点恢复时继续使用已保存的 v1 正文。
 
 ## 3. 角色、公开输入和格式的归属
 

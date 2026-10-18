@@ -1,0 +1,36 @@
+import asyncio,json,pathlib,sys,tempfile,traceback
+ROOT=pathlib.Path('/Users/bmilk/code/project/agent-loom')
+sys.path.insert(0,str(ROOT/'agentloom-sdk/qa'))
+from test_sdk_review_round4 import build,operation
+from agentloom import FileRuntimeStore,FunctionToolAdapter,MemoryRuntimeStore,RuntimeEngine
+async def run(backend):
+ calls=[]
+ value=None
+ for _ in range(480):value=[value]
+ def body(arguments,context):calls.append(1);return value
+ adapter=FunctionToolAdapter(body)
+ with tempfile.TemporaryDirectory() as d:
+  store=MemoryRuntimeStore() if backend=='memory' else FileRuntimeStore(pathlib.Path(d)/'state')
+  run_id=None
+  for cycle in ['first','recovered']:
+   async with RuntimeEngine(store=store) as runtime:
+    handle=await build(runtime,adapter).start('go' if run_id is None else None,run_id=run_id,session_id='deep')
+    run_id=handle.run_id
+    try:
+     result=await handle.wait(timeout_s=3)
+     print(json.dumps({'backend':backend,'cycle':cycle,'status':result.status,'calls':len(calls)}),flush=True)
+    except Exception as e:
+     print(json.dumps({'backend':backend,'cycle':cycle,'error':getattr(e,'code',type(e).__name__),'calls':len(calls)}),flush=True)
+     traceback.print_exception(e,limit=18)
+    state=runtime._load(run_id)
+    op=operation(runtime,run_id)
+    print(json.dumps({'status':state['status'],'raw':op['raw']['status'] if op['raw'] else None}),flush=True)
+    try:
+     new=await build(runtime,FunctionToolAdapter(lambda a,c:'ok')).start('next',session_id='deep')
+     await new.wait(timeout_s=3)
+     print('session-reused',flush=True)
+    except Exception as e:print('session-next: '+getattr(e,'code',type(e).__name__),flush=True)
+  store.close()
+async def main():
+ for backend in ['memory','file']:await run(backend)
+asyncio.run(main())

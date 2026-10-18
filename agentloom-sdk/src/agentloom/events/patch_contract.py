@@ -2,6 +2,7 @@
 
 from ..configuration import ContextPolicy, ModelOptions, json_copy
 from ..configuration.actions import action_contract
+from ..configuration.definitions import manifest_definition_snapshot
 from ..configuration.json_documents import document_digest as digest
 from ..context.budget import ContextBudget
 from ..errors import AgentLoomError, InfrastructureError, error_record
@@ -58,14 +59,10 @@ def legacy_patch_contract(state, op):
         and item["task_id"] == op["task_id"]
     ]
     definitions = {
-        name: {"definition": definition, "variable_specs": []}
-        for name, definition in bindings["definitions"].items()
+        name: manifest_definition_snapshot(bindings, name)
+        for name in bindings["definitions"]
         if name not in {"react", "planner"}
     }
-    # The old manifest flattened VariableSpec and ordinary dict defaults alike.
-    # Never guess their meaning when validating a delegated variable edit.
-    for snapshot in definitions.values():
-        snapshot["legacy_variables"] = True
     descriptor = ModelDescriptor(**bindings["model_descriptor"])
     options = ModelOptions(**bindings["model_options"])
     budget = ContextBudget.resolve(descriptor, ContextPolicy(**bindings["context_policy"]), options)

@@ -123,13 +123,19 @@ Chat Completions 服务改用 `OpenAIChatAdapter`。`ModelOptions.max_output_tok
 
 ## 4. 从定义构建 ReAct 和 Plan
 
+业务方只填写 `AgentDefinition.prompt` 的业务要求。`app.build(definition)` 自动使用 ReAct 指令；提供 executors 或指定 `mode="plan"` 后，SDK 自动配置 Planner 指令，每次委派的子任务自动使用 Executor 指令。无需另写系统 Prompt 或在 PropertiesConfig 注入模式模板。声明的最终输出 Schema，以及 Planner 所需的 Executor 任务和变量合同，都会随模式指令提供给模型。
+
+例如“整理财务报告，使用中文说明结论”就是业务提示词，不需要附加“你是 Planner，请使用 delegate_task”。工具和 Executor 仍按定义显式授权，SDK 不凭空添加业务能力。完整规则见[模式指令装配](assembly.md#25-sdk-模式指令与业务-prompt)。
+
+内置模式模板采用 LangChain 来源的 SDK 适配版 `agentloom-langchain-modes-v2`。ReAct 与 Executor 使用行动／观察循环；Planner 根据实际执行结果更新计划、继续委派或汇总。执行采用原生工具调用，最终答案遵守声明的 output_schema；业务方无需实现 Action 文本解析、额外规划工具或终止标记。模板来源及改动见[说明](../../agentloom-sdk/src/agentloom/prompts/NOTICE.md)。升级 SDK 只影响新 Run；恢复沿用接受 Run 时保存的模板版本和正文。
+
 `app.build(definition)` 创建 ReAct。传入 Executor 定义表创建 Plan；共享模型、运行预算和宿主，各角色保留自己的 Prompt、能力与上下文。
 
 ```python
 from agentloom import AgentDefinition
 
-planner = AgentDefinition("planner", "委派适合的任务并汇总结果。")
-reviewer = AgentDefinition("reviewer", "检查收到的材料。", description="审查事实与结论")
+planner = AgentDefinition("advisor", "分析方案的成本和风险，给出有事实依据的建议。")
+reviewer = AgentDefinition("reviewer", "检查论据是否支持结论，指出缺失事实。", description="审查事实与结论")
 plan = app.build(planner, executors={"review": reviewer})
 result = await plan.ainvoke("检查方案中的风险")
 ```
@@ -304,6 +310,8 @@ async with AgentLoom(properties) as app:
 
 Plan 恢复还须传回原 Executor 表。已终态返回保存结果；有效 owner 存在时只附着观察；owner 租约到期后才可接管。恢复不重置总截止和 Loop 用量。仅有 Runtime 启动不会自动重建全部 Agent，非终态业务接续仍需按原配置调用 start；停止和过期执行的后台收束由 Runtime 维护任务处理。
 
+当前清单保留变量声明类型，并用规范 JSON 核对配置，`true` 与 `1`、VariableSpec 与同字段的普通默认字典都不相同。旧清单若缺少类型证据且无法无歧义核对，会返回 `RECOVERY_BINDING_MISMATCH` 及具体变量路径；可以使用原版本续完，或通过控制接口停止后用新 run_id 发起任务。不要手动补写清单绕过检查。合法的 128 层最终 JSON 值可通过 wait、events／astream 和游标回放交付，事件封装不挤占业务材料的深度预算。
+
 初始接收回执丢失时，使用相同 run_id、input_id、session_id 和原输入重投；不能先生成新 ID。补充和停止命令也须保持原 input_id／command_id。同一 ID 对应不同内容会被拒绝。
 
 | 故障或结果 | 接入方处理 |
@@ -325,6 +333,6 @@ Plan 恢复还须传回原 Executor 表。已终态返回保存结果；有效 o
 
 接入验证至少覆盖：启动参数构造、角色权限绑定、一次真实业务调用、同 run_id 重开、停止／等待超时区别、维护状态查询。确定性脚本用于检查本地装配；真实模型端点和 MCP 服务需按部署环境另行联调。
 
-最近一次第五轮修复回归为 **1089 passed**，包含既有 SDK、69 项新增修复测试及五轮 QA；源码摘要、测试范围和进程恢复证据见[验证记录](implementation.md#第五轮持久化-json-深度与异常记录修复)。独立新增的白盒探针单独记录，不计入此快照。
+本次全部剩余改动统一提交前的完整回归为 **1537 passed，0 failed，0 skipped**，包含 SDK 1075 项与七轮 QA 462 项，独立白盒探针一并执行。源码摘要、测试范围和完整日志见[验证记录](implementation.md#验证口径)。SDK 与独立文件提供者的安装包另通过 10 个进程验证场景，见[安装包验证](../../agentloom-sdk/qa/evidence/full-workspace-publish-20261018/wheel-summary.json)。MiniMax 示例检查了命令行入口，未执行真实远端模型调用。
 
 本页 7 个 Python 代码块已通过本地验证，另验证停止、补充、等待超时和查询入口，共 8 个场景；真实模型片段仅验证构造，其余执行使用确定性模型，没有远端服务调用。[文档代码与验证结果](../../agentloom-sdk/qa/evidence/docs-integration-20261017/summary.json)独立保存，不计入上述 SDK 回归数量。
