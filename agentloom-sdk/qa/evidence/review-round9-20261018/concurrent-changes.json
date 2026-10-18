@@ -1,0 +1,19 @@
+{
+  "recorded_at": "2026-10-18T14:42:59.642934+00:00",
+  "last_test_finished_at": "2026-10-18T14:36:56.238865+00:00",
+  "changed_since_test_snapshot": [
+    "agentloom-sdk/src/agentloom/events/bus.py",
+    "agentloom-sdk/src/agentloom/runtime/handlers.py",
+    "agentloom-sdk/src/agentloom/storage/commit.py",
+    "agentloom-sdk/src/agentloom/types.py"
+  ],
+  "new_source_files": {
+    "agentloom-sdk/src/agentloom/nodes/__init__.py": "b5f2af4163b010a2327cbd4655f890a2824937156d721f0407e40b5b0707e5f3",
+    "agentloom-sdk/src/agentloom/nodes/contracts.py": "e92c62fd90082f4d10ff98b1b74c8f2af3d03ae18909a434503b382c92f0f4de",
+    "agentloom-sdk/src/agentloom/checkpoints/journal.py": "3d2fb2f6d1c6be784d18487fb0ae19753884c972ceb56e70774f8869f2967fe6",
+    "agentloom-sdk/src/agentloom/checkpoints/__init__.py": "3e9c4f0d0dec0888c693d9257de00d1f224a64426ae57c465c48ad3b4171c746"
+  },
+  "finding_source_files_unchanged": true,
+  "baseline_applicability": "Valid for the completed audit snapshot; not certified for concurrent source edits made during report finalization",
+  "new_changes_tested": false
+}

@@ -1,0 +1,22 @@
+{
+  "command": [
+    "/Users/bmilk/code/project/agent-loom/.venv/bin/python",
+    "-m",
+    "pytest",
+    "-q",
+    "-ra",
+    "-s",
+    "--tb=short",
+    "qa/test_sdk_review_round9.py",
+    "--junitxml=qa/evidence/review-round9-20261018/junit.xml"
+  ],
+  "cwd": "/Users/bmilk/code/project/agent-loom/agentloom-sdk",
+  "started_at": "2026-10-18T14:36:51.091273+00:00",
+  "test_sha256": "ae77bdac3d7e343531e1190e884851ee028e38dfc2655d5477db72c2283a2117",
+  "scope": "round9 new tests only",
+  "full_suite_rerun": false,
+  "real_llm": false,
+  "finished_at": "2026-10-18T14:36:56.238865+00:00",
+  "duration_seconds": 5.147336125024594,
+  "exit_code": 1
+}

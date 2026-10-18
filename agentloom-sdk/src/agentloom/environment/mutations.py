@@ -90,14 +90,14 @@ class FileMutations:
         original = self._whole_text(scope, path, guard)
         if self._version(path, original.encode())["etag"] != if_match:
             raise AgentLoomError("FILE_CHANGED", category="conflict")
-        lines = unified_diff.splitlines(keepends=True)
+        lines = lf_lines(unified_diff)
         if len(lines) < 3 or not lines[0].startswith("--- ") or not lines[1].startswith("+++ "):
             raise AgentLoomError("PATCH_FORMAT_INVALID")
         for header, prefix in zip(lines[:2], ("a/", "b/")):
             candidate = header[4:].rstrip("\r\n").split("\t", 1)[0].removeprefix(prefix)
             if _parts(candidate) != _parts(path):
                 raise AgentLoomError("PATCH_PATH_MISMATCH")
-        source, output, position, index, hunks = original.splitlines(keepends=True), [], 0, 2, 0
+        source, output, position, index, hunks = lf_lines(original), [], 0, 2, 0
         while index < len(lines):
             match = re.fullmatch(
                 r"@@ -(\d+)(?:,(\d+))? \+(\d+)(?:,(\d+))? @@[^\n]*(?:\n|$)", lines[index]
@@ -192,6 +192,8 @@ class FileMutations:
         if pattern.startswith("/") or ".." in pattern.split("/"):
             raise AgentLoomError("PATH_FORBIDDEN")
         root_parts = path_parts(root)
+        pattern_parts = path_parts(pattern)
+        directories_only = pattern.endswith("/")
         pending, paths = [root], []
 
         def matches(parts, segments):
@@ -211,9 +213,17 @@ class FileMutations:
                 # list() normalizes dot segments and repeated separators. Use
                 # the same logical path parts, including the /work alias.
                 relative = path_parts(entry["path"])[len(root_parts) :]
-                if matches(relative, pattern.split("/")):
+                if matches(relative, pattern_parts) and (
+                    not directories_only or entry["kind"] == "directory"
+                ):
                     paths.append(entry["path"])
                 if entry["kind"] == "directory":
                     pending.append(entry["path"])
         paths.sort(key=lambda p: p.encode())
         return {"paths": paths[:limit], "truncated": len(paths) > limit}
+
+
+def lf_lines(text):
+    """Unified diff counts LF-terminated lines, not Unicode text separators."""
+    parts = text.split("\n")
+    return [part + "\n" for part in parts[:-1]] + ([parts[-1]] if parts[-1] else [])

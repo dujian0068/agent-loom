@@ -1,0 +1,130 @@
+diff --git a/agentloom-sdk/src/agentloom/events/bus.py b/agentloom-sdk/src/agentloom/events/bus.py
+index c8f7314..96bdaf1 100644
+--- a/agentloom-sdk/src/agentloom/events/bus.py
++++ b/agentloom-sdk/src/agentloom/events/bus.py
+@@ -36,6 +36,7 @@ class EventBusImpl:
+     def register_handler(self, event_type, schema_version, binding):
+         if self._frozen:
+             raise ConfigurationError("REGISTRY_FROZEN")
++        self._validate_key(event_type, schema_version)
+         key = (event_type, schema_version)
+         if key in self._handlers:
+             raise ConfigurationError("DUPLICATE_HANDLER")
+@@ -44,7 +45,16 @@ class EventBusImpl:
+         self._handlers[key] = binding
+ 
+     def resolve(self, event_type, schema_version=1):
+-        return self._handlers.get((event_type, schema_version))
++        self._validate_key(event_type, schema_version)
++        binding = self._handlers.get((event_type, schema_version))
++        return (binding,) if binding is not None else ()
++
++    @staticmethod
++    def _validate_key(event_type, schema_version):
++        if not isinstance(event_type, str) or not event_type.strip():
++            raise ConfigurationError("EVENT_TYPE_INVALID")
++        if type(schema_version) is not int or schema_version < 1:
++            raise ConfigurationError("EVENT_VERSION_INVALID")
+ 
+     def freeze(self):
+         visited, active, registries = set(), set(), []
+@@ -69,7 +79,7 @@ class EventBusImpl:
+     async def request(self, event, context=None):
+         if not self._frozen:
+             raise ConfigurationError("REGISTRY_NOT_FROZEN")
+-        binding = self.resolve(event.event_type)
+-        if binding is None:
++        bindings = self.resolve(event.event_type, getattr(event, "schema_version", 1))
++        if not bindings:
+             raise AgentLoomError("HANDLER_NOT_FOUND")
+-        return await binding.handler.handle(event, context)
++        return await bindings[0].handler.handle(event, context)
+diff --git a/agentloom-sdk/src/agentloom/runtime/handlers.py b/agentloom-sdk/src/agentloom/runtime/handlers.py
+index 6c6a646..597da3d 100644
+--- a/agentloom-sdk/src/agentloom/runtime/handlers.py
++++ b/agentloom-sdk/src/agentloom/runtime/handlers.py
+@@ -31,6 +31,7 @@ class BusinessEvent:
+     event_type: str
+     operation_id: str
+     payload: dict
++    schema_version: int = 1
+ 
+ 
+ @dataclass(frozen=True)
+diff --git a/agentloom-sdk/src/agentloom/storage/commit.py b/agentloom-sdk/src/agentloom/storage/commit.py
+index cbe971a..ddd3c98 100644
+--- a/agentloom-sdk/src/agentloom/storage/commit.py
++++ b/agentloom-sdk/src/agentloom/storage/commit.py
+@@ -61,12 +61,18 @@ class CommitCoordinator:
+             verify_lease(state, self.lease, tx.now)
+             change(state)
+             state["revision"] += 1
++            from ..checkpoints import publish
++
++            head = publish(tx, self.namespace, state, command)
+             receipt = {
+                 "command": command,
+                 "run_id": self.lease.run_id,
+                 "revision": state["revision"],
+                 "committed_at": tx.now,
+                 "fingerprint": fingerprint,
++                "scope_versions": [{"graph_id": head["graph_execution_id"],
++                                    "scope_commit_seq": head["scope_commit_seq"],
++                                    "state_revision": head["state_revision"]}] if head else [],
+                 "state_hash": digest(state)
+                 if state["revision"] % 16 == 0 or state["status"] in TERMINAL
+                 else None,
+diff --git a/agentloom-sdk/src/agentloom/types.py b/agentloom-sdk/src/agentloom/types.py
+index b93fa66..d7db5e5 100644
+--- a/agentloom-sdk/src/agentloom/types.py
++++ b/agentloom-sdk/src/agentloom/types.py
+@@ -9,6 +9,7 @@ from uuid import uuid4
+ from .capabilities.contracts import CapabilityAdapter as CapabilityAdapter
+ from .configuration import freeze, number
+ from .errors import ConfigurationError, RequestError
++from .nodes import NodeContext as NodeContext
+ 
+ 
+ def new_id():
+@@ -173,6 +174,7 @@ class CallStageEvent:
+     purpose: str = "business"
+     role_key: str | None = None
+     source: str = "agent-loop"
++    schema_version: int = 1
+ 
+ 
+ @runtime_checkable
+@@ -184,13 +186,7 @@ class Agent(Protocol):
+ 
+ @runtime_checkable
+ class Node(Protocol):
+-    async def activate(self, input, continuation, node_context): ...
+-
+-
+-@dataclass(frozen=True)
+-class NodeContext:
+-    task_id: str
+-    driver: Any
++    def activate(self, input, continuation, node_context): ...
+ 
+ 
+ @dataclass(frozen=True)
+@@ -213,6 +209,7 @@ class AgentContext:
+                 **task["context"],
+                 "task_id": self.task_id,
+                 "progress": {key: task[key] for key in ("stage", "round", "calls", "status")},
++                "continuation": task.get("continuation"),
+             }
+         )
+ 
+@@ -231,6 +228,10 @@ class AgentContext:
+     def progress(self):
+         return self.snapshot()["progress"]
+ 
++    @property
++    def continuation(self):
++        return self.snapshot()["continuation"]
++
+ 
+ @runtime_checkable
+ class ModelAdapter(Protocol):

@@ -20,7 +20,7 @@ class EventBus(Protocol):
 class HandlerRegistry(Protocol):
     def register_handler(self, event_type, schema_version, binding): ...
     def resolve(self, event_type, schema_version=1): ...
-    def freeze(self): ...
+    def freeze(self, required_manifest=()): ...
 
 
 @dataclass(frozen=True)
@@ -36,17 +36,27 @@ class EventBusImpl:
     def register_handler(self, event_type, schema_version, binding):
         if self._frozen:
             raise ConfigurationError("REGISTRY_FROZEN")
+        self._validate_key(event_type, schema_version)
         key = (event_type, schema_version)
         if key in self._handlers:
             raise ConfigurationError("DUPLICATE_HANDLER")
-        if not isinstance(binding.handler, EventHandler):
+        if not isinstance(binding, HandlerBinding) or not isinstance(binding.handler, EventHandler):
             raise ConfigurationError("HANDLER_INVALID")
         self._handlers[key] = binding
 
     def resolve(self, event_type, schema_version=1):
-        return self._handlers.get((event_type, schema_version))
+        self._validate_key(event_type, schema_version)
+        binding = self._handlers.get((event_type, schema_version))
+        return (binding,) if binding is not None else ()
 
-    def freeze(self):
+    @staticmethod
+    def _validate_key(event_type, schema_version):
+        if not isinstance(event_type, str) or not event_type.strip():
+            raise ConfigurationError("EVENT_TYPE_INVALID")
+        if type(schema_version) is not int or schema_version < 1:
+            raise ConfigurationError("EVENT_VERSION_INVALID")
+
+    def freeze(self, required_manifest=()):
         visited, active, registries = set(), set(), []
 
         def visit(bus):
@@ -63,13 +73,19 @@ class EventBusImpl:
             registries.append(bus)
 
         visit(self)
+        for event_type, version in required_manifest:
+            if not self.resolve(event_type, version):
+                raise ConfigurationError("REQUIRED_HANDLER_MISSING")
         for bus in registries:
             bus._frozen = True
 
     async def request(self, event, context=None):
         if not self._frozen:
             raise ConfigurationError("REGISTRY_NOT_FROZEN")
-        binding = self.resolve(event.event_type)
-        if binding is None:
+        bindings = self.resolve(event.event_type, getattr(event, "schema_version", 1))
+        if not bindings:
             raise AgentLoomError("HANDLER_NOT_FOUND")
-        return await binding.handler.handle(event, context)
+        return await bindings[0].handler.handle(event, context)
+
+    async def handle(self, event, context):
+        return await self.request(event, context)

@@ -325,6 +325,12 @@ class RuntimeEngine:
             from .recovery import validate_recovery
 
             validate_recovery(self._load(run_id))
+            from ..checkpoints import restore
+
+            with self.store.transaction(self.namespace) as tx:
+                restored = restore(tx, self.namespace, tx.get("runs", run_id))
+                validate_recovery(restored)
+                tx.put("runs", run_id, restored)
             runner = ExecutionRunner(self, program, lease)
             await runner.run()
         except asyncio.CancelledError:

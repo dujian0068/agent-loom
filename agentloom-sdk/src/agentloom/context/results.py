@@ -16,11 +16,13 @@ def result_bytes(value):
 def text_slice(data, offset, limit):
     if (
         type(offset) is not int
-        or not 0 <= offset <= len(data)
+        or offset < 0
         or type(limit) is not int
         or not 1 <= limit <= PREVIEW_BYTES
     ):
         raise AgentLoomError("RESULT_SLICE_INVALID")
+    if offset >= len(data):
+        return "", offset
     try:
         data[:offset].decode("utf-8")
     except UnicodeDecodeError as exc:

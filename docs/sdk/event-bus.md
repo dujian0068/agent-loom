@@ -1,6 +1,6 @@
 # SDK 事件总线、能力调用与 Hook
 
-状态：详细设计，尚未实现。节点注入代理端口，SDK 集中提供调用路由、拦截、结果等待和可靠观察；平台只在外部消费公开事件。相关状态提交见[检查点与持久化](checkpoints.md)，Loop 见[运行时](runtime.md)，作用域见[定义](definitions.md)。
+状态：版本化路由、调用阶段持久化、节点持久等待，以及模型／工具／Skill／Context／Environment／Executor Handler 已实现。完整可靠订阅、outbox ACK 和统一公共请求门面仍为目标能力；当前范围见[实现记录](implementation.md#节点协议与检查点设计对齐)。Workflow 相关调用不在本轮范围。
 
 ## 1. 实现边界与模块装配
 

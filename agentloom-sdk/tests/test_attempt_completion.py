@@ -246,9 +246,12 @@ async def test_completion_commit_fault_stops_delivery_and_recovers_from_durable_
     original = CommitCoordinator.commit
 
     def interrupt(coordinator, command, change, **kwargs):
-        if command.startswith("attempt-result:"):
+        # Node progress now uses RuntimeCommit. Keep this fault at the same
+        # external-attempt completion boundary, including its lost-ACK case.
+        command_id = command if isinstance(command, str) else command.command_id
+        if command_id.startswith("attempt-result:"):
             state = coordinator.store.load(coordinator.namespace, coordinator.lease.run_id)
-            op = state["operations"][command.split(":")[1]]
+            op = state["operations"][command_id.split(":")[1]]
             if op["event_type"] == event_type:
                 if committed:
                     original(coordinator, command, change, **kwargs)

@@ -29,6 +29,7 @@ def validate_recovery(state):
     try:
         _validate(state)
         validate_prompt_state(state)
+        _validate_graph(state)
     except (KeyError, TypeError, ValueError, AttributeError) as exc:
         raise InfrastructureError(
             "PERSISTENCE_INVARIANT_BROKEN",
@@ -135,7 +136,16 @@ def _validate(state):
         _require(ticket in {None, "reserved", "consumed", "released"}, "operation.ticket")
         _require(business or ticket is None, "operation.ticket_scope")
         if ticket:
-            _require((ticket == "reserved") != complete, "operation.ticket_state")
+            awaiting_consumption = (
+                ticket == "reserved"
+                and complete
+                and tasks[op["task_id"]].get("continuation", {}).get("model_operation_id") == op_id
+                and tasks[op["task_id"]]["status"] not in {"succeeded", "failed", "cancelled"}
+                and (op["status"] == "succeeded" or op["task_id"] != root)
+            )
+            _require(
+                (ticket == "reserved") != complete or awaiting_consumption, "operation.ticket_state"
+            )
         if ticket in {"reserved", "consumed"}:
             counts["loops_" + ticket] += 1
         if ticket == "consumed":
@@ -217,3 +227,84 @@ def _validate(state):
     )
     for seq, event in enumerate(state["events"], 1):
         _require(event["seq"] == seq and event["run_id"] == state["run_id"], "event.sequence")
+
+
+def _validate_graph(state):
+    from ..nodes import ReactContinuationV1
+    from .batches import TASK_TERMINAL, executor_slots, satisfied
+
+    graph = state.get("graph")
+    if not graph:
+        return  # pre-node-protocol v1 format has its explicit migration adapter
+    if type(graph.get("protocol_version")) is not int or graph["protocol_version"] != 1:
+        raise InfrastructureError("CHECKPOINT_VERSION_UNSUPPORTED")
+    for task_id, task in state["tasks"].items():
+        continuation = ReactContinuationV1(**task["continuation"])
+        _require(type(task["node_revision"]) is int and task["node_revision"] >= 0, "node.revision")
+        _require(
+            type(task["activation_no"]) is int and task["activation_no"] >= 0, "node.activation_no"
+        )
+        _require(
+            continuation.role_key == task["role_key"]
+            and continuation.role_loop_index == task["round"],
+            "node.continuation_binding",
+        )
+        _require(
+            continuation.context_revision_ref["context_id"] == task["context"]["context_id"]
+            and continuation.context_revision_ref["revision"] <= task["context"]["revision"],
+            "node.context_binding",
+        )
+        _require(
+            (continuation.phase == "completed") == (task["status"] in TASK_TERMINAL),
+            "node.terminal",
+        )
+        if task["status"] == "waiting":
+            _require(
+                task["wait_condition"] is not None and task["resume_input_ref"] is not None,
+                "node.wait",
+            )
+            satisfied(state, task["wait_condition"])
+        if task["activation_id"]:
+            activation = state.get("activations", {}).get(task["activation_id"])
+            _require(
+                activation is not None and activation["task_id"] == task_id,
+                "node.activation_binding",
+            )
+        if task_id in state.get("task_results", {}):
+            result = state["task_results"][task_id]
+            _require(
+                task["status"] in TASK_TERMINAL
+                and result["status"] == task["status"]
+                and digest(result["result"]) == digest(task["result"])
+                and digest(result["error"]) == digest(task["error"]),
+                "node.task_result",
+            )
+    _require(executor_slots(state) <= state["policy"]["executor_max_parallel"], "batch.capacity")
+    for batch_id, batch in state.get("batches", {}).items():
+        _require(batch_id == batch["batch_id"] and batch["generation"] == 1, "batch.identity")
+        task = state["tasks"][batch["owner_task_id"]]
+        decision = state["operations"][batch["decision_operation_id"]]
+        _require(
+            decision["task_id"] == task["task_id"]
+            and decision["ticket"] == "consumed"
+            and decision["consumption_kind"] == "decision",
+            "batch.decision",
+        )
+        for ordinal, member in enumerate(batch["members"]):
+            _require(member["ordinal"] == ordinal, "batch.ordinal")
+            if member["operation_id"]:
+                op = state["operations"][member["operation_id"]]
+                _require(
+                    op["task_id"] == task["task_id"]
+                    and op.get("source_call_id") == member["call"]["call_id"],
+                    "batch.operation_binding",
+                )
+                _require(
+                    not op["target_ref"] or member["admission_token"] is None,
+                    "batch.converted_token",
+                )
+            if member["status"] == "settled":
+                _require(
+                    member["response"] is not None and member["admission_token"] is None,
+                    "batch.settlement",
+                )

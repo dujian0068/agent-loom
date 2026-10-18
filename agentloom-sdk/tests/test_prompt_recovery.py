@@ -125,6 +125,14 @@ async def test_legacy_run_keeps_old_layout_for_later_executor(runtime_store, bui
         context["revision"] = len(context["records"])
         for seq, record in enumerate(context["records"], 1):
             record["context_seq"] = seq
+        # This fixture represents a pre-protocol store, which has neither the
+        # immutable graph journal nor a typed node continuation.
+        from agentloom.checkpoints.journal import delete_owned
+
+        delete_owned(tx, "legacy")
+        state.pop("graph", None)
+        for task in state["tasks"].values():
+            task.pop("continuation", None)
         tx.put("runs", "legacy", state)
     async with RuntimeEngine(store=runtime_store) as recovered:
         agent = build(recovered, response, **plan_options())

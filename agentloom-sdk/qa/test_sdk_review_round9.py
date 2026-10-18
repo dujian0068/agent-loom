@@ -1,0 +1,240 @@
+"""Round 9: independent checks for uncovered public and UTF-8 boundaries.
+
+Reuse the user's 1665-test baseline; run this file alone for the new probes.
+ScriptedModel is deterministic and offline. No real LLM or credentials are used.
+Assertions describe the expected contract, without xfail or production patches.
+"""
+
+import json
+from pathlib import Path
+
+import pytest
+
+from agentloom import (
+    AgentDefinition,
+    CapabilityBinding,
+    CapabilityRegistration,
+    CapabilityRegistry,
+    CapabilitySpec,
+    FileRuntimeStore,
+    FunctionToolAdapter,
+    LocalEnvironment,
+    MemoryRuntimeStore,
+    ModelResponse,
+    PlanAgent,
+    ReactAgent,
+    RequestError,
+    RuntimeEngine,
+    ScriptedModel,
+    ToolCall,
+    WorkspaceBinding,
+)
+from agentloom.workspace.service import WorkspaceService
+
+
+@pytest.fixture(autouse=True)
+def isolated_directory(tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+
+
+@pytest.fixture(params=["memory", "file"])
+def store(request, tmp_path):
+    backend = (
+        MemoryRuntimeStore() if request.param == "memory" else FileRuntimeStore(tmp_path / "state")
+    )
+    yield backend
+    backend.close()
+
+
+def agent_with_tool(runtime, responder, function, *, cls=ReactAgent):
+    return cls(
+        runtime_engine=runtime,
+        definition=AgentDefinition(
+            "review9",
+            "Use the tool and then finish.",
+            capabilities=(CapabilityBinding("probe", "tool", "probe", "probe", "probe"),),
+        ),
+        workspace=WorkspaceBinding(Path.cwd() / "workspace"),
+        model=ScriptedModel(responder),
+        capabilities=CapabilityRegistry(
+            tools=(
+                CapabilityRegistration(
+                    "probe",
+                    FunctionToolAdapter(function),
+                    (CapabilitySpec("probe", "probe", "Offline probe", {"type": "object"}),),
+                ),
+            )
+        ),
+    )
+
+
+@pytest.mark.parametrize("content", ["a" * 70000, "中" * 24000], ids=["ascii", "utf8"])
+@pytest.mark.parametrize("position", ["inside", "at_eof", "past_eof", "far_past_eof"])
+async def test_result_read_all_nonnegative_eof_offsets(store, content, position):
+    """capabilities.md: past EOF returns empty text and next_offset=null."""
+    size = len(content.encode("utf-8"))
+    offset = {"inside": 0, "at_eof": size, "past_eof": size + 1, "far_past_eof": 2**52}[position]
+    feedback = []
+
+    def respond(request):
+        feedback[:] = [json.loads(m["content"]) for m in request.messages if m["role"] == "tool"]
+        if not feedback:
+            return ModelResponse(tool_calls=(ToolCall("probe", {}),))
+        if len(feedback) == 1:
+            ref = feedback[0]["result"]["result_ref"]
+            return ModelResponse(
+                tool_calls=(ToolCall("result_read", {"result_ref": ref, "offset": offset}),)
+            )
+        return ModelResponse("done")
+
+    async with RuntimeEngine(store=store) as runtime:
+        agent = agent_with_tool(runtime, respond, lambda arguments, context: content)
+        result = await (await agent.start("go")).wait(timeout_s=10)
+        assert result.status == "succeeded", result.error
+        read = feedback[-1]
+        print(
+            json.dumps(
+                {
+                    "case": "result_read_eof",
+                    "store": type(store).__name__,
+                    "position": position,
+                    "offset": offset,
+                    "total_bytes": size,
+                    "read_error": read["error"],
+                }
+            )
+        )
+        assert read["error"] is None, read["error"]
+        sliced = read["result"]
+        assert sliced["offset"] == offset and sliced["total_bytes"] == size
+        if offset >= size:
+            assert sliced["text"] == "" and sliced["next_offset"] is None
+        else:
+            assert sliced["text"].encode("utf-8") == content.encode("utf-8")[: sliced["end_offset"]]
+            assert 0 < sliced["next_offset"] <= 16384
+
+
+@pytest.mark.parametrize("cls", [ReactAgent, PlanAgent], ids=["react", "plan"])
+@pytest.mark.parametrize("cursor", [-1, None, True, 0.5], ids=["negative", "null", "bool", "float"])
+async def test_invalid_astream_cursor_reports_error_and_records_acceptance(store, cls, cursor):
+    """Characterize the documented start-then-observe order and its side effects.
+
+    public-api.md explicitly starts before observing; it does not promise that
+    an invalid observation cursor prevents admission. Record this design risk,
+    without treating pre-admission validation as an already promised contract.
+    """
+    effects = []
+
+    def respond(request):
+        if not any(m["role"] == "tool" for m in request.messages):
+            return ModelResponse(tool_calls=(ToolCall("probe", {}),))
+        return ModelResponse("done")
+
+    async with RuntimeEngine(store=store) as runtime:
+        agent = agent_with_tool(
+            runtime, respond, lambda arguments, context: effects.append("executed"), cls=cls
+        )
+        with pytest.raises(RequestError, match="EVENT_CURSOR_INVALID"):
+            _ = [
+                event
+                async for event in agent.astream(
+                    "go", run_id="bad-cursor", session_id="session", after_seq=cursor
+                )
+            ]
+        with store.transaction(runtime.namespace) as tx:
+            accepted = tx.get("runs", "bad-cursor")
+            inputs = tx.list("inputs")
+            sessions = tx.list("sessions")
+        # Observe any accepted Run to show actual dispatch and avoid leaving an
+        # unobserved test worker. No real external service is called by the tool.
+        if accepted is not None:
+            handle = await runtime.runs.attach("bad-cursor")
+            terminal = await handle.wait(timeout_s=10)
+            assert terminal.status == "succeeded", terminal.error
+        print(
+            json.dumps(
+                {
+                    "case": "invalid_astream_cursor",
+                    "store": type(store).__name__,
+                    "mode": agent.mode,
+                    "cursor": cursor,
+                    "accepted": accepted is not None,
+                    "inputs": len(inputs),
+                    "sessions": len(sessions),
+                    "model_calls": len(agent.model.requests),
+                    "tool_side_effects": effects,
+                }
+            )
+        )
+
+
+@pytest.mark.parametrize("cls", [ReactAgent, PlanAgent], ids=["react", "plan"])
+async def test_valid_astream_cursor_still_accepts_and_delivers_terminal(store, cls):
+    async with RuntimeEngine(store=store) as runtime:
+        agent = agent_with_tool(
+            runtime, lambda request: ModelResponse("done"), lambda a, c: 1, cls=cls
+        )
+        events = [event async for event in agent.astream("go", after_seq=0)]
+        assert events[0].type == "run.accepted" and events[-1].type == "run.completed"
+        assert len(agent.model.requests) == 1
+
+
+@pytest.fixture
+def files(tmp_path):
+    environment = LocalEnvironment()
+    scope = environment.prepare(WorkspaceBinding(tmp_path / "work"), "session", "run", 1)
+    yield WorkspaceService(environment, scope, lambda: None, {})
+    environment.revoke(scope)
+    environment.cleanup(scope)
+
+
+@pytest.mark.parametrize(
+    "middle",
+    ["中文", "中\t文", "中\u2028文", "中\u2029文", "中\u0085文", "中\v文"],
+    ids=["utf8_control", "tab_control", "line_separator", "paragraph_separator", "nel", "vt"],
+)
+def test_exact_unified_patch_preserves_non_lf_utf8_characters(files, middle):
+    """A UTF-8 character inside an LF-delimited diff line is part of its content."""
+    original = f"before {middle} after\n"
+    updated = f"updated {middle} after\n"
+    version = files.write("unicode.txt", original)
+    diff = f"--- a/unicode.txt\n+++ b/unicode.txt\n@@ -1 +1 @@\n-{original}+{updated}"
+    try:
+        patched = files.patch("unicode.txt", diff, version["etag"])
+    except Exception as exc:
+        assert files.read("unicode.txt")["text"] == original, "Rejected patch altered the source"
+        print(json.dumps({"case": "unicode_patch", "middle": middle, "error": str(exc)}))
+        raise
+    assert patched["hunks_applied"] == 1
+    assert files.read("unicode.txt")["text"] == updated
+
+
+@pytest.mark.parametrize(
+    "pattern,expected",
+    [
+        ("sub/*.txt", ["sub/a.txt"]),
+        ("./sub/*.txt", ["sub/a.txt"]),
+        ("sub//*.txt", ["sub/a.txt"]),
+        ("sub/./*.txt", ["sub/a.txt"]),
+        ("**/*.txt", ["sub/a.txt", "sub/nested/b.txt"]),
+        ("**//*.txt", ["sub/a.txt", "sub/nested/b.txt"]),
+        ("**/./*.txt", ["sub/a.txt", "sub/nested/b.txt"]),
+    ],
+    ids=[
+        "plain",
+        "leading_dot",
+        "double_slash",
+        "inner_dot",
+        "recursive",
+        "recursive_slash",
+        "recursive_dot",
+    ],
+)
+def test_glob_pattern_dot_and_repeated_separator_aliases(files, pattern, expected):
+    """Normalization must apply to the pattern as well as the search root."""
+    files.mkdir("sub/nested", parents=True)
+    files.write("sub/a.txt", "a")
+    files.write("sub/nested/b.txt", "b")
+    result = files.glob(pattern)
+    print(json.dumps({"case": "glob_pattern_alias", "pattern": pattern, "actual": result}))
+    assert result == {"paths": expected, "truncated": False}

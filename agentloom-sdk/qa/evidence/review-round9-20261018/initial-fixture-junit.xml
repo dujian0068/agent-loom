@@ -1,0 +1,433 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="40" skipped="0" tests="42" time="0.367" timestamp="2026-10-18T22:33:25.554390+08:00" hostname="bmilk"><testcase classname="qa.test_sdk_review_round9" name="test_result_read_all_nonnegative_eof_offsets[memory-inside-ascii]" time="0.010"><failure message="agentloom.errors.ConfigurationError: WORKSPACE_ROOT_REQUIRED: WORKSPACE_ROOT_REQUIRED">/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round9.py:92: in test_result_read_all_nonnegative_eof_offsets
+    agent = agent_with_tool(runtime, respond, lambda arguments, context: content)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round9.py:49: in agent_with_tool
+    return cls(
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/public/agents.py:60: in __init__
+    self._bind_capabilities()
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/public/agents.py:183: in _bind_capabilities
+    self.runtime_engine._files.validate_program(self)
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/workspace/runtime.py:44: in validate_program
+    raise ConfigurationError("WORKSPACE_ROOT_REQUIRED")
+E   agentloom.errors.ConfigurationError: WORKSPACE_ROOT_REQUIRED: WORKSPACE_ROOT_REQUIRED</failure></testcase><testcase classname="qa.test_sdk_review_round9" name="test_result_read_all_nonnegative_eof_offsets[memory-inside-utf8]" time="0.002"><failure message="agentloom.errors.ConfigurationError: WORKSPACE_ROOT_REQUIRED: WORKSPACE_ROOT_REQUIRED">/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round9.py:92: in test_result_read_all_nonnegative_eof_offsets
+    agent = agent_with_tool(runtime, respond, lambda arguments, context: content)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round9.py:49: in agent_with_tool
+    return cls(
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/public/agents.py:60: in __init__
+    self._bind_capabilities()
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/public/agents.py:183: in _bind_capabilities
+    self.runtime_engine._files.validate_program(self)
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/workspace/runtime.py:44: in validate_program
+    raise ConfigurationError("WORKSPACE_ROOT_REQUIRED")
+E   agentloom.errors.ConfigurationError: WORKSPACE_ROOT_REQUIRED: WORKSPACE_ROOT_REQUIRED</failure></testcase><testcase classname="qa.test_sdk_review_round9" name="test_result_read_all_nonnegative_eof_offsets[memory-at_eof-ascii]" time="0.002"><failure message="agentloom.errors.ConfigurationError: WORKSPACE_ROOT_REQUIRED: WORKSPACE_ROOT_REQUIRED">/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round9.py:92: in test_result_read_all_nonnegative_eof_offsets
+    agent = agent_with_tool(runtime, respond, lambda arguments, context: content)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round9.py:49: in agent_with_tool
+    return cls(
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/public/agents.py:60: in __init__
+    self._bind_capabilities()
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/public/agents.py:183: in _bind_capabilities
+    self.runtime_engine._files.validate_program(self)
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/workspace/runtime.py:44: in validate_program
+    raise ConfigurationError("WORKSPACE_ROOT_REQUIRED")
+E   agentloom.errors.ConfigurationError: WORKSPACE_ROOT_REQUIRED: WORKSPACE_ROOT_REQUIRED</failure></testcase><testcase classname="qa.test_sdk_review_round9" name="test_result_read_all_nonnegative_eof_offsets[memory-at_eof-utf8]" time="0.002"><failure message="agentloom.errors.ConfigurationError: WORKSPACE_ROOT_REQUIRED: WORKSPACE_ROOT_REQUIRED">/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round9.py:92: in test_result_read_all_nonnegative_eof_offsets
+    agent = agent_with_tool(runtime, respond, lambda arguments, context: content)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round9.py:49: in agent_with_tool
+    return cls(
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/public/agents.py:60: in __init__
+    self._bind_capabilities()
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/public/agents.py:183: in _bind_capabilities
+    self.runtime_engine._files.validate_program(self)
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/workspace/runtime.py:44: in validate_program
+    raise ConfigurationError("WORKSPACE_ROOT_REQUIRED")
+E   agentloom.errors.ConfigurationError: WORKSPACE_ROOT_REQUIRED: WORKSPACE_ROOT_REQUIRED</failure></testcase><testcase classname="qa.test_sdk_review_round9" name="test_result_read_all_nonnegative_eof_offsets[memory-past_eof-ascii]" time="0.002"><failure message="agentloom.errors.ConfigurationError: WORKSPACE_ROOT_REQUIRED: WORKSPACE_ROOT_REQUIRED">/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round9.py:92: in test_result_read_all_nonnegative_eof_offsets
+    agent = agent_with_tool(runtime, respond, lambda arguments, context: content)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round9.py:49: in agent_with_tool
+    return cls(
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/public/agents.py:60: in __init__
+    self._bind_capabilities()
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/public/agents.py:183: in _bind_capabilities
+    self.runtime_engine._files.validate_program(self)
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/workspace/runtime.py:44: in validate_program
+    raise ConfigurationError("WORKSPACE_ROOT_REQUIRED")
+E   agentloom.errors.ConfigurationError: WORKSPACE_ROOT_REQUIRED: WORKSPACE_ROOT_REQUIRED</failure></testcase><testcase classname="qa.test_sdk_review_round9" name="test_result_read_all_nonnegative_eof_offsets[memory-past_eof-utf8]" time="0.002"><failure message="agentloom.errors.ConfigurationError: WORKSPACE_ROOT_REQUIRED: WORKSPACE_ROOT_REQUIRED">/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round9.py:92: in test_result_read_all_nonnegative_eof_offsets
+    agent = agent_with_tool(runtime, respond, lambda arguments, context: content)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round9.py:49: in agent_with_tool
+    return cls(
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/public/agents.py:60: in __init__
+    self._bind_capabilities()
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/public/agents.py:183: in _bind_capabilities
+    self.runtime_engine._files.validate_program(self)
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/workspace/runtime.py:44: in validate_program
+    raise ConfigurationError("WORKSPACE_ROOT_REQUIRED")
+E   agentloom.errors.ConfigurationError: WORKSPACE_ROOT_REQUIRED: WORKSPACE_ROOT_REQUIRED</failure></testcase><testcase classname="qa.test_sdk_review_round9" name="test_result_read_all_nonnegative_eof_offsets[memory-far_past_eof-ascii]" time="0.002"><failure message="agentloom.errors.ConfigurationError: WORKSPACE_ROOT_REQUIRED: WORKSPACE_ROOT_REQUIRED">/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round9.py:92: in test_result_read_all_nonnegative_eof_offsets
+    agent = agent_with_tool(runtime, respond, lambda arguments, context: content)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round9.py:49: in agent_with_tool
+    return cls(
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/public/agents.py:60: in __init__
+    self._bind_capabilities()
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/public/agents.py:183: in _bind_capabilities
+    self.runtime_engine._files.validate_program(self)
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/workspace/runtime.py:44: in validate_program
+    raise ConfigurationError("WORKSPACE_ROOT_REQUIRED")
+E   agentloom.errors.ConfigurationError: WORKSPACE_ROOT_REQUIRED: WORKSPACE_ROOT_REQUIRED</failure></testcase><testcase classname="qa.test_sdk_review_round9" name="test_result_read_all_nonnegative_eof_offsets[memory-far_past_eof-utf8]" time="0.002"><failure message="agentloom.errors.ConfigurationError: WORKSPACE_ROOT_REQUIRED: WORKSPACE_ROOT_REQUIRED">/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round9.py:92: in test_result_read_all_nonnegative_eof_offsets
+    agent = agent_with_tool(runtime, respond, lambda arguments, context: content)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round9.py:49: in agent_with_tool
+    return cls(
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/public/agents.py:60: in __init__
+    self._bind_capabilities()
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/public/agents.py:183: in _bind_capabilities
+    self.runtime_engine._files.validate_program(self)
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/workspace/runtime.py:44: in validate_program
+    raise ConfigurationError("WORKSPACE_ROOT_REQUIRED")
+E   agentloom.errors.ConfigurationError: WORKSPACE_ROOT_REQUIRED: WORKSPACE_ROOT_REQUIRED</failure></testcase><testcase classname="qa.test_sdk_review_round9" name="test_result_read_all_nonnegative_eof_offsets[file-inside-ascii]" time="0.002"><failure message="agentloom.errors.ConfigurationError: WORKSPACE_ROOT_REQUIRED: WORKSPACE_ROOT_REQUIRED">/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round9.py:92: in test_result_read_all_nonnegative_eof_offsets
+    agent = agent_with_tool(runtime, respond, lambda arguments, context: content)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round9.py:49: in agent_with_tool
+    return cls(
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/public/agents.py:60: in __init__
+    self._bind_capabilities()
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/public/agents.py:183: in _bind_capabilities
+    self.runtime_engine._files.validate_program(self)
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/workspace/runtime.py:44: in validate_program
+    raise ConfigurationError("WORKSPACE_ROOT_REQUIRED")
+E   agentloom.errors.ConfigurationError: WORKSPACE_ROOT_REQUIRED: WORKSPACE_ROOT_REQUIRED</failure></testcase><testcase classname="qa.test_sdk_review_round9" name="test_result_read_all_nonnegative_eof_offsets[file-inside-utf8]" time="0.002"><failure message="agentloom.errors.ConfigurationError: WORKSPACE_ROOT_REQUIRED: WORKSPACE_ROOT_REQUIRED">/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round9.py:92: in test_result_read_all_nonnegative_eof_offsets
+    agent = agent_with_tool(runtime, respond, lambda arguments, context: content)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round9.py:49: in agent_with_tool
+    return cls(
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/public/agents.py:60: in __init__
+    self._bind_capabilities()
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/public/agents.py:183: in _bind_capabilities
+    self.runtime_engine._files.validate_program(self)
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/workspace/runtime.py:44: in validate_program
+    raise ConfigurationError("WORKSPACE_ROOT_REQUIRED")
+E   agentloom.errors.ConfigurationError: WORKSPACE_ROOT_REQUIRED: WORKSPACE_ROOT_REQUIRED</failure></testcase><testcase classname="qa.test_sdk_review_round9" name="test_result_read_all_nonnegative_eof_offsets[file-at_eof-ascii]" time="0.002"><failure message="agentloom.errors.ConfigurationError: WORKSPACE_ROOT_REQUIRED: WORKSPACE_ROOT_REQUIRED">/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round9.py:92: in test_result_read_all_nonnegative_eof_offsets
+    agent = agent_with_tool(runtime, respond, lambda arguments, context: content)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round9.py:49: in agent_with_tool
+    return cls(
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/public/agents.py:60: in __init__
+    self._bind_capabilities()
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/public/agents.py:183: in _bind_capabilities
+    self.runtime_engine._files.validate_program(self)
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/workspace/runtime.py:44: in validate_program
+    raise ConfigurationError("WORKSPACE_ROOT_REQUIRED")
+E   agentloom.errors.ConfigurationError: WORKSPACE_ROOT_REQUIRED: WORKSPACE_ROOT_REQUIRED</failure></testcase><testcase classname="qa.test_sdk_review_round9" name="test_result_read_all_nonnegative_eof_offsets[file-at_eof-utf8]" time="0.002"><failure message="agentloom.errors.ConfigurationError: WORKSPACE_ROOT_REQUIRED: WORKSPACE_ROOT_REQUIRED">/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round9.py:92: in test_result_read_all_nonnegative_eof_offsets
+    agent = agent_with_tool(runtime, respond, lambda arguments, context: content)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round9.py:49: in agent_with_tool
+    return cls(
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/public/agents.py:60: in __init__
+    self._bind_capabilities()
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/public/agents.py:183: in _bind_capabilities
+    self.runtime_engine._files.validate_program(self)
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/workspace/runtime.py:44: in validate_program
+    raise ConfigurationError("WORKSPACE_ROOT_REQUIRED")
+E   agentloom.errors.ConfigurationError: WORKSPACE_ROOT_REQUIRED: WORKSPACE_ROOT_REQUIRED</failure></testcase><testcase classname="qa.test_sdk_review_round9" name="test_result_read_all_nonnegative_eof_offsets[file-past_eof-ascii]" time="0.002"><failure message="agentloom.errors.ConfigurationError: WORKSPACE_ROOT_REQUIRED: WORKSPACE_ROOT_REQUIRED">/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round9.py:92: in test_result_read_all_nonnegative_eof_offsets
+    agent = agent_with_tool(runtime, respond, lambda arguments, context: content)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round9.py:49: in agent_with_tool
+    return cls(
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/public/agents.py:60: in __init__
+    self._bind_capabilities()
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/public/agents.py:183: in _bind_capabilities
+    self.runtime_engine._files.validate_program(self)
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/workspace/runtime.py:44: in validate_program
+    raise ConfigurationError("WORKSPACE_ROOT_REQUIRED")
+E   agentloom.errors.ConfigurationError: WORKSPACE_ROOT_REQUIRED: WORKSPACE_ROOT_REQUIRED</failure></testcase><testcase classname="qa.test_sdk_review_round9" name="test_result_read_all_nonnegative_eof_offsets[file-past_eof-utf8]" time="0.002"><failure message="agentloom.errors.ConfigurationError: WORKSPACE_ROOT_REQUIRED: WORKSPACE_ROOT_REQUIRED">/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round9.py:92: in test_result_read_all_nonnegative_eof_offsets
+    agent = agent_with_tool(runtime, respond, lambda arguments, context: content)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round9.py:49: in agent_with_tool
+    return cls(
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/public/agents.py:60: in __init__
+    self._bind_capabilities()
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/public/agents.py:183: in _bind_capabilities
+    self.runtime_engine._files.validate_program(self)
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/workspace/runtime.py:44: in validate_program
+    raise ConfigurationError("WORKSPACE_ROOT_REQUIRED")
+E   agentloom.errors.ConfigurationError: WORKSPACE_ROOT_REQUIRED: WORKSPACE_ROOT_REQUIRED</failure></testcase><testcase classname="qa.test_sdk_review_round9" name="test_result_read_all_nonnegative_eof_offsets[file-far_past_eof-ascii]" time="0.002"><failure message="agentloom.errors.ConfigurationError: WORKSPACE_ROOT_REQUIRED: WORKSPACE_ROOT_REQUIRED">/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round9.py:92: in test_result_read_all_nonnegative_eof_offsets
+    agent = agent_with_tool(runtime, respond, lambda arguments, context: content)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round9.py:49: in agent_with_tool
+    return cls(
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/public/agents.py:60: in __init__
+    self._bind_capabilities()
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/public/agents.py:183: in _bind_capabilities
+    self.runtime_engine._files.validate_program(self)
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/workspace/runtime.py:44: in validate_program
+    raise ConfigurationError("WORKSPACE_ROOT_REQUIRED")
+E   agentloom.errors.ConfigurationError: WORKSPACE_ROOT_REQUIRED: WORKSPACE_ROOT_REQUIRED</failure></testcase><testcase classname="qa.test_sdk_review_round9" name="test_result_read_all_nonnegative_eof_offsets[file-far_past_eof-utf8]" time="0.002"><failure message="agentloom.errors.ConfigurationError: WORKSPACE_ROOT_REQUIRED: WORKSPACE_ROOT_REQUIRED">/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round9.py:92: in test_result_read_all_nonnegative_eof_offsets
+    agent = agent_with_tool(runtime, respond, lambda arguments, context: content)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round9.py:49: in agent_with_tool
+    return cls(
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/public/agents.py:60: in __init__
+    self._bind_capabilities()
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/public/agents.py:183: in _bind_capabilities
+    self.runtime_engine._files.validate_program(self)
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/workspace/runtime.py:44: in validate_program
+    raise ConfigurationError("WORKSPACE_ROOT_REQUIRED")
+E   agentloom.errors.ConfigurationError: WORKSPACE_ROOT_REQUIRED: WORKSPACE_ROOT_REQUIRED</failure></testcase><testcase classname="qa.test_sdk_review_round9" name="test_invalid_astream_cursor_rejects_before_acceptance[memory-negative-react]" time="0.002"><failure message="agentloom.errors.ConfigurationError: WORKSPACE_ROOT_REQUIRED: WORKSPACE_ROOT_REQUIRED">/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round9.py:130: in test_invalid_astream_cursor_rejects_before_acceptance
+    agent = agent_with_tool(
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round9.py:49: in agent_with_tool
+    return cls(
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/public/agents.py:60: in __init__
+    self._bind_capabilities()
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/public/agents.py:183: in _bind_capabilities
+    self.runtime_engine._files.validate_program(self)
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/workspace/runtime.py:44: in validate_program
+    raise ConfigurationError("WORKSPACE_ROOT_REQUIRED")
+E   agentloom.errors.ConfigurationError: WORKSPACE_ROOT_REQUIRED: WORKSPACE_ROOT_REQUIRED</failure></testcase><testcase classname="qa.test_sdk_review_round9" name="test_invalid_astream_cursor_rejects_before_acceptance[memory-negative-plan]" time="0.002"><failure message="agentloom.errors.ConfigurationError: WORKSPACE_ROOT_REQUIRED: WORKSPACE_ROOT_REQUIRED">/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round9.py:130: in test_invalid_astream_cursor_rejects_before_acceptance
+    agent = agent_with_tool(
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round9.py:49: in agent_with_tool
+    return cls(
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/public/agents.py:245: in __init__
+    self._bind_capabilities()
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/public/agents.py:183: in _bind_capabilities
+    self.runtime_engine._files.validate_program(self)
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/workspace/runtime.py:44: in validate_program
+    raise ConfigurationError("WORKSPACE_ROOT_REQUIRED")
+E   agentloom.errors.ConfigurationError: WORKSPACE_ROOT_REQUIRED: WORKSPACE_ROOT_REQUIRED</failure></testcase><testcase classname="qa.test_sdk_review_round9" name="test_invalid_astream_cursor_rejects_before_acceptance[memory-null-react]" time="0.002"><failure message="agentloom.errors.ConfigurationError: WORKSPACE_ROOT_REQUIRED: WORKSPACE_ROOT_REQUIRED">/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round9.py:130: in test_invalid_astream_cursor_rejects_before_acceptance
+    agent = agent_with_tool(
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round9.py:49: in agent_with_tool
+    return cls(
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/public/agents.py:60: in __init__
+    self._bind_capabilities()
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/public/agents.py:183: in _bind_capabilities
+    self.runtime_engine._files.validate_program(self)
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/workspace/runtime.py:44: in validate_program
+    raise ConfigurationError("WORKSPACE_ROOT_REQUIRED")
+E   agentloom.errors.ConfigurationError: WORKSPACE_ROOT_REQUIRED: WORKSPACE_ROOT_REQUIRED</failure></testcase><testcase classname="qa.test_sdk_review_round9" name="test_invalid_astream_cursor_rejects_before_acceptance[memory-null-plan]" time="0.002"><failure message="agentloom.errors.ConfigurationError: WORKSPACE_ROOT_REQUIRED: WORKSPACE_ROOT_REQUIRED">/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round9.py:130: in test_invalid_astream_cursor_rejects_before_acceptance
+    agent = agent_with_tool(
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round9.py:49: in agent_with_tool
+    return cls(
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/public/agents.py:245: in __init__
+    self._bind_capabilities()
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/public/agents.py:183: in _bind_capabilities
+    self.runtime_engine._files.validate_program(self)
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/workspace/runtime.py:44: in validate_program
+    raise ConfigurationError("WORKSPACE_ROOT_REQUIRED")
+E   agentloom.errors.ConfigurationError: WORKSPACE_ROOT_REQUIRED: WORKSPACE_ROOT_REQUIRED</failure></testcase><testcase classname="qa.test_sdk_review_round9" name="test_invalid_astream_cursor_rejects_before_acceptance[memory-bool-react]" time="0.002"><failure message="agentloom.errors.ConfigurationError: WORKSPACE_ROOT_REQUIRED: WORKSPACE_ROOT_REQUIRED">/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round9.py:130: in test_invalid_astream_cursor_rejects_before_acceptance
+    agent = agent_with_tool(
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round9.py:49: in agent_with_tool
+    return cls(
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/public/agents.py:60: in __init__
+    self._bind_capabilities()
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/public/agents.py:183: in _bind_capabilities
+    self.runtime_engine._files.validate_program(self)
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/workspace/runtime.py:44: in validate_program
+    raise ConfigurationError("WORKSPACE_ROOT_REQUIRED")
+E   agentloom.errors.ConfigurationError: WORKSPACE_ROOT_REQUIRED: WORKSPACE_ROOT_REQUIRED</failure></testcase><testcase classname="qa.test_sdk_review_round9" name="test_invalid_astream_cursor_rejects_before_acceptance[memory-bool-plan]" time="0.002"><failure message="agentloom.errors.ConfigurationError: WORKSPACE_ROOT_REQUIRED: WORKSPACE_ROOT_REQUIRED">/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round9.py:130: in test_invalid_astream_cursor_rejects_before_acceptance
+    agent = agent_with_tool(
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round9.py:49: in agent_with_tool
+    return cls(
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/public/agents.py:245: in __init__
+    self._bind_capabilities()
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/public/agents.py:183: in _bind_capabilities
+    self.runtime_engine._files.validate_program(self)
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/workspace/runtime.py:44: in validate_program
+    raise ConfigurationError("WORKSPACE_ROOT_REQUIRED")
+E   agentloom.errors.ConfigurationError: WORKSPACE_ROOT_REQUIRED: WORKSPACE_ROOT_REQUIRED</failure></testcase><testcase classname="qa.test_sdk_review_round9" name="test_invalid_astream_cursor_rejects_before_acceptance[memory-float-react]" time="0.002"><failure message="agentloom.errors.ConfigurationError: WORKSPACE_ROOT_REQUIRED: WORKSPACE_ROOT_REQUIRED">/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round9.py:130: in test_invalid_astream_cursor_rejects_before_acceptance
+    agent = agent_with_tool(
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round9.py:49: in agent_with_tool
+    return cls(
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/public/agents.py:60: in __init__
+    self._bind_capabilities()
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/public/agents.py:183: in _bind_capabilities
+    self.runtime_engine._files.validate_program(self)
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/workspace/runtime.py:44: in validate_program
+    raise ConfigurationError("WORKSPACE_ROOT_REQUIRED")
+E   agentloom.errors.ConfigurationError: WORKSPACE_ROOT_REQUIRED: WORKSPACE_ROOT_REQUIRED</failure></testcase><testcase classname="qa.test_sdk_review_round9" name="test_invalid_astream_cursor_rejects_before_acceptance[memory-float-plan]" time="0.002"><failure message="agentloom.errors.ConfigurationError: WORKSPACE_ROOT_REQUIRED: WORKSPACE_ROOT_REQUIRED">/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round9.py:130: in test_invalid_astream_cursor_rejects_before_acceptance
+    agent = agent_with_tool(
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round9.py:49: in agent_with_tool
+    return cls(
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/public/agents.py:245: in __init__
+    self._bind_capabilities()
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/public/agents.py:183: in _bind_capabilities
+    self.runtime_engine._files.validate_program(self)
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/workspace/runtime.py:44: in validate_program
+    raise ConfigurationError("WORKSPACE_ROOT_REQUIRED")
+E   agentloom.errors.ConfigurationError: WORKSPACE_ROOT_REQUIRED: WORKSPACE_ROOT_REQUIRED</failure></testcase><testcase classname="qa.test_sdk_review_round9" name="test_invalid_astream_cursor_rejects_before_acceptance[file-negative-react]" time="0.002"><failure message="agentloom.errors.ConfigurationError: WORKSPACE_ROOT_REQUIRED: WORKSPACE_ROOT_REQUIRED">/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round9.py:130: in test_invalid_astream_cursor_rejects_before_acceptance
+    agent = agent_with_tool(
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round9.py:49: in agent_with_tool
+    return cls(
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/public/agents.py:60: in __init__
+    self._bind_capabilities()
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/public/agents.py:183: in _bind_capabilities
+    self.runtime_engine._files.validate_program(self)
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/workspace/runtime.py:44: in validate_program
+    raise ConfigurationError("WORKSPACE_ROOT_REQUIRED")
+E   agentloom.errors.ConfigurationError: WORKSPACE_ROOT_REQUIRED: WORKSPACE_ROOT_REQUIRED</failure></testcase><testcase classname="qa.test_sdk_review_round9" name="test_invalid_astream_cursor_rejects_before_acceptance[file-negative-plan]" time="0.002"><failure message="agentloom.errors.ConfigurationError: WORKSPACE_ROOT_REQUIRED: WORKSPACE_ROOT_REQUIRED">/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round9.py:130: in test_invalid_astream_cursor_rejects_before_acceptance
+    agent = agent_with_tool(
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round9.py:49: in agent_with_tool
+    return cls(
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/public/agents.py:245: in __init__
+    self._bind_capabilities()
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/public/agents.py:183: in _bind_capabilities
+    self.runtime_engine._files.validate_program(self)
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/workspace/runtime.py:44: in validate_program
+    raise ConfigurationError("WORKSPACE_ROOT_REQUIRED")
+E   agentloom.errors.ConfigurationError: WORKSPACE_ROOT_REQUIRED: WORKSPACE_ROOT_REQUIRED</failure></testcase><testcase classname="qa.test_sdk_review_round9" name="test_invalid_astream_cursor_rejects_before_acceptance[file-null-react]" time="0.002"><failure message="agentloom.errors.ConfigurationError: WORKSPACE_ROOT_REQUIRED: WORKSPACE_ROOT_REQUIRED">/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round9.py:130: in test_invalid_astream_cursor_rejects_before_acceptance
+    agent = agent_with_tool(
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round9.py:49: in agent_with_tool
+    return cls(
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/public/agents.py:60: in __init__
+    self._bind_capabilities()
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/public/agents.py:183: in _bind_capabilities
+    self.runtime_engine._files.validate_program(self)
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/workspace/runtime.py:44: in validate_program
+    raise ConfigurationError("WORKSPACE_ROOT_REQUIRED")
+E   agentloom.errors.ConfigurationError: WORKSPACE_ROOT_REQUIRED: WORKSPACE_ROOT_REQUIRED</failure></testcase><testcase classname="qa.test_sdk_review_round9" name="test_invalid_astream_cursor_rejects_before_acceptance[file-null-plan]" time="0.002"><failure message="agentloom.errors.ConfigurationError: WORKSPACE_ROOT_REQUIRED: WORKSPACE_ROOT_REQUIRED">/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round9.py:130: in test_invalid_astream_cursor_rejects_before_acceptance
+    agent = agent_with_tool(
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round9.py:49: in agent_with_tool
+    return cls(
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/public/agents.py:245: in __init__
+    self._bind_capabilities()
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/public/agents.py:183: in _bind_capabilities
+    self.runtime_engine._files.validate_program(self)
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/workspace/runtime.py:44: in validate_program
+    raise ConfigurationError("WORKSPACE_ROOT_REQUIRED")
+E   agentloom.errors.ConfigurationError: WORKSPACE_ROOT_REQUIRED: WORKSPACE_ROOT_REQUIRED</failure></testcase><testcase classname="qa.test_sdk_review_round9" name="test_invalid_astream_cursor_rejects_before_acceptance[file-bool-react]" time="0.002"><failure message="agentloom.errors.ConfigurationError: WORKSPACE_ROOT_REQUIRED: WORKSPACE_ROOT_REQUIRED">/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round9.py:130: in test_invalid_astream_cursor_rejects_before_acceptance
+    agent = agent_with_tool(
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round9.py:49: in agent_with_tool
+    return cls(
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/public/agents.py:60: in __init__
+    self._bind_capabilities()
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/public/agents.py:183: in _bind_capabilities
+    self.runtime_engine._files.validate_program(self)
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/workspace/runtime.py:44: in validate_program
+    raise ConfigurationError("WORKSPACE_ROOT_REQUIRED")
+E   agentloom.errors.ConfigurationError: WORKSPACE_ROOT_REQUIRED: WORKSPACE_ROOT_REQUIRED</failure></testcase><testcase classname="qa.test_sdk_review_round9" name="test_invalid_astream_cursor_rejects_before_acceptance[file-bool-plan]" time="0.002"><failure message="agentloom.errors.ConfigurationError: WORKSPACE_ROOT_REQUIRED: WORKSPACE_ROOT_REQUIRED">/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round9.py:130: in test_invalid_astream_cursor_rejects_before_acceptance
+    agent = agent_with_tool(
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round9.py:49: in agent_with_tool
+    return cls(
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/public/agents.py:245: in __init__
+    self._bind_capabilities()
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/public/agents.py:183: in _bind_capabilities
+    self.runtime_engine._files.validate_program(self)
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/workspace/runtime.py:44: in validate_program
+    raise ConfigurationError("WORKSPACE_ROOT_REQUIRED")
+E   agentloom.errors.ConfigurationError: WORKSPACE_ROOT_REQUIRED: WORKSPACE_ROOT_REQUIRED</failure></testcase><testcase classname="qa.test_sdk_review_round9" name="test_invalid_astream_cursor_rejects_before_acceptance[file-float-react]" time="0.002"><failure message="agentloom.errors.ConfigurationError: WORKSPACE_ROOT_REQUIRED: WORKSPACE_ROOT_REQUIRED">/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round9.py:130: in test_invalid_astream_cursor_rejects_before_acceptance
+    agent = agent_with_tool(
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round9.py:49: in agent_with_tool
+    return cls(
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/public/agents.py:60: in __init__
+    self._bind_capabilities()
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/public/agents.py:183: in _bind_capabilities
+    self.runtime_engine._files.validate_program(self)
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/workspace/runtime.py:44: in validate_program
+    raise ConfigurationError("WORKSPACE_ROOT_REQUIRED")
+E   agentloom.errors.ConfigurationError: WORKSPACE_ROOT_REQUIRED: WORKSPACE_ROOT_REQUIRED</failure></testcase><testcase classname="qa.test_sdk_review_round9" name="test_invalid_astream_cursor_rejects_before_acceptance[file-float-plan]" time="0.002"><failure message="agentloom.errors.ConfigurationError: WORKSPACE_ROOT_REQUIRED: WORKSPACE_ROOT_REQUIRED">/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round9.py:130: in test_invalid_astream_cursor_rejects_before_acceptance
+    agent = agent_with_tool(
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round9.py:49: in agent_with_tool
+    return cls(
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/public/agents.py:245: in __init__
+    self._bind_capabilities()
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/public/agents.py:183: in _bind_capabilities
+    self.runtime_engine._files.validate_program(self)
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/workspace/runtime.py:44: in validate_program
+    raise ConfigurationError("WORKSPACE_ROOT_REQUIRED")
+E   agentloom.errors.ConfigurationError: WORKSPACE_ROOT_REQUIRED: WORKSPACE_ROOT_REQUIRED</failure></testcase><testcase classname="qa.test_sdk_review_round9" name="test_valid_astream_cursor_still_accepts_and_delivers_terminal[memory-react]" time="0.002"><failure message="agentloom.errors.ConfigurationError: WORKSPACE_ROOT_REQUIRED: WORKSPACE_ROOT_REQUIRED">/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round9.py:176: in test_valid_astream_cursor_still_accepts_and_delivers_terminal
+    agent = agent_with_tool(runtime, lambda request: ModelResponse("done"), lambda a, c: 1, cls=cls)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round9.py:49: in agent_with_tool
+    return cls(
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/public/agents.py:60: in __init__
+    self._bind_capabilities()
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/public/agents.py:183: in _bind_capabilities
+    self.runtime_engine._files.validate_program(self)
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/workspace/runtime.py:44: in validate_program
+    raise ConfigurationError("WORKSPACE_ROOT_REQUIRED")
+E   agentloom.errors.ConfigurationError: WORKSPACE_ROOT_REQUIRED: WORKSPACE_ROOT_REQUIRED</failure></testcase><testcase classname="qa.test_sdk_review_round9" name="test_valid_astream_cursor_still_accepts_and_delivers_terminal[memory-plan]" time="0.002"><failure message="agentloom.errors.ConfigurationError: WORKSPACE_ROOT_REQUIRED: WORKSPACE_ROOT_REQUIRED">/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round9.py:176: in test_valid_astream_cursor_still_accepts_and_delivers_terminal
+    agent = agent_with_tool(runtime, lambda request: ModelResponse("done"), lambda a, c: 1, cls=cls)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round9.py:49: in agent_with_tool
+    return cls(
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/public/agents.py:245: in __init__
+    self._bind_capabilities()
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/public/agents.py:183: in _bind_capabilities
+    self.runtime_engine._files.validate_program(self)
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/workspace/runtime.py:44: in validate_program
+    raise ConfigurationError("WORKSPACE_ROOT_REQUIRED")
+E   agentloom.errors.ConfigurationError: WORKSPACE_ROOT_REQUIRED: WORKSPACE_ROOT_REQUIRED</failure></testcase><testcase classname="qa.test_sdk_review_round9" name="test_valid_astream_cursor_still_accepts_and_delivers_terminal[file-react]" time="0.002"><failure message="agentloom.errors.ConfigurationError: WORKSPACE_ROOT_REQUIRED: WORKSPACE_ROOT_REQUIRED">/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round9.py:176: in test_valid_astream_cursor_still_accepts_and_delivers_terminal
+    agent = agent_with_tool(runtime, lambda request: ModelResponse("done"), lambda a, c: 1, cls=cls)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round9.py:49: in agent_with_tool
+    return cls(
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/public/agents.py:60: in __init__
+    self._bind_capabilities()
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/public/agents.py:183: in _bind_capabilities
+    self.runtime_engine._files.validate_program(self)
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/workspace/runtime.py:44: in validate_program
+    raise ConfigurationError("WORKSPACE_ROOT_REQUIRED")
+E   agentloom.errors.ConfigurationError: WORKSPACE_ROOT_REQUIRED: WORKSPACE_ROOT_REQUIRED</failure></testcase><testcase classname="qa.test_sdk_review_round9" name="test_valid_astream_cursor_still_accepts_and_delivers_terminal[file-plan]" time="0.002"><failure message="agentloom.errors.ConfigurationError: WORKSPACE_ROOT_REQUIRED: WORKSPACE_ROOT_REQUIRED">/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round9.py:176: in test_valid_astream_cursor_still_accepts_and_delivers_terminal
+    agent = agent_with_tool(runtime, lambda request: ModelResponse("done"), lambda a, c: 1, cls=cls)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round9.py:49: in agent_with_tool
+    return cls(
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/public/agents.py:245: in __init__
+    self._bind_capabilities()
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/public/agents.py:183: in _bind_capabilities
+    self.runtime_engine._files.validate_program(self)
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/workspace/runtime.py:44: in validate_program
+    raise ConfigurationError("WORKSPACE_ROOT_REQUIRED")
+E   agentloom.errors.ConfigurationError: WORKSPACE_ROOT_REQUIRED: WORKSPACE_ROOT_REQUIRED</failure></testcase><testcase classname="qa.test_sdk_review_round9" name="test_exact_unified_patch_preserves_non_lf_utf8_characters[utf8_control]" time="0.005" /><testcase classname="qa.test_sdk_review_round9" name="test_exact_unified_patch_preserves_non_lf_utf8_characters[tab_control]" time="0.003" /><testcase classname="qa.test_sdk_review_round9" name="test_exact_unified_patch_preserves_non_lf_utf8_characters[line_separator]" time="0.003"><failure message="agentloom.errors.AgentLoomError: PATCH_FORMAT_INVALID: PATCH_FORMAT_INVALID">/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round9.py:203: in test_exact_unified_patch_preserves_non_lf_utf8_characters
+    patched = files.patch("unicode.txt", diff, version["etag"])
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/workspace/service.py:173: in patch
+    return self._call("patch", dict(path=path, unified_diff=unified_diff, if_match=if_match))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/workspace/service.py:133: in _call
+    result = synchronous_result(getattr(self._backend, member)(context, **arguments))
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/workspace/local.py:45: in patch
+    return self.environment.patch(
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/environment/mutations.py:120: in patch
+    raise AgentLoomError("PATCH_FORMAT_INVALID")
+E   agentloom.errors.AgentLoomError: PATCH_FORMAT_INVALID: PATCH_FORMAT_INVALID</failure></testcase><testcase classname="qa.test_sdk_review_round9" name="test_exact_unified_patch_preserves_non_lf_utf8_characters[paragraph_separator]" time="0.003"><failure message="agentloom.errors.AgentLoomError: PATCH_FORMAT_INVALID: PATCH_FORMAT_INVALID">/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round9.py:203: in test_exact_unified_patch_preserves_non_lf_utf8_characters
+    patched = files.patch("unicode.txt", diff, version["etag"])
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/workspace/service.py:173: in patch
+    return self._call("patch", dict(path=path, unified_diff=unified_diff, if_match=if_match))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/workspace/service.py:133: in _call
+    result = synchronous_result(getattr(self._backend, member)(context, **arguments))
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/workspace/local.py:45: in patch
+    return self.environment.patch(
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/environment/mutations.py:120: in patch
+    raise AgentLoomError("PATCH_FORMAT_INVALID")
+E   agentloom.errors.AgentLoomError: PATCH_FORMAT_INVALID: PATCH_FORMAT_INVALID</failure></testcase><testcase classname="qa.test_sdk_review_round9" name="test_exact_unified_patch_preserves_non_lf_utf8_characters[nel]" time="0.003"><failure message="agentloom.errors.AgentLoomError: PATCH_FORMAT_INVALID: PATCH_FORMAT_INVALID">/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round9.py:203: in test_exact_unified_patch_preserves_non_lf_utf8_characters
+    patched = files.patch("unicode.txt", diff, version["etag"])
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/workspace/service.py:173: in patch
+    return self._call("patch", dict(path=path, unified_diff=unified_diff, if_match=if_match))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/workspace/service.py:133: in _call
+    result = synchronous_result(getattr(self._backend, member)(context, **arguments))
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/workspace/local.py:45: in patch
+    return self.environment.patch(
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/environment/mutations.py:120: in patch
+    raise AgentLoomError("PATCH_FORMAT_INVALID")
+E   agentloom.errors.AgentLoomError: PATCH_FORMAT_INVALID: PATCH_FORMAT_INVALID</failure></testcase><testcase classname="qa.test_sdk_review_round9" name="test_exact_unified_patch_preserves_non_lf_utf8_characters[vt]" time="0.003"><failure message="agentloom.errors.AgentLoomError: PATCH_FORMAT_INVALID: PATCH_FORMAT_INVALID">/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round9.py:203: in test_exact_unified_patch_preserves_non_lf_utf8_characters
+    patched = files.patch("unicode.txt", diff, version["etag"])
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/workspace/service.py:173: in patch
+    return self._call("patch", dict(path=path, unified_diff=unified_diff, if_match=if_match))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/workspace/service.py:133: in _call
+    result = synchronous_result(getattr(self._backend, member)(context, **arguments))
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/workspace/local.py:45: in patch
+    return self.environment.patch(
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/environment/mutations.py:120: in patch
+    raise AgentLoomError("PATCH_FORMAT_INVALID")
+E   agentloom.errors.AgentLoomError: PATCH_FORMAT_INVALID: PATCH_FORMAT_INVALID</failure></testcase></testsuite></testsuites>

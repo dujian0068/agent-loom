@@ -1,0 +1,237 @@
+{
+  "head": "6179c8e7678e43f7ecef7275abcffcf1be3740b0",
+  "recorded_at": "2026-10-18T14:38:20.596666+00:00",
+  "environment": {
+    "python": "3.12.14 (main, Aug 25 2026, 13:50:33) [Clang 22.1.3 ]",
+    "platform": "macOS-26.7-arm64-arm-64bit"
+  },
+  "baseline_directory": "/Users/bmilk/code/project/agent-loom/.agentloom/test-results/20261018-141539-685079Z",
+  "reused_baseline_counts": {
+    "tests": 1665,
+    "failed": 0,
+    "errors": 0,
+    "skipped": 0,
+    "passed": 1665
+  },
+  "baseline_check_before_new_files_exit_code": 0,
+  "full_suite_rerun": false,
+  "new_tests": {
+    "counts": {
+      "tests": 49,
+      "passed": 32,
+      "failed": 17,
+      "errors": 0,
+      "skipped": 0
+    },
+    "groups": {
+      "test_result_read_all_nonnegative_eof_offsets": {
+        "tests": 16,
+        "passed": 8,
+        "failed": 8,
+        "errors": 0,
+        "skipped": 0
+      },
+      "test_invalid_astream_cursor_reports_error_and_records_acceptance": {
+        "tests": 16,
+        "passed": 16,
+        "failed": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      "test_valid_astream_cursor_still_accepts_and_delivers_terminal": {
+        "tests": 4,
+        "passed": 4,
+        "failed": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      "test_exact_unified_patch_preserves_non_lf_utf8_characters": {
+        "tests": 6,
+        "passed": 2,
+        "failed": 4,
+        "errors": 0,
+        "skipped": 0
+      },
+      "test_glob_pattern_dot_and_repeated_separator_aliases": {
+        "tests": 7,
+        "passed": 2,
+        "failed": 5,
+        "errors": 0,
+        "skipped": 0
+      }
+    },
+    "failed_cases": [
+      {
+        "name": "test_result_read_all_nonnegative_eof_offsets[memory-past_eof-ascii]",
+        "status": "failed",
+        "message": "AssertionError: {'category': 'business', 'code': 'RESULT_SLICE_INVALID', 'external_outcome': 'known', 'field_path': None, ...}\nassert {'category': 'business', 'code': 'RESULT_SLICE_INVALID', 'external_outcome': 'known', 'field_path': None, ...} is None"
+      },
+      {
+        "name": "test_result_read_all_nonnegative_eof_offsets[memory-past_eof-utf8]",
+        "status": "failed",
+        "message": "AssertionError: {'category': 'business', 'code': 'RESULT_SLICE_INVALID', 'external_outcome': 'known', 'field_path': None, ...}\nassert {'category': 'business', 'code': 'RESULT_SLICE_INVALID', 'external_outcome': 'known', 'field_path': None, ...} is None"
+      },
+      {
+        "name": "test_result_read_all_nonnegative_eof_offsets[memory-far_past_eof-ascii]",
+        "status": "failed",
+        "message": "AssertionError: {'category': 'business', 'code': 'RESULT_SLICE_INVALID', 'external_outcome': 'known', 'field_path': None, ...}\nassert {'category': 'business', 'code': 'RESULT_SLICE_INVALID', 'external_outcome': 'known', 'field_path': None, ...} is None"
+      },
+      {
+        "name": "test_result_read_all_nonnegative_eof_offsets[memory-far_past_eof-utf8]",
+        "status": "failed",
+        "message": "AssertionError: {'category': 'business', 'code': 'RESULT_SLICE_INVALID', 'external_outcome': 'known', 'field_path': None, ...}\nassert {'category': 'business', 'code': 'RESULT_SLICE_INVALID', 'external_outcome': 'known', 'field_path': None, ...} is None"
+      },
+      {
+        "name": "test_result_read_all_nonnegative_eof_offsets[file-past_eof-ascii]",
+        "status": "failed",
+        "message": "AssertionError: {'category': 'business', 'code': 'RESULT_SLICE_INVALID', 'external_outcome': 'known', 'field_path': None, ...}\nassert {'category': 'business', 'code': 'RESULT_SLICE_INVALID', 'external_outcome': 'known', 'field_path': None, ...} is None"
+      },
+      {
+        "name": "test_result_read_all_nonnegative_eof_offsets[file-past_eof-utf8]",
+        "status": "failed",
+        "message": "AssertionError: {'category': 'business', 'code': 'RESULT_SLICE_INVALID', 'external_outcome': 'known', 'field_path': None, ...}\nassert {'category': 'business', 'code': 'RESULT_SLICE_INVALID', 'external_outcome': 'known', 'field_path': None, ...} is None"
+      },
+      {
+        "name": "test_result_read_all_nonnegative_eof_offsets[file-far_past_eof-ascii]",
+        "status": "failed",
+        "message": "AssertionError: {'category': 'business', 'code': 'RESULT_SLICE_INVALID', 'external_outcome': 'known', 'field_path': None, ...}\nassert {'category': 'business', 'code': 'RESULT_SLICE_INVALID', 'external_outcome': 'known', 'field_path': None, ...} is None"
+      },
+      {
+        "name": "test_result_read_all_nonnegative_eof_offsets[file-far_past_eof-utf8]",
+        "status": "failed",
+        "message": "AssertionError: {'category': 'business', 'code': 'RESULT_SLICE_INVALID', 'external_outcome': 'known', 'field_path': None, ...}\nassert {'category': 'business', 'code': 'RESULT_SLICE_INVALID', 'external_outcome': 'known', 'field_path': None, ...} is None"
+      },
+      {
+        "name": "test_exact_unified_patch_preserves_non_lf_utf8_characters[line_separator]",
+        "status": "failed",
+        "message": "agentloom.errors.AgentLoomError: PATCH_FORMAT_INVALID: PATCH_FORMAT_INVALID"
+      },
+      {
+        "name": "test_exact_unified_patch_preserves_non_lf_utf8_characters[paragraph_separator]",
+        "status": "failed",
+        "message": "agentloom.errors.AgentLoomError: PATCH_FORMAT_INVALID: PATCH_FORMAT_INVALID"
+      },
+      {
+        "name": "test_exact_unified_patch_preserves_non_lf_utf8_characters[nel]",
+        "status": "failed",
+        "message": "agentloom.errors.AgentLoomError: PATCH_FORMAT_INVALID: PATCH_FORMAT_INVALID"
+      },
+      {
+        "name": "test_exact_unified_patch_preserves_non_lf_utf8_characters[vt]",
+        "status": "failed",
+        "message": "agentloom.errors.AgentLoomError: PATCH_FORMAT_INVALID: PATCH_FORMAT_INVALID"
+      },
+      {
+        "name": "test_glob_pattern_dot_and_repeated_separator_aliases[leading_dot]",
+        "status": "failed",
+        "message": "AssertionError: assert {'paths': [],...cated': False} == {'paths': ['s...cated': False}\n  \n  Omitting 1 identical items, use -vv to show\n  Differing items:\n  {'paths': []} != {'paths': ['sub/a.txt']}\n  Use -v to get more diff"
+      },
+      {
+        "name": "test_glob_pattern_dot_and_repeated_separator_aliases[double_slash]",
+        "status": "failed",
+        "message": "AssertionError: assert {'paths': [],...cated': False} == {'paths': ['s...cated': False}\n  \n  Omitting 1 identical items, use -vv to show\n  Differing items:\n  {'paths': []} != {'paths': ['sub/a.txt']}\n  Use -v to get more diff"
+      },
+      {
+        "name": "test_glob_pattern_dot_and_repeated_separator_aliases[inner_dot]",
+        "status": "failed",
+        "message": "AssertionError: assert {'paths': [],...cated': False} == {'paths': ['s...cated': False}\n  \n  Omitting 1 identical items, use -vv to show\n  Differing items:\n  {'paths': []} != {'paths': ['sub/a.txt']}\n  Use -v to get more diff"
+      },
+      {
+        "name": "test_glob_pattern_dot_and_repeated_separator_aliases[recursive_slash]",
+        "status": "failed",
+        "message": "AssertionError: assert {'paths': [],...cated': False} == {'paths': ['s...cated': False}\n  \n  Omitting 1 identical items, use -vv to show\n  Differing items:\n  {'paths': []} != {'paths': ['sub/a.txt', 'sub/nested/b.txt']}\n  Use -v to get more diff"
+      },
+      {
+        "name": "test_glob_pattern_dot_and_repeated_separator_aliases[recursive_dot]",
+        "status": "failed",
+        "message": "AssertionError: assert {'paths': [],...cated': False} == {'paths': ['s...cated': False}\n  \n  Omitting 1 identical items, use -vv to show\n  Differing items:\n  {'paths': []} != {'paths': ['sub/a.txt', 'sub/nested/b.txt']}\n  Use -v to get more diff"
+      }
+    ],
+    "command": {
+      "command": [
+        "/Users/bmilk/code/project/agent-loom/.venv/bin/python",
+        "-m",
+        "pytest",
+        "-q",
+        "-ra",
+        "-s",
+        "--tb=short",
+        "qa/test_sdk_review_round9.py",
+        "--junitxml=qa/evidence/review-round9-20261018/junit.xml"
+      ],
+      "cwd": "/Users/bmilk/code/project/agent-loom/agentloom-sdk",
+      "started_at": "2026-10-18T14:36:51.091273+00:00",
+      "test_sha256": "ae77bdac3d7e343531e1190e884851ee028e38dfc2655d5477db72c2283a2117",
+      "scope": "round9 new tests only",
+      "full_suite_rerun": false,
+      "real_llm": false,
+      "finished_at": "2026-10-18T14:36:56.238865+00:00",
+      "duration_seconds": 5.147336125024594,
+      "exit_code": 1
+    }
+  },
+  "confirmed_findings": [
+    "R9-01 result_read past EOF",
+    "R9-02 UTF-8 unified patch line splitting",
+    "R9-03 glob pattern path aliases"
+  ],
+  "design_risks_not_counted_as_defects": [
+    "R9-R01 invalid astream cursor can follow durable acceptance"
+  ],
+  "source_integrity": {
+    "existing_files_checked": 195,
+    "changed_existing_files": [],
+    "new_test_sha256": "ae77bdac3d7e343531e1190e884851ee028e38dfc2655d5477db72c2283a2117",
+    "new_test_matches_executed_version": true,
+    "checked_at": "2026-10-18T14:38:20.596666+00:00"
+  },
+  "llm": {
+    "adapter": "ScriptedModel",
+    "credentials_used": false,
+    "network_requests": false
+  },
+  "earlier_attempts": [
+    {
+      "prefix": "initial-fixture-",
+      "counts": {
+        "tests": 42,
+        "passed": 2,
+        "failed": 40
+      },
+      "note": "36 cases did not reach their checks because the new test helper omitted the required local workspace root. Fixture corrected; production code was not changed. Four UTF-8 patch failures were genuine. The astream expectation was also classified against the explicit start-then-observe design instead of being counted as a defect."
+    },
+    {
+      "prefix": "before-glob-",
+      "counts": {
+        "tests": 42,
+        "passed": 30,
+        "failed": 12
+      },
+      "note": "Completed probe run before adding seven glob pattern boundary cases. Final run above supersedes these counts."
+    }
+  ],
+  "report": "/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/REVIEW_RESULTS_2026-10-18_ROUND9.md",
+  "incomplete_feature_groups": 9,
+  "all_confirmed_findings_priority": "P2",
+  "concurrent_edits_after_test_run": {
+    "recorded_at": "2026-10-18T14:42:59.642934+00:00",
+    "last_test_finished_at": "2026-10-18T14:36:56.238865+00:00",
+    "changed_since_test_snapshot": [
+      "agentloom-sdk/src/agentloom/events/bus.py",
+      "agentloom-sdk/src/agentloom/runtime/handlers.py",
+      "agentloom-sdk/src/agentloom/storage/commit.py",
+      "agentloom-sdk/src/agentloom/types.py"
+    ],
+    "new_source_files": {
+      "agentloom-sdk/src/agentloom/nodes/__init__.py": "b5f2af4163b010a2327cbd4655f890a2824937156d721f0407e40b5b0707e5f3",
+      "agentloom-sdk/src/agentloom/nodes/contracts.py": "e92c62fd90082f4d10ff98b1b74c8f2af3d03ae18909a434503b382c92f0f4de",
+      "agentloom-sdk/src/agentloom/checkpoints/journal.py": "3d2fb2f6d1c6be784d18487fb0ae19753884c972ceb56e70774f8869f2967fe6",
+      "agentloom-sdk/src/agentloom/checkpoints/__init__.py": "3e9c4f0d0dec0888c693d9257de00d1f224a64426ae57c465c48ad3b4171c746"
+    },
+    "finding_source_files_unchanged": true,
+    "baseline_applicability": "Valid for the completed audit snapshot; not certified for concurrent source edits made during report finalization",
+    "new_changes_tested": false
+  },
+  "baseline_applicable_to_live_worktree_at_report_close": false,
+  "incomplete_feature_groups_scope": "Verified audit snapshot before concurrent node/checkpoint edits"
+}

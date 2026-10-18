@@ -16,6 +16,15 @@ class _MemoryTransaction:
         key = (kind, key)
         return copy_document(self.pending.get(key, self.data.get(key)))
 
+    def read_path(self, kind, key, path):
+        pair = (kind, key)
+        value = self.pending.get(pair, self.data.get(pair))
+        for part in path:
+            if value is None:
+                return None
+            value = value.get(part)
+        return copy_document(value)
+
     def put(self, kind, key, value):
         self.pending[(kind, key)] = copy_document(value)
 

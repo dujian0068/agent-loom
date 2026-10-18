@@ -42,8 +42,36 @@ class CallDriver:
                     lambda s: s["operations"][op_id].update(source_call_id=source_call_id),
                 )
             return op_id
+        op = self.prepare_operation(
+            task_id, key, event_type, request, purpose, binding_key, source_call_id
+        )
+
+        def begin(state):
+            state["operations"][op_id] = op
+            for batch in state.get("batches", {}).values():
+                if batch["owner_task_id"] != task_id:
+                    continue
+                for member in batch["members"]:
+                    if member["call"]["call_id"] == source_call_id:
+                        member.update(operation_id=op_id, status="admitted")
+
+        runner.commit("begin:" + op_id, begin)
+        return op_id
+
+    def prepare_operation(
+        self,
+        task_id,
+        key,
+        event_type,
+        request,
+        purpose="business",
+        binding_key=None,
+        source_call_id=None,
+    ):
+        runner = self.runner
         task = runner.task(task_id)
-        op = {
+        op_id = str(uuid5(NAMESPACE_URL, f"{runner.run_id}:{task_id}:{key}"))
+        return {
             "operation_id": op_id,
             "task_id": task_id,
             "role_key": task["role_key"],
@@ -67,16 +95,12 @@ class CallDriver:
             "next_attempt_at": None,
             "output_reserve": runner.program.budget.output,
         }
-        runner.commit("begin:" + op_id, lambda s: s["operations"].__setitem__(op_id, op))
-        return op_id
 
-    async def model(
-        self, task_id, key, *, purpose="business", messages=None, max_output_tokens=None
-    ):
+    def model_request(self, task_id, *, purpose="business", messages=None, max_output_tokens=None):
         runner = self.runner
         task = runner.task(task_id)
         selected = materialize(task["context"]) if messages is None else []
-        request = {
+        return {
             "messages": messages if messages is not None else [r["message"] for r in selected],
             "record_ids": [r["record_id"] for r in selected],
             "tools": runner.tools(task["role_key"]) if purpose == "business" else [],
@@ -88,6 +112,13 @@ class CallDriver:
             ),
             "parameters": dict(runner.program.model_options.parameters),
         }
+
+    async def model(
+        self, task_id, key, *, purpose="business", messages=None, max_output_tokens=None
+    ):
+        request = self.model_request(
+            task_id, purpose=purpose, messages=messages, max_output_tokens=max_output_tokens
+        )
         op_id = self.begin(task_id, key, "model.generate", request, purpose)
         return await self.advance(op_id)
 
@@ -173,7 +204,12 @@ class CallDriver:
         if op["raw"] is None:
             runner.check_active()
             if op["event_type"] == "executor.delegate":
-                raw = await runner.delegate(op_id)
+                if op["target_ref"] is None:
+                    prepared = await runner.bus.request(
+                        BusinessEvent("executor.delegate", op_id, op["request"])
+                    )
+                    runner.engine.start_delegate(op_id, prepared)
+                raw = await runner.engine.wait_delegate(op_id)
                 runner.commit(
                     "delegate-raw:" + op_id,
                     lambda s: s["operations"][op_id].update(
@@ -227,7 +263,9 @@ class CallDriver:
                     and op["purpose"] == "business"
                     and not op["permit"]
                 ):
-                    await self.compaction.prepare(op_id)
+                    await runner.bus.request(
+                        BusinessEvent("context.compact", op_id, {}), runner.lease
+                    )
                 await self._permit(op_id)
                 await self._attempts(op_id)
         runner.check_active()
@@ -301,6 +339,16 @@ class CallDriver:
                         >= runner.program.execution_policy.loop_max
                     ):
                         raise AgentLoomError("LOOP_LIMIT_EXCEEDED")
+                    if s["tasks"][op["task_id"]].get("continuation") and not feedback_only:
+                        continuation = s["tasks"][op["task_id"]]["continuation"]
+                        continuation.update(
+                            phase="call_model",
+                            current_loop_ticket_id=op_id,
+                            context_revision_ref={
+                                "context_id": s["tasks"][op["task_id"]]["context"]["context_id"],
+                                "revision": s["tasks"][op["task_id"]]["context"]["revision"],
+                            },
+                        )
                     current["ticket"] = "reserved"
                     s["usage"]["loops_reserved"] += 1
                     if not feedback_only and op["task_id"] == s["root_task_id"]:
@@ -537,15 +585,19 @@ class CallDriver:
 
             op = s["operations"][op_id]
             op.update(status=response["status"], phase="completed", response=response)
-            if op["ticket"] == "reserved":
-                consumed = response["status"] == "succeeded" or op["task_id"] != s["root_task_id"]
-                op["ticket"] = "consumed" if consumed else "released"
+            # A model response is durable before its decision is accepted. The
+            # node's acceptance commit consumes its ticket together with context
+            # and batch creation; Executor failure consumes with its TaskResult.
+            if (
+                op["ticket"] == "reserved"
+                and response["status"] != "succeeded"
+                and op["task_id"] == s["root_task_id"]
+            ):
+                op["ticket"] = "released"
                 s["usage"]["loops_reserved"] -= 1
-                if consumed:
-                    s["usage"]["loops_consumed"] += 1
-                    op["consumption_kind"] = (
-                        "decision" if response["status"] == "succeeded" else "error_feedback"
-                    )
+            from .batches import settle_operation
+
+            settle_operation(s, op_id, response)
             emit(
                 s,
                 "operation.completed",

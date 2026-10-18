@@ -1,0 +1,26 @@
+{
+  "sub/*.txt": [
+    "sub/a.txt"
+  ],
+  "./sub/*.txt": [
+    "sub/a.txt"
+  ],
+  "sub//*.txt": [
+    "sub/a.txt"
+  ],
+  "sub/./*.txt": [
+    "sub/a.txt"
+  ],
+  "**/*.txt": [
+    "sub/a.txt",
+    "sub/nested/b.txt"
+  ],
+  "**//*.txt": [
+    "sub/a.txt",
+    "sub/nested/b.txt"
+  ],
+  "**/./*.txt": [
+    "sub/a.txt",
+    "sub/nested/b.txt"
+  ]
+}

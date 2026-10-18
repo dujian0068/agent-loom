@@ -230,7 +230,7 @@ class HookHandler(EventBusImpl):
                 )
                 try:
                     async with asyncio.timeout(binding.timeout_ms / 1000):
-                        decision = await self.resolve(binding.handler_key).handler.handle(
+                        decision = await self.resolve(binding.handler_key)[0].handler.handle(
                             hook_event,
                             HookCallContext(reader, metadata),
                         )

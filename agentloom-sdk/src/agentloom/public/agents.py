@@ -67,11 +67,11 @@ class ReactAgent(AgentParameterView):
     def context(self):
         return self._context
 
-    async def _activate(self, node_context):
+    def _activate(self, input, continuation, node_context):
         # Local imports keep the public facade independent of runtime assembly.
         from ..runtime.agent_loop import AgentLoop
 
-        return await AgentLoop(self, node_context).run()
+        return AgentLoop(self, node_context).activate(input, continuation)
 
     async def start(self, input=None, *, session_id=None, run_id=None, input_id=None):
         """Accept or reopen a Run and return its observation/control RunHandle.
@@ -261,6 +261,6 @@ class AgentNode:
     def astream(self, input=None, **ids):
         return self.agent.astream(input, **ids)
 
-    async def activate(self, input, continuation, node_context):
+    def activate(self, input, continuation, node_context):
         # Internal activation is scoped to an existing task, never public start().
-        return await self.agent._activate(node_context)
+        return self.agent._activate(input, continuation, node_context)

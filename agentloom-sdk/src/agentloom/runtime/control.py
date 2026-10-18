@@ -82,7 +82,21 @@ def finalize_run(runtime, lease, status, *, output=None, error=None):
             )
         for task in s["tasks"].values():
             if task["status"] not in {"succeeded", "failed", "cancelled"}:
-                task.update(status="cancelled", error=final_error, stage="completed")
+                task.update(
+                    status="cancelled", error=final_error, stage="completed", wait_condition=None
+                )
+                if task.get("continuation"):
+                    task["continuation"]["phase"] = "completed"
+                activation = s.get("activations", {}).get(task.get("activation_id"))
+                if activation:
+                    activation["status"] = "abandoned"
+                s.setdefault("task_results", {})[task["task_id"]] = {
+                    "task_id": task["task_id"],
+                    "status": "cancelled",
+                    "result": None,
+                    "error": final_error,
+                }
+
         for op in s["operations"].values():
             if op["ticket"] == "reserved":
                 op["ticket"] = "released"
@@ -123,6 +137,17 @@ def finalize_run(runtime, lease, status, *, output=None, error=None):
             for attempt in op["attempts"]:
                 if attempt["status"] == "started":
                     attempt.update(status="cancelled", ended_at=time.time(), error=final_error)
+        for batch in s.get("batches", {}).values():
+            for member in batch["members"]:
+                member["admission_token"] = None
+                if member["status"] != "settled":
+                    op = s["operations"].get(member["operation_id"])
+                    member.update(
+                        status="settled",
+                        response=copy_document(op["response"])
+                        if op
+                        else failure(final_error or AgentLoomError("RUN_ENDED").to_dict()),
+                    )
         s["usage"]["loops_reserved"] = 0
         for item in s["inputs"]:
             if item["input_id"] != s["input_id"] and item["delivery_state"] in {

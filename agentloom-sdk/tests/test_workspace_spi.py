@@ -1,5 +1,6 @@
 """Installed provider discovery plus runtime authorization, recovery and ownership."""
 
+import asyncio
 import json
 import sys
 import time
@@ -567,6 +568,11 @@ async def test_background_cleanup_receives_independent_job_identity(file_provide
 
         result = await agent(runtime, respond, "write").ainvoke("go")
         CleanupService(runtime).scan_once()
+        # Another maintenance worker may already own this job; a scan does not
+        # join that worker. Await the documented durable cleanup outcome.
+        async with asyncio.timeout(3):
+            while runtime._load(result.run_id)["cleanup_state"] != "succeeded":
+                await asyncio.sleep(0.01)
         state = runtime._load(result.run_id)
         assert state["cleanup_state"] == "succeeded"
         assert received[-1].cleanup_job_id == state["cleanup_job"]["job_id"]

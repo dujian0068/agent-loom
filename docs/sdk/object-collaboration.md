@@ -1,6 +1,6 @@
 # SDK 对象关系与交互 UML
 
-状态：详细设计，尚未实现。本页定义对象如何协作；[Definition 与运行实体](definitions.md)定义身份与归属，[调用总线](event-bus.md)和[检查点](checkpoints.md)定义状态机与提交算法。三者共同作为实现依据。
+状态：当前已实现 ReAct／Plan 角色、NodeDriver 生成器交付、受限 NodeContext、GraphExecutionHandler 委派及图／节点检查点。下方 UML 仍包含完整目标中的 Workflow、内容存储和可靠订阅对象，不能将其全部视为已发布接口；当前实现映射见[实现记录](implementation.md#节点协议与检查点设计对齐)。
 
 图例：实线带菱形表示组成及生命周期管理，普通箭头表示引用／调用，普通虚线箭头表示依赖；实线空心三角表示类继承，虚线空心三角表示接口实现。时序图的箭头才表示执行先后。不能把“能访问某对象”理解为拥有它的生命周期。
 
@@ -87,7 +87,7 @@ RuntimeEngine 不持有供所有 Agent 共用的聊天记录。角色的 AgentCo
 <details>
 <summary>展开：构造参数示意</summary>
 
-下面的变量代表调用方已准备好的配置和适配器，名称及参数遵循[构造合同](assembly.md#2-python-构造合同)。这是目标设计示意，SDK 尚未实现。
+下面的变量代表调用方已准备好的配置和适配器，名称及参数遵循[构造合同](assembly.md#2-python-构造合同)。这是完整目标设计示意；已实现的构造方式与可运行示例见[接入指南](integration.md)，目标中的其他接口以实现记录列出的边界为准。
 
 ```python
 runtime = RuntimeEngine(

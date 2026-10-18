@@ -9,6 +9,7 @@ from uuid import uuid4
 from .capabilities.contracts import CapabilityAdapter as CapabilityAdapter
 from .configuration import freeze, number
 from .errors import ConfigurationError, RequestError
+from .nodes import ActivationStream, ContinuationRef, NodeContext, NodeInput
 
 
 def new_id():
@@ -173,6 +174,7 @@ class CallStageEvent:
     purpose: str = "business"
     role_key: str | None = None
     source: str = "agent-loop"
+    schema_version: int = 1
 
 
 @runtime_checkable
@@ -184,13 +186,9 @@ class Agent(Protocol):
 
 @runtime_checkable
 class Node(Protocol):
-    async def activate(self, input, continuation, node_context): ...
-
-
-@dataclass(frozen=True)
-class NodeContext:
-    task_id: str
-    driver: Any
+    def activate(
+        self, input: NodeInput, continuation: ContinuationRef | None, node_context: NodeContext
+    ) -> ActivationStream: ...
 
 
 @dataclass(frozen=True)
@@ -213,6 +211,7 @@ class AgentContext:
                 **task["context"],
                 "task_id": self.task_id,
                 "progress": {key: task[key] for key in ("stage", "round", "calls", "status")},
+                "continuation": task.get("continuation"),
             }
         )
 
@@ -230,6 +229,10 @@ class AgentContext:
     @property
     def progress(self):
         return self.snapshot()["progress"]
+
+    @property
+    def continuation(self):
+        return self.snapshot()["continuation"]
 
 
 @runtime_checkable

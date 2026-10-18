@@ -35,6 +35,8 @@ class FunctionToolAdapter(ValueToolAdapter):
 
 class FileToolAdapter(ValueToolAdapter):
     async def invoke(self, member, arguments, context):
+        if getattr(context, "environment_port", None) is not None:
+            return await context.environment_port(member, arguments)
         return getattr(context.workspace, member)(**arguments)
 
 

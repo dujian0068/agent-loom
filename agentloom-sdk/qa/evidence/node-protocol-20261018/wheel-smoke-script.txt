@@ -1,0 +1,34 @@
+import asyncio, json, os, sys
+from pathlib import Path
+sys.path.insert(0, '/tmp/agentloom-architecture-installed')
+import agentloom
+from agentloom import (AgentDefinition, CapabilityBinding, CapabilityRegistry, ModelResponse,
+                       PlanAgent, RuntimeEngine, ScriptedModel, ToolCall, WorkspaceBinding, file_tools)
+assert str(Path(agentloom.__file__)).startswith('/tmp/agentloom-architecture-installed/')
+root=Path('/tmp/agentloom-architecture-smoke-state'); root.mkdir(exist_ok=True); os.chdir(root)
+async def main():
+    calls=[]
+    def model(request):
+        calls.append(request.role_key)
+        if any(m['role']=='tool' for m in request.messages):
+            return ModelResponse('verified')
+        if request.role_key=='planner':
+            return ModelResponse(tool_calls=(ToolCall('delegate_task', {'executor':'worker','task':'write one file'}),))
+        return ModelResponse(tool_calls=(ToolCall('write', {'path':'proof.txt','content':'ok'}),))
+    async with RuntimeEngine() as runtime:
+        agent=PlanAgent(runtime_engine=runtime, model=ScriptedModel(model),
+                        definition=AgentDefinition('planner','Coordinate'),
+                        executors={'worker':AgentDefinition('worker','Write evidence','File worker',capabilities=(
+                            CapabilityBinding('write','builtin_tool','write','files','write'),))},
+                        workspace=WorkspaceBinding(root/'workspace'),
+                        capabilities=CapabilityRegistry(tools=(file_tools(),)))
+        handle=await agent.start('go' if sys.argv[1]=='start' else None, run_id='wheel-node-protocol')
+        result=await handle.wait(timeout_s=10)
+        assert result.status=='succeeded' and result.output.value=='verified'
+        state=runtime.store.load_run_consistently(runtime.namespace, handle.run_id)
+        assert len(state['tasks'])==2
+        assert all(b['delivery_state']=='consumed' for b in state['batches'].values())
+        assert len(calls)==(4 if sys.argv[1]=='start' else 0)
+        print(json.dumps({'status':result.status,'model_calls':len(calls),'tasks':len(state['tasks']),
+                          'loops':result.usage.loops_consumed,'store':type(runtime.store).__name__}))
+asyncio.run(main())

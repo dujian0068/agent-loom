@@ -1,0 +1,153 @@
+{"case": "result_read_eof", "store": "MemoryRuntimeStore", "position": "inside", "offset": 0, "total_bytes": 70000, "read_error": null}
+.{"case": "result_read_eof", "store": "MemoryRuntimeStore", "position": "inside", "offset": 0, "total_bytes": 72000, "read_error": null}
+.{"case": "result_read_eof", "store": "MemoryRuntimeStore", "position": "at_eof", "offset": 70000, "total_bytes": 70000, "read_error": null}
+.{"case": "result_read_eof", "store": "MemoryRuntimeStore", "position": "at_eof", "offset": 72000, "total_bytes": 72000, "read_error": null}
+.{"case": "result_read_eof", "store": "MemoryRuntimeStore", "position": "past_eof", "offset": 70001, "total_bytes": 70000, "read_error": {"category": "business", "code": "RESULT_SLICE_INVALID", "external_outcome": "known", "field_path": null, "message": "RESULT_SLICE_INVALID", "phase": "execute", "retryable_transport": false}}
+F{"case": "result_read_eof", "store": "MemoryRuntimeStore", "position": "past_eof", "offset": 72001, "total_bytes": 72000, "read_error": {"category": "business", "code": "RESULT_SLICE_INVALID", "external_outcome": "known", "field_path": null, "message": "RESULT_SLICE_INVALID", "phase": "execute", "retryable_transport": false}}
+F{"case": "result_read_eof", "store": "MemoryRuntimeStore", "position": "far_past_eof", "offset": 4503599627370496, "total_bytes": 70000, "read_error": {"category": "business", "code": "RESULT_SLICE_INVALID", "external_outcome": "known", "field_path": null, "message": "RESULT_SLICE_INVALID", "phase": "execute", "retryable_transport": false}}
+F{"case": "result_read_eof", "store": "MemoryRuntimeStore", "position": "far_past_eof", "offset": 4503599627370496, "total_bytes": 72000, "read_error": {"category": "business", "code": "RESULT_SLICE_INVALID", "external_outcome": "known", "field_path": null, "message": "RESULT_SLICE_INVALID", "phase": "execute", "retryable_transport": false}}
+F{"case": "result_read_eof", "store": "FileRuntimeStore", "position": "inside", "offset": 0, "total_bytes": 70000, "read_error": null}
+.{"case": "result_read_eof", "store": "FileRuntimeStore", "position": "inside", "offset": 0, "total_bytes": 72000, "read_error": null}
+.{"case": "result_read_eof", "store": "FileRuntimeStore", "position": "at_eof", "offset": 70000, "total_bytes": 70000, "read_error": null}
+.{"case": "result_read_eof", "store": "FileRuntimeStore", "position": "at_eof", "offset": 72000, "total_bytes": 72000, "read_error": null}
+.{"case": "result_read_eof", "store": "FileRuntimeStore", "position": "past_eof", "offset": 70001, "total_bytes": 70000, "read_error": {"category": "business", "code": "RESULT_SLICE_INVALID", "external_outcome": "known", "field_path": null, "message": "RESULT_SLICE_INVALID", "phase": "execute", "retryable_transport": false}}
+F{"case": "result_read_eof", "store": "FileRuntimeStore", "position": "past_eof", "offset": 72001, "total_bytes": 72000, "read_error": {"category": "business", "code": "RESULT_SLICE_INVALID", "external_outcome": "known", "field_path": null, "message": "RESULT_SLICE_INVALID", "phase": "execute", "retryable_transport": false}}
+F{"case": "result_read_eof", "store": "FileRuntimeStore", "position": "far_past_eof", "offset": 4503599627370496, "total_bytes": 70000, "read_error": {"category": "business", "code": "RESULT_SLICE_INVALID", "external_outcome": "known", "field_path": null, "message": "RESULT_SLICE_INVALID", "phase": "execute", "retryable_transport": false}}
+F{"case": "result_read_eof", "store": "FileRuntimeStore", "position": "far_past_eof", "offset": 4503599627370496, "total_bytes": 72000, "read_error": {"category": "business", "code": "RESULT_SLICE_INVALID", "external_outcome": "known", "field_path": null, "message": "RESULT_SLICE_INVALID", "phase": "execute", "retryable_transport": false}}
+F{"case": "invalid_astream_cursor", "store": "MemoryRuntimeStore", "mode": "react", "cursor": -1, "accepted": true, "inputs": 1, "sessions": 1, "model_calls": 2, "tool_side_effects": ["executed"]}
+.{"case": "invalid_astream_cursor", "store": "MemoryRuntimeStore", "mode": "plan", "cursor": -1, "accepted": true, "inputs": 1, "sessions": 1, "model_calls": 2, "tool_side_effects": ["executed"]}
+.{"case": "invalid_astream_cursor", "store": "MemoryRuntimeStore", "mode": "react", "cursor": null, "accepted": true, "inputs": 1, "sessions": 1, "model_calls": 2, "tool_side_effects": ["executed"]}
+.{"case": "invalid_astream_cursor", "store": "MemoryRuntimeStore", "mode": "plan", "cursor": null, "accepted": true, "inputs": 1, "sessions": 1, "model_calls": 2, "tool_side_effects": ["executed"]}
+.{"case": "invalid_astream_cursor", "store": "MemoryRuntimeStore", "mode": "react", "cursor": true, "accepted": true, "inputs": 1, "sessions": 1, "model_calls": 2, "tool_side_effects": ["executed"]}
+.{"case": "invalid_astream_cursor", "store": "MemoryRuntimeStore", "mode": "plan", "cursor": true, "accepted": true, "inputs": 1, "sessions": 1, "model_calls": 2, "tool_side_effects": ["executed"]}
+.{"case": "invalid_astream_cursor", "store": "MemoryRuntimeStore", "mode": "react", "cursor": 0.5, "accepted": true, "inputs": 1, "sessions": 1, "model_calls": 2, "tool_side_effects": ["executed"]}
+.{"case": "invalid_astream_cursor", "store": "MemoryRuntimeStore", "mode": "plan", "cursor": 0.5, "accepted": true, "inputs": 1, "sessions": 1, "model_calls": 2, "tool_side_effects": ["executed"]}
+.{"case": "invalid_astream_cursor", "store": "FileRuntimeStore", "mode": "react", "cursor": -1, "accepted": true, "inputs": 1, "sessions": 1, "model_calls": 2, "tool_side_effects": ["executed"]}
+.{"case": "invalid_astream_cursor", "store": "FileRuntimeStore", "mode": "plan", "cursor": -1, "accepted": true, "inputs": 1, "sessions": 1, "model_calls": 2, "tool_side_effects": ["executed"]}
+.{"case": "invalid_astream_cursor", "store": "FileRuntimeStore", "mode": "react", "cursor": null, "accepted": true, "inputs": 1, "sessions": 1, "model_calls": 2, "tool_side_effects": ["executed"]}
+.{"case": "invalid_astream_cursor", "store": "FileRuntimeStore", "mode": "plan", "cursor": null, "accepted": true, "inputs": 1, "sessions": 1, "model_calls": 2, "tool_side_effects": ["executed"]}
+.{"case": "invalid_astream_cursor", "store": "FileRuntimeStore", "mode": "react", "cursor": true, "accepted": true, "inputs": 1, "sessions": 1, "model_calls": 2, "tool_side_effects": ["executed"]}
+.{"case": "invalid_astream_cursor", "store": "FileRuntimeStore", "mode": "plan", "cursor": true, "accepted": true, "inputs": 1, "sessions": 1, "model_calls": 2, "tool_side_effects": ["executed"]}
+.{"case": "invalid_astream_cursor", "store": "FileRuntimeStore", "mode": "react", "cursor": 0.5, "accepted": true, "inputs": 1, "sessions": 1, "model_calls": 2, "tool_side_effects": ["executed"]}
+.{"case": "invalid_astream_cursor", "store": "FileRuntimeStore", "mode": "plan", "cursor": 0.5, "accepted": true, "inputs": 1, "sessions": 1, "model_calls": 2, "tool_side_effects": ["executed"]}
+.......{"case": "unicode_patch", "middle": "\u4e2d\u2028\u6587", "error": "PATCH_FORMAT_INVALID: PATCH_FORMAT_INVALID"}
+F{"case": "unicode_patch", "middle": "\u4e2d\u2029\u6587", "error": "PATCH_FORMAT_INVALID: PATCH_FORMAT_INVALID"}
+F{"case": "unicode_patch", "middle": "\u4e2d\u0085\u6587", "error": "PATCH_FORMAT_INVALID: PATCH_FORMAT_INVALID"}
+F{"case": "unicode_patch", "middle": "\u4e2d\u000b\u6587", "error": "PATCH_FORMAT_INVALID: PATCH_FORMAT_INVALID"}
+F
+=================================== FAILURES ===================================
+_____ test_result_read_all_nonnegative_eof_offsets[memory-past_eof-ascii] ______
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round9.py:107: in test_result_read_all_nonnegative_eof_offsets
+    assert read["error"] is None, read["error"]
+E   AssertionError: {'category': 'business', 'code': 'RESULT_SLICE_INVALID', 'external_outcome': 'known', 'field_path': None, ...}
+E   assert {'category': 'business', 'code': 'RESULT_SLICE_INVALID', 'external_outcome': 'known', 'field_path': None, ...} is None
+______ test_result_read_all_nonnegative_eof_offsets[memory-past_eof-utf8] ______
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round9.py:107: in test_result_read_all_nonnegative_eof_offsets
+    assert read["error"] is None, read["error"]
+E   AssertionError: {'category': 'business', 'code': 'RESULT_SLICE_INVALID', 'external_outcome': 'known', 'field_path': None, ...}
+E   assert {'category': 'business', 'code': 'RESULT_SLICE_INVALID', 'external_outcome': 'known', 'field_path': None, ...} is None
+___ test_result_read_all_nonnegative_eof_offsets[memory-far_past_eof-ascii] ____
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round9.py:107: in test_result_read_all_nonnegative_eof_offsets
+    assert read["error"] is None, read["error"]
+E   AssertionError: {'category': 'business', 'code': 'RESULT_SLICE_INVALID', 'external_outcome': 'known', 'field_path': None, ...}
+E   assert {'category': 'business', 'code': 'RESULT_SLICE_INVALID', 'external_outcome': 'known', 'field_path': None, ...} is None
+____ test_result_read_all_nonnegative_eof_offsets[memory-far_past_eof-utf8] ____
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round9.py:107: in test_result_read_all_nonnegative_eof_offsets
+    assert read["error"] is None, read["error"]
+E   AssertionError: {'category': 'business', 'code': 'RESULT_SLICE_INVALID', 'external_outcome': 'known', 'field_path': None, ...}
+E   assert {'category': 'business', 'code': 'RESULT_SLICE_INVALID', 'external_outcome': 'known', 'field_path': None, ...} is None
+______ test_result_read_all_nonnegative_eof_offsets[file-past_eof-ascii] _______
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round9.py:107: in test_result_read_all_nonnegative_eof_offsets
+    assert read["error"] is None, read["error"]
+E   AssertionError: {'category': 'business', 'code': 'RESULT_SLICE_INVALID', 'external_outcome': 'known', 'field_path': None, ...}
+E   assert {'category': 'business', 'code': 'RESULT_SLICE_INVALID', 'external_outcome': 'known', 'field_path': None, ...} is None
+_______ test_result_read_all_nonnegative_eof_offsets[file-past_eof-utf8] _______
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round9.py:107: in test_result_read_all_nonnegative_eof_offsets
+    assert read["error"] is None, read["error"]
+E   AssertionError: {'category': 'business', 'code': 'RESULT_SLICE_INVALID', 'external_outcome': 'known', 'field_path': None, ...}
+E   assert {'category': 'business', 'code': 'RESULT_SLICE_INVALID', 'external_outcome': 'known', 'field_path': None, ...} is None
+____ test_result_read_all_nonnegative_eof_offsets[file-far_past_eof-ascii] _____
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round9.py:107: in test_result_read_all_nonnegative_eof_offsets
+    assert read["error"] is None, read["error"]
+E   AssertionError: {'category': 'business', 'code': 'RESULT_SLICE_INVALID', 'external_outcome': 'known', 'field_path': None, ...}
+E   assert {'category': 'business', 'code': 'RESULT_SLICE_INVALID', 'external_outcome': 'known', 'field_path': None, ...} is None
+_____ test_result_read_all_nonnegative_eof_offsets[file-far_past_eof-utf8] _____
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round9.py:107: in test_result_read_all_nonnegative_eof_offsets
+    assert read["error"] is None, read["error"]
+E   AssertionError: {'category': 'business', 'code': 'RESULT_SLICE_INVALID', 'external_outcome': 'known', 'field_path': None, ...}
+E   assert {'category': 'business', 'code': 'RESULT_SLICE_INVALID', 'external_outcome': 'known', 'field_path': None, ...} is None
+__ test_exact_unified_patch_preserves_non_lf_utf8_characters[line_separator] ___
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round9.py:203: in test_exact_unified_patch_preserves_non_lf_utf8_characters
+    patched = files.patch("unicode.txt", diff, version["etag"])
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/workspace/service.py:173: in patch
+    return self._call("patch", dict(path=path, unified_diff=unified_diff, if_match=if_match))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/workspace/service.py:133: in _call
+    result = synchronous_result(getattr(self._backend, member)(context, **arguments))
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/workspace/local.py:45: in patch
+    return self.environment.patch(
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/environment/mutations.py:120: in patch
+    raise AgentLoomError("PATCH_FORMAT_INVALID")
+E   agentloom.errors.AgentLoomError: PATCH_FORMAT_INVALID: PATCH_FORMAT_INVALID
+_ test_exact_unified_patch_preserves_non_lf_utf8_characters[paragraph_separator] _
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round9.py:203: in test_exact_unified_patch_preserves_non_lf_utf8_characters
+    patched = files.patch("unicode.txt", diff, version["etag"])
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/workspace/service.py:173: in patch
+    return self._call("patch", dict(path=path, unified_diff=unified_diff, if_match=if_match))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/workspace/service.py:133: in _call
+    result = synchronous_result(getattr(self._backend, member)(context, **arguments))
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/workspace/local.py:45: in patch
+    return self.environment.patch(
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/environment/mutations.py:120: in patch
+    raise AgentLoomError("PATCH_FORMAT_INVALID")
+E   agentloom.errors.AgentLoomError: PATCH_FORMAT_INVALID: PATCH_FORMAT_INVALID
+________ test_exact_unified_patch_preserves_non_lf_utf8_characters[nel] ________
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round9.py:203: in test_exact_unified_patch_preserves_non_lf_utf8_characters
+    patched = files.patch("unicode.txt", diff, version["etag"])
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/workspace/service.py:173: in patch
+    return self._call("patch", dict(path=path, unified_diff=unified_diff, if_match=if_match))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/workspace/service.py:133: in _call
+    result = synchronous_result(getattr(self._backend, member)(context, **arguments))
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/workspace/local.py:45: in patch
+    return self.environment.patch(
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/environment/mutations.py:120: in patch
+    raise AgentLoomError("PATCH_FORMAT_INVALID")
+E   agentloom.errors.AgentLoomError: PATCH_FORMAT_INVALID: PATCH_FORMAT_INVALID
+________ test_exact_unified_patch_preserves_non_lf_utf8_characters[vt] _________
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round9.py:203: in test_exact_unified_patch_preserves_non_lf_utf8_characters
+    patched = files.patch("unicode.txt", diff, version["etag"])
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/workspace/service.py:173: in patch
+    return self._call("patch", dict(path=path, unified_diff=unified_diff, if_match=if_match))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/workspace/service.py:133: in _call
+    result = synchronous_result(getattr(self._backend, member)(context, **arguments))
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/workspace/local.py:45: in patch
+    return self.environment.patch(
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/environment/mutations.py:120: in patch
+    raise AgentLoomError("PATCH_FORMAT_INVALID")
+E   agentloom.errors.AgentLoomError: PATCH_FORMAT_INVALID: PATCH_FORMAT_INVALID
+- generated xml file: /Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/evidence/review-round9-20261018/junit.xml -
+=========================== short test summary info ============================
+FAILED qa/test_sdk_review_round9.py::test_result_read_all_nonnegative_eof_offsets[memory-past_eof-ascii]
+FAILED qa/test_sdk_review_round9.py::test_result_read_all_nonnegative_eof_offsets[memory-past_eof-utf8]
+FAILED qa/test_sdk_review_round9.py::test_result_read_all_nonnegative_eof_offsets[memory-far_past_eof-ascii]
+FAILED qa/test_sdk_review_round9.py::test_result_read_all_nonnegative_eof_offsets[memory-far_past_eof-utf8]
+FAILED qa/test_sdk_review_round9.py::test_result_read_all_nonnegative_eof_offsets[file-past_eof-ascii]
+FAILED qa/test_sdk_review_round9.py::test_result_read_all_nonnegative_eof_offsets[file-past_eof-utf8]
+FAILED qa/test_sdk_review_round9.py::test_result_read_all_nonnegative_eof_offsets[file-far_past_eof-ascii]
+FAILED qa/test_sdk_review_round9.py::test_result_read_all_nonnegative_eof_offsets[file-far_past_eof-utf8]
+FAILED qa/test_sdk_review_round9.py::test_exact_unified_patch_preserves_non_lf_utf8_characters[line_separator]
+FAILED qa/test_sdk_review_round9.py::test_exact_unified_patch_preserves_non_lf_utf8_characters[paragraph_separator]
+FAILED qa/test_sdk_review_round9.py::test_exact_unified_patch_preserves_non_lf_utf8_characters[nel]
+FAILED qa/test_sdk_review_round9.py::test_exact_unified_patch_preserves_non_lf_utf8_characters[vt]
+12 failed, 30 passed in 4.92s

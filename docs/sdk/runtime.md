@@ -1,6 +1,6 @@
 # SDK Agent 执行与轻量图调度
 
-状态：详细设计，尚未实现。AgentGraphEngine 仅推进 ReAct／Plan 角色任务；Workflow 编译与 super-step 见[工作流](workflow.md)。平台不会调用这些内部阶段接口。
+状态：ReAct／Plan 的节点生成器协议、提交回执、持久等待、批次准入和角色恢复已实现；本页同时保留完整目标接口。实际分包和验证范围见[实现记录](implementation.md#节点协议与检查点设计对齐)。Workflow 编译与 super-step 尚未接入，见[工作流](workflow.md)。平台不调用内部阶段接口。
 
 RuntimeEngine（运行时引擎）负责 SDK 的运行服务和执行托管，详细构造及生命周期见[装配设计](assembly.md#11-runtimeengine-管理的范围)。本文描述它装配的单次执行现场和图内算法；节点收到的 NodeContext 只包含当前任务身份、控制和已有服务的受限引用；ReactAgent.context 才保存角色的消息和 Loop 进度。
 

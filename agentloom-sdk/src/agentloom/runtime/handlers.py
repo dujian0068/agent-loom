@@ -31,6 +31,7 @@ class BusinessEvent:
     event_type: str
     operation_id: str
     payload: dict
+    schema_version: int = 1
 
 
 @dataclass(frozen=True)
@@ -216,6 +217,19 @@ class ToolHandler:
             if error is not None:
                 raise error
 
+        async def environment_call(member, arguments):
+            event_type = (
+                "environment.write"
+                if member in {"write", "mkdir", "edit", "patch", "move", "delete"}
+                else "environment.read"
+            )
+            return await runner.bus.request(
+                BusinessEvent(
+                    event_type, op["operation_id"], {"member": member, "arguments": arguments}
+                ),
+                context,
+            )
+
         context = ToolInvocationContext(
             content_scope_ref=scope,
             run_id=runner.run_id,
@@ -250,6 +264,7 @@ class ToolHandler:
             spec=entry.spec,
             report_diagnostic=attempt.diagnostics.append,
             report_completion=complete,
+            environment_port=environment_call,
         )
         request = CapabilityRequest(
             op["operation_id"],

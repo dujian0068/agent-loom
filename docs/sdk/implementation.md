@@ -2,14 +2,14 @@
 
 日期：2026-10-18。实现版本：`agentloom-sdk 0.1.0a1`。当前推荐入口是 `PropertiesConfig → AgentLoom → build(AgentDefinition)`，默认使用文件系统保存执行状态。安装、可运行代码和接续步骤见 [SDK 接入指南](integration.md)。Workflow 按当前开发范围暂不接入。
 
-本页先说明当前状态与实现职责，再保留各阶段修复及验证记录。最新修复见[第八轮租约与路径边界](#第八轮租约与路径边界修复)，文件接入机制见[文件提供者 SPI](#文件提供者-spi)。SDK 已按 LangChain 模板适配 ReAct／Planner／Executor，业务方只填写业务 Prompt，见[LangChain 模板适配](#langchain-模板适配与回归)。首次自动注入与第五轮修复分别保留在[模式提示词实现](#sdk-自动模式提示词)和[第五轮记录](#第五轮持久化-json-深度与异常记录修复)。其他 SDK 章节仍含完整目标设计，不能据此推定全部接口已发布。
+本页先说明当前状态与实现职责，再保留各阶段修复及验证记录。最新结构对齐见[节点协议与检查点](#节点协议与检查点设计对齐)，上一轮修复见[第八轮租约与路径边界](#第八轮租约与路径边界修复)，文件接入机制见[文件提供者 SPI](#文件提供者-spi)。SDK 已按 LangChain 模板适配 ReAct／Planner／Executor，业务方只填写业务 Prompt，见[LangChain 模板适配](#langchain-模板适配与回归)。首次自动注入与第五轮修复分别保留在[模式提示词实现](#sdk-自动模式提示词)和[第五轮记录](#第五轮持久化-json-深度与异常记录修复)。其他 SDK 章节仍含完整目标设计，不能据此推定全部接口已发布。
 
 ## 当前接口与交付状态
 
 | 范围 | 当前可用内容 | 边界或待实现内容 |
 | --- | --- | --- |
 | 参数与装配 | PropertiesConfig、RuntimeProperties、AgentProperties、ServiceProperties、FileProperties；AgentLoom、AgentBuilder、直接构造共用校验 | 配置不可变，服务实例借用；不提供全局可变参数容器或热更新 |
-| Agent 执行 | ReAct／Plan–Executor、RunHandle、停止、补充、同配置重开、独立角色上下文 | 一个实例绑定一个 Run；AgentNode 是内部适配桥，Workflow／StateGraph 未接入 |
+| Agent 执行 | ReAct／Plan–Executor、RunHandle、停止、补充、同配置重开、独立角色上下文 | 一个实例绑定一个 Run；AgentNode 实现生成器协议，NodeDriver 提交并回送回执；Workflow／StateGraph 未接入 |
 | 模式提示词 | SDK 自动生成 ReAct／Planner／Executor 指令、输入输出合同，Run 保存固定版本正文 | 业务 Prompt 独立；模式指令受保护并计入预算；Prompt 引导行为，运行时约束实际动作 |
 | 模型 | Chat Completions／Responses、ScriptedModel；ModelAdapter.stream_once、ProviderEvent、ModelDescriptor | 窗口显式提供，未实现统一 ModelAdapter.discover；公开事件不是 token 流 |
 | 能力扩展 | CapabilityAdapter.invoke_once、CapabilityRequest、ToolInvocationContext、ToolResult；目录 for_role／for_node_binding／resolve | 先注册再按角色绑定；旧 invoke 仅作兼容；独立内容引用和 Artifact 授权未实现 |
@@ -17,8 +17,28 @@
 | 查询与删除 | runs／tasks／operations／events／sessions、补充和停止回执、records.delete | 当前多为 JSON dict／列表，尚无完整 RunSnapshot／分页／回执 DTO；sessions.inputs 无分页 |
 | 文件与环境 | WorkspaceBackend、11 个普通方法、entry points 加载、FileProperties、默认本地实现、授权与恢复绑定 | 完整 EnvironmentProvider／SandboxGateway、多后端挂载及真实共享／对象存储驱动待补齐；没有默认宿主 shell |
 | 上下文与内容 | 原始／有效记录、历史、压缩、结果预览、按角色分片读取 | 完整值保存在执行快照；独立 ContentStore／BlobStore、ArtifactRef 输入和来源授权待实现 |
-| 存储与恢复 | FileRuntimeStore 默认、MemoryRuntimeStore 可选；原子快照、提交回执、租约、单机进程恢复 | 无 SQLite／PostgreSQL 实现；未实现目标增量日志、跨机存储与任意历史版本迁移 |
-| 事件总线 | 单处理者分发、局部注册、Hook 调用阶段持久化、已提交 RunEvent 观察 | 不等于完整可靠总线；独立 outbox、订阅 ACK 和全部持久等待合同待实现 |
+| 存储与恢复 | FileRuntimeStore 默认、MemoryRuntimeStore 可选；不可变节点／图检查点、ScopeCommit 增量、提交回执、租约、单机进程恢复 | 无 SQLite／PostgreSQL 实现；跨机存储与任意历史版本迁移未实现 |
+| 事件总线 | 按类型＋版本分发、局部注册、业务 Handler、Hook 调用阶段持久化、已提交 RunEvent 观察 | 不等于完整可靠总线；独立 outbox、订阅 ACK 和全部持久等待合同待实现 |
+
+## 节点协议与检查点设计对齐
+
+本轮按 runtime／event-bus／checkpoints 设计调整内部执行结构，保留默认文件后端和现有业务装配方式；Workflow 暂不接入。
+
+- `AgentNode.activate(input, continuation, context)` 返回异步生成器。`NodeDriver` 先提交激活，再读取交付；Progress 的命令、上下文效果和 continuation 提交成功后才 `asend(CommitReceipt)`。Wait／Complete／Fail 提交后关闭生成器，不继续运行节点。无终态、非法交付和节点异常形成明确任务错误，基础设施异常交还接管路径。
+- NodeContext 保存当前激活身份、控制和受限服务端口，不再直接持有 Runner。端口在激活结束后失效。输入和 continuation 绑定同一任务；AgentContext 暴露已提交 continuation。
+- 图引擎从持久 ready 顺序激活节点；模型调用及动作推进独立于节点激活。模型／批次等待保存条件与恢复输入，结算与等待注册均复核条件。并行成员按冻结 ordinal 汇合，父节点只消费一次。
+- Executor 在 before Hook 前保留准入名额；GraphExecutionHandler 只准备提案，StartExecutor 同一事务保存许可、唯一子任务、原 Operation 关联和 ready 意图。子终态与委派 raw 同时提交，after Hook 不占 Executor 名额。
+- 模型原始响应和后置处理先持久保存；节点接受有效决策时，在同一提交里消费 Loop 票据、追加消息并冻结批次。Executor 模型失败随失败任务结果结算反馈票据。
+- 根总线严格按 `(event_type, schema_version)` 解析，不回落到其他版本。Context 的物化／修改／压缩和 Environment 的准备／文件读写经过 Handler；文件 Provider 继续通过原有同步 SPI 接入。
+- 每次相关提交保存不可变节点版本与有序 ScopeCommit；图快照在关键提交之后合并生成，保存公共信封和 Agent 专属引用清单。图快照失败记录诊断，不能回滚已提交结果；不可变节点版本和增量保存失败仍属于必须阻止推进的基础设施错误。恢复从快照重放到一致读取水位，核验 hash、连续序号、节点引用与查询投影，再安装恢复结果；旧的停止／截止／租约不覆盖当前控制。记录删除同时清理所属检查点。已知旧单机格式通过显式适配进入节点协议，未知引擎／协议不猜测恢复。
+
+本轮同时复核新加入工作区的第九轮 QA：修复 `result_read` 超末尾空页、unified diff 对非 LF Unicode 字符的分行，以及 glob pattern 的点段／重复分隔符规范化。没有更改第九轮 QA 的断言；非法 astream 游标仍遵循文档的先启动再观察语义。
+
+旧快照测试现在同时移除新协议检查点后再构造旧格式；故障注入测试识别 RuntimeCommit 的命令 ID，仍在原 Attempt 完成边界制造故障；后台清理测试等待持久终态，不把一次扫描等同于等待其他 Worker 完成。新增 `test_node_protocol.py` 和 `test_checkpoint_protocol.py` 检查真实 Driver 握手、激活失效、节点错误分类、模型票据／批次原子接受、双后端重放、快照失败隔离、hash／缺号拒绝和 Owner 删除。
+
+固定源码完整回归：SDK 与 QA **1764 passed，710.48 秒**，没有失败、错误或跳过；运行前后源码与测试摘要一致，`scripts/test_all.py --check` 确认结果匹配当前工作区。包括新增的 50 项节点／检查点测试和第九轮原有 49 项 QA。Ruff lint／format 通过。独立安装的 wheel 中 118 个源码／资源文件与工作区一致；Plan→Executor→文件写入成功，另一个进程重开相同 Run 时模型调用为 0。见[完整回归摘要](../../agentloom-sdk/qa/evidence/node-protocol-20261018/regression-summary.json)、[测试日志](../../agentloom-sdk/qa/evidence/node-protocol-20261018/regression.txt)和[安装包验证](../../agentloom-sdk/qa/evidence/node-protocol-20261018/wheel-summary.json)。
+
+这次没有把 Workflow 原生保存点、跨机器 lease 或独立内容授权视为已交付。完整目标中的公共 DTO 和可靠订阅仍按下方差异表说明。
 
 ## 模块职责与调用路径
 
@@ -30,7 +50,10 @@
 | `configuration.definitions/assembly/recovery` | 变量声明类型快照、版本化绑定清单、类型语义比较及旧清单兼容边界 |
 | `configuration.json_values/json_documents`、`operation_errors` | 边界 JSON 与内部文档的统一深度、迭代复制／冻结／RFC 8785；共享 OperationError 校验 |
 | `prompts.roles/protocol/templates/assembly/recovery` | LangChain 三角色适配、原生协议、版本目录、输入输出合同组装、Run 指令快照与恢复校验 |
-| `runtime.host/runner/agent_engine/agent_loop` | 本机宿主、每 Run 执行者、角色激活／批次汇合及独立 Agent Loop |
+| `runtime.host/runner/agent_engine/agent_loop` | 本机宿主、每 Run 执行者、持久 ready／wait 调度和 ReAct 节点程序 |
+| `nodes.contracts/driver/commands/effects/ports` | 节点交付协议、Activate／Progress／Wait／Complete／Fail 命令、提交握手和激活授权 |
+| `runtime.batches/domain_handlers` | 持久批次准入规则，Context／Environment／GraphExecution 事件入口 |
+| `checkpoints.journal/snapshots` | 公共图信封、Agent 载荷、不可变节点版本与 ScopeCommit 重放、提交后合并图快照、Owner 删除 |
 | `runtime.calls/completion/handlers/usage` | 准入与重试、Attempt 完成回执、单次适配器调用、原子用量计量 |
 | `runtime.output` | 区分可纠正的模型候选错误与不可由模型修正的 Schema 配置错误 |
 | `runtime.recovery/control/maintenance/cleanup/leases` | 恢复账本核验、停止和截止、撤权与清理重试、执行及清理租约 |
@@ -46,12 +69,16 @@ flowchart LR
     D[AgentDefinition] --> B[AgentBuilder 装配]
     A --> B
     B --> S[start 持久接收 Run]
-    S --> R[Runner 与 Agent Loop]
-    R --> C[调用准入与 Hook]
-    C --> H[模型或能力适配器]
-    H --> F[结果与用量提交]
-    F --> E[后置 Hook 与上下文推进]
-    E --> O[已提交事件与 RunResult]
+    S --> G[AgentEngine 持久 ready 与 wait 调度]
+    G --> N[NodeDriver 激活 AgentNode]
+    N --> T[CommitCoordinator 原子提交与回执]
+    T --> J[节点版本与 ScopeCommit]
+    J --> K[提交后合并图快照]
+    G --> C[CallDriver 调用准入与 Hook]
+    C --> H[EventBus 与业务 Handler]
+    H --> F[模型／能力结果与用量提交]
+    F --> G
+    T --> O[已提交事件与 RunResult]
 ```
 
 参数对象和服务引用停留在装配层；检查点只保存恢复合同需要的固定配置与执行事实。模型 completed 和 MCP 已知响应在资源关闭前进入结果提交；自定义能力内部有关闭阶段时可使用当前 Attempt 的 report_completion 回调。关闭仍在原调用任务中进行，不另起脱离生命周期的后台任务。
@@ -469,11 +496,11 @@ npm run docs:check
 
 当前交付采用明确的单机存储／环境实现范围：
 
-1. 默认 JSON 文件后端保存原子执行快照和幂等命令回执，按 namespace 串行提交，清单包含该 namespace 当前所有记录引用；尚非目标中的增量日志／索引布局，大运行记录的写入和查询有规模开销。已完成进程退出恢复验证，未验证断电或 NFS／跨机协调，也不提供任意历史版本迁移。当前只有文件与内存后端，没有 SQLite 或 PostgreSQL 实现；目标设计中出现的数据库适配不是依赖要求或已交付能力。
+1. 默认 JSON 文件后端保存运行查询投影、幂等命令回执、独立 NodeCheckpoint／GraphCheckpoint 和不可变 ScopeCommit 增量。恢复在一致水位重放并核对投影，按 namespace 串行提交；清单包含该 namespace 当前所有记录引用，大运行记录的写入和查询仍有规模开销。已完成进程退出恢复验证，未验证断电或 NFS／跨机协调，也不提供任意历史版本迁移。当前只有文件与内存后端，没有 SQLite 或 PostgreSQL 实现；目标设计中出现的数据库适配不是依赖要求或已交付能力。
 2. LocalEnvironment 只 fence 经 SDK 文件服务的访问，文件锁不约束任意宿主代码。没有 OCI 执行服务、多机卷撤销证明、NFS mutation journal；脚本适配器需要调用方另行提供配套的隔离环境和网关，默认拒绝本地宿主执行。[默认工具与 SPI](builtin-tools-spi.md)中的独立 WorkspaceBackend、包注册发现与配置加载已实现；公共路径与授权已从本地 driver 分离。完整环境／沙箱协议、按后端能力裁剪工具、多后端挂载、共享文件／对象存储驱动仍待实施，不能以本轮文件 SPI 测试覆盖 SPI01–SPI10 的所有目标环境。
 3. 大结果完整值保存在执行快照，已有预览、有效 hash、按角色受限的 `result.read`；尚无独立 BlobStore、ArtifactRef 导入、跨工作区来源撤销和显式外部结果授权。非空 `AgentInput.artifacts` 明确拒绝。
 4. 本地文件 grep 当前为字面搜索，未提供 RE2；目录 move 暂不支持。未知外部副作用不被重试成假成功；工作文件变更与运行状态提交是两个动作，即使使用同一文件系统，也不宣称二者原子。
-5. EventBus 已有单处理者路由、局部注册和调用阶段持久化，但尚非目标中的完整可靠总线：缺少独立 outbox 订阅确认协议和全部持久等待／准入记录，本机推进仍使用协程、信号量和轮询。Context／Environment 的全部业务事件路由、生命周期修改 Hook，以及完整机器 Schema、查询／内容授权 DTO 仍待补齐；公开查询目前返回 JSON 投影。
+5. EventBus 已有精确版本路由、局部注册和调用阶段持久化，Executor／Context／Environment 通过各自 Handler 接入。节点等待、批次成员准入和消费记录持久化；Executor 配额来自活跃子任务加保留准入记录，不使用本地 Semaphore。尚无完整独立 outbox／订阅 ACK、统一公共 EventRequest 门面和生命周期修改 Hook；模型／能力阶段由内部 CallDriver 推进。完整机器 Schema、查询／内容授权 DTO 仍待补齐；公开查询目前返回 JSON 投影。
 6. 恢复清单固定定义、策略、Schema、模型规格、Skill manifest、Hook 绑定与工作区根目录，文件提供者另固定登记名称、实现入口、发行包与版本及类型敏感 options 摘要；但没有对其他注入的 Python handler 实现、客户端配置／服务地址做完整版本指纹。接续方仍须重建相同实现和资源；记录删除要求先移除后续历史依赖。
 7. Workflow / StateGraph / LangGraph 按本轮范围暂不接入；容器驱动、跨机存储、真实付费模型、真实远程 MCP 均未作为本轮验收通过项。
 

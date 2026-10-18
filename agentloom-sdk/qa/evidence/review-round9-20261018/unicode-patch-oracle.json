@@ -1,0 +1,47 @@
+[
+  {
+    "middle": "\u4e2d\u6587",
+    "diff_exit_code": 1,
+    "matches_test_diff": true,
+    "patch_dry_run_exit_code": 0,
+    "patch_stdout": "patching file unicode.txt\n",
+    "patch_stderr": "",
+    "original_unchanged": true
+  },
+  {
+    "middle": "\u4e2d\u2028\u6587",
+    "diff_exit_code": 1,
+    "matches_test_diff": true,
+    "patch_dry_run_exit_code": 0,
+    "patch_stdout": "patching file unicode.txt\n",
+    "patch_stderr": "",
+    "original_unchanged": true
+  },
+  {
+    "middle": "\u4e2d\u2029\u6587",
+    "diff_exit_code": 1,
+    "matches_test_diff": true,
+    "patch_dry_run_exit_code": 0,
+    "patch_stdout": "patching file unicode.txt\n",
+    "patch_stderr": "",
+    "original_unchanged": true
+  },
+  {
+    "middle": "\u4e2d\u0085\u6587",
+    "diff_exit_code": 1,
+    "matches_test_diff": true,
+    "patch_dry_run_exit_code": 0,
+    "patch_stdout": "patching file unicode.txt\n",
+    "patch_stderr": "",
+    "original_unchanged": true
+  },
+  {
+    "middle": "\u4e2d\u000b\u6587",
+    "diff_exit_code": 1,
+    "matches_test_diff": true,
+    "patch_dry_run_exit_code": 0,
+    "patch_stdout": "patching file unicode.txt\n",
+    "patch_stderr": "",
+    "original_unchanged": true
+  }
+]

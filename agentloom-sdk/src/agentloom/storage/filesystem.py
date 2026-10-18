@@ -104,7 +104,17 @@ class _FileTransaction:
 
     def put(self, kind, key, value):
         pair = self._check(kind, key)
-        self.pending[pair] = canonical(value).encode("utf-8")
+        # The object filename hashes these exact storage bytes. Logical SDK
+        # fingerprints/checkpoint payloads still use canonical_document. Avoid
+        # re-encoding every scalar in a growing run with a Python-level walker;
+        # validate the internal document profile before using the C encoder.
+        self.pending[pair] = json.dumps(
+            copy_document(value),
+            ensure_ascii=False,
+            allow_nan=False,
+            sort_keys=True,
+            separators=(",", ":"),
+        ).encode("utf-8")
 
     def delete(self, kind, key):
         self.pending[self._check(kind, key)] = _DELETED

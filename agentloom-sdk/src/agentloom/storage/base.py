@@ -31,6 +31,17 @@ class RuntimeStore(Protocol):
 
 
 class StoreQueries:
+    def load_run_consistently(self, namespace, run_id):
+        from ..checkpoints import restore
+
+        with self.transaction(namespace) as tx:
+            state = tx.get("runs", str(run_id))
+            return restore(tx, namespace, state) if state else None
+
+    def get_commit_receipt(self, namespace, run_id, command_id):
+        with self.transaction(namespace) as tx:
+            return tx.get("commits", str(run_id) + ":" + command_id)
+
     def read_path(self, namespace, run_id, path):
         state = self.load(namespace, run_id)
         for key in path:

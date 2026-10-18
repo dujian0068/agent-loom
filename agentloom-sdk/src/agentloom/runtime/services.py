@@ -257,6 +257,9 @@ class RecordService:
                 if other["run_id"] != run_id
             ):
                 raise RequestError("RECORD_REFERENCED", "Delete dependent execution records first")
+            from ..checkpoints.journal import delete_owned
+
+            delete_owned(tx, run_id)
             tx.delete("runs", run_id)
             for receipt in tx.list("commits"):
                 if receipt["run_id"] == run_id:

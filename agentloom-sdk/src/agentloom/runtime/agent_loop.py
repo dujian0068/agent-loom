@@ -1,191 +1,161 @@
-"""A ReactAgent's resumable model/action/feedback loop, driven in its task scope."""
+"""ReAct node program. It prepares outcomes; only NodeDriver commits them."""
 
-import asyncio
-
-from ..configuration.json_documents import canonical_document as canonical
-from ..context import append
-from ..context.results import project_result
-from ..errors import AgentLoomError, InfrastructureError, RequestError
+from ..configuration.json_documents import canonical_document
+from ..errors import ConfigurationError, InfrastructureError, RequestError
+from ..nodes import (
+    CommitReceipt,
+    Complete,
+    ContinuationRef,
+    Fail,
+    PayloadRef,
+    Progress,
+    ReactContinuationV1,
+    Wait,
+    WaitCondition,
+)
+from ..nodes.contracts import validate_binding
 from .output import validate_output
-
-
-def assistant_message(response):
-    message = {"role": "assistant", "content": response["text"]}
-    if response.get("provider_state"):
-        message["provider_state"] = response["provider_state"]
-    if response["tool_calls"]:
-        message["tool_calls"] = [
-            {
-                "id": c["call_id"],
-                "type": "function",
-                "function": {
-                    "name": c["name"],
-                    "arguments": canonical(c["arguments"])
-                    if not isinstance(c["arguments"], str)
-                    else c["arguments"],
-                },
-            }
-            for c in response["tool_calls"]
-        ]
-    return message
 
 
 class AgentLoop:
     def __init__(self, agent, node_context):
-        self.agent = agent
-        self.runner = node_context.driver
-        self.task_id = node_context.task_id
+        self.agent, self.context = agent, node_context
 
-    async def run(self):
-        runner = self.runner
-        task_id = self.task_id
-        try:
-            while True:
-                # Synchronous local adapters must not starve stop/renew/input tasks.
-                await asyncio.sleep(0)
-                task = runner.task(task_id)
-                if task["status"] in {"succeeded", "failed", "cancelled"}:
-                    return task
-                runner.check_active()
-                round_number = task["round"]
-                if task["stage"] == "prepare":
+    async def activate(self, input, continuation):
+        context = self.context
+        validate_binding(input, continuation, context)
+        task = context.context_port.snapshot()
+        if (
+            continuation is None
+            or continuation.content_hash
+            != PayloadRef(context.task_id, task["continuation"]).content_hash
+        ):
+            raise InfrastructureError("CONTINUATION_INVALID")
+        if input.input_ref.content_hash != PayloadRef(context.task_id, task["input"]).content_hash:
+            raise RequestError("NODE_INPUT_MISMATCH")
+        while True:
+            task = context.context_port.snapshot()
+            current = ReactContinuationV1(**task["continuation"])
+            if current.role_key != context.scope.role_key:
+                raise InfrastructureError("CONTINUATION_INVALID")
+            revision = task["node_revision"]
 
-                    def prepare(s):
-                        current = s["tasks"][task_id]
-                        current.update(status="running", stage="call_model")
-                        if task_id == s["root_task_id"]:
-                            for item in sorted(s["inputs"], key=lambda i: i["session_seq"]):
-                                if (
-                                    item.get("record_id") is None
-                                    and item["delivery_state"] == "pending"
-                                ):
-                                    entry = append(
-                                        current["context"],
-                                        {"role": "user", "content": item["text"]},
-                                        protected=True,
-                                        fixed=True,
-                                    )
-                                    item["record_id"] = entry["record_id"]
+            def ref(value):
+                return ContinuationRef(context.task_id, value.to_dict(), revision)
 
-                    runner.commit(f"prepare:{task_id}:{round_number}", prepare)
-                    continue
-                if task["stage"] == "call_model":
-                    response = await runner.calls.model(task_id, f"model:{round_number}")
-                    if response["status"] != "succeeded":
-                        return self.fail(task_id, response["error"])
-                    candidate = response["result"]
-                    raw_candidate = runner.operation(response["operation_id"])["raw"]["result"]
-
-                    def accept(s):
-                        current = s["tasks"][task_id]
-                        append(
-                            current["context"],
-                            assistant_message(candidate),
-                            raw=assistant_message(raw_candidate),
+            phase = current.phase
+            if phase == "prepare_context":
+                effect = await context.context_port.prepare("prepare_context")
+                outcome = Progress(ref(current.advance(phase="prepare_model")), (effect,))
+            elif phase == "prepare_model":
+                op_id, effect = await context.model_port.prepare(
+                    current.role_loop_index, context.context_port
+                )
+                outcome = Progress(
+                    ref(current.advance(phase="compact_context", model_operation_id=op_id)),
+                    (effect,),
+                )
+            elif phase in {"compact_context", "call_model"}:
+                response = context.model_port.result(current.model_operation_id)
+                if response is None:
+                    yield Wait(
+                        ref(current),
+                        WaitCondition("operation_completed", current.model_operation_id),
+                        PayloadRef(context.task_id, {"operation_id": current.model_operation_id}),
+                    )
+                    return
+                outcome = Progress(ref(current.advance(phase="interpret_response")))
+            elif phase == "interpret_response":
+                response = context.model_port.result(current.model_operation_id)
+                if response is None:
+                    raise InfrastructureError("OPERATION_RESULT_MISSING")
+                if response["status"] != "succeeded":
+                    yield Fail(response["error"])
+                    return
+                has_calls = bool(response["result"]["tool_calls"])
+                batch_id = (
+                    context.capability_port.batch_id(current.role_loop_index) if has_calls else None
+                )
+                effect = await context.context_port.prepare(
+                    "accept_model", operation_id=current.model_operation_id
+                )
+                outcome = Progress(
+                    ref(
+                        current.advance(
+                            phase="wait_batch" if has_calls else "validate_output",
+                            pending_batch_id=batch_id,
+                            accepted_decision_ref=current.model_operation_id,
                         )
-                        current.update(
-                            stage="batch" if candidate["tool_calls"] else "validate",
-                            calls=candidate["tool_calls"],
-                            candidate=candidate["text"],
+                    ),
+                    (effect,),
+                )
+            elif phase == "wait_batch":
+                if not context.capability_port.settled(current.pending_batch_id):
+                    yield Wait(
+                        ref(current),
+                        WaitCondition("batch_settled", current.pending_batch_id),
+                        PayloadRef(context.task_id, {"batch_id": current.pending_batch_id}),
+                    )
+                    return
+                outcome = Progress(ref(current.advance(phase="consume_results")))
+            elif phase == "consume_results":
+                effect = await context.context_port.prepare(
+                    "consume_batch", batch_id=current.pending_batch_id
+                )
+                outcome = Progress(
+                    ref(
+                        current.advance(
+                            phase="prepare_context",
+                            role_loop_index=current.role_loop_index + 1,
+                            model_operation_id=None,
+                            current_loop_ticket_id=None,
+                            pending_batch_id=None,
+                            pending_operation_refs=(),
+                            compaction_ref=None,
+                            projection_ref=None,
+                            accepted_decision_ref=None,
+                            validation_feedback_ref=None,
                         )
-
-                    runner.commit(f"decision:{task_id}:{round_number}", accept)
-                    continue
-                if task["stage"] == "batch":
-                    calls = task["calls"]
-                    if self.agent.execution_policy.parallel_enabled:
-                        futures = [
-                            asyncio.create_task(
-                                runner.calls.action(task_id, call, ordinal, round_number)
-                            )
-                            for ordinal, call in enumerate(calls)
-                        ]
-                        try:
-                            responses = await asyncio.gather(*futures)
-                        except BaseException:
-                            for future in futures:
-                                future.cancel()
-                            await asyncio.gather(*futures, return_exceptions=True)
-                            raise
-                    else:
-                        responses = [
-                            await runner.calls.action(task_id, call, ordinal, round_number)
-                            for ordinal, call in enumerate(calls)
-                        ]
-
-                    def consume(s):
-                        current = s["tasks"][task_id]
-                        for call, response in zip(calls, responses):
-                            op = s["operations"].get(response.get("operation_id"))
-                            append(
-                                current["context"],
-                                {
-                                    "role": "tool",
-                                    "tool_call_id": call["call_id"],
-                                    "content": canonical(
-                                        response
-                                        if op is None or op["event_type"] == "result.read"
-                                        else project_result(response, runner.run_id)
-                                    ),
-                                },
-                                raw={
-                                    "role": "tool",
-                                    "tool_call_id": call["call_id"],
-                                    "content": canonical((op["raw"] if op else None) or response),
-                                },
-                            )
-                        current.update(stage="prepare", round=round_number + 1, calls=[])
-
-                    runner.commit(f"consume:{task_id}:{round_number}", consume)
-                    continue
-                if task["stage"] == "validate":
-                    definition = self.agent.definition
-                    try:
-                        value = validate_output(task["candidate"], definition.output_schema)
-                    except RequestError:
-
-                        def correction(s):
-                            current = s["tasks"][task_id]
-                            append(
-                                current["context"],
-                                {
-                                    "role": "user",
-                                    "content": "The final answer did not satisfy the required output format. Return a corrected complete answer. Required schema: "
-                                    + canonical(definition.output_schema),
-                                },
-                                kind="format",
-                            )
-                            current.update(stage="prepare", round=round_number + 1)
-
-                        runner.commit(f"correction:{task_id}:{round_number}", correction)
-                        continue
-                    runner.commit(
-                        f"validate:{task_id}:{round_number}",
-                        lambda s: s["tasks"][task_id].update(
-                            status="succeeded", stage="completed", result=value
+                    ),
+                    (effect,),
+                )
+            elif phase == "validate_output":
+                try:
+                    value = validate_output(task["candidate"], self.agent.definition.output_schema)
+                except RequestError:
+                    effect = await context.context_port.prepare(
+                        "format_feedback",
+                        message=(
+                            "The final answer did not satisfy the required output format. Return a corrected complete answer. Required schema: "
+                            + canonical_document(self.agent.definition.output_schema)
                         ),
                     )
-                    return runner.task(task_id)
+                    outcome = Progress(
+                        ref(
+                            current.advance(
+                                phase="prepare_context",
+                                role_loop_index=current.role_loop_index + 1,
+                                model_operation_id=None,
+                                current_loop_ticket_id=None,
+                                accepted_decision_ref=None,
+                            )
+                        ),
+                        (effect,),
+                    )
+                except ConfigurationError as exc:
+                    yield Fail(exc.to_dict())
+                    return
+                else:
+                    yield Complete(
+                        PayloadRef(context.task_id, value), ref(current.advance(phase="completed"))
+                    )
+                    return
+            else:
                 raise InfrastructureError("CONTINUATION_INVALID")
-        except InfrastructureError:
-            raise
-        except AgentLoomError as exc:
-            if exc.code in {
-                "LOOP_LIMIT_EXCEEDED",
-                "RUN_TIMEOUT",
-                "RUN_STOPPED",
-                "COMPACTION_FAILED",
-                "COMPACTION_FIXED_PROMPT_TOO_LARGE",
-                "CONTEXT_PROTECTED_INPUT_TOO_LARGE",
-                "CONTEXT_BUDGET_INVALID",
-                "CONTEXT_WINDOW_EXCEEDED",
-            }:
-                raise
-            return self.fail(task_id, exc.to_dict())
-
-    def fail(self, task_id, error):
-        self.runner.commit(
-            "task-failed:" + task_id,
-            lambda s: s["tasks"][task_id].update(status="failed", stage="completed", error=error),
-        )
-        return self.runner.task(task_id)
+            receipt = yield outcome
+            if (
+                not isinstance(receipt, CommitReceipt)
+                or receipt.allocated_refs.get("task_id") != context.task_id
+                or not any(v.get("node_revision") == revision + 1 for v in receipt.entity_versions)
+            ):
+                raise InfrastructureError("NODE_COMMIT_RECEIPT_INVALID")

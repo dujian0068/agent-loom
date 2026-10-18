@@ -53,6 +53,7 @@ class ToolInvocationContext:
     spec: object = field(default=None, repr=False)
     report_diagnostic: object = field(default=None, repr=False)
     report_completion: object = field(default=None, repr=False)
+    environment_port: object = field(default=None, repr=False)
 
     def __post_init__(self):
         for key in (

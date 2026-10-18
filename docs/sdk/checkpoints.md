@@ -1,6 +1,6 @@
 # SDK 检查点、持久化与故障接管
 
-状态：完整目标设计。当前默认使用 `FileRuntimeStore(".agentloom/state")`，也可显式注入内存后端，实际范围见[实现记录](implementation.md)。SDK 不要求数据库。存储适配器需要满足原子性、版本检查、执行权和恢复约定。以下 SQL、表结构、行锁和数据库时钟是 **可选 PostgreSQL 参考适配器** 的设计，不是使用 SDK 的前提。
+状态：完整目标设计。当前默认使用 `FileRuntimeStore(".agentloom/state")`，也可显式注入内存后端，已实现 Agent 图／节点检查点和 ScopeCommit 重放，具体范围见[实现记录](implementation.md#节点协议与检查点设计对齐)。Workflow 原生载荷仍待接入。SDK 不要求数据库。存储适配器需要满足原子性、版本检查、执行权和恢复约定。以下 SQL、表结构、行锁和数据库时钟是 **可选 PostgreSQL 参考适配器** 的设计，不是使用 SDK 的前提。
 
 文件后端以 namespace 文件锁、不可变 JSON 记录和原子替换的清单实现关联状态一致提交，使用同机宿主时钟；不用模拟 SQL 表和数据库连接。详细目录和提交规则见 [SDK 文件持久化](../../agentloom-sdk/README.md#文件持久化)。后文 PostgreSQL 的实现细节不能推导为所有后端必须引入数据库。
 

@@ -4,18 +4,19 @@ import asyncio
 import time
 
 from ..configuration.json_documents import canonical_document as canonical
-from ..configuration.json_documents import document_digest as digest
 from ..context import history_records, record
 from ..context.results import RESULT_READ_TOOL, ResultReadHandler
 from ..errors import AgentLoomError, InfrastructureError
 from ..events import EventBusImpl, HandlerBinding, HookHandler
+from ..nodes import ReactContinuationV1
 from ..prompts.assembly import PROMPT_RECORD_KIND
 from ..storage import TERMINAL, CommitCoordinator, verify_lease
 from ..types import new_id
 from .agent_engine import AgentGraphEngine
-from .calls import CallDriver, failure, success
+from .calls import CallDriver
 from .control import emit, finalize_run, run_sequence
-from .handlers import ModelHandler, SkillHandler, ToolHandler
+from .domain_handlers import ContextHandler, EnvironmentHandler, GraphExecutionHandler
+from .handlers import BusinessEvent, ModelHandler, SkillHandler, ToolHandler
 from .leases import LeaseHeartbeat
 
 
@@ -47,8 +48,22 @@ def new_task(
         records.append(record({"role": "user", "content": text}, protected=True, fixed=True))
     for sequence, entry in enumerate(records, 1):
         entry["context_seq"] = sequence
+    context_id = new_id()
     return {
         "task_id": task_id,
+        "node_revision": 0,
+        "activation_no": 0,
+        "activation_id": None,
+        "ready_seq": 0,
+        "input": {"content": content, "variables": variables or {}},
+        "wait_condition": None,
+        "resume_input_ref": None,
+        "continuation": ReactContinuationV1(
+            "prepare_context",
+            role_key,
+            role_key,
+            {"context_id": context_id, "revision": len(records)},
+        ).to_dict(),
         "role_key": role_key,
         "parent_operation": parent_operation,
         "status": "ready",
@@ -59,7 +74,7 @@ def new_task(
         "result": None,
         "error": None,
         "context": {
-            "context_id": new_id(),
+            "context_id": context_id,
             "records": records,
             "revision": len(records),
             "snapshot": None,
@@ -82,15 +97,30 @@ class ExecutionRunner:
         skill = SkillHandler(self)
         handlers.update({k: skill for k in ("skill.list", "skill.read", "skill.resource.read")})
         handlers["result.read"] = ResultReadHandler(self)
+        handlers["executor.delegate"] = GraphExecutionHandler(self)
+        context_handler, environment_handler = ContextHandler(self), EnvironmentHandler(self)
+        handlers.update(
+            {
+                name: context_handler
+                for name in ("context.materialize", "context.mutate", "context.compact")
+            }
+        )
+        handlers.update(
+            {
+                name: environment_handler
+                for name in ("environment.prepare", "environment.read", "environment.write")
+            }
+        )
         for event_type, handler in handlers.items():
             self.bus.register_handler(event_type, 1, HandlerBinding(handler))
-        for event_type in (*handlers, "executor.delegate"):
+        for event_type in handlers:
             for stage in ("before", "after"):
                 self.bus.register_handler(event_type + "." + stage, 1, HandlerBinding(hooks))
-        self.bus.freeze()
+        self.bus.freeze(
+            tuple((name + suffix, 1) for name in handlers for suffix in ("", ".before", ".after"))
+        )
         self.calls = CallDriver(self)
         self.engine = AgentGraphEngine(self)
-        self._slots = asyncio.Semaphore(program.execution_policy.executor_max_parallel)
         self._heartbeat = None
 
     def state(self):
@@ -120,7 +150,15 @@ class ExecutionRunner:
         if self._heartbeat is not None:
             self._heartbeat.check()
         with self.runtime.store.transaction(self.runtime.namespace) as tx:
-            state = tx.get("runs", self.run_id)
+            if hasattr(tx, "read_path"):
+                # Check one consistent control view without copying private
+                # histories and all prior model requests on every port access.
+                state = {
+                    key: tx.read_path("runs", self.run_id, (key,))
+                    for key in ("status", "lease", "deadline_at")
+                }
+            else:
+                state = tx.get("runs", self.run_id)
             verify_lease(state, self.lease, tx.now)
             self.ensure_admission(state)
 
@@ -164,50 +202,6 @@ class ExecutionRunner:
 
         self.commit("first-output:" + attempt_id, receive)
 
-    async def delegate(self, op_id):
-        from .validation import validate_action
-
-        op = self.operation(op_id)
-        try:
-            arguments = op["request"]["arguments"]
-            validate_action(self, op["role_key"], op["request"]["name"], arguments)
-            key = arguments["executor"]
-            definition = self.program.executors[key]
-        except AgentLoomError as exc:
-            return failure(exc.to_dict())
-        # Only live Executor work owns a slot; response hooks run after it is released.
-        async with self._slots:
-            self.check_active()
-            if op["target_ref"] is None:
-                task = new_task(
-                    key,
-                    definition,
-                    arguments["task"],
-                    arguments.get("variables"),
-                    parent_operation=op_id,
-                    system_prompt=self._prompts.get(key),
-                )
-
-                def start(s):
-                    self.ensure_admission(s)
-                    current = s["operations"][op_id]
-                    current.update(
-                        target_ref=task["task_id"],
-                        permit={"epoch": self.lease.epoch},
-                        phase="execute",
-                        request_hash=digest(current["request"]),
-                    )
-                    s["tasks"][task["task_id"]] = task
-
-                self.commit("delegate-start:" + op_id, start)
-            target = self.operation(op_id)["target_ref"]
-            result = await self.engine.run_task(target)
-        return (
-            success(result["result"])
-            if result["status"] == "succeeded"
-            else failure(result["error"])
-        )
-
     async def _monitor(self):
         while True:
             self.check_active()
@@ -227,7 +221,7 @@ class ExecutionRunner:
             finally:
                 self._heartbeat = None
 
-    def _prepare(self):
+    def prepare_environment(self):
         state = self.state()
 
         def record_scope(scope):
@@ -244,6 +238,10 @@ class ExecutionRunner:
             guard=self.check_active,
             record_scope=record_scope,
         )
+
+    async def _prepare(self):
+        await self.bus.request(BusinessEvent("environment.prepare", "", {}), self.lease)
+        state = self.state()
         if state["root_task_id"] is None:
             with self.runtime.store.transaction(self.runtime.namespace) as tx:
                 previous = sorted(
@@ -270,6 +268,8 @@ class ExecutionRunner:
                     root_task_id=task["task_id"],
                     tasks={task["task_id"]: task},
                     status="running",
+                    graph={"protocol_version": 1, "ready_sequence": 1},
+                    batches={},
                     started_at=time.time(),
                 )
                 # The root prepare stage inserts all pending inputs in receipt
@@ -282,7 +282,7 @@ class ExecutionRunner:
         work, monitor = None, None
         try:
             self.check_active()
-            self._prepare()
+            await self._prepare()
             work = asyncio.create_task(self.engine.run_task(self.state()["root_task_id"]))
             monitor = asyncio.create_task(self._monitor())
             done, _ = await asyncio.wait((work, monitor), return_when=asyncio.FIRST_COMPLETED)

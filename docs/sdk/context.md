@@ -1,6 +1,6 @@
 # SDK 上下文、历史与压缩
 
-状态：详细设计，尚未实现。SDK 保存原始记录、权威有效修订和本次模型视图；Platform 只负责用户身份与可见范围以及将正式输入交给 SDK。[作用域类型](definitions.md)、[Hook 修改](event-bus.md)和[原子提交](checkpoints.md)是本页依赖。
+状态：原始／有效记录、压缩恢复、角色上下文，以及 ContextHandler 的 materialize／mutate／compact 路由已实现。独立内容存储与来源授权仍是目标合同，详见[实现记录](implementation.md#与完整目标设计的差异)。本页继续作为接口与行为的设计依据。
 
 ## 1. 实现边界与公共类型
 
