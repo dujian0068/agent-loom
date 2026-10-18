@@ -248,12 +248,19 @@ class AgentDefinition:
 
 @dataclass(frozen=True)
 class WorkspaceBinding:
-    root: Path | str
+    """Workspace policy. root may be omitted when a selected file provider owns it."""
+
+    root: Path | str | None = None
     persistent_sandbox: bool = False
 
     def __post_init__(self):
-        if not isinstance(self.root, (str, Path)) or not str(self.root) or "\0" in str(self.root):
-            raise ConfigurationError("WORKSPACE_ROOT_INVALID")
-        object.__setattr__(self, "root", Path(self.root).absolute())
+        if self.root is not None:
+            if (
+                not isinstance(self.root, (str, Path))
+                or not str(self.root)
+                or "\0" in str(self.root)
+            ):
+                raise ConfigurationError("WORKSPACE_ROOT_INVALID")
+            object.__setattr__(self, "root", Path(self.root).absolute())
         if type(self.persistent_sandbox) is not bool:
             raise ConfigurationError("INVALID_CONFIGURATION", field_path="persistent_sandbox")

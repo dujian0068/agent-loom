@@ -18,27 +18,13 @@ from pathlib import Path, PurePosixPath
 
 from ..configuration import digest
 from ..errors import AgentLoomError, LeaseLost
+from ..workspace.paths import path_parts as _parts
 from .limits import DEFAULT_FILE_READ_BYTES, MAX_FILE_BYTES, MAX_FILE_READ_BYTES
 from .mutations import FileMutations
 
 
 def _key(value):
     return hashlib.sha256(str(value).encode()).hexdigest()
-
-
-def _parts(path):
-    if not isinstance(path, str) or "\0" in path or "\\" in path:
-        raise AgentLoomError("PATH_FORBIDDEN", category="permission")
-    if path == "/work":
-        path = "."
-    elif path.startswith("/work/"):
-        path = path[6:]
-    elif path.startswith("/"):
-        raise AgentLoomError("PATH_FORBIDDEN", category="permission")
-    parts = PurePosixPath(path).parts
-    if any(p == ".." or p.startswith(".agentloom") for p in parts):
-        raise AgentLoomError("PATH_FORBIDDEN", category="permission")
-    return parts
 
 
 def _directory(path, *, create=False):

@@ -67,6 +67,7 @@ class AgentLoom:
                 properties=self.properties.runtime,
                 store=services.store,
                 environment=services.environment,
+                files=self.properties.files,
                 checkpoint_callback=services.checkpoint_callback,
             )
             self._runtime = runtime
@@ -96,7 +97,7 @@ class AgentLoom:
             exc.add_note(f"Host cleanup also failed: {type(cleanup).__name__}")
 
     async def aclose(self):
-        """Idempotently suspend local work; close only the host-owned file store.
+        """Suspend local work; close the owned file provider and file store.
 
         The same runtime shutdown behavior applies to previously built Agents.
         An injected store/model/environment is not closed. Storage close failures

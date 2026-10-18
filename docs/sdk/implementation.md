@@ -1,20 +1,20 @@
 # SDK 当前实现与验证
 
-日期：2026-10-17。实现版本：`agentloom-sdk 0.1.0a1`。当前推荐入口是 `PropertiesConfig → AgentLoom → build(AgentDefinition)`，默认使用文件系统保存执行状态。安装、可运行代码和接续步骤见 [SDK 接入指南](integration.md)。Workflow 按当前开发范围暂不接入。
+日期：2026-10-18。实现版本：`agentloom-sdk 0.1.0a1`。当前推荐入口是 `PropertiesConfig → AgentLoom → build(AgentDefinition)`，默认使用文件系统保存执行状态。安装、可运行代码和接续步骤见 [SDK 接入指南](integration.md)。Workflow 按当前开发范围暂不接入。
 
-本页先说明当前状态与实现职责，再保留各阶段修复及验证记录。第五轮修复处理 JSON 深度与持久化不一致、直接抛错绕过 OperationError 校验两类问题，具体测试快照见[第五轮记录](#第五轮持久化-json-深度与异常记录修复)。其他 SDK 章节仍含完整目标设计，不能据此推定全部接口已发布。
+本页先说明当前状态与实现职责，再保留各阶段修复及验证记录。最新实现见[文件提供者 SPI](#文件提供者-spi)。第五轮修复处理 JSON 深度与持久化不一致、直接抛错绕过 OperationError 校验两类问题，具体测试快照见[第五轮记录](#第五轮持久化-json-深度与异常记录修复)。其他 SDK 章节仍含完整目标设计，不能据此推定全部接口已发布。
 
 ## 当前接口与交付状态
 
 | 范围 | 当前可用内容 | 边界或待实现内容 |
 | --- | --- | --- |
-| 参数与装配 | PropertiesConfig、RuntimeProperties、AgentProperties、ServiceProperties；AgentLoom、AgentBuilder、直接构造共用校验 | 配置不可变，服务实例借用；不提供全局可变参数容器或热更新 |
+| 参数与装配 | PropertiesConfig、RuntimeProperties、AgentProperties、ServiceProperties、FileProperties；AgentLoom、AgentBuilder、直接构造共用校验 | 配置不可变，服务实例借用；不提供全局可变参数容器或热更新 |
 | Agent 执行 | ReAct／Plan–Executor、RunHandle、停止、补充、同配置重开、独立角色上下文 | 一个实例绑定一个 Run；AgentNode 是内部适配桥，Workflow／StateGraph 未接入 |
 | 模型 | Chat Completions／Responses、ScriptedModel；ModelAdapter.stream_once、ProviderEvent、ModelDescriptor | 窗口显式提供，未实现统一 ModelAdapter.discover；公开事件不是 token 流 |
 | 能力扩展 | CapabilityAdapter.invoke_once、CapabilityRequest、ToolInvocationContext、ToolResult；目录 for_role／for_node_binding／resolve | 先注册再按角色绑定；旧 invoke 仅作兼容；独立内容引用和 Artifact 授权未实现 |
 | Hook | HookInput、HookContext、HookRecordView／Page、FunctionHookHandler、有序 request／response 链 | 读端口固定版本且可过期；尚无 ScriptHookHandler 和生命周期修改 Hook |
 | 查询与删除 | runs／tasks／operations／events／sessions、补充和停止回执、records.delete | 当前多为 JSON dict／列表，尚无完整 RunSnapshot／分页／回执 DTO；sessions.inputs 无分页 |
-| 文件与环境 | LocalEnvironment、WorkspaceService、文件工具、执行域 fence、配套脚本适配入口 | 独立 WorkspaceBackend／EnvironmentProvider／SandboxGateway 协议与完整装配合同待补齐；没有默认宿主 shell |
+| 文件与环境 | WorkspaceBackend、11 个普通方法、entry points 加载、FileProperties、默认本地实现、授权与恢复绑定 | 完整 EnvironmentProvider／SandboxGateway、多后端挂载及真实共享／对象存储驱动待补齐；没有默认宿主 shell |
 | 上下文与内容 | 原始／有效记录、历史、压缩、结果预览、按角色分片读取 | 完整值保存在执行快照；独立 ContentStore／BlobStore、ArtifactRef 输入和来源授权待实现 |
 | 存储与恢复 | FileRuntimeStore 默认、MemoryRuntimeStore 可选；原子快照、提交回执、租约、单机进程恢复 | 无 SQLite／PostgreSQL 实现；未实现目标增量日志、跨机存储与任意历史版本迁移 |
 | 事件总线 | 单处理者分发、局部注册、Hook 调用阶段持久化、已提交 RunEvent 观察 | 不等于完整可靠总线；独立 outbox、订阅 ACK 和全部持久等待合同待实现 |
@@ -33,6 +33,7 @@
 | `events.hooks/hook_views/hook_reads/patches/control` | 有序 Hook、受限输入视图、读取授权、双补丁提交与无 Agent 控制收束 |
 | `context` | 消息物化、历史与补充顺序、受保护输入、预算、可恢复摘要、大结果读取 |
 | `capabilities`、`models` | 资源目录及结果合同、工具／MCP／Skill 适配；模型协议、完整材料与 usage 校验 |
+| `workspace.contracts/properties/loader/local/service/results/runtime` | 文件接口与 DTO、参数组、选中提供者加载、本地适配、授权／结果检查和生命周期 |
 | `environment`、`storage` | POSIX 工作区和受限文件服务；JSON 文件事务、内存事务、提交回执和租约校验 |
 
 ```mermaid
@@ -62,6 +63,8 @@ flowchart LR
 
 ## 验证口径
 
+文件 SPI 的提交快照基于 `2b47ea9` 独立验证，没有包含工作区其他未提交功能；完整回归 **1075 passed，0 failed，0 skipped**，耗时 292.23 秒；144 个源码／测试／配置文件摘要在运行前后保持一致，见[提交快照回归](../../agentloom-sdk/qa/evidence/workspace-spi-publish-20261018/regression-summary.json)。下文的第五轮数字属于历史验证记录。
+
 第五轮修复完整回归 **1089 passed**：既有 SDK 与新增修复测试 783 项，原 QA 110 项、复审 QA 24 项、第三轮 QA 44 项、第四轮 QA 56 项、第五轮 QA 72 项；对应[固定源码与测试清单](../../agentloom-sdk/qa/evidence/round5-fixes-20261017/summary.json)。工作区另行新增且持续变化的白盒探针单独验证，不计入此范围；详见[探针快照与测试逻辑核对](../../agentloom-sdk/qa/evidence/round5-fixes-20261017/separate-probe-assessment.json)。948／813 等数字属于历史快照，各轮原始审查和失败证据保留。
 
 这些验证使用本地确定性模型、协议替身和已有的 MCP stdio／SSE 测试，没有远端模型、远端 MCP、多机或 Workflow 的验收结论。完整目标尚未实现的部分集中列在[设计差异](#与完整目标设计的差异)。
@@ -72,7 +75,7 @@ flowchart LR
 
 - 独立安装与导入，`ReactAgent`、`PlanAgent`、`AgentNode` 门面、`RuntimeEngine` 和 `RunHandle`；调用方注入模型、能力和工作区，默认文件存储可替换，不导入 Platform。
 - `AgentBuilder` 从现有 AgentDefinition 构建独立 Agent，提供不可变的共享默认配置和 `with_options()` 派生；与直接构造共用校验、角色授权和恢复清单，详见[构建合同](assembly.md#23-从定义构建-agentbuilder)。
-- `PropertiesConfig` 统一 runtime／defaults／services 三组参数，AgentLoom 管理宿主开启和关闭；Runtime、Builder、Agent 读取对应只读参数组，原关键字入口通过同一解析路径兼容，详见[参数合同](assembly.md#24-统一参数配置-propertiesconfig)。
+- `PropertiesConfig` 统一 runtime／defaults／services／files 四组参数，AgentLoom 管理宿主开启和关闭；Runtime、Builder、Agent 读取对应只读参数组，原关键字入口通过同一解析路径兼容，详见[参数合同](assembly.md#24-统一参数配置-propertiesconfig)。
 - 每次委派独立的 ReactAgent、任务与上下文；根级 Loop / deadline 共享，按配置串行或并行执行，批次全部结算后按模型给出的次序反馈。
 - 冻结配置、JSON Schema、声明式 Prompt 变量、原始／有效结果分离、有序 Hook、合法拒绝、无效 patch 放行、受限且可过期的读取端口。
 - 最近 N 轮实际根角色历史、补充输入的领取／送达／跨轮转交、input_id 去重、受保护输入、预算计量与可接续的分块压缩。
@@ -81,7 +84,21 @@ flowchart LR
 - 默认 JSON 文件后端、显式选择的内存后端、幂等提交回执、租约 epoch fencing、独立进程恢复；已保存 raw / Hook result / 子任务 / 批次继续原阶段，没有可靠外部结果的调用标记 unknown。文件后端采用 namespace 文件锁、不可变记录和原子清单，不需要数据库。
 - 独立停止命令与停止前准入关闭，宿主关闭保留现场；终态与 CleanupJob 原子提交，清理独立领取租约、失败重试，不再次激活 Agent。
 
-源码按 `public`、`configuration`、`runtime`、`events`、`context`、`capabilities`、`environment`、`models`、`storage` 分包。具体接入见[接入指南](integration.md)，包安装说明见 [SDK README](../../agentloom-sdk/README.md)。
+源码按 `public`、`configuration`、`runtime`、`events`、`context`、`capabilities`、`workspace`、`environment`、`models`、`storage` 分包。具体接入见[接入指南](integration.md)，包安装说明见 [SDK README](../../agentloom-sdk/README.md)。
+
+## 文件提供者 SPI
+
+本轮按包注册、配置选择、SDK 加载的机制实现完整文件 SPI。`WorkspaceBackend` 是普通方法抽象基类；第三方实现全部 11 个操作，在 `agentloom.workspace_backends` 登记实现类。业务只设置 `PropertiesConfig.files = FileProperties(provider="...", options={})`；地址可由实现包内置。默认 local 也走同一接口，LLM 工具名称与 Schema 保持不变。
+
+`workspace` 按合同／DTO、配置、加载、本地适配、公共授权、结果检查和生命周期分包。Runtime 仍负责 Hook、Attempt、重试、结果提交及恢复；没有新增文件工具调度循环。SDK 仅创建与关闭选中的提供者实例，实例可跨 Run 复用，但 context 和授权逐次隔离。
+
+处理了缺失／重名登记、接口不完整、构造失败、实例方法被覆盖、异步结果、错误 DTO、越权结果、关闭失败重试等边界。恢复比较保留 options 中 bool／int／float 的类型；已保存 raw 的恢复不重复写入。后台清理核对 scope 提供者身份，传递独立 cleanup_job_id／cleanup_lease_epoch 并校验清理租约；持久工作区保留内容。已返回的非法结果与超时结果仍保留 completed 事实，避免把已完成写入误判成 unknown 后重试。
+
+新增的 54 项专项测试实际构建并安装独立提供者包，使用公开接口实现全部操作；包含 ReAct／Plan 跨进程写入后退出、错误配置拒绝和原配置接续验证。
+
+提交时按修改前备份分离了工作区其他未提交改动，在 `2b47ea9` 上单独验证文件 SPI。独立安装检查发现宿主关闭需要等待维护线程完全退出，因此同时包含该关闭等待修复及对应的 4 项测试，避免提供者或存储关闭后仍有清理任务访问它们。
+
+SDK 与第三方包均构建为 wheel 并独立安装，92 个 SDK 源码／资源文件与提交快照逐字节一致；10 个独立进程场景通过，覆盖两种模式下本地及第三方的全部 11 个操作、写入后进程退出、配置变更拒绝和原配置恢复，见[安装包验证](../../agentloom-sdk/qa/evidence/workspace-spi-publish-20261018/wheel-summary.json)。完整提交快照回归 **1075 passed，0 failed，0 skipped**，见[验证记录](../../agentloom-sdk/qa/evidence/workspace-spi-publish-20261018/regression-summary.json)及[日志](../../agentloom-sdk/qa/evidence/workspace-spi-publish-20261018/regression.txt)。真实 NFS／对象存储、脚本挂载以及 Workflow 不在本轮验收范围。
 
 ## 第五轮持久化 JSON 深度与异常记录修复
 
@@ -364,11 +381,11 @@ npm run docs:check
 当前交付采用明确的单机存储／环境实现范围：
 
 1. 默认 JSON 文件后端保存原子执行快照和幂等命令回执，按 namespace 串行提交，清单包含该 namespace 当前所有记录引用；尚非目标中的增量日志／索引布局，大运行记录的写入和查询有规模开销。已完成进程退出恢复验证，未验证断电或 NFS／跨机协调，也不提供任意历史版本迁移。当前只有文件与内存后端，没有 SQLite 或 PostgreSQL 实现；目标设计中出现的数据库适配不是依赖要求或已交付能力。
-2. LocalEnvironment 只 fence 经 SDK 文件服务的访问，文件锁不约束任意宿主代码。没有 OCI 执行服务、多机卷撤销证明、NFS mutation journal；脚本适配器需要调用方另行提供配套的隔离环境和网关，默认拒绝本地宿主执行。[默认工具与 SPI](builtin-tools-spi.md)是 2026-10-17 新增设计，其中独立 WorkspaceBackend Protocol、后端能力装配校验以及共享文件／对象存储实现仍待实施。公共路径仍依赖本地实现，脚本适配也仍读取环境内部属性；当前分包不能代替这些接口合同，SPI01–SPI10 不包含在上述已通过测试的结论中。
+2. LocalEnvironment 只 fence 经 SDK 文件服务的访问，文件锁不约束任意宿主代码。没有 OCI 执行服务、多机卷撤销证明、NFS mutation journal；脚本适配器需要调用方另行提供配套的隔离环境和网关，默认拒绝本地宿主执行。[默认工具与 SPI](builtin-tools-spi.md)中的独立 WorkspaceBackend、包注册发现与配置加载已实现；公共路径与授权已从本地 driver 分离。完整环境／沙箱协议、按后端能力裁剪工具、多后端挂载、共享文件／对象存储驱动仍待实施，不能以本轮文件 SPI 测试覆盖 SPI01–SPI10 的所有目标环境。
 3. 大结果完整值保存在执行快照，已有预览、有效 hash、按角色受限的 `result.read`；尚无独立 BlobStore、ArtifactRef 导入、跨工作区来源撤销和显式外部结果授权。非空 `AgentInput.artifacts` 明确拒绝。
 4. 本地文件 grep 当前为字面搜索，未提供 RE2；目录 move 暂不支持。未知外部副作用不被重试成假成功；工作文件变更与运行状态提交是两个动作，即使使用同一文件系统，也不宣称二者原子。
 5. EventBus 已有单处理者路由、局部注册和调用阶段持久化，但尚非目标中的完整可靠总线：缺少独立 outbox 订阅确认协议和全部持久等待／准入记录，本机推进仍使用协程、信号量和轮询。Context／Environment 的全部业务事件路由、生命周期修改 Hook，以及完整机器 Schema、查询／内容授权 DTO 仍待补齐；公开查询目前返回 JSON 投影。
-6. 恢复清单固定定义、策略、Schema、模型规格、Skill manifest、Hook 绑定与工作区根目录，但没有对注入的 Python handler 实现、客户端配置／服务地址做完整版本指纹。接续方仍须重建相同实现和资源；记录删除要求先移除后续历史依赖。
+6. 恢复清单固定定义、策略、Schema、模型规格、Skill manifest、Hook 绑定与工作区根目录，文件提供者另固定登记名称、实现入口、发行包与版本及类型敏感 options 摘要；但没有对其他注入的 Python handler 实现、客户端配置／服务地址做完整版本指纹。接续方仍须重建相同实现和资源；记录删除要求先移除后续历史依赖。
 7. Workflow / StateGraph / LangGraph 按本轮范围暂不接入；容器驱动、跨机存储、真实付费模型、真实远程 MCP 均未作为本轮验收通过项。
 
 这些边界不以静默降级方式隐藏；其余目标继续以 [SDK 验收矩阵](verification.md) 为准。

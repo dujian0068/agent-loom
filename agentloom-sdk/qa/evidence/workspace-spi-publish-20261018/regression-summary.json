@@ -1,0 +1,30 @@
+{
+  "tests": 1075,
+  "errors": 0,
+  "failures": 0,
+  "skipped": 0,
+  "base_commit": "2b47ea96111326b3e13d5a0f808583bcf50cc8b4",
+  "duration_seconds": 292.217,
+  "areas": {
+    "tests": 841,
+    "qa": 234
+  },
+  "source_files_checked": 144,
+  "source_unchanged_during_regression": true,
+  "excluded_tests": [],
+  "spi_tests": 54,
+  "required_shutdown_tests": 4,
+  "scope": "Isolated SPI changes plus required maintenance shutdown dependency; other uncommitted workspace changes excluded",
+  "command": [
+    "python",
+    "-m",
+    "pytest",
+    "-q",
+    "agentloom-sdk/tests",
+    "agentloom-sdk/qa",
+    "--tb=short",
+    "--durations=5",
+    "--junitxml=../publish-regression.junit.xml"
+  ],
+  "passed": 1075
+}

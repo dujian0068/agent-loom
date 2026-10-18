@@ -91,6 +91,7 @@ from .types import (
     RunUsage,
     ToolCall,
 )
+from .workspace import FILE_OPERATIONS, FileProperties, WorkspaceBackend, WorkspaceCallContext
 
 __version__ = "0.1.0a1"
 
@@ -111,5 +112,6 @@ __all__ = [
         "runtime",
         "storage",
         "types",
+        "workspace",
     }
 ]

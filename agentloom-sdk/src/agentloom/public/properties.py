@@ -10,6 +10,7 @@ from ..capabilities import CapabilityRegistry
 from ..configuration import AgentProperties, RuntimeProperties
 from ..errors import ConfigurationError
 from ..events import HookSet
+from ..workspace.properties import FileProperties
 from .assembly import resolve_model_budget, validate_model_adapter
 
 if TYPE_CHECKING:
@@ -63,6 +64,7 @@ class _PropertiesOverrides(TypedDict, total=False):
     runtime: RuntimeProperties
     defaults: AgentProperties
     services: ServiceProperties
+    files: FileProperties
 
 
 @dataclass(frozen=True, kw_only=True, eq=False, repr=False)
@@ -73,6 +75,7 @@ class PropertiesConfig:
         runtime: Host parameters; defaults to local file persistence.
         defaults: Agent parameter defaults, including the required workspace.
         services: Borrowed adapters, including the required model.
+        files: Installed file provider name and optional constructor parameters.
 
     Raises:
         ConfigurationError: Invalid group, unsupported model options or an
@@ -86,12 +89,14 @@ class PropertiesConfig:
     defaults: AgentProperties
     services: ServiceProperties
     runtime: RuntimeProperties = field(default_factory=RuntimeProperties)
+    files: FileProperties = field(default_factory=FileProperties)
 
     def __post_init__(self):
         for name, expected in (
             ("runtime", RuntimeProperties),
             ("defaults", AgentProperties),
             ("services", ServiceProperties),
+            ("files", FileProperties),
         ):
             if not isinstance(getattr(self, name), expected):
                 raise ConfigurationError("INVALID_CONFIGURATION", field_path=name)
@@ -105,7 +110,7 @@ class PropertiesConfig:
         AgentBuilder.with_options for one Agent's overrides. Unknown keys raise
         TypeError; invalid combined parameters raise ConfigurationError.
         """
-        unknown = overrides.keys() - {"runtime", "defaults", "services"}
+        unknown = overrides.keys() - {"runtime", "defaults", "services", "files"}
         if unknown:
             raise TypeError(f"Unknown PropertiesConfig options: {', '.join(sorted(unknown))}")
         return replace(self, **overrides)

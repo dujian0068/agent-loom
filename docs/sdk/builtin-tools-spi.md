@@ -1,8 +1,8 @@
 # SDK 默认工具与 SPI 扩展设计
 
-更新：2026-10-17。本文记录本轮确认的默认工具与扩展方向，并细化各层的实现职责。**这是目标设计；与本地预览实现的差异见[第 9 节](#9-当前代码与待调整部分)。** 本轮只更新文档，不表示共享存储、对象存储和沙箱驱动已实现。
+更新：2026-10-18。文件后端 SPI 已实现：普通抽象方法、entry points 注册、按配置发现与实例化，覆盖全部 11 个文件操作。EnvironmentProvider／SandboxGateway 的完整目标协议及真实共享存储、对象存储驱动仍待实现，具体边界见[第 9 节](#9-当前代码与待调整部分)。Workflow 不在本轮范围。
 
-SDK 自带一套基础工具，内置工具与用户扩展使用相同的调用机制。增加业务工具通过工具执行 SPI；给文件工具更换存储介质通过文件后端 SPI；更换脚本运行环境通过沙箱执行 SPI。SPI 即供实现方扩展的接口，Python 使用 `Protocol` 和显式依赖注入表达，不要求引入插件加载框架。
+SDK 自带一套基础工具，内置工具与用户扩展使用相同的调用机制。增加业务工具通过工具执行 SPI；给文件工具更换存储介质通过文件后端 SPI；更换脚本运行环境通过沙箱执行 SPI。文件 SPI 使用 `WorkspaceBackend` 抽象基类、Python 包 entry points 和标准库 `importlib.metadata`；业务安装实现包，在 `PropertiesConfig.files` 选择名称，无需手动创建后端对象。
 
 ## 1. 默认工具清单
 
@@ -46,7 +46,7 @@ flowchart TD
     S --> D[本地、共享文件或对象存储实现]
 ```
 
-一次文件调用选择一个后端，不是向所有存储广播。多个挂载可分别使用不同后端，由受限文件视图按逻辑路径选择；路径不能由模型转换成任意存储连接。调用脚本时，ToolHandler 选择 ScriptToolAdapter → SandboxGateway；MCP 与函数工具分别选择自己的适配器。
+一次文件调用选择一个后端，不是向所有存储广播。当前每个 RuntimeEngine 选择一个提供者，所有文件操作一起切换；多个后端的挂载路由仍属于后续设计。路径不能由模型转换成任意存储连接。调用脚本时，ToolHandler 选择 ScriptToolAdapter → SandboxGateway；MCP 与函数工具分别选择自己的适配器。
 
 调用仍遵循现有[事件与 Hook 协议](event-bus.md)：
 
@@ -65,9 +65,9 @@ Skill 的三个入口直接路由 SkillHandler → SkillLoader；result_read 沿
 | 接口／对象 | 负责 | 不负责 |
 | --- | --- | --- |
 | `CapabilityAdapter` | 业务能力执行 SPI；完成一次具体调用并返回结构化结果或错误 | 模型循环、外围 Hook、自动重试、平台查询 |
-| `FileToolAdapter` | 把文件工具参数映射到文件服务，组织 edit／patch 等工具语义 | 选择云账号、直接拼宿主路径、独立保存检查点 |
+| `FileToolAdapter` | 把文件工具参数映射到文件服务，保持模型可见 Schema | 选择云账号、直接拼宿主路径、独立保存检查点 |
 | `WorkspaceService` | 当前调用的受限文件视图；路径规范化、挂载路由、读写权限及公共文件行为 | 固定绑定某种磁盘、持有所有角色的权限并集 |
-| `WorkspaceBackend` | 文件存储 SPI；受限读写、列举、版本条件及已声明的原子操作 | 模型上下文、Skill 模板、运行状态提交 |
+| `WorkspaceBackend` | 完整 11 方法的文件 SPI；版本条件、存储原子性、精确修改与搜索语义 | 模型上下文、Skill 模板、运行状态提交 |
 | `EnvironmentProvider` | 准备工作区和只读资源挂载，装配后端与沙箱，提供撤权和清理能力 | 业务工具选择、Planner 决策、平台应用创建 |
 | `SandboxGateway` | 执行环境 SPI；命令执行、状态查询、终止和执行域撤销 | 静默启用宿主 shell、创建第二套 Agent Loop |
 | `SkillLoader` | 从固定资源包读取入口和附属资源，验证 manifest | 自动执行包内脚本或扩大工具权限 |
@@ -125,40 +125,46 @@ WorkspaceService 根据只读挂载表解析路径；Backend 接收受限句柄�
 
 共同规则由文件服务验证，后端必须使用其介质适用的方式约束真实访问。POSIX 的 dirfd、符号链接处理，或对象 key 前缀与网关授权属于各实现内部细节；上层不能 import 本地 driver 的私有路径函数。
 
-### 4.2 后端提供的基础操作
+### 4.2 可导入的完整文件接口
 
-以下是待落实为 `Protocol` 的合同，不是当前可导入的方法签名。面向可能发生远程 I/O 的后端，执行入口采用异步接口；本地适配器负责处理阻塞 I/O，不占住 Agent 的事件循环。
+`agentloom.WorkspaceBackend` 是抽象基类。实现包必须继承并实现 `read/write/list/mkdir/stat/edit/patch/move/delete/glob/grep` 全部 11 个普通方法。SDK 不要求 `async def`，不代建事件循环或 I/O 线程池；内部连接、线程和异步客户端由实现包管理，方法返回时本次操作必须已完成或明确失败。
 
-| 操作 | 输入要点 | 返回与保证 |
-| --- | --- | --- |
-| 能力描述 | 注入时已准备的静态描述 | 可用操作、版本条件、列举一致性、原子移动和可执行挂载支持；读取描述不出网 |
-| `stat` | 受限句柄、相对路径 | 文件类型、大小及不透明版本标识 |
-| `read` | 路径、偏移、长度及需要固定的版本 | 数据分片与实际版本；禁止悄悄拼接不同版本 |
-| `list` | 目录、游标、数量上限 | 稳定顺序的目录项、后续游标与目录版本；内容变化时按合同返回失效 |
-| `write` | 正文、create_only 或 replace、版本条件 | 一次条件写入后的版本；已存在／版本不符明确冲突 |
-| `mkdir` | 路径、是否创建父目录 | 明确的目录语义；已有同名文件不能视作成功 |
-| `move` | 源、目标、源版本 | 仅在声明支持的范围内原子移动，目标须不存在；不支持时不模拟成功 |
-| `delete` | 路径、版本、递归选项 | 按约定范围删除；目录递归语义及未知执行事实明确返回 |
+完整签名及返回 TypedDict 见 [`workspace/contracts.py`](../../agentloom-sdk/src/agentloom/workspace/contracts.py)。每个方法的首个业务参数是可信的 `WorkspaceCallContext`，随后是原文件工具参数。例如：
 
-这些方法均携带截止、取消和当前执行权信息。失权、只读或范围不匹配时不得产生新的写入；后端连接不能成为绕过 WorkspaceService 的公共模型接口。
+```python
+# 实现类中的方法签名；返回普通 DTO 字典。
+def read(self, context, path, *, offset=0, limit=16384): ...
+def write(self, context, path, content, *, mode="create_only", if_match=None): ...
+def list(self, context, path=".", *, cursor=None, limit=100): ...
+```
 
-`FileVersion.etag` 对调用方是不透明的版本条件，不能要求所有后端计算相同格式的值。对象的版本号或条件请求标识可由后端封装；本地实现可使用内容摘要。仅返回 etag 字符串不代表实现了条件写入：校验和提交必须由后端保证不可被另一个受控写入者插入。
+`WorkspaceCallContext` 携带 namespace、session_id、run_id、稳定 workspace_id、lease_epoch、role_key、operation_id、attempt_id、attempt_no、deadline_at、access_scope 和 `check_active()`。身份与授权由 SDK 构造并冻结，不能使用全局 current_session 保存。临时 workspace_id 按 namespace／session／run 隔离；持久工作区按 namespace／session 复用。
 
-### 4.3 复用公共工具行为
+| 方法 | 返回 DTO 及约束 |
+| --- | --- |
+| read | FileRead：版本、UTF-8 字节范围、text、next_offset、total_bytes；默认 16 KiB，最大 64 KiB |
+| write／stat／move | FileVersion：path、kind、size、etag；文件操作返回 sha256，etag 保持不透明 |
+| list | DirectoryPage：entries、etag、next_cursor；直属项含 name 和版本，排序、限制及失效游标语义保持一致 |
+| mkdir | DirectoryCreated：path、kind=directory |
+| edit／patch | FileEdit／FilePatch：文件版本与 matched_count／hunks_applied |
+| delete | FileDeleted：deleted_path、previous_etag；非空目录须显式 recursive |
+| glob／grep | GlobResult／GrepResult：有界、排序的 paths／matches 与 truncated；当前 grep 只允许 literal=True |
 
-edit／patch 使用固定版本读取和同版本条件写入；文本匹配、补丁格式、UTF-8 和大小限制由公共文件层保持一致。两个 Executor 读取同一版本后修改，至多一个条件写入成功，另一个收到冲突并由模型决定下一步。
+SDK 在调用前检查 Schema、逻辑路径、只读权限、访问根和输入大小，在返回时检查 DTO、路径范围、顺序、数量及读取偏移，不将供应商私有字段或越权路径交给模型。写入版本条件、真实存储隔离、符号链接／对象前缀处理和原子性必须由实现包保证，SDK 的 Python 接口不能自动证明存储语义。
 
-glob／grep 默认可以基于受限 list／read 实现。后端可提供搜索加速，但结果范围、排序、截断、权限和支持的匹配语法必须相同；不能直接把供应商自己的查询语言变成同名 grep。
+### 4.3 修改、搜索与执行权
 
-公共层能组合操作不等于获得跨文件事务。目录递归删除、原子移动和并行目录枚举需要单独的后端保证；无法满足时按能力描述拒绝相应绑定或参数，不静默退化。
+edit／patch 的完整实现由提供者接管；实现包可复用自己的固定版本 read 与条件 write。必须保持精确匹配、单文件补丁、禁止 fuzz、20 MiB 上限和冲突语义。glob／grep 同样由提供者接管，搜索加速不能改变公共结果、范围或匹配语法。
 
-### 4.4 装配时校验能力
+长调用应在 I/O 过程中检查 deadline_at 和 check_active，写入发布前再次核验，服务端需要 fencing 时使用 lease_epoch 建立可撤销的执行域。方法不能返回后继续留下不受控写入者。普通同步方法并不获得强制中断能力；网络超时、取消、连接回收与远端失权由实现包落实。
 
-调用方显式准备后端和能力描述，Agent 构造阶段做纯本地检查。例如，绑定 move 要求对应挂载提供约定的原子移动；只读存储只能绑定读取类工具。未知的关键能力不按“支持”处理。
+### 4.4 启动与生命周期校验
 
-同一工具允许可选参数时，实际支持范围必须写入冻结 Schema。例如暂不支持目录移动或正则搜索，应固定可用类型或参数值，并在调用边界再次校验。环境准备时发现真实挂载与声明不符则报错，不能悄悄删除工具或换后端。
+启动时只加载选中名称。不存在报 `FILE_PROVIDER_NOT_FOUND`，重名报 `FILE_PROVIDER_DUPLICATE`，缺方法、签名不兼容、异步入口报 `FILE_PROVIDER_INTERFACE_INVALID`，导入或构造失败报 `FILE_PROVIDER_LOAD_FAILED`；不回退本地。实例构造后也复核方法，防止构造器把接口覆盖为无效属性。运行时意外返回协程会拒绝，不由 SDK 代为 await。
 
-这些能力声明用于语义兼容与装配，**不新增“工具声明幂等才允许重试”的门槛**。自动重试规则仍由结构化错误及用户配置决定。
+所有提供者都实现完整接口；只读限制仍由每项 CapabilityBinding.access_scope 控制。后端若不能满足选用工具的实际存储语义，应提供不同的能力接口或明确失败，不能声称完整实现后静默降级。
+
+可选生命周期方法均为普通方法：prepare(context) 可准备空间与 fence；revoke(context) 可撤销远端写入者；cleanup(context) 默认使用 list／delete 清空临时内容；close() 释放当前实例。prepare／revoke 默认无额外 I/O，适合仅通过同步调用访问的后端。需要服务端撤权的实现必须覆盖 revoke。cleanup context 另带 cleanup_job_id／cleanup_lease_epoch，与目标工作区的业务 lease_epoch 分开；由独立清理租约保护，失败保持诊断并重试；持久工作区不会调用 cleanup。额外容器或元数据回收由提供者覆盖 cleanup 完成。
 
 ## 5. 三种介质怎样接入
 
@@ -168,7 +174,7 @@ glob／grep 默认可以基于受限 list／read 实现。后端可提供搜索�
 | 共享文件系统 | 实现相同 SPI，验证跨进程／跨机器锁、可见性和旧执行权撤销 | NFS 挂载成功不等于多机故障接管已安全；失联不能降为无锁写 |
 | 对象存储 | 将逻辑路径映射到受限 key，封装范围读取、条件写及列举 | 前缀不等于真实目录；复制再删除不能冒充原子 move；分页、版本及删除能力按实际合同声明 |
 
-新后端不是必须支持整套默认文件工具。可以仅提供满足合同的只读子集；调用方若要求未支持的能力，装配时给出明确错误，而不是运行中偷偷换实现。
+当前可导入接口要求实现全部 11 个方法。按后端静态能力裁剪工具集、跨挂载路由和共享／对象存储驱动的完整验收属于后续能力，不以本次测试提供者代替。
 
 ## 6. 文件工具与脚本必须看到同一份文件
 
@@ -191,47 +197,58 @@ SandboxGateway 沿用[执行、查询、终止和撤销合同](capabilities.md#7
 - CapabilityAdapter 和 Backend 不叠加隐藏的自动重试。SDK 继续使用用户配置的统一策略；若底层客户端存在无法关闭的重试，应明确作为适配边界，不能声称一次 Attempt 只发送一次请求。
 - operation_id 可传给支持防重的后端，自动重试仍是同 Operation 的新 Attempt；LLM 再次提出调用是新 Operation，不按参数相同自动合并。
 - Hook 改参不能扩大授权；修改后的请求再次校验。后置 Hook 可以产生有效输出修订，但不能抹去真实失败或撤销已经发生的文件写入。
+- 提供者已返回但 DTO 非法时保留 completed 事实并拒绝公开非法内容；已返回的有效结果超过工具截止时保留 completed 与结果材料，不能按 unknown 自动重写。
 - 已保存 raw 的恢复只续后处理；外部写入发生而 raw 尚未可靠保存时须核对后端证据，无法确定则保留 unknown，不把“没有记录”当作未执行。
 - 工作文件与 RuntimeStore 检查点分开。即使二者都保存为 JSON 文件，也不能假设工作文件修改与执行状态提交是同一个原子事务。
 - 临时目录在整个 ExecutionRecord 收束、所有相关写入者失效后清理；持久沙箱按既定规则保留文件。单个 Executor 完成不清理共享目录。
 
 RuntimeStore 的实现可以独立替换，必须满足[一致提交与恢复合同](checkpoints.md)。WorkspaceBackend 不因此获得写检查点或删除执行记录的权限；模型文件工具不能访问系统记录目录。
 
-## 8. Python 装配与资源所有权
+## 8. Python 包注册与配置加载
 
-首版采用 `Protocol` 描述扩展接口，调用方显式创建实现并注入。内置 FileToolAdapter 与用户工具均使用 CapabilityRegistration 注册，再由 CapabilityBinding 选择；不另设只能由内置工具使用的旁路。
+第三方在自身 `pyproject.toml` 登记实现类，发布并安装该包：
 
-装配顺序：
+```toml
+[project.entry-points."agentloom.workspace_backends"]
+acme = "acme_files:AcmeWorkspaceBackend"
+```
 
-1. 调用方准备模型、工具资源、Skill 包，以及存储和执行环境实现。
-2. 注册工具描述与适配器；EnvironmentProvider 接收具体 WorkspaceBackend 和可选 SandboxGateway，提供其能力描述。
-3. 各 AgentDefinition 选择工具，构造时冻结 Schema、配置与访问范围，并校验后端兼容性。
-4. 执行开始时，由 SDK 创建运行身份；环境按身份准备挂载和受限句柄，ToolHandler 为具体调用提供 WorkspaceService。
-5. 运行结束后撤销本次句柄、按策略清理工作文件；调用方注入的共享客户端仍由调用方关闭。
+业务只配置提供者名称和可选构造参数：
 
-Backend、Adapter 和 Gateway 可以在满足并发合同后复用；当前路径、角色和会话只能从调用上下文读取。凭据和挂载配置不能写入模型参数或序列化进检查点，恢复时重新注入客户端与有效句柄。
+```python
+from agentloom import FileProperties
 
-后续可增加 Python entry points 发现插件，但仍需调用方显式选择和绑定。本轮不实现自动扫描并执行所有已安装包，也不增加全局可变注册表。
+# properties 是原有 PropertiesConfig；安装实现包后按名称选择。
+properties = properties.with_options(
+    files=FileProperties(provider="acme", options={}),
+)
+```
+
+`options` 是冻结的 JSON 参数，SDK 使用 `实现类(**options)` 创建对象；可以为空，地址可完全内置在第三方包里。模型、能力目录和业务 AgentDefinition 不因更换文件后端改变。第三方持有根地址时，AgentProperties 中可使用 `WorkspaceBinding()`；默认 `local` 必须指定本地 root，配置错误在 build 阶段拒绝。
+
+`FileProperties()` 默认选择内置 local，使用同一 WorkspaceBackend 调用合同；已有直接 RuntimeEngine／WorkspaceService 用法保持兼容。高级入口可使用 `RuntimeEngine(files=FileProperties(...))`。Runtime 构造只解析本地登记元数据，async entry 才导入选中模块并实例化；`AgentLoom(properties)` 本身不加载提供者。
+
+一个 RuntimeEngine 只创建一个提供者实例，不同 Run 共用客户端，通过各自 context 隔离身份与权限。宿主退出先等待运行及维护任务收束，再调用 close，成功后释放引用；关闭失败可再次 aclose 重试。原先注入的模型、store、environment 等服务仍由调用方拥有。
+
+恢复清单保存提供者名、entry point、发行包名称与版本、保留数值类型的 options 摘要，不保存原始参数和凭据。改变上述绑定会在派发前拒绝非终态恢复；维护任务也检查持久 scope 的提供者绑定，不会拿另一后端执行清理或撤权。默认本地旧检查点保持兼容。第三方实现或内置地址改变时必须更新发行版本；SDK 不对安装包全部源码做哈希。
+
+安装包发现不执行未选中的实现，不引入全局可变注册表。第三方文件提供者与未经验证的自定义 environment／ScriptToolAdapter 组合明确拒绝，避免 exec 和文件工具访问两份不同的文件；脚本、共享挂载和完整环境 SPI 后续单独对齐。
 
 ## 9. 当前代码与待调整部分
 
-以下是 2026-10-17 对本地 SDK 预览实现的核对；实现代码另行交付，不包含在本次设计文档提交中。
-
-| 内容 | 当前实现 | 本方案需要的调整 |
+| 内容 | 当前实现 | 边界 |
 | --- | --- | --- |
-| 工具接口 | 已有 CapabilityAdapter、注册描述、角色绑定及文件／函数／MCP／脚本适配器 | 保持统一调用路径；对照目标协议补齐类型和一致性测试 |
-| 文件视图 | 已有 WorkspaceService；文件能力通过它访问 LocalEnvironment | 提取独立 WorkspaceBackend Protocol；公共路径解析不再依赖本地 driver 私有函数 |
-| 本地文件 | 已有读写、版本检查、精确修改、搜索及受限访问 | 将本地实现适配到新 SPI；保持模型可见语义，明确能力描述 |
-| 脚本入口 | 已有 ScriptToolAdapter，要求外部配套隔离环境和网关 | 通过正式受限接口取得执行域，消除访问 WorkspaceService 内部属性的耦合；提供真实环境实现后才能宣称可用 |
-| Skill | 已有只读包、manifest、读取入口和参数处理 | 复用逻辑挂载／后端能力；仍由 SkillLoader 负责资源规则 |
-| 其他介质 | 尚无通过本方案验收的共享文件或对象存储后端 | 分别实现及验证，不能用本地测试替代跨机器验证 |
-| 检查点 | 已有独立 RuntimeStore 接口 | 继续独立注入，不并入文件工具 SPI |
-
-本轮文档不会给当前包新增可导入的 WorkspaceBackend、对象存储类或默认沙箱。公共装配合同见[构造与资源绑定](assembly.md)，实际可导入接口与测试证据随实现版本交付。
+| 文件 SPI | WorkspaceBackend 抽象基类、完整 DTO、11 个普通方法 | 实现包自行保证真实存储语义；不自动提供远端强制取消 |
+| 注册加载 | entry points、FileProperties、按名称选择／校验／创建／关闭 | 只加载选中类；不提供全局可变注册表或热切换 |
+| 公共文件层 | 独立 workspace 包，参数／逻辑路径／授权／结果校验 | 一个 Runtime 一个文件后端；多后端挂载路由待实现 |
+| 本地默认实现 | LocalWorkspaceBackend 适配现有 POSIX 读写、版本、精确修改、搜索、撤权与清理 | 仍是单机保证，不宣称 NFS／跨机 fencing |
+| 第三方接入验证 | 独立测试包安装；全部 11 操作、ReAct／Plan、进程退出恢复 | 测试包是合同替身，不是生产云存储驱动 |
+| 脚本与 Skill | 原能力目录、SkillLoader、脚本适配入口保留 | 完整 EnvironmentProvider／SandboxGateway 协议、对象挂载与脚本一致性待补齐 |
+| 检查点 | RuntimeStore 独立配置，继续默认 JSON 文件系统 | 不由 WorkspaceBackend 接管运行记录 |
 
 ## 10. 后续实现验收
 
-以下为待实施的合同测试，不表示已通过：
+下表仍为完整环境／文件／沙箱目标的验收清单；本轮文件 SPI 的具体结果见[实现记录](implementation.md#文件提供者-spi)。不能把文件接口与确定性提供者测试当成共享存储、脚本及多机验收：
 
 | 编号 | 场景 | 必须验证 |
 | --- | --- | --- |

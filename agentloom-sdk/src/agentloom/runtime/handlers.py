@@ -165,11 +165,28 @@ class ToolHandler:
                 "TOOL_ARGUMENTS_INVALID", category="validation", external_outcome="not_started"
             )
         validate_schema(arguments, entry.spec.input_schema)
+        state = runner.state()
+        file_context = runner.runtime._files.context(
+            state["workspace"],
+            runner.check_active,
+            session_id=state["session_id"],
+            role_key=op["role_key"],
+            operation_id=op["operation_id"],
+            attempt_id=attempt.attempt_id,
+            attempt_no=attempt.attempt_no,
+            deadline_at=min(
+                attempt.deadline_at,
+                time.time() + runner.program.execution_policy.tool_timeout_seconds,
+            ),
+            access_scope=entry.binding.access_scope,
+        )
         workspace = WorkspaceService(
             runner.runtime.environment,
             runner.state()["workspace"],
             runner.check_active,
             entry.binding.access_scope,
+            backend=runner.runtime._files.backend,
+            context=file_context,
         )
         state = runner.state()
         runner.check_active()

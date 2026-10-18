@@ -180,6 +180,7 @@ class ReactAgent(AgentParameterView):
         from ..configuration.assembly import recovery_manifest
         from ..configuration.json_documents import document_digest as digest
 
+        self.runtime_engine._files.validate_program(self)
         key = digest(recovery_manifest(self))
         registry = self.capabilities.bind_program(key, self.definitions)
         object.__setattr__(self, "program_key", key)

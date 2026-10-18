@@ -33,7 +33,14 @@ def recovery_manifest(program):
                 for role, catalog in program.catalogs.items()
             },
             "persistent_sandbox": program.workspace.persistent_sandbox,
-            "workspace_root": str(program.workspace.root),
+            "workspace_root": str(program.workspace.root)
+            if program.workspace.root is not None
+            else None,
+            **(
+                {"file_provider": program.runtime_engine._files.manifest}
+                if program.runtime_engine._files.manifest is not None
+                else {}
+            ),
         }
     )
 

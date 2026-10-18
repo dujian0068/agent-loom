@@ -62,19 +62,20 @@ asyncio.run(main())
 
 ## 2. 参数配置与生命周期
 
-启动时传入一份 `PropertiesConfig`，由各模块读取各自的只读参数组。`defaults` 和 `services` 必填，`runtime` 可省略。
+启动时传入一份 `PropertiesConfig`，由各模块读取各自的只读参数组。`defaults` 和 `services` 必填，`runtime` 和 `files` 可省略。
 
 | 参数组 | 字段与默认值 | 归属 |
 | --- | --- | --- |
 | `runtime: RuntimeProperties` | `namespace="default"`、`state_directory=".agentloom/state"`、`store_lock_timeout_seconds=10`、`lease_seconds=30`、`cleanup_retry_seconds=30` | 宿主、默认文件存储和后台维护 |
 | `defaults: AgentProperties` | 必填 `workspace: WorkspaceBinding`；可选 `execution_policy`、`context_policy`、`model_options`，省略时使用对应 Policy 默认值 | 每个 Agent 的固定参数 |
 | `services: ServiceProperties` | 必填 `model`；可选 `capabilities`、`hooks`、`store`、`environment`、`checkpoint_callback` | 调用方注入的服务实例 |
+| `files: FileProperties` | `provider="local"`、`options={}` | 文件实现选择；SDK 负责加载及生命周期 |
 
 配置构造只校验并冻结参数；相对路径在构造时固定为绝对路径。进入 `async with AgentLoom(properties)` 才打开宿主并创建默认状态目录。`app.build()` 只装配 Agent，`start()` 才接收一次执行。
 
 在 Web 服务中，应让 AgentLoom 的生命周期覆盖整个应用或 Worker，接收请求时为每个新 Run 调用一次 `app.build()`。不要在 `start()` 返回后立即退出宿主作用域，否则本机后台推进会暂停。一个 Agent 实例绑定一个 Run；同会话的新问题需要新的 Agent 实例。
 
-退出宿主会暂停本机推进并保留检查点，不等于用户停止。每个 AgentLoom 实例只开启一次；重启创建新实例。SDK 只关闭自己创建的默认文件存储，注入的 store、模型客户端、环境和其他共享服务仍由调用方管理。共享适配器须支持调用方启用的并发。
+退出宿主会暂停本机推进并保留检查点，不等于用户停止。每个 AgentLoom 实例只开启一次；重启创建新实例。SDK 关闭自己创建的文件提供者和默认文件存储，注入的 store、模型客户端、环境和其他共享服务仍由调用方管理。共享适配器须支持调用方启用的并发。
 
 下面及后续装配片段中的 `properties` 指已构造的参数配置，`app` 指处于 `async with` 内的宿主，`definition` 指已有 AgentDefinition。
 
@@ -258,6 +259,35 @@ HTTP／MCP 的合法 Retry-After 与配置间隔取较大值，等待时间持�
 
 这些都是 async 方法。RunResult 的 partial_results 不公开内部模型碎片、reasoning 或 Executor 私有审计材料。Run 终态不表示清理已完成；按 snapshot 的 cleanup_state 判断清理，维护失败会保存诊断并重试。
 
+### 文件提供者接入
+
+文件工具可以整体切换到已安装的第三方实现。它必须继承 `agentloom.WorkspaceBackend`，实现 read、write、list、mkdir、stat、edit、patch、move、delete、glob、grep 全部 11 个普通方法。每个方法接收 `WorkspaceCallContext` 和原工具参数，返回 [contracts.py](../../agentloom-sdk/src/agentloom/workspace/contracts.py) 中定义的普通 DTO 字典；无需实现 async 接口。
+
+第三方包的登记：
+
+```toml
+[project.entry-points."agentloom.workspace_backends"]
+acme = "acme_files:AcmeWorkspaceBackend"
+```
+
+安装该包后，业务在原配置中加入 files；不创建 AcmeWorkspaceBackend 对象：
+
+```python
+from dataclasses import replace
+from agentloom import FileProperties, WorkspaceBinding
+
+properties = properties.with_options(
+    files=FileProperties(provider="acme", options={}),
+    defaults=replace(properties.defaults, workspace=WorkspaceBinding()),
+)
+```
+
+SDK 使用 `AcmeWorkspaceBackend(**options)` 构造实例。地址可内置，options 可以为空；其余模型、能力注册和 AgentDefinition 保持原样。仍需用 `file_tools()` 注册目录，并用 `CapabilityBinding(kind="builtin_tool", adapter_key="files", member_key="read", ...)` 等逐项授权，选择后端不会自动扩大 Agent 权限。
+
+未配置 files 时使用 local，WorkspaceBinding.root 继续必填。提供者名不存在、重复登记、缺方法或签名不兼容会明确报错，构造失败不会回退到本地。SDK 仅导入选中类；同一宿主复用实例，并在运行和维护任务收束后关闭。close 失败可以重试 aclose，借用的其他服务不受影响。
+
+恢复时必须保留提供者名、发行包版本和 options。检查点保存这些绑定及 options 的类型敏感摘要，不保存原始参数；更换配置会拒绝非终态恢复。第三方内部地址或行为变化应发布新版本。长同步调用的超时、提交前执行权核验及存储 fencing 由提供者实现，SDK 不替实现包建立异步或线程执行机制。完整注册、返回值、生命周期与错误合同见[文件 SPI](builtin-tools-spi.md#8-python-包注册与配置加载)。
+
 ## 7. 恢复与故障处理
 
 接入方保存 namespace、run_id、session_id、初始 input_id 及原装配配置。重启时保持状态目录、工作区根、Definition、策略、模型规格、能力与 Hook 绑定一致，并重建对应的服务实现。SDK 不替调用方保存 Python 处理器或客户端连接；服务地址和实现版本仍由接入方固定。
@@ -291,7 +321,7 @@ Plan 恢复还须传回原 Executor 表。已终态返回保存结果；有效 o
 
 ## 8. 当前范围与验证
 
-本版本尚未提供独立 ContentStore／ArtifactRef 输入授权、完整查询 DTO、模型发现协议、完整环境／文件／沙箱 SPI、可靠订阅 ACK／outbox、脚本 Hook 和 Workflow。目标设计中的同名类不能直接作为本版本的导入清单；完整状态见[实现文档](implementation.md#当前接口与交付状态)。
+本版本尚未提供独立 ContentStore／ArtifactRef 输入授权、完整查询 DTO、模型发现协议、完整环境／沙箱 SPI 及真实共享／对象存储驱动、可靠订阅 ACK／outbox、脚本 Hook 和 Workflow。目标设计中的同名类不能直接作为本版本的导入清单；完整状态见[实现文档](implementation.md#当前接口与交付状态)。
 
 接入验证至少覆盖：启动参数构造、角色权限绑定、一次真实业务调用、同 run_id 重开、停止／等待超时区别、维护状态查询。确定性脚本用于检查本地装配；真实模型端点和 MCP 服务需按部署环境另行联调。
 

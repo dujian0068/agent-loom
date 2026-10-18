@@ -296,7 +296,7 @@ EnvironmentProvider 提供受限端口 `cleanup(request:CleanupRequest, scope:Sy
 
 ### 6.1 路径、编码与版本
 
-文件工具统一面向 WorkspaceService 和 WorkspaceBackend SPI；默认提供本地 POSIX 实现，Linux/NFSv4 共享后端与对象存储属于可选适配。后端声明并实现其支持的操作，未满足合同的工具绑定明确拒绝，见[文件存储 SPI](builtin-tools-spi.md#4-文件存储-spi-的合同)。路径输入仅允许 UTF-8 `/work/...` 或相对 `/work` 的路径；读取另可接受明确获准只读挂载。拒绝 NUL、越根 `..`、设备节点、魔术链接和未授权 mount；规范化不是授权判断。
+文件工具统一面向 WorkspaceService 和 WorkspaceBackend SPI；默认提供本地 POSIX 实现，Linux/NFSv4 共享后端与对象存储属于可选适配。当前文件 SPI 要求完整实现 11 个普通方法，具体注册与运行合同以最新文件 SPI 为准；多后端能力声明仍是后续目标，见[文件存储 SPI](builtin-tools-spi.md#4-文件存储-spi-的合同)。路径输入仅允许 UTF-8 `/work/...` 或相对 `/work` 的路径；读取另可接受明确获准只读挂载。拒绝 NUL、越根 `..`、设备节点、魔术链接和未授权 mount；规范化不是授权判断。
 
 Linux 文件 driver 以授权根 dirfd 使用 openat2 的 beneath/no-magic-links 约束，禁止越界符号链接；递归 list/glob/grep 不跟随目录符号链接。写操作拒绝符号链接目标及父路径中的符号链接，防止校验后换链。开发 driver 用逐段 dirfd+O_NOFOLLOW 保持同规则；不能只检查字符串前缀。
 
@@ -319,7 +319,7 @@ Linux 文件 driver 以授权根 dirfd 使用 openat2 的 beneath/no-magic-links
 | `fs.move{source,destination,if_match}` | `FileVersion` | 只限当前/work分区，目标须不存在；源版本匹配；不覆盖目标、不跨挂载、不移动分区根 |
 | `fs.delete{path,if_match,recursive=false}` | `deleted_path,previous_etag` | 文件须匹配；非空目录recursive必须true并校验树manifest；根与只读资源禁止删除 |
 
-FileToolAdapter 将工具参数映射到 WorkspaceService；公共文件层组织上述语义，WorkspaceBackend 负责底层 I/O 与条件提交。edit／patch 可复用固定版本 read 加条件 write，不要求每种介质重写文本替换或补丁算法。ToolHandler 负责调用校验与路由，不另写一套文件行为。fs.write/edit/patch 的 content 限制为20MiB；更大材料通过已授权的脚本或外部准备流程生成文件并返回 artifact，不把无限正文塞入工具 JSON。
+FileToolAdapter 将工具参数映射到 WorkspaceService；公共文件层验证参数、逻辑路径、授权和结果 DTO，WorkspaceBackend 实现全部 11 个操作、真实 I/O 与条件提交。edit／patch 可复用固定版本 read 加条件 write，不要求每种介质重写文本替换或补丁算法。ToolHandler 负责调用校验与路由，不另写一套文件行为。fs.write/edit/patch 的 content 限制为20MiB；更大材料通过已授权的脚本或外部准备流程生成文件并返回 artifact，不把无限正文塞入工具 JSON。
 
 每个调用输入先经 schema／scope 校验，再进入文件服务；路径不存在为 not_found，版本或匹配数量冲突为 conflict，越界／只读根为 permission，NFS错误保留发生阶段与外部结果。错误反馈含逻辑相对路径，不包含宿主路径。
 

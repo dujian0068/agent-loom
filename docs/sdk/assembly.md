@@ -245,7 +245,7 @@ async with AgentLoom(properties) as app:
     result = await limited.build(agent_def).ainvoke("分析需求")
 ```
 
-`runtime` 可省略；defaults／services 必须显式提供，分别要求 WorkspaceBinding 和 ModelAdapter。参数组复用已有 ExecutionPolicy／ContextPolicy／ModelOptions，默认值和校验只有一个来源。配置构造时验证类型、数值、路径及模型窗口／选项组合并冻结；只检查本地元信息，不读取远端目录或执行 Hook。ServiceProperties 的 store／environment 可省略，启动时使用默认文件后端／本地环境；显式注入仍遵守原有所有权合同。checkpoint_callback 可注入同步检查点回调，异步回调在参数校验阶段拒绝。
+`runtime` 和 `files` 可省略；defaults／services 必须显式提供，分别要求 WorkspaceBinding 和 ModelAdapter。参数组复用已有 ExecutionPolicy／ContextPolicy／ModelOptions，默认值和校验只有一个来源。配置构造时验证类型、数值、路径及模型窗口／选项组合并冻结；只检查本地元信息，不读取远端目录或执行 Hook。ServiceProperties 的 store／environment 可省略，默认 local 配置启动时使用文件状态存储／本地环境；显式注入仍遵守原有所有权合同。checkpoint_callback 可注入同步检查点回调，异步回调在参数校验阶段拒绝。
 
 | 读取范围 | 唯一来源 |
 | --- | --- |
@@ -262,6 +262,8 @@ RuntimeEngine 与 Agent 的旧参数属性变为只读转发，不保存独立�
 `AgentLoom(properties)` 构造只保存配置，不创建文件目录或后台任务。进入 async with 创建并开启一个 RuntimeEngine；启动失败关闭本次已创建的宿主资源，保留原异常，附带清理失败类型，可再次调用 aclose 重试清理。退出或 aclose 暂停本机推进而不发用户停止命令，只关闭宿主创建的文件存储；注入的存储、模型、Hook、能力和环境继续归调用方所有。build／builder 在宿主未打开或关闭后返回 `RUNTIME_CLOSED`；一个门面只开启一次，重开需新建门面。查询控制通过 `app.runtime` 的现有服务完成。
 
 默认文件目录与锁等待参数只作用于宿主创建的 FileRuntimeStore；注入的 store 使用自身参数。相对路径在参数构造时固定为绝对路径，不受稍后 chdir 影响。Workflow 不在本入口本轮实现范围。
+
+`files: FileProperties` 为文件提供者参数组，默认 `provider="local", options={}`。SDK 从安装包登记元数据选择唯一实现类，以 `类(**options)` 创建；所有 11 个方法为普通方法。第三方内置地址时无需业务传 root；默认本地仍校验 WorkspaceBinding.root。详见[注册与装配](builtin-tools-spi.md#8-python-包注册与配置加载)。
 
 ## 3. 角色、公开输入和格式的归属
 
@@ -282,7 +284,7 @@ Prompt 变量值属于本次输入的一部分，随请求固定并参与幂等�
 
 开发者提供资源目录，每份 AgentDefinition 通过 capabilities 从目录中选择。**注册可用资源不等于授权所有 Agent 使用。** 同一 Plan 的 Planner 与 Executor 分别解析自己的选择，目录构造为纯本地操作，执行期间不可增删。
 
-内置与用户扩展工具使用相同的 CapabilityRegistration／CapabilityAdapter；默认工具与三个扩展点见[工具 SPI](builtin-tools-spi.md)。EnvironmentProvider 装配 WorkspaceBackend 及可选 SandboxGateway，构造时通过已准备的能力描述校验所选文件／脚本工具是否可用；不能边构造边联网发现，不能静默换成宿主目录或 shell。共享基础设施由调用方显式注入，首版不引入插件自动扫描。
+内置与用户扩展工具使用相同的 CapabilityRegistration／CapabilityAdapter；默认工具与三个扩展点见[工具 SPI](builtin-tools-spi.md)。文件提供者现通过 `PropertiesConfig.files: FileProperties` 选择，SDK 使用 `agentloom.workspace_backends` entry points 登记元数据定位选中类，启动时加载并校验完整普通方法接口；不联网发现或执行未选中的提供者。`files.provider` 默认 local，`files.options` 为可选构造参数，实例由 SDK 管理。默认本地继续支持借用的 environment；第三方文件提供者与未经验证的自定义脚本环境组合拒绝。完整 EnvironmentProvider／SandboxGateway 与多后端挂载合同仍是后续目标，不能静默换成宿主目录或 shell。
 
 ```python
 class CapabilityRegistry:
@@ -414,7 +416,7 @@ RuntimeEngine 持有本机执行任务的强引用。取消 ainvoke 的等待协
 
 aclose 幂等，关闭后不能 reopen；需要新建 RuntimeEngine。关闭过程不保证任何第三方业务副作用被撤销。无法证明旧写入者已停止时保留恢复屏障，不把“关闭方法返回”解释成允许新写入者访问共享卷。关闭流程沿用[总线 shutdown](event-bus.md#11-生命周期)和[检查点接管](checkpoints.md)约束。
 
-注入的 RuntimeStore、ContentStore、EnvironmentProvider、模型客户端和共享 Adapter **由调用方拥有**；RuntimeEngine 只关闭自己创建的任务、句柄、观察者和受限执行连接，不关闭别的 RuntimeEngine 还在使用的客户端池。调用者应在 RuntimeEngine 退出后再退出这些依赖的资源上下文。
+通过 files 配置加载的 WorkspaceBackend **由 SDK 创建和关闭**，关闭失败可重试。注入的 RuntimeStore、ContentStore、EnvironmentProvider、模型客户端和共享 Adapter **由调用方拥有**；RuntimeEngine 只关闭自己创建的任务、句柄、观察者和受限执行连接，不关闭别的 RuntimeEngine 还在使用的客户端池。调用者应在 RuntimeEngine 退出后再退出这些依赖的资源上下文。
 
 ## 8. 装配流程与实现位置
 

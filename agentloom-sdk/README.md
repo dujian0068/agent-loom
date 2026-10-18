@@ -52,15 +52,16 @@ asyncio.run(main())
 
 ## 统一参数配置
 
-启动参数统一由 `PropertiesConfig` 注入，并按职责分为三组：
+启动参数统一由 `PropertiesConfig` 注入，并按职责分为四组：
 
 | 分组 | 类型与内容 |
 | --- | --- |
 | `runtime` | `RuntimeProperties`：namespace、默认文件状态目录、文件锁等待、租约、清理重试 |
 | `defaults` | `AgentProperties`：WorkspaceBinding、ExecutionPolicy、ContextPolicy、ModelOptions |
 | `services` | `ServiceProperties`：模型、能力目录、Hook、显式存储、环境、检查点回调 |
+| `files` | `FileProperties`：文件提供者名称，默认 `local`；可选构造参数 `options` |
 
-`defaults` 和 `services` 必须提供，工作区与模型各有唯一归属；`runtime` 可省略，保持默认文件存储。所有配置在构造时校验并冻结；相对路径按构造时的工作目录固定。模型选项与窗口预算也在启动前校验。`AgentLoom(properties)` 构造没有文件／网络副作用，进入 `async with` 才创建并开启 Runtime，之后用 `app.build(agent_def)` 构建 Agent，用 `app.runtime.runs/inputs/...` 查询和控制。
+`defaults` 和 `services` 必须提供，工作区与模型各有唯一归属；`runtime` 和 `files` 可省略，保持默认文件存储及本地文件工具实现。所有配置在构造时校验并冻结；相对路径按构造时的工作目录固定。模型选项与窗口预算也在启动前校验。`AgentLoom(properties)` 构造没有文件／网络副作用，进入 `async with` 才创建并开启 Runtime，之后用 `app.build(agent_def)` 构建 Agent，用 `app.runtime.runs/inputs/...` 查询和控制。
 
 `runtime.state_directory` 默认 `.agentloom/state`，`store_lock_timeout_seconds` 默认 10；这两项只用于宿主创建的 FileRuntimeStore。显式传 `services.store` 时使用该存储自身配置，并由调用方负责关闭。模型、Hook、能力适配器与环境也是借用的实例，不复制或自动关闭。退出 AgentLoom 只暂停本机推进并保留恢复现场；不会发送用户停止命令。每个 AgentLoom 实例只开启一次，重启使用同参数的新实例。
 
@@ -84,7 +85,7 @@ other_properties = properties.with_options(
 )
 ```
 
-`PropertiesConfig.with_options()` 整组替换 runtime／defaults／services；使用 `dataclasses.replace()` 修改组内字段。Builder 的 `with_options()` 支持逐项覆盖，参数组和旧形式的单项参数不能混传，冲突返回 `PARAMETERS_CONFLICT`。配置不包含 `run_id`、用户输入、消息、租约现场或活动上下文；检查点继续只保存原恢复合同要求的固定值，不序列化服务对象。
+`PropertiesConfig.with_options()` 整组替换 runtime／defaults／services／files；使用 `dataclasses.replace()` 修改组内字段。Builder 的 `with_options()` 支持逐项覆盖，参数组和旧形式的单项参数不能混传，冲突返回 `PARAMETERS_CONFLICT`。配置不包含 `run_id`、用户输入、消息、租约现场或活动上下文；检查点继续只保存原恢复合同要求的固定值，不序列化服务对象。
 
 ## 从已有定义构建
 
@@ -194,7 +195,17 @@ definition = AgentDefinition(
 
 普通工具/MCP/Skill/委派的大结果保存完整有效值，模型收到最多 64 KiB 的 UTF-8 预览；可使用自动提供的 `result_read` 分片读取。引用校验来源、角色和 hash，Planner 不能凭 Executor 的私有引用读取其内部工具正文。
 
-后续的 [默认工具与 SPI 设计](../docs/sdk/builtin-tools-spi.md)将文件后端和沙箱执行分别作为扩展点；当前已有 CapabilityAdapter 和 WorkspaceService，独立 WorkspaceBackend Protocol 及其他介质后端尚未实现。该设计中的接口结构不作为本版本可导入 API。
+文件后端已支持 [WorkspaceBackend SPI](../docs/sdk/builtin-tools-spi.md#8-python-包注册与配置加载)：第三方包继承抽象基类，实现全部 11 个普通方法，并登记 `agentloom.workspace_backends` entry point。业务安装包后只配置名称，无需手动导入或实例化：
+
+```python
+from agentloom import FileProperties
+
+properties = properties.with_options(files=FileProperties(provider="acme", options={}))
+```
+
+地址由第三方包决定；可内置，也可通过 options 传入。SDK 加载选中类并复用实例，保留工具 Schema、逐项授权、Hook、重试、恢复和清理流程。默认 local 也实现同一接口。提供者自带根地址时使用 `WorkspaceBinding()`，本地仍须指定 root。SDK 创建的文件提供者由 SDK 关闭；普通方法的超时、内部异步机制和真实存储 fencing 由提供者实现。
+
+完整 EnvironmentProvider／SandboxGateway 协议及真实共享文件／对象存储驱动仍待实现。第三方文件后端与未验证脚本环境的组合会明确拒绝，避免访问不一致的文件视图。
 
 ## Hook、上下文和恢复
 

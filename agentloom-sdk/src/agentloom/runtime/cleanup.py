@@ -1,6 +1,6 @@
 """Terminal file cleanup has a separate lease and never constructs an Agent."""
 
-from ..errors import error_record
+from ..errors import LeaseLost, error_record
 from ..storage import TERMINAL
 from .cleanup_lease import CleanupLeaseGuard
 from .maintenance import maintenance_due, maintenance_failed, maintenance_recovered
@@ -56,7 +56,15 @@ class CleanupService:
         with guard:
             try:
                 if scope:
-                    runtime.environment.cleanup(scope)
+
+                    def check():
+                        with runtime.store.transaction(runtime.namespace) as tx:
+                            if not guard.matches(tx.get("runs", run_id), tx.now):
+                                raise LeaseLost("Cleanup ownership has expired or changed")
+
+                    runtime._files.cleanup(
+                        scope, check, cleanup_job_id=job["job_id"], cleanup_lease_epoch=epoch
+                    )
                 error = None
             except Exception as exc:
                 error = error_record(exc)

@@ -8,12 +8,12 @@ from ..configuration.assembly import recovery_manifest
 from ..configuration.json_documents import canonical_document as canonical
 from ..configuration.json_documents import document_digest as digest
 from ..configuration.properties import UNSET, resolve_properties
-from ..environment import LocalEnvironment
 from ..errors import InfrastructureError, RequestError
 from ..public.handles import RunHandle
 from ..public.validation import identity
 from ..storage import TERMINAL, CommitCoordinator, FileRuntimeStore, claim
 from ..types import AgentInput, RunUsage, new_id
+from ..workspace.runtime import WorkspaceResources
 from .cleanup import CleanupService
 from .control import emit, settle_orphaned_stops
 from .deadlines import request_expired_stops
@@ -38,6 +38,7 @@ class RuntimeEngine:
         store=None,
         namespace=UNSET,
         environment=None,
+        files=None,
         lease_seconds=UNSET,
         cleanup_retry_seconds=UNSET,
         checkpoint_callback=None,
@@ -46,7 +47,8 @@ class RuntimeEngine:
 
         Mixing properties with namespace/lease_seconds/cleanup_retry_seconds is
         rejected. Injected store/environment/callback remain separate borrowed
-        services; only an internally created file store is closed by this host.
+        services. files selects an installed file provider owned by this host;
+        it is instantiated on async entry and closed along with the owned store.
         """
         self._properties = resolve_properties(
             properties,
@@ -55,6 +57,7 @@ class RuntimeEngine:
             lease_seconds=lease_seconds,
             cleanup_retry_seconds=cleanup_retry_seconds,
         )
+        self._files = WorkspaceResources(files, environment)
         self._owns_store = store is None
         self.store = (
             store
@@ -64,7 +67,7 @@ class RuntimeEngine:
                 lock_timeout_s=self.properties.store_lock_timeout_seconds,
             )
         )
-        self.environment = environment if environment is not None else LocalEnvironment()
+        self.environment = self._files.environment
         self.checkpoint_callback, self.worker_id = checkpoint_callback, new_id()
         self.runs, self.inputs = RunService(self), InputCommands(self)
         self.tasks, self.operations = QueryServices(self, "tasks"), OperationService(self)
@@ -98,12 +101,25 @@ class RuntimeEngine:
         if self._status != "created":
             raise InfrastructureError("RUNTIME_ALREADY_OPENED")
         self._loop = asyncio.get_running_loop()
+        try:
+            self._files.open()
+        except BaseException as primary:
+            try:
+                await self.aclose()
+            except Exception as cleanup:
+                primary.add_note(f"Provider startup cleanup also failed: {type(cleanup).__name__}")
+            raise
         self._status = "open"
         self._cleanup = asyncio.create_task(self._maintenance(), name="agentloom-maintenance")
         return self
 
     async def __aexit__(self, exc_type, exc, traceback):
-        await self.aclose()
+        try:
+            await self.aclose()
+        except Exception as cleanup:
+            if exc is None:
+                raise
+            exc.add_note(f"Host cleanup also failed: {type(cleanup).__name__}")
 
     def ensure_open(self):
         if self._status != "open":
@@ -120,6 +136,7 @@ class RuntimeEngine:
             task.cancel()
         await asyncio.gather(*tasks, return_exceptions=True)
         self._workers.clear()
+        self._files.close()
         if self._owns_store:
             self.store.close()
         self._status = "closed"
@@ -344,9 +361,14 @@ class RuntimeEngine:
             ),
             asyncio.create_task(scan_forever(self, (("cleanup_scan", cleanup.scan_once),))),
         ]
+        completion = asyncio.gather(*workers)
         try:
-            await asyncio.gather(*workers)
+            # Cancel the scanners exactly once below. Propagating cancellation
+            # through gather first can cancel a sibling again while it is still
+            # draining its in-flight thread, letting it outlive this host.
+            await asyncio.shield(completion)
         finally:
             for worker in workers:
                 worker.cancel()
-            await asyncio.gather(*workers, return_exceptions=True)
+            # Await every scanner and retrieve the aggregate's cancellation too.
+            await asyncio.gather(*workers, completion, return_exceptions=True)

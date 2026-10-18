@@ -1,0 +1,23 @@
+{
+  "scope": "Isolated SPI changes plus required maintenance shutdown dependency; other uncommitted workspace changes excluded",
+  "regression_passed": 1075,
+  "wheel_source_files_matched": 92,
+  "wheel_checks": 10,
+  "ruff": "passed",
+  "format": "passed",
+  "docs_build": "passed",
+  "docs_site_check": "passed",
+  "required_dependency": "Host shutdown drains both maintenance workers before closing the file provider and store",
+  "evidence": [
+    "regression-summary.json",
+    "regression.txt",
+    "regression.junit.xml",
+    "source-before.json",
+    "source-after.json",
+    "wheel-summary.json",
+    "ruff.txt",
+    "ruff-format.txt",
+    "docs-build.txt",
+    "docs-check.txt"
+  ]
+}

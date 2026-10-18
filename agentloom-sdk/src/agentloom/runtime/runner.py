@@ -206,12 +206,12 @@ class ExecutionRunner:
         if time.time() >= state["deadline_at"]:
             self.finalize("timed_out", error=AgentLoomError("RUN_TIMEOUT").to_dict())
             return
-        scope = self.runtime.environment.prepare(
+        scope = self.runtime._files.prepare(
+            self.runtime,
             self.program.workspace,
             state["session_id"],
             self.run_id,
             self.lease.epoch,
-            self.runtime.namespace,
             guard=self.check_active,
         )
         if state["workspace"] and state["workspace"]["path"] != scope["path"]:
@@ -289,7 +289,7 @@ class ExecutionRunner:
             monitor.cancel()
             await asyncio.gather(work, monitor, return_exceptions=True)
             if self.state()["status"] not in TERMINAL:
-                self.runtime.environment.revoke(scope)
+                self.runtime._files.revoke(self.runtime, scope)
 
     def finalize(self, status, *, output=None, error=None):
         return finalize_run(self.runtime, self.lease, status, output=output, error=error)

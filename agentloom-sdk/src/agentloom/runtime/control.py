@@ -66,7 +66,7 @@ def finalize_run(runtime, lease, status, *, output=None, error=None):
         validate_recovery(state)
         scope = state["workspace"]
         if scope:
-            runtime.environment.revoke(scope)
+            runtime._files.revoke(runtime, scope)
 
     def finish(s):
         final_status, final_output, final_error = status, output, error
