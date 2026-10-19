@@ -59,7 +59,7 @@ async def main():
 
     try:
         async with RuntimeEngine(
-            store=store, lease_seconds=0.3, checkpoint_callback=checkpoint
+            store=store, lease_seconds=2, checkpoint_callback=checkpoint
         ) as runtime:
             agent = PlanAgent(
                 definition=AgentDefinition("p", "Write a report."),

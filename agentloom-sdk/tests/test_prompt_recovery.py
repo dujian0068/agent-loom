@@ -11,6 +11,7 @@ import pytest
 
 from agentloom import (
     AgentDefinition,
+    FileRuntimeStore,
     InfrastructureError,
     LocalEnvironment,
     ModelResponse,
@@ -39,7 +40,14 @@ def test_real_process_exit_and_template_upgrade(tmp_path, cut):
         timeout=10,
     )
     assert first.returncode == 75, first.stderr
-    time.sleep(0.35)
+    # Wait for the crashed process's actual lease, not a fixed scheduler margin.
+    store = FileRuntimeStore(tmp_path / "state")
+    try:
+        lease = store.load("default", "prompt-run")["lease"]
+        time.sleep(max(0, lease["expires_at"] - time.time()) + 0.05)
+        assert store.load("default", "prompt-run")["lease"] == lease
+    finally:
+        store.close()
     second = subprocess.run(
         [sys.executable, str(worker), str(tmp_path), "resume"],
         env=env,

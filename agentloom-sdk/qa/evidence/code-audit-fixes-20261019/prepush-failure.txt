@@ -1,0 +1,104 @@
+bringing up nodes...
+bringing up nodes...
+
+........................................................................ [  3%]
+........................................................................ [  7%]
+........................................................................ [ 10%]
+........................................................................ [ 14%]
+........................................................................ [ 17%]
+........................................................................ [ 21%]
+........................................................................ [ 24%]
+........................................................................ [ 28%]
+........................................................................ [ 32%]
+........................................................................ [ 35%]
+........................................................................ [ 39%]
+........................................................................ [ 42%]
+........................................................................ [ 46%]
+........................................................................ [ 49%]
+........................................................................ [ 53%]
+........................................................................ [ 57%]
+........................................................................ [ 60%]
+................................................................F....... [ 64%]
+........................................................................ [ 67%]
+........................................................................ [ 71%]
+........................................................................ [ 74%]
+........................................................................ [ 78%]
+........................................................................ [ 81%]
+........................................................................ [ 85%]
+........................................................................ [ 89%]
+........................................................................ [ 92%]
+........................................................................ [ 96%]
+........................................................................ [ 99%]
+....                                                                     [100%]
+=================================== FAILURES ===================================
+__________ test_real_process_exit_and_template_upgrade[before_child] ___________
+[gw1] darwin -- Python 3.12.14 /Users/bmilk/code/project/agent-loom/.venv/bin/python
+
+tmp_path = PosixPath('/private/var/folders/g6/378nmc5541n9wkbyb0nj9x9r0000gn/T/pytest-of-bmilk/pytest-571/popen-gw1/test_real_process_exit_and_tem1')
+cut = 'before_child'
+
+    @pytest.mark.parametrize("cut", ["before_root", "before_child"])
+    def test_real_process_exit_and_template_upgrade(tmp_path, cut):
+        worker = Path(__file__).parent / "support" / "prompt_process.py"
+        env = {**os.environ, "PYTHONPATH": str(Path(__file__).parents[1] / "src")}
+        first = subprocess.run(
+            [sys.executable, str(worker), str(tmp_path), cut],
+            env=env,
+            capture_output=True,
+            text=True,
+            timeout=10,
+        )
+        assert first.returncode == 75, first.stderr
+        time.sleep(0.35)
+        second = subprocess.run(
+            [sys.executable, str(worker), str(tmp_path), "resume"],
+            env=env,
+            capture_output=True,
+            text=True,
+            timeout=10,
+        )
+>       assert second.returncode == 0, second.stderr
+E       AssertionError: Traceback (most recent call last):
+E           File "/Users/bmilk/code/project/agent-loom/agentloom-sdk/tests/support/prompt_process.py", line 81, in <module>
+E             asyncio.run(main())
+E           File "/Users/bmilk/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/asyncio/runners.py", line 195, in run
+E             return runner.run(main)
+E                    ^^^^^^^^^^^^^^^^
+E           File "/Users/bmilk/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/asyncio/runners.py", line 118, in run
+E             return self._loop.run_until_complete(task)
+E                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E           File "/Users/bmilk/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/asyncio/base_events.py", line 691, in run_until_complete
+E             return future.result()
+E                    ^^^^^^^^^^^^^^^
+E           File "/Users/bmilk/code/project/agent-loom/agentloom-sdk/tests/support/prompt_process.py", line 74, in main
+E             result = await handle.wait(timeout_s=5)
+E                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E           File "/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/public/handles.py", line 57, in wait
+E             return await observe()
+E                    ^^^^^^^^^^^^^^^
+E           File "/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/public/handles.py", line 52, in observe
+E             self._runtime.raise_local_failure(self.run_id)
+E           File "/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/runtime/host.py", line 158, in raise_local_failure
+E             raise failure
+E           File "/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/runtime/host.py", line 335, in _drive
+E             await runner.run()
+E           File "/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/runtime/runner.py", line 225, in run
+E             await self._run()
+E           File "/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/runtime/runner.py", line 295, in _run
+E             await monitor
+E           File "/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/runtime/runner.py", line 212, in _monitor
+E             self.check_active()
+E           File "/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/runtime/runner.py", line 167, in check_active
+E             verify_lease(state, self.lease, tx.now)
+E           File "/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/storage/commit.py", line 16, in verify_lease
+E             raise LeaseLost()
+E         agentloom.errors.LeaseLost: LEASE_LOST: Execution ownership has expired or was revoked
+E         
+E       assert 1 == 0
+E        +  where 1 = CompletedProcess(args=['/Users/bmilk/code/project/agent-loom/.venv/bin/python', '/Users/bmilk/code/project/agent-loom/...ease\n    raise LeaseLost()\nagentloom.errors.LeaseLost: LEASE_LOST: Execution ownership has expired or was revoked\n').returncode
+
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/tests/test_prompt_recovery.py:50: AssertionError
+- generated xml file: /Users/bmilk/code/project/agent-loom/.agentloom/test-results/20261019-142309-894378Z/junit.xml -
+=========================== short test summary info ============================
+FAILED agentloom-sdk/tests/test_prompt_recovery.py::test_real_process_exit_and_template_upgrade[before_child]
+1 failed, 2019 passed in 377.60s (0:06:17)

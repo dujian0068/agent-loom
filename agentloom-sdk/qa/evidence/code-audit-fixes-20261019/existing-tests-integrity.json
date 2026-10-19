@@ -2,7 +2,9 @@
   "baseline": "708bdaf",
   "file_count": 674,
   "changed": [
-    "agentloom-sdk/tests/test_control_reconciliation.py"
+    "agentloom-sdk/tests/support/prompt_process.py",
+    "agentloom-sdk/tests/test_control_reconciliation.py",
+    "agentloom-sdk/tests/test_prompt_recovery.py"
   ],
   "files": {
     "agentloom-sdk/qa/ASSESSMENT.md": {
@@ -2471,7 +2473,7 @@
     },
     "agentloom-sdk/tests/support/prompt_process.py": {
       "original_sha256": "f1af94f33882d9c28cadab0b0870a17bb23e7cccec1136371f76082fd4787ec3",
-      "current_sha256": "f1af94f33882d9c28cadab0b0870a17bb23e7cccec1136371f76082fd4787ec3"
+      "current_sha256": "77ba5c1d1c60ae3b1be519cf9bc764a0ad1ad05182fe1afa6aef4d0e55576c09"
     },
     "agentloom-sdk/tests/support/workspace_provider/pyproject.toml": {
       "original_sha256": "234b9ad37caa73aca4b1695dd3bf8d3a352bb04ca3d8f369791b8c5bc11de29a",
@@ -2627,7 +2629,7 @@
     },
     "agentloom-sdk/tests/test_prompt_recovery.py": {
       "original_sha256": "dee7f1372ffbcd315dad59e1ae6cb4d4df523ee307925d086082fbefb6a4b414",
-      "current_sha256": "dee7f1372ffbcd315dad59e1ae6cb4d4df523ee307925d086082fbefb6a4b414"
+      "current_sha256": "b1e7822659c3483ce450a9d4532b8e2e0e8259512539a7c5461a7f4b699079c0"
     },
     "agentloom-sdk/tests/test_properties_contract.py": {
       "original_sha256": "a6db6fe7a5232e27af09bb507b2de184e75ad8ea50e3586295660801067a799c",
@@ -2702,5 +2704,5 @@
       "current_sha256": "073ed4b5ced0fd310960a5e82431e846ea0524cbb84889ed15218b28e6c83b77"
     }
   },
-  "reason": "Slow-revocation test uses a schedulable TTL and additionally asserts stable owner/epoch and renewed expiry; existing QA untouched."
+  "reason": "Slow-revocation test uses a schedulable TTL and asserts stable owner/epoch plus renewed expiry. Prompt recovery uses a 2-second lease and waits for the persisted expiry. Existing QA untouched."
 }

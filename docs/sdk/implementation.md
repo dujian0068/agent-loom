@@ -39,7 +39,11 @@
 
 首次完整回归为 **2019 passed、1 failed**；失败来自既有慢撤权测试的 120 ms 租约在并行调度时、进入撤权前已经过期，独立重跑 4 个场景均通过。该测试改为 1 秒租约和超过完整 TTL 的阻塞撤权，并加强 owner／epoch 不变及 expires_at 持续延长的断言；连同真实失权用例，**6 passed**。SDK 的失权校验未放宽，既有 QA 断言未修改。
 
-最终完整回归为 **2020 passed，364.68 秒**，无失败、错误或跳过；217 个源码／资源／测试／配置文件的运行前后摘要一致，`scripts/test_all.py --check` 确认结果与当前工作区匹配。独立安装 wheel 后，129 个源码／资源文件逐字节一致，新增 125 项回归在安装目录再次全部通过。Ruff lint／format、文档构建和站点检查通过。见[审计项处理清单](../../agentloom-sdk/qa/evidence/code-audit-fixes-20261019/fixes-summary.json)、[完整回归摘要](../../agentloom-sdk/qa/evidence/code-audit-fixes-20261019/regression-summary.json)、[完整日志](../../agentloom-sdk/qa/evidence/code-audit-fixes-20261019/regression.txt)、[安装包验证](../../agentloom-sdk/qa/evidence/code-audit-fixes-20261019/wheel-summary.json)及[既有测试完整性](../../agentloom-sdk/qa/evidence/code-audit-fixes-20261019/existing-tests-integrity.json)。首次失败日志与定向重跑证据也在同一目录保留。
+提交前再次复跑还发现提示词进程恢复用例的 300 ms 租约在并行负载下过期。该用例改用 2 秒租约，并读取崩溃后保存的 expires_at 等待真实到期，校验等待期间租约没有变化；保留强制进程退出、模板升级、角色指令冻结和调用次数断言。生产租约与恢复逻辑没有因此放宽；[该次失败记录](../../agentloom-sdk/qa/evidence/code-audit-fixes-20261019/prepush-failure.txt)单独保留。
+
+后续并行验证在原 QA 的 150 ms 租约场景中再次发生调度过期：清理和会话释放已完成，失败发生在后续新任务。该轮在已出现失败后中断并保存[未完成记录](../../agentloom-sdk/qa/evidence/code-audit-fixes-20261019/prepush-parallel-interrupted-summary.json)，不计作完整通过。保留原 QA 断言，最终使用 `scripts/test_all.py --workers 1` 执行完整串行回归。
+
+最终完整串行回归为 **2020 passed，764.09 秒**，无失败、错误或跳过；217 个源码／资源／测试／配置文件的运行前后摘要一致，`scripts/test_all.py --check` 确认结果与当前工作区匹配。独立安装 wheel 后，129 个源码／资源文件逐字节一致，新增 125 项回归在安装目录再次全部通过。Ruff lint／format、文档构建和站点检查通过。见[审计项处理清单](../../agentloom-sdk/qa/evidence/code-audit-fixes-20261019/fixes-summary.json)、[完整回归摘要](../../agentloom-sdk/qa/evidence/code-audit-fixes-20261019/regression-summary.json)、[完整日志](../../agentloom-sdk/qa/evidence/code-audit-fixes-20261019/regression.txt)、[安装包验证](../../agentloom-sdk/qa/evidence/code-audit-fixes-20261019/wheel-summary.json)及[既有测试完整性](../../agentloom-sdk/qa/evidence/code-audit-fixes-20261019/existing-tests-integrity.json)。首次失败日志与定向重跑证据也在同一目录保留。
 
 本次没有实现文件 mutation journal、跨机 fencing、完整可靠事件总线或 Workflow；进程在 move 的两次文件系统修改之间退出仍可能留下未知结果，不能把异常补偿等同于跨崩溃原子移动。排序差异和非法异步生成器返回值的可选诊断整理也未纳入本轮。
 

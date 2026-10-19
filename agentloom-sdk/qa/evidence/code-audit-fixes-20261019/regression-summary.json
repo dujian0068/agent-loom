@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
-  "directory": "/Users/bmilk/code/project/agent-loom/.agentloom/test-results/20261019-135849-377563Z",
-  "started_at": "2026-10-19T13:58:49.377563+00:00",
+  "directory": "/Users/bmilk/code/project/agent-loom/.agentloom/test-results/20261019-143304-449770Z",
+  "started_at": "2026-10-19T14:33:04.449770+00:00",
   "command": [
     "/Users/bmilk/code/project/agent-loom/.venv/bin/python",
     "-u",
@@ -12,23 +12,17 @@
     "--color=no",
     "-o",
     "addopts=",
-    "-p",
-    "xdist",
-    "-n",
-    "4",
-    "--dist",
-    "worksteal",
     "/Users/bmilk/code/project/agent-loom/agentloom-sdk/tests",
     "/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa",
-    "--junitxml=/Users/bmilk/code/project/agent-loom/.agentloom/test-results/20261019-135849-377563Z/junit.xml"
+    "--junitxml=/Users/bmilk/code/project/agent-loom/.agentloom/test-results/20261019-143304-449770Z/junit.xml"
   ],
   "scope": [
     "agentloom-sdk/tests",
     "agentloom-sdk/qa"
   ],
   "git_before": {
-    "head": "708bdafc95071a28d3800f862048e937c4576bb4",
-    "status": "M agentloom-sdk/src/agentloom/capabilities/mcp.py\n M agentloom-sdk/src/agentloom/capabilities/skills.py\n M agentloom-sdk/src/agentloom/environment/limits.py\n M agentloom-sdk/src/agentloom/environment/local.py\n M agentloom-sdk/src/agentloom/environment/mutations.py\n M agentloom-sdk/src/agentloom/events/hooks.py\n M agentloom-sdk/src/agentloom/models/openai.py\n M agentloom-sdk/src/agentloom/models/responses.py\n M agentloom-sdk/src/agentloom/nodes/driver.py\n M agentloom-sdk/src/agentloom/nodes/effects.py\n M agentloom-sdk/src/agentloom/runtime/agent_engine.py\n M agentloom-sdk/src/agentloom/runtime/batches.py\n M agentloom-sdk/src/agentloom/runtime/runner.py\n M agentloom-sdk/src/agentloom/runtime/services.py\n M agentloom-sdk/src/agentloom/storage/commit.py\n M agentloom-sdk/src/agentloom/storage/memory.py\n M agentloom-sdk/src/agentloom/workspace/runtime.py\n M agentloom-sdk/tests/test_control_reconciliation.py\n M docs/sdk/capabilities.md\n M docs/sdk/implementation.md\n M docs/sdk/integration.md\n?? agentloom-sdk/qa/evidence/code-audit-fixes-20261019/\n?? agentloom-sdk/src/agentloom/capabilities/skill_files.py\n?? agentloom-sdk/src/agentloom/environment/fencing.py\n?? agentloom-sdk/src/agentloom/environment/moves.py\n?? agentloom-sdk/src/agentloom/environment/staging.py\n?? agentloom-sdk/src/agentloom/filesystem/\n?? agentloom-sdk/src/agentloom/models/response_protocol.py\n?? agentloom-sdk/src/agentloom/nodes/effect_validation.py\n?? agentloom-sdk/tests/test_control_faults.py\n?? agentloom-sdk/tests/test_mcp_diagnostics.py\n?? agentloom-sdk/tests/test_node_effect_contract.py\n?? agentloom-sdk/tests/test_response_shapes.py\n?? agentloom-sdk/tests/test_skill_files.py\n?? agentloom-sdk/tests/test_workspace_faults.py"
+    "head": "e53229a31d34dc63e60fca0f4fcc255cf9dc6afc",
+    "status": "M agentloom-platform/README.md\n M agentloom-sdk/tests/support/prompt_process.py\n M agentloom-sdk/tests/test_prompt_recovery.py\n M docs/.vitepress/config.mts\n M docs/README.md\n M docs/platform/api.md\n M docs/platform/index.md\n M docs/platform/sdk-integration.md\n M docs/platform/storage-lifecycle.md\n M docs/sdk/implementation.md\n?? agentloom-sdk/qa/evidence/code-audit-fixes-20261019/prepush-failure-source-after.json\n?? agentloom-sdk/qa/evidence/code-audit-fixes-20261019/prepush-failure-source-before.json\n?? agentloom-sdk/qa/evidence/code-audit-fixes-20261019/prepush-failure-summary.json\n?? agentloom-sdk/qa/evidence/code-audit-fixes-20261019/prepush-failure.junit.xml\n?? agentloom-sdk/qa/evidence/code-audit-fixes-20261019/prepush-failure.txt\n?? agentloom-sdk/qa/evidence/code-audit-fixes-20261019/prepush-parallel-interrupted-summary.json\n?? agentloom-sdk/qa/evidence/code-audit-fixes-20261019/prepush-parallel-interrupted.junit.xml\n?? agentloom-sdk/qa/evidence/code-audit-fixes-20261019/prepush-parallel-interrupted.txt\n?? docs/platform/implementation-plan.md"
   },
   "environment": {
     "python": "3.12.14 (main, Aug 25 2026, 13:50:33) [Clang 22.1.3 ]",
@@ -95,14 +89,14 @@
     }
   },
   "execution": {
-    "mode": "parallel",
-    "workers": 4,
-    "distribution": "worksteal"
+    "mode": "serial",
+    "workers": 1,
+    "distribution": null
   },
   "completed": true,
   "pytest_addopts_ignored": true,
-  "finished_at": "2026-10-19T14:04:54.386318+00:00",
-  "duration_seconds": 364.944,
+  "finished_at": "2026-10-19T14:45:49.044370+00:00",
+  "duration_seconds": 764.539,
   "pytest_exit_code": 0,
   "counts": {
     "tests": 2020,
@@ -113,7 +107,7 @@
   },
   "sources_unchanged": true,
   "git_after": {
-    "head": "708bdafc95071a28d3800f862048e937c4576bb4",
-    "status": "M agentloom-sdk/src/agentloom/capabilities/mcp.py\n M agentloom-sdk/src/agentloom/capabilities/skills.py\n M agentloom-sdk/src/agentloom/environment/limits.py\n M agentloom-sdk/src/agentloom/environment/local.py\n M agentloom-sdk/src/agentloom/environment/mutations.py\n M agentloom-sdk/src/agentloom/events/hooks.py\n M agentloom-sdk/src/agentloom/models/openai.py\n M agentloom-sdk/src/agentloom/models/responses.py\n M agentloom-sdk/src/agentloom/nodes/driver.py\n M agentloom-sdk/src/agentloom/nodes/effects.py\n M agentloom-sdk/src/agentloom/runtime/agent_engine.py\n M agentloom-sdk/src/agentloom/runtime/batches.py\n M agentloom-sdk/src/agentloom/runtime/runner.py\n M agentloom-sdk/src/agentloom/runtime/services.py\n M agentloom-sdk/src/agentloom/storage/commit.py\n M agentloom-sdk/src/agentloom/storage/memory.py\n M agentloom-sdk/src/agentloom/workspace/runtime.py\n M agentloom-sdk/tests/test_control_reconciliation.py\n M docs/sdk/capabilities.md\n M docs/sdk/implementation.md\n M docs/sdk/integration.md\n?? agentloom-sdk/qa/evidence/code-audit-fixes-20261019/\n?? agentloom-sdk/src/agentloom/capabilities/skill_files.py\n?? agentloom-sdk/src/agentloom/environment/fencing.py\n?? agentloom-sdk/src/agentloom/environment/moves.py\n?? agentloom-sdk/src/agentloom/environment/staging.py\n?? agentloom-sdk/src/agentloom/filesystem/\n?? agentloom-sdk/src/agentloom/models/response_protocol.py\n?? agentloom-sdk/src/agentloom/nodes/effect_validation.py\n?? agentloom-sdk/tests/test_control_faults.py\n?? agentloom-sdk/tests/test_mcp_diagnostics.py\n?? agentloom-sdk/tests/test_node_effect_contract.py\n?? agentloom-sdk/tests/test_response_shapes.py\n?? agentloom-sdk/tests/test_skill_files.py\n?? agentloom-sdk/tests/test_workspace_faults.py"
+    "head": "e53229a31d34dc63e60fca0f4fcc255cf9dc6afc",
+    "status": "M agentloom-platform/README.md\n M agentloom-sdk/qa/evidence/code-audit-fixes-20261019/existing-tests-integrity.json\n M agentloom-sdk/qa/evidence/code-audit-fixes-20261019/fixes-summary.json\n M agentloom-sdk/tests/support/prompt_process.py\n M agentloom-sdk/tests/test_prompt_recovery.py\n M docs/.vitepress/config.mts\n M docs/README.md\n M docs/platform/api.md\n M docs/platform/index.md\n M docs/platform/sdk-integration.md\n M docs/platform/storage-lifecycle.md\n M docs/sdk/implementation.md\n?? agentloom-sdk/qa/evidence/code-audit-fixes-20261019/prepush-failure-source-after.json\n?? agentloom-sdk/qa/evidence/code-audit-fixes-20261019/prepush-failure-source-before.json\n?? agentloom-sdk/qa/evidence/code-audit-fixes-20261019/prepush-failure-summary.json\n?? agentloom-sdk/qa/evidence/code-audit-fixes-20261019/prepush-failure.junit.xml\n?? agentloom-sdk/qa/evidence/code-audit-fixes-20261019/prepush-failure.txt\n?? agentloom-sdk/qa/evidence/code-audit-fixes-20261019/prepush-parallel-interrupted-summary.json\n?? agentloom-sdk/qa/evidence/code-audit-fixes-20261019/prepush-parallel-interrupted.junit.xml\n?? agentloom-sdk/qa/evidence/code-audit-fixes-20261019/prepush-parallel-interrupted.txt\n?? docs/platform/implementation-plan.md\n?? docs/platform/interaction-design.md"
   }
 }

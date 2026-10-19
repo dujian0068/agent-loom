@@ -38,7 +38,7 @@
   ],
   "new_tests": 125,
   "existing_focused_tests": 180,
-  "existing_test_adjustment": "Only the slow-revocation test: longer scheduling margin, with added original-owner/epoch and live renewed-expiry assertions.",
+  "existing_test_adjustment": "Slow-revocation test uses a schedulable TTL and asserts stable owner/epoch plus renewed expiry. Prompt recovery uses a 2-second lease and waits for the persisted expiry. Existing QA untouched.",
   "regression_counts": {
     "tests": 2020,
     "failed": 0,
@@ -46,5 +46,10 @@
     "skipped": 0,
     "passed": 2020
   },
-  "regression_sources_unchanged": true
+  "regression_sources_unchanged": true,
+  "regression_execution": {
+    "mode": "serial",
+    "workers": 1,
+    "distribution": null
+  }
 }
