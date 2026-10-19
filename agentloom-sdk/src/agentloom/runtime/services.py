@@ -1,7 +1,7 @@
 """Public read/control facades. Only these trusted commands bypass a business lease."""
 
 from ..configuration.json_documents import document_digest as digest
-from ..errors import AgentLoomError, RequestError
+from ..errors import AgentLoomError, InfrastructureError, RequestError
 from ..public.handles import RunHandle
 from ..public.validation import identity, pagination
 from ..storage import TERMINAL
@@ -103,7 +103,12 @@ class InputCommands:
                 target = tx.get("runs", existing["delivery_run_id"])
                 if target is None:
                     raise RequestError("INPUT_SOURCE_DELETED")
-                item = next(i for i in target["inputs"] if i["input_id"] == input_id)
+                matches = [i for i in target["inputs"] if i["input_id"] == input_id]
+                if len(matches) != 1:
+                    raise InfrastructureError(
+                        "PERSISTENCE_INVARIANT_BROKEN", field_path="inputs.delivery_run_id"
+                    )
+                item = matches[0]
                 return input_receipt(target, item)
             state = tx.get("runs", run_id)
             if state is None:

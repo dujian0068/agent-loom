@@ -10,6 +10,7 @@ import yaml
 
 from ..configuration import digest, freeze
 from ..errors import AgentLoomError, ConfigurationError
+from .skill_files import import_files, read_resource_bytes
 from .skill_profile import validate_body, validate_metadata
 
 
@@ -55,24 +56,15 @@ class SkillPackage:
     @classmethod
     def from_directory(cls, root, *, package_key=None):
         root = Path(root).absolute()
-        if root.is_symlink():
-            raise ConfigurationError("SKILL_PATH_FORBIDDEN")
         try:
-            text = (root / "SKILL.md").read_text(encoding="utf-8")
+            entry, manifest = import_files(root)
+            text = entry.decode("utf-8")
             match = re.match(r"\A---\s*\n(.*?)\n---(?:\n|$)", text, re.S)
             if not match:
                 raise ConfigurationError("SKILL_METADATA_INVALID")
             metadata = yaml.safe_load(match[1])
             validate_metadata(metadata)
             validate_body(text)
-            manifest = {}
-            for path in sorted(root.rglob("*")):
-                if path.is_symlink():
-                    raise ConfigurationError("SKILL_PATH_FORBIDDEN")
-                if path.is_file():
-                    manifest[path.relative_to(root).as_posix()] = hashlib.sha256(
-                        path.read_bytes()
-                    ).hexdigest()
             return cls(root, freeze(metadata), freeze(manifest), package_key or metadata["name"])
         except (OSError, UnicodeError, yaml.YAMLError) as exc:
             raise ConfigurationError("SKILL_PACKAGE_INVALID", type(exc).__name__) from exc
@@ -91,6 +83,8 @@ class DirectorySkillLoader:
         ]
 
     def read_resource(self, package, path):
+        if not isinstance(path, str):
+            raise AgentLoomError("SKILL_PATH_FORBIDDEN", category="permission")
         parts = PurePosixPath(path).parts
         if not parts or path.startswith("/") or ".." in parts or "\0" in path or "\\" in path:
             raise AgentLoomError("SKILL_PATH_FORBIDDEN", category="permission")
@@ -98,20 +92,7 @@ class DirectorySkillLoader:
         expected = package.files_manifest.get(path)
         if expected is None:
             raise AgentLoomError("SKILL_PATH_FORBIDDEN", category="permission")
-        # Reuse the no-follow dirfd walker, including package-root ancestors.
-        from ..environment.local import LocalEnvironment, _directory
-
-        parent = package.root.joinpath(*parts[:-1])
-        try:
-            import os
-
-            fd = _directory(parent)
-            try:
-                data = LocalEnvironment._read_bytes(fd, parts[-1])
-            finally:
-                os.close(fd)
-        except OSError as exc:
-            raise AgentLoomError("SKILL_CONTENT_UNAVAILABLE", category="not_found") from exc
+        data = read_resource_bytes(package.root, parts)
         if hashlib.sha256(data).hexdigest() != expected:
             raise AgentLoomError("SKILL_CONTENT_CHANGED", category="conflict")
         try:

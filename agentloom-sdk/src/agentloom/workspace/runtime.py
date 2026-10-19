@@ -2,7 +2,7 @@
 
 from ..configuration.json_values import canonical, digest, freeze
 from ..environment import LocalEnvironment
-from ..errors import ConfigurationError, InfrastructureError, LeaseLost
+from ..errors import AgentLoomError, ConfigurationError, InfrastructureError, LeaseLost
 from .contracts import WorkspaceCallContext
 from .loader import resolve_provider, synchronous_result, validate_instance
 from .properties import FileProperties
@@ -35,6 +35,8 @@ class WorkspaceResources:
         if self.backend is not None:
             try:
                 synchronous_result(self.backend.close())
+            except AgentLoomError:
+                raise
             except Exception as exc:
                 raise InfrastructureError("FILE_PROVIDER_CLOSE_FAILED", type(exc).__name__) from exc
             self.backend = None

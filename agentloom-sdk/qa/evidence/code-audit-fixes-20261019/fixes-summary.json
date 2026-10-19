@@ -1,0 +1,50 @@
+{
+  "audit_file": "/Users/bmilk/审计bug.md",
+  "audit_sha256": "c134be82ce60cd90b527b7f0bf854a60fd118be9d4225d6c07830748ba01ceed",
+  "baseline": "708bdafc95071a28d3800f862048e937c4576bb4",
+  "fixed_audit_items": [
+    "M2",
+    "M3",
+    "M4",
+    "M5",
+    "L1",
+    "L2",
+    "L3",
+    "L4",
+    "L5",
+    "L6",
+    "L7",
+    "L8",
+    "L9",
+    "L10",
+    "L12",
+    "L13"
+  ],
+  "preserved_by_contract": {
+    "M1": "Prestart stop closes admission to prevent a late launch.",
+    "L11": "report_completion(error=...) requires AgentLoomError."
+  },
+  "additional_fixes": [
+    "Memory store rejects nested same-namespace transactions.",
+    "Workspace provider close preserves SDK errors.",
+    "MCP catalog mismatch category is conflict."
+  ],
+  "not_in_scope": [
+    "Workflow",
+    "File mutation journal and cross-crash atomic move",
+    "Cross-machine fencing",
+    "Optional store list sorting normalization",
+    "Optional invalid async-generator return diagnostics"
+  ],
+  "new_tests": 125,
+  "existing_focused_tests": 180,
+  "existing_test_adjustment": "Only the slow-revocation test: longer scheduling margin, with added original-owner/epoch and live renewed-expiry assertions.",
+  "regression_counts": {
+    "tests": 2020,
+    "failed": 0,
+    "errors": 0,
+    "skipped": 0,
+    "passed": 2020
+  },
+  "regression_sources_unchanged": true
+}

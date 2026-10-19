@@ -279,6 +279,7 @@ def test_saved_deny_survives_process_death(tmp_path, stage):
 @pytest.mark.parametrize("orphan", [False, True])
 async def test_slow_revocation_renews_original_execution_lease(runtime_store, build, orphan):
     entered = asyncio.Event()
+    lease_seconds = 1.0
 
     async def blocked(request):
         entered.set()
@@ -286,11 +287,20 @@ async def test_slow_revocation_renews_original_execution_lease(runtime_store, bu
 
     class SlowEnvironment(LocalEnvironment):
         def revoke(self, scope):
-            time.sleep(0.3)
+            with runtime_store.transaction("default") as tx:
+                before = tx.get("runs", scope["run_id"])["lease"]
+            # Keep revocation longer than a whole TTL without making setup depend
+            # on a sub-100 ms scheduler/filesystem response in parallel suites.
+            time.sleep(lease_seconds * 1.5)
+            with runtime_store.transaction("default") as tx:
+                after = tx.get("runs", scope["run_id"])["lease"]
+                assert after["worker_id"] == before["worker_id"]
+                assert after["epoch"] == before["epoch"]
+                assert after["expires_at"] > max(before["expires_at"], tx.now)
             return super().revoke(scope)
 
     async with RuntimeEngine(
-        store=runtime_store, environment=SlowEnvironment(), lease_seconds=0.12
+        store=runtime_store, environment=SlowEnvironment(), lease_seconds=lease_seconds
     ) as runtime:
         handle = await build(runtime, blocked if orphan else lambda r: ModelResponse("done")).start(
             "question",
@@ -300,14 +310,14 @@ async def test_slow_revocation_renews_original_execution_lease(runtime_store, bu
         if orphan:
             await asyncio.wait_for(entered.wait(), 2)
         else:
-            assert (await handle.wait(timeout_s=3)).status == "succeeded"
+            assert (await handle.wait(timeout_s=6)).status == "succeeded"
     if orphan:
         async with RuntimeEngine(
-            store=runtime_store, environment=SlowEnvironment(), lease_seconds=0.12
+            store=runtime_store, environment=SlowEnvironment(), lease_seconds=lease_seconds
         ) as runtime:
             await runtime.runs.stop("slow", command_id="stop")
             assert (
-                await (await runtime.runs.attach("slow")).wait(timeout_s=3)
+                await (await runtime.runs.attach("slow")).wait(timeout_s=6)
             ).status == "cancelled"
 
 

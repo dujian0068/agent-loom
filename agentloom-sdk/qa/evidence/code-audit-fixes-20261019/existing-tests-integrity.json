@@ -1,0 +1,2706 @@
+{
+  "baseline": "708bdaf",
+  "file_count": 674,
+  "changed": [
+    "agentloom-sdk/tests/test_control_reconciliation.py"
+  ],
+  "files": {
+    "agentloom-sdk/qa/ASSESSMENT.md": {
+      "original_sha256": "b50ea437feaee1e0c419d6463168f5e89ce3c181bef8e1798bb269ed124a8750",
+      "current_sha256": "b50ea437feaee1e0c419d6463168f5e89ce3c181bef8e1798bb269ed124a8750"
+    },
+    "agentloom-sdk/qa/FIX_REPORT.md": {
+      "original_sha256": "1acdca511d5ddb57fd67b329b8540f94b46bff925ae0ffeb71b0498da089ec56",
+      "current_sha256": "1acdca511d5ddb57fd67b329b8540f94b46bff925ae0ffeb71b0498da089ec56"
+    },
+    "agentloom-sdk/qa/REVIEW_REPORT.md": {
+      "original_sha256": "d452c96a06263c11574faa9fd8f3a77cce2e954c5034501be53046a8f2320e24",
+      "current_sha256": "d452c96a06263c11574faa9fd8f3a77cce2e954c5034501be53046a8f2320e24"
+    },
+    "agentloom-sdk/qa/REVIEW_RESULTS_2026-10-17_220ebd4.md": {
+      "original_sha256": "68bdb9129badc66fcdaf2c5c42fa225939e790e631c8d8acfde899757995cb24",
+      "current_sha256": "68bdb9129badc66fcdaf2c5c42fa225939e790e631c8d8acfde899757995cb24"
+    },
+    "agentloom-sdk/qa/REVIEW_RESULTS_2026-10-17_84b3355.md": {
+      "original_sha256": "cf07da8f98bf59181905e996921c82b624f2e3ac260c61e3387eb30f1c34fcbd",
+      "current_sha256": "cf07da8f98bf59181905e996921c82b624f2e3ac260c61e3387eb30f1c34fcbd"
+    },
+    "agentloom-sdk/qa/REVIEW_RESULTS_2026-10-17_ROUND4.md": {
+      "original_sha256": "ba441733e338c00ca2efc84e853be99e46da3831979527641c6e3deedd3c2485",
+      "current_sha256": "ba441733e338c00ca2efc84e853be99e46da3831979527641c6e3deedd3c2485"
+    },
+    "agentloom-sdk/qa/REVIEW_RESULTS_2026-10-17_ROUND5.md": {
+      "original_sha256": "e22ed53d88c2f4e619ec4a9b9f5f8c533e097a22bf4c06543e0dcf3f85d45262",
+      "current_sha256": "e22ed53d88c2f4e619ec4a9b9f5f8c533e097a22bf4c06543e0dcf3f85d45262"
+    },
+    "agentloom-sdk/qa/REVIEW_RESULTS_2026-10-18_ROUND6.md": {
+      "original_sha256": "8d85bf5962571d7bc8feb4e13a57b6ebf68a201487008ee497cecd7ad7137ce4",
+      "current_sha256": "8d85bf5962571d7bc8feb4e13a57b6ebf68a201487008ee497cecd7ad7137ce4"
+    },
+    "agentloom-sdk/qa/REVIEW_RESULTS_2026-10-18_ROUND7.md": {
+      "original_sha256": "9b136a838dc9de3de11f046ce30e46ff468576564f5b7bbb303e387ec98f5f52",
+      "current_sha256": "9b136a838dc9de3de11f046ce30e46ff468576564f5b7bbb303e387ec98f5f52"
+    },
+    "agentloom-sdk/qa/REVIEW_RESULTS_2026-10-18_ROUND8.md": {
+      "original_sha256": "d52f3513af558df0521384e7811720b964096c002b94526dbab4121400726b13",
+      "current_sha256": "d52f3513af558df0521384e7811720b964096c002b94526dbab4121400726b13"
+    },
+    "agentloom-sdk/qa/REVIEW_RESULTS_2026-10-18_ROUND8_FIX_VERIFICATION.md": {
+      "original_sha256": "1da4fe47a04c7f2de98fcc21ac0c8c08abbb0f73bc8981418fb87c334fa6c7a1",
+      "current_sha256": "1da4fe47a04c7f2de98fcc21ac0c8c08abbb0f73bc8981418fb87c334fa6c7a1"
+    },
+    "agentloom-sdk/qa/REVIEW_RESULTS_2026-10-18_ROUND9.md": {
+      "original_sha256": "cea024c37a0fbc1fbdbdd18f2a69cd1f10eb32000cd76107a528333a22da1342",
+      "current_sha256": "cea024c37a0fbc1fbdbdd18f2a69cd1f10eb32000cd76107a528333a22da1342"
+    },
+    "agentloom-sdk/qa/REVIEW_RESULTS_2026-10-18_ROUND9_FIX_VERIFICATION.md": {
+      "original_sha256": "00c660572d139374f83747ce4eed2395241718e8f460052176768d83f22d1b1e",
+      "current_sha256": "00c660572d139374f83747ce4eed2395241718e8f460052176768d83f22d1b1e"
+    },
+    "agentloom-sdk/qa/REVIEW_RESULTS_2026-10-19_ROUND10_INCREMENTAL.md": {
+      "original_sha256": "8c4e15a1fd124352222e3572ca78a6c0cb7fe50322326c9bb1b0a6a1a3e94837",
+      "current_sha256": "8c4e15a1fd124352222e3572ca78a6c0cb7fe50322326c9bb1b0a6a1a3e94837"
+    },
+    "agentloom-sdk/qa/TEST_REPORT.md": {
+      "original_sha256": "10d42ca5df5cb0c4b1592f6262903af029cf23bde80b2f79e41668c06dafeedf",
+      "current_sha256": "10d42ca5df5cb0c4b1592f6262903af029cf23bde80b2f79e41668c06dafeedf"
+    },
+    "agentloom-sdk/qa/evidence/api-contract-fixes-20261017/docs-build.txt": {
+      "original_sha256": "81e363fd92990b38170f8c915c8a8b6547086c4791a1159eb40940b2d57757a1",
+      "current_sha256": "81e363fd92990b38170f8c915c8a8b6547086c4791a1159eb40940b2d57757a1"
+    },
+    "agentloom-sdk/qa/evidence/api-contract-fixes-20261017/docs-check.txt": {
+      "original_sha256": "c5f9e616aac9296c5e1fb1c9ebda806d29fa05ab5c61686d42b506552e31ac85",
+      "current_sha256": "c5f9e616aac9296c5e1fb1c9ebda806d29fa05ab5c61686d42b506552e31ac85"
+    },
+    "agentloom-sdk/qa/evidence/api-contract-fixes-20261017/regression-first.junit.xml": {
+      "original_sha256": "13694f2997fa74e7d11f5f3a1a0fda2eaa1439b4f906e01d97d55dec290a4d6b",
+      "current_sha256": "13694f2997fa74e7d11f5f3a1a0fda2eaa1439b4f906e01d97d55dec290a4d6b"
+    },
+    "agentloom-sdk/qa/evidence/api-contract-fixes-20261017/regression-first.txt": {
+      "original_sha256": "91abd15029d054b96c07052e1144cbea8b0cab606bf0795a510769e62f4d3aa4",
+      "current_sha256": "91abd15029d054b96c07052e1144cbea8b0cab606bf0795a510769e62f4d3aa4"
+    },
+    "agentloom-sdk/qa/evidence/api-contract-fixes-20261017/regression.junit.xml": {
+      "original_sha256": "0840df5a33351ddeb9979e004ee984f6a3f25e1b7023b2ad99c3a6a536ea9e6f",
+      "current_sha256": "0840df5a33351ddeb9979e004ee984f6a3f25e1b7023b2ad99c3a6a536ea9e6f"
+    },
+    "agentloom-sdk/qa/evidence/api-contract-fixes-20261017/regression.txt": {
+      "original_sha256": "84976851e0ec21320487389f36f983e369470f1342e142ace369e1d10e6d3517",
+      "current_sha256": "84976851e0ec21320487389f36f983e369470f1342e142ace369e1d10e6d3517"
+    },
+    "agentloom-sdk/qa/evidence/api-contract-fixes-20261017/review.junit.xml": {
+      "original_sha256": "aca0554b55c6926630431a81339a8a9eca09596f9f7095b1226a8083154e4c23",
+      "current_sha256": "aca0554b55c6926630431a81339a8a9eca09596f9f7095b1226a8083154e4c23"
+    },
+    "agentloom-sdk/qa/evidence/api-contract-fixes-20261017/review.txt": {
+      "original_sha256": "71b9bd87229b6a725cb32c267854d93cfe580269e6b80458c539ea76648ecce6",
+      "current_sha256": "71b9bd87229b6a725cb32c267854d93cfe580269e6b80458c539ea76648ecce6"
+    },
+    "agentloom-sdk/qa/evidence/api-contract-fixes-20261017/ruff-format.txt": {
+      "original_sha256": "291d91fd4256e9a8b5d743c5c5fcb04dfee353294a3741d1ec385150e1711bf6",
+      "current_sha256": "291d91fd4256e9a8b5d743c5c5fcb04dfee353294a3741d1ec385150e1711bf6"
+    },
+    "agentloom-sdk/qa/evidence/api-contract-fixes-20261017/ruff.txt": {
+      "original_sha256": "82b3e6a6c090a57601d22943bd23fca9218d1031dbe5a7b754092f9a156b4f18",
+      "current_sha256": "82b3e6a6c090a57601d22943bd23fca9218d1031dbe5a7b754092f9a156b4f18"
+    },
+    "agentloom-sdk/qa/evidence/api-contract-fixes-20261017/run-source-sha256.json": {
+      "original_sha256": "9a95d1b637fbb97c5b29db71cc87df36a87bf5bc36b7adf5275cc66a108ad5ae",
+      "current_sha256": "9a95d1b637fbb97c5b29db71cc87df36a87bf5bc36b7adf5275cc66a108ad5ae"
+    },
+    "agentloom-sdk/qa/evidence/api-contract-fixes-20261017/smoke-first.json": {
+      "original_sha256": "9af3654f5d0c4d1a7c07841cdee262c4c2953d4d577870326697860bc48da18a",
+      "current_sha256": "9af3654f5d0c4d1a7c07841cdee262c4c2953d4d577870326697860bc48da18a"
+    },
+    "agentloom-sdk/qa/evidence/api-contract-fixes-20261017/smoke-second.json": {
+      "original_sha256": "7287532fabb59cab28f7b6034f6a3770a62eb7d4dd953ea7dcf7e20946d7c3f7",
+      "current_sha256": "7287532fabb59cab28f7b6034f6a3770a62eb7d4dd953ea7dcf7e20946d7c3f7"
+    },
+    "agentloom-sdk/qa/evidence/api-contract-fixes-20261017/summary.json": {
+      "original_sha256": "8cd2d6c399c20fc9ae54e2b68bd009dcafb6f9117146e2c5d152f65a19943420",
+      "current_sha256": "8cd2d6c399c20fc9ae54e2b68bd009dcafb6f9117146e2c5d152f65a19943420"
+    },
+    "agentloom-sdk/qa/evidence/api-contract-fixes-20261017/wheel-contents.json": {
+      "original_sha256": "65f4303c411cf8b62be216f583ab1bf651e868bf24cbdef7fbc91521b53bc1ff",
+      "current_sha256": "65f4303c411cf8b62be216f583ab1bf651e868bf24cbdef7fbc91521b53bc1ff"
+    },
+    "agentloom-sdk/qa/evidence/api-contract-fixes-20261017/wheel-install-root.txt": {
+      "original_sha256": "6b05c26e3f48da876d2aaa14ba6469afd192d3960bedd547566287a1b294e62c",
+      "current_sha256": "6b05c26e3f48da876d2aaa14ba6469afd192d3960bedd547566287a1b294e62c"
+    },
+    "agentloom-sdk/qa/evidence/api-contract-fixes-20261017/wheel-install.txt": {
+      "original_sha256": "6a2d7e3b37c463fa27371fd2b863cc720274e6c2586e18a049f53c564d631f8c",
+      "current_sha256": "6a2d7e3b37c463fa27371fd2b863cc720274e6c2586e18a049f53c564d631f8c"
+    },
+    "agentloom-sdk/qa/evidence/api-contract-fixes-20261017/wheel.txt": {
+      "original_sha256": "e0cfbf4f95b4a8d212860485572e41cfa93800c14479807dbcc571752ae6d094",
+      "current_sha256": "e0cfbf4f95b4a8d212860485572e41cfa93800c14479807dbcc571752ae6d094"
+    },
+    "agentloom-sdk/qa/evidence/assessment-ec1c93d/ec1c93d-audit.junit.xml": {
+      "original_sha256": "ecc1c894f219a51991d4a2650ac6899d2feaf427752128dd655c823dfa9ac202",
+      "current_sha256": "ecc1c894f219a51991d4a2650ac6899d2feaf427752128dd655c823dfa9ac202"
+    },
+    "agentloom-sdk/qa/evidence/assessment-ec1c93d/ec1c93d-audit.txt": {
+      "original_sha256": "5ab6dbe4aff3791e8fe6b55bf94dfd06e60c3f133d836f0d06480acfabc87296",
+      "current_sha256": "5ab6dbe4aff3791e8fe6b55bf94dfd06e60c3f133d836f0d06480acfabc87296"
+    },
+    "agentloom-sdk/qa/evidence/assessment-ec1c93d/ef31404-audit.junit.xml": {
+      "original_sha256": "d0a59102601bb4dd7e4e9fc11e0e0ed6738bba308b8b21e7de9de94f3585f27b",
+      "current_sha256": "d0a59102601bb4dd7e4e9fc11e0e0ed6738bba308b8b21e7de9de94f3585f27b"
+    },
+    "agentloom-sdk/qa/evidence/assessment-ec1c93d/ef31404-audit.txt": {
+      "original_sha256": "78b10108a191adbb516a7b196881c365e09d93bf33340a86ab0a9a011fe31330",
+      "current_sha256": "78b10108a191adbb516a7b196881c365e09d93bf33340a86ab0a9a011fe31330"
+    },
+    "agentloom-sdk/qa/evidence/assessment-ec1c93d/probes.json": {
+      "original_sha256": "f558137ce7bd282377e5153896d2b1024b631c91393990da54f23db9aede21f8",
+      "current_sha256": "f558137ce7bd282377e5153896d2b1024b631c91393990da54f23db9aede21f8"
+    },
+    "agentloom-sdk/qa/evidence/assessment-ec1c93d/probes.py": {
+      "original_sha256": "1274a7dce05ee21e90fb0d6feeceeb7f47be5fc0c9465e3ca1d51d0c6177340c",
+      "current_sha256": "1274a7dce05ee21e90fb0d6feeceeb7f47be5fc0c9465e3ca1d51d0c6177340c"
+    },
+    "agentloom-sdk/qa/evidence/assessment-ec1c93d/summary.json": {
+      "original_sha256": "9e0be06e9eefe59b187f85d68300c7e888b5ae06ba17b39180d562fd495cb660",
+      "current_sha256": "9e0be06e9eefe59b187f85d68300c7e888b5ae06ba17b39180d562fd495cb660"
+    },
+    "agentloom-sdk/qa/evidence/audit.junit.xml": {
+      "original_sha256": "e6033785a42134c1e82d473833610fe5f02d5819bdd9dac3981d72ee1a0fbb35",
+      "current_sha256": "e6033785a42134c1e82d473833610fe5f02d5819bdd9dac3981d72ee1a0fbb35"
+    },
+    "agentloom-sdk/qa/evidence/audit.txt": {
+      "original_sha256": "35d91e2cff15be0e240ed8ba9365ba541d2a59b0f8fed36c1a7fc8377ac0803a",
+      "current_sha256": "35d91e2cff15be0e240ed8ba9365ba541d2a59b0f8fed36c1a7fc8377ac0803a"
+    },
+    "agentloom-sdk/qa/evidence/baseline.junit.xml": {
+      "original_sha256": "c052f0af3593339d19aebe599d3e098c489d398dd124230fda87f1194ba25412",
+      "current_sha256": "c052f0af3593339d19aebe599d3e098c489d398dd124230fda87f1194ba25412"
+    },
+    "agentloom-sdk/qa/evidence/baseline.txt": {
+      "original_sha256": "91d9a269875f4ada0ed34315123f920a36f21eeac99f19779312e6441069d175",
+      "current_sha256": "91d9a269875f4ada0ed34315123f920a36f21eeac99f19779312e6441069d175"
+    },
+    "agentloom-sdk/qa/evidence/builder-20261017/docs-build.txt": {
+      "original_sha256": "e3e2ecab92e17eabd642f715a93fa45506147e59991a4352d023dc980162f282",
+      "current_sha256": "e3e2ecab92e17eabd642f715a93fa45506147e59991a4352d023dc980162f282"
+    },
+    "agentloom-sdk/qa/evidence/builder-20261017/docs-check.txt": {
+      "original_sha256": "4518c7330417377cca624bc0e2d1af9bda14912f200499f835422a76890a09ea",
+      "current_sha256": "4518c7330417377cca624bc0e2d1af9bda14912f200499f835422a76890a09ea"
+    },
+    "agentloom-sdk/qa/evidence/builder-20261017/regression.junit.xml": {
+      "original_sha256": "5e69ffb8603ae4e55d46490086fbb127602586b62da61a55573e140ba209f870",
+      "current_sha256": "5e69ffb8603ae4e55d46490086fbb127602586b62da61a55573e140ba209f870"
+    },
+    "agentloom-sdk/qa/evidence/builder-20261017/regression.txt": {
+      "original_sha256": "63c4d4efd45fe55750a82862fc6c91624724698269af0c2ee113edda53633a0b",
+      "current_sha256": "63c4d4efd45fe55750a82862fc6c91624724698269af0c2ee113edda53633a0b"
+    },
+    "agentloom-sdk/qa/evidence/builder-20261017/ruff-format.txt": {
+      "original_sha256": "67e4bf8f396fefa7f8830b9533fb5eb02129af09cf3d399e36ec9c6d6b248625",
+      "current_sha256": "67e4bf8f396fefa7f8830b9533fb5eb02129af09cf3d399e36ec9c6d6b248625"
+    },
+    "agentloom-sdk/qa/evidence/builder-20261017/ruff.txt": {
+      "original_sha256": "82b3e6a6c090a57601d22943bd23fca9218d1031dbe5a7b754092f9a156b4f18",
+      "current_sha256": "82b3e6a6c090a57601d22943bd23fca9218d1031dbe5a7b754092f9a156b4f18"
+    },
+    "agentloom-sdk/qa/evidence/builder-20261017/run-source-sha256.json": {
+      "original_sha256": "e33840bdd1a95c8e2a82e3595cb50540baca51766a7156d2fe4f358a0486418c",
+      "current_sha256": "e33840bdd1a95c8e2a82e3595cb50540baca51766a7156d2fe4f358a0486418c"
+    },
+    "agentloom-sdk/qa/evidence/builder-20261017/smoke-first.json": {
+      "original_sha256": "613de37bd5bd9ce118167d621eb46da4e5e097754cff1ae11504e4eda1513771",
+      "current_sha256": "613de37bd5bd9ce118167d621eb46da4e5e097754cff1ae11504e4eda1513771"
+    },
+    "agentloom-sdk/qa/evidence/builder-20261017/smoke-harness-note.txt": {
+      "original_sha256": "050d5d3e329e07aff3fa46532855c3781bf0e2691b637247703c518fc5cfc98c",
+      "current_sha256": "050d5d3e329e07aff3fa46532855c3781bf0e2691b637247703c518fc5cfc98c"
+    },
+    "agentloom-sdk/qa/evidence/builder-20261017/smoke-second.json": {
+      "original_sha256": "93ba26ae42b13d6bbcce82e5f1dafa4e4667b3b4771205d77f0b7f3c9d6f8ecf",
+      "current_sha256": "93ba26ae42b13d6bbcce82e5f1dafa4e4667b3b4771205d77f0b7f3c9d6f8ecf"
+    },
+    "agentloom-sdk/qa/evidence/builder-20261017/summary.json": {
+      "original_sha256": "0de4eb117969c218f42f5d34515ee64386ba2846664bf3cf143cb5d01f536d38",
+      "current_sha256": "0de4eb117969c218f42f5d34515ee64386ba2846664bf3cf143cb5d01f536d38"
+    },
+    "agentloom-sdk/qa/evidence/builder-20261017/wheel-contents.json": {
+      "original_sha256": "cf1bc550bea8b76b8731da605a71182e3e199c0a41f024a3988f328d9569b5f8",
+      "current_sha256": "cf1bc550bea8b76b8731da605a71182e3e199c0a41f024a3988f328d9569b5f8"
+    },
+    "agentloom-sdk/qa/evidence/builder-20261017/wheel-install.txt": {
+      "original_sha256": "d0258a0b3ebefe744a41b289fd403bb4d4bc542a436d7b5539f7d14b7d2ad3ec",
+      "current_sha256": "d0258a0b3ebefe744a41b289fd403bb4d4bc542a436d7b5539f7d14b7d2ad3ec"
+    },
+    "agentloom-sdk/qa/evidence/builder-20261017/wheel-smoke-source.txt": {
+      "original_sha256": "6ef819ff8aa714c38af7e3fff703f5e7655ffd7789869da412e62a23b42bcac0",
+      "current_sha256": "6ef819ff8aa714c38af7e3fff703f5e7655ffd7789869da412e62a23b42bcac0"
+    },
+    "agentloom-sdk/qa/evidence/builder-20261017/wheel.txt": {
+      "original_sha256": "a81b68e4f5ed8f6ab1ccebfc4a01f188c0cda5bcd505ed3801b13d6a79fe6bb2",
+      "current_sha256": "a81b68e4f5ed8f6ab1ccebfc4a01f188c0cda5bcd505ed3801b13d6a79fe6bb2"
+    },
+    "agentloom-sdk/qa/evidence/docs-integration-20261017/docs-build.txt": {
+      "original_sha256": "05c8dd475880e2eb308c3f6ef100ba4dc07e167f0fa452e2fef725884985ab67",
+      "current_sha256": "05c8dd475880e2eb308c3f6ef100ba4dc07e167f0fa452e2fef725884985ab67"
+    },
+    "agentloom-sdk/qa/evidence/docs-integration-20261017/docs-check.txt": {
+      "original_sha256": "1e22a238dbcafe0dac800bc21319b76180a7658ff8ad46fc7bf37dc5904161e9",
+      "current_sha256": "1e22a238dbcafe0dac800bc21319b76180a7658ff8ad46fc7bf37dc5904161e9"
+    },
+    "agentloom-sdk/qa/evidence/docs-integration-20261017/documents-sha256.json": {
+      "original_sha256": "de502f4752d519cc21ffe6e9d0578ad7cbe4da44711b4185fbb3673dc40a1cc5",
+      "current_sha256": "de502f4752d519cc21ffe6e9d0578ad7cbe4da44711b4185fbb3673dc40a1cc5"
+    },
+    "agentloom-sdk/qa/evidence/docs-integration-20261017/markdown-links.json": {
+      "original_sha256": "f5a7f4060979433b2becd3953e9876eef4d0660e0030e385cd53940cf4251266",
+      "current_sha256": "f5a7f4060979433b2becd3953e9876eef4d0660e0030e385cd53940cf4251266"
+    },
+    "agentloom-sdk/qa/evidence/docs-integration-20261017/python-block-1.txt": {
+      "original_sha256": "03ea724015d0bd3d347ac1bb5822b6426224332ecc132e5fa3d160679250249c",
+      "current_sha256": "03ea724015d0bd3d347ac1bb5822b6426224332ecc132e5fa3d160679250249c"
+    },
+    "agentloom-sdk/qa/evidence/docs-integration-20261017/python-block-2.txt": {
+      "original_sha256": "781f0a058232429610a6fcb3f70a197898fa0998d7c121c5714c5510e4cca85d",
+      "current_sha256": "781f0a058232429610a6fcb3f70a197898fa0998d7c121c5714c5510e4cca85d"
+    },
+    "agentloom-sdk/qa/evidence/docs-integration-20261017/python-block-3.txt": {
+      "original_sha256": "f81f3ffd36de33920e7b73623cda70fc708de93412fbc921a4552db2934c642e",
+      "current_sha256": "f81f3ffd36de33920e7b73623cda70fc708de93412fbc921a4552db2934c642e"
+    },
+    "agentloom-sdk/qa/evidence/docs-integration-20261017/python-block-4.txt": {
+      "original_sha256": "69eda54893335f08982d738727b0c65c8214ba42782a067ec17b1fdfdacb9644",
+      "current_sha256": "69eda54893335f08982d738727b0c65c8214ba42782a067ec17b1fdfdacb9644"
+    },
+    "agentloom-sdk/qa/evidence/docs-integration-20261017/python-block-5.txt": {
+      "original_sha256": "9ae72fd198fe1e3ce4b9ecf790fa5b18b7814044c79a61216e3f9eb4ce83a009",
+      "current_sha256": "9ae72fd198fe1e3ce4b9ecf790fa5b18b7814044c79a61216e3f9eb4ce83a009"
+    },
+    "agentloom-sdk/qa/evidence/docs-integration-20261017/python-block-6.txt": {
+      "original_sha256": "d3d7934453fc489da6788bb0c967de84ab2d218bc3f79a87797570113b9c4a87",
+      "current_sha256": "d3d7934453fc489da6788bb0c967de84ab2d218bc3f79a87797570113b9c4a87"
+    },
+    "agentloom-sdk/qa/evidence/docs-integration-20261017/python-block-7.txt": {
+      "original_sha256": "2ae7ee12237727907d3134001c692ee616b0fdaf9d9a17911b82bf8e41648758",
+      "current_sha256": "2ae7ee12237727907d3134001c692ee616b0fdaf9d9a17911b82bf8e41648758"
+    },
+    "agentloom-sdk/qa/evidence/docs-integration-20261017/snippet-check.txt": {
+      "original_sha256": "5a07d662db4c587ea2ae3530673120973cc7ed86e77e8f86e5ae205ad7e8f425",
+      "current_sha256": "5a07d662db4c587ea2ae3530673120973cc7ed86e77e8f86e5ae205ad7e8f425"
+    },
+    "agentloom-sdk/qa/evidence/docs-integration-20261017/snippet-checker.txt": {
+      "original_sha256": "c8c6420cf8adf13045a43332523e80f42ed464e5be715fd8a2747d825e92d749",
+      "current_sha256": "c8c6420cf8adf13045a43332523e80f42ed464e5be715fd8a2747d825e92d749"
+    },
+    "agentloom-sdk/qa/evidence/docs-integration-20261017/summary.json": {
+      "original_sha256": "dd5eed4c75e8bdd4a9d7fb5f51ce5f041b1b3ff93f08581115cd11623391f3a4",
+      "current_sha256": "dd5eed4c75e8bdd4a9d7fb5f51ce5f041b1b3ff93f08581115cd11623391f3a4"
+    },
+    "agentloom-sdk/qa/evidence/fixes-20261017/docs-build.txt": {
+      "original_sha256": "cb759f33c3442d9cfe61b270732e7dec48504d71707d520a5b1103f3fe257d79",
+      "current_sha256": "cb759f33c3442d9cfe61b270732e7dec48504d71707d520a5b1103f3fe257d79"
+    },
+    "agentloom-sdk/qa/evidence/fixes-20261017/docs-check.txt": {
+      "original_sha256": "ceb26c22fa834c247c14b9a41784034712f051f71a2e4d02637ce60460a53f16",
+      "current_sha256": "ceb26c22fa834c247c14b9a41784034712f051f71a2e4d02637ce60460a53f16"
+    },
+    "agentloom-sdk/qa/evidence/fixes-20261017/regression.junit.xml": {
+      "original_sha256": "418a97c5e0258f15e931fb97e778a6102690d0a7376750b80c26a50298b1ea7a",
+      "current_sha256": "418a97c5e0258f15e931fb97e778a6102690d0a7376750b80c26a50298b1ea7a"
+    },
+    "agentloom-sdk/qa/evidence/fixes-20261017/regression.txt": {
+      "original_sha256": "98d655d6d699fca31a2e3ce225f7eebfa620291bf92cf16cd6f75136357172c5",
+      "current_sha256": "98d655d6d699fca31a2e3ce225f7eebfa620291bf92cf16cd6f75136357172c5"
+    },
+    "agentloom-sdk/qa/evidence/fixes-20261017/ruff-format.txt": {
+      "original_sha256": "9768eed49a8831ae7da21738b4579c3aac21cbeffe482ca40611c554624f1cde",
+      "current_sha256": "9768eed49a8831ae7da21738b4579c3aac21cbeffe482ca40611c554624f1cde"
+    },
+    "agentloom-sdk/qa/evidence/fixes-20261017/ruff.txt": {
+      "original_sha256": "82b3e6a6c090a57601d22943bd23fca9218d1031dbe5a7b754092f9a156b4f18",
+      "current_sha256": "82b3e6a6c090a57601d22943bd23fca9218d1031dbe5a7b754092f9a156b4f18"
+    },
+    "agentloom-sdk/qa/evidence/fixes-20261017/smoke-first.json": {
+      "original_sha256": "63198e047605e402dd2e796aa1aa96303a05a1b3ab88150a0bd3e75ba9a76048",
+      "current_sha256": "63198e047605e402dd2e796aa1aa96303a05a1b3ab88150a0bd3e75ba9a76048"
+    },
+    "agentloom-sdk/qa/evidence/fixes-20261017/smoke-second.json": {
+      "original_sha256": "361d505675f92ca72eb4cf97031553491fa001c535f16ffba785f750bdf30105",
+      "current_sha256": "361d505675f92ca72eb4cf97031553491fa001c535f16ffba785f750bdf30105"
+    },
+    "agentloom-sdk/qa/evidence/fixes-20261017/summary.json": {
+      "original_sha256": "2b0eed11f36b27171c2f4871f86a5b07f01bf60917d515850719bf2a4b775f23",
+      "current_sha256": "2b0eed11f36b27171c2f4871f86a5b07f01bf60917d515850719bf2a4b775f23"
+    },
+    "agentloom-sdk/qa/evidence/fixes-20261017/wheel-install.txt": {
+      "original_sha256": "eab5fea4f47b7c3c578a837cd02842fb476ed15928bdbf09b4dbd55d0dbdefb1",
+      "current_sha256": "eab5fea4f47b7c3c578a837cd02842fb476ed15928bdbf09b4dbd55d0dbdefb1"
+    },
+    "agentloom-sdk/qa/evidence/fixes-20261017/wheel.txt": {
+      "original_sha256": "3fe4dfc9b4d48605f6e1796432d5707e5611dc3d77a6f3567bf7c0798f6958c4",
+      "current_sha256": "3fe4dfc9b4d48605f6e1796432d5707e5611dc3d77a6f3567bf7c0798f6958c4"
+    },
+    "agentloom-sdk/qa/evidence/full-workspace-publish-20261018/docs-build.txt": {
+      "original_sha256": "b3a913a43df47767a75f79abdeae93bff23f808586c724236e812f56422315bb",
+      "current_sha256": "b3a913a43df47767a75f79abdeae93bff23f808586c724236e812f56422315bb"
+    },
+    "agentloom-sdk/qa/evidence/full-workspace-publish-20261018/docs-check.txt": {
+      "original_sha256": "3dde7b43c214978b660cd581668ce1e40a2c4e0fb3bc19bcfc5a0d584235d7f9",
+      "current_sha256": "3dde7b43c214978b660cd581668ce1e40a2c4e0fb3bc19bcfc5a0d584235d7f9"
+    },
+    "agentloom-sdk/qa/evidence/full-workspace-publish-20261018/example-help.txt": {
+      "original_sha256": "b545ed09db07fe391ce211c9e48ecd7b186d0009e26ca97963d3603aa67b60f3",
+      "current_sha256": "b545ed09db07fe391ce211c9e48ecd7b186d0009e26ca97963d3603aa67b60f3"
+    },
+    "agentloom-sdk/qa/evidence/full-workspace-publish-20261018/regression-summary.json": {
+      "original_sha256": "fe14065875e43762da283b3de83d06ca1e96f87d5995273953d697af9c83033f",
+      "current_sha256": "fe14065875e43762da283b3de83d06ca1e96f87d5995273953d697af9c83033f"
+    },
+    "agentloom-sdk/qa/evidence/full-workspace-publish-20261018/regression.junit.xml": {
+      "original_sha256": "fbda0c9658b9057b56bd5ac0d148fddb6369f969e8251fe1717301d32c0b9422",
+      "current_sha256": "fbda0c9658b9057b56bd5ac0d148fddb6369f969e8251fe1717301d32c0b9422"
+    },
+    "agentloom-sdk/qa/evidence/full-workspace-publish-20261018/regression.txt": {
+      "original_sha256": "05f9d06744302aa7920f68976ce8e8c6bd48c6c08aed757d8aea26889b3d6c05",
+      "current_sha256": "05f9d06744302aa7920f68976ce8e8c6bd48c6c08aed757d8aea26889b3d6c05"
+    },
+    "agentloom-sdk/qa/evidence/full-workspace-publish-20261018/ruff-format.txt": {
+      "original_sha256": "4efb24614e1989f8459fcf5942e007e1505a707a6613f549c57c29d48cebc4eb",
+      "current_sha256": "4efb24614e1989f8459fcf5942e007e1505a707a6613f549c57c29d48cebc4eb"
+    },
+    "agentloom-sdk/qa/evidence/full-workspace-publish-20261018/ruff.txt": {
+      "original_sha256": "82b3e6a6c090a57601d22943bd23fca9218d1031dbe5a7b754092f9a156b4f18",
+      "current_sha256": "82b3e6a6c090a57601d22943bd23fca9218d1031dbe5a7b754092f9a156b4f18"
+    },
+    "agentloom-sdk/qa/evidence/full-workspace-publish-20261018/scope.json": {
+      "original_sha256": "2c7867b45e45422fc007a0bc7fb5e5aa79b0abc20fc79e60f91d09aed638d912",
+      "current_sha256": "2c7867b45e45422fc007a0bc7fb5e5aa79b0abc20fc79e60f91d09aed638d912"
+    },
+    "agentloom-sdk/qa/evidence/full-workspace-publish-20261018/source-after.json": {
+      "original_sha256": "710b3506a0e1db1f3b0d5e43924f94527de56df150bee32692ed4f7e6f4712cb",
+      "current_sha256": "710b3506a0e1db1f3b0d5e43924f94527de56df150bee32692ed4f7e6f4712cb"
+    },
+    "agentloom-sdk/qa/evidence/full-workspace-publish-20261018/source-before.json": {
+      "original_sha256": "710b3506a0e1db1f3b0d5e43924f94527de56df150bee32692ed4f7e6f4712cb",
+      "current_sha256": "710b3506a0e1db1f3b0d5e43924f94527de56df150bee32692ed4f7e6f4712cb"
+    },
+    "agentloom-sdk/qa/evidence/full-workspace-publish-20261018/summary.json": {
+      "original_sha256": "dd2f1fdac0ecf6f121b7b762649214b95fa3cf9a7ef97eb5ede8b11e5abff959",
+      "current_sha256": "dd2f1fdac0ecf6f121b7b762649214b95fa3cf9a7ef97eb5ede8b11e5abff959"
+    },
+    "agentloom-sdk/qa/evidence/full-workspace-publish-20261018/wheel-build.txt": {
+      "original_sha256": "abd1e19268ef7ee7c2fe682411470d7a01759793ffa7c1c9fb0c6a2ef97f9cea",
+      "current_sha256": "abd1e19268ef7ee7c2fe682411470d7a01759793ffa7c1c9fb0c6a2ef97f9cea"
+    },
+    "agentloom-sdk/qa/evidence/full-workspace-publish-20261018/wheel-check.txt": {
+      "original_sha256": "3b5e0162e809eb07b003eb200825f48aa112c7a64adee7f3386361febe26b167",
+      "current_sha256": "3b5e0162e809eb07b003eb200825f48aa112c7a64adee7f3386361febe26b167"
+    },
+    "agentloom-sdk/qa/evidence/full-workspace-publish-20261018/wheel-install.txt": {
+      "original_sha256": "72e8f4e3b38f7c7392cf73f4aeba899afdf4157c75e97ed0456b8c56d6b9cb12",
+      "current_sha256": "72e8f4e3b38f7c7392cf73f4aeba899afdf4157c75e97ed0456b8c56d6b9cb12"
+    },
+    "agentloom-sdk/qa/evidence/full-workspace-publish-20261018/wheel-summary.json": {
+      "original_sha256": "5665bce66685a9781c7e077a734edd90a1b4e37fab8ea3512793edc6213b6e8a",
+      "current_sha256": "5665bce66685a9781c7e077a734edd90a1b4e37fab8ea3512793edc6213b6e8a"
+    },
+    "agentloom-sdk/qa/evidence/langchain-prompts-20261018/baseline.junit.xml": {
+      "original_sha256": "002d8b8fb5716290da7e2659aa4dcdd762c9eaaa501119efb9de33677d80fc87",
+      "current_sha256": "002d8b8fb5716290da7e2659aa4dcdd762c9eaaa501119efb9de33677d80fc87"
+    },
+    "agentloom-sdk/qa/evidence/langchain-prompts-20261018/baseline.txt": {
+      "original_sha256": "92dd45c378b9bef675ea8e7cdaba6c14cf14a55dc4001b8f25c7bf75306f7f7d",
+      "current_sha256": "92dd45c378b9bef675ea8e7cdaba6c14cf14a55dc4001b8f25c7bf75306f7f7d"
+    },
+    "agentloom-sdk/qa/evidence/langchain-prompts-20261018/before-budget-status-assertion-output-boundaries.junit.xml": {
+      "original_sha256": "736918a30f20df238a5d3e170fae73ca3ed8ba5a6f5d3bc3283e0d6852358897",
+      "current_sha256": "736918a30f20df238a5d3e170fae73ca3ed8ba5a6f5d3bc3283e0d6852358897"
+    },
+    "agentloom-sdk/qa/evidence/langchain-prompts-20261018/before-budget-status-assertion-output-boundaries.txt": {
+      "original_sha256": "2c8a88f55b4798a3804e67e632351ba0b5d51976220840d877d6e77cc18dead6",
+      "current_sha256": "2c8a88f55b4798a3804e67e632351ba0b5d51976220840d877d6e77cc18dead6"
+    },
+    "agentloom-sdk/qa/evidence/langchain-prompts-20261018/boundaries.junit.xml": {
+      "original_sha256": "354d9570411ac330ac57a68c7861a7ebc5c81d959c74e36cd82e8d44a81075be",
+      "current_sha256": "354d9570411ac330ac57a68c7861a7ebc5c81d959c74e36cd82e8d44a81075be"
+    },
+    "agentloom-sdk/qa/evidence/langchain-prompts-20261018/boundaries.txt": {
+      "original_sha256": "1035edb2e7074708de37d0cc306aea17882ccc67bbc9cd0347c9d6c2f3199fe9",
+      "current_sha256": "1035edb2e7074708de37d0cc306aea17882ccc67bbc9cd0347c9d6c2f3199fe9"
+    },
+    "agentloom-sdk/qa/evidence/langchain-prompts-20261018/diff-check.txt": {
+      "original_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "current_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "agentloom-sdk/qa/evidence/langchain-prompts-20261018/docs-build.txt": {
+      "original_sha256": "0d732477778611cb8e858774a8db9efc912e19343a21142483a3dc22fb56cf8f",
+      "current_sha256": "0d732477778611cb8e858774a8db9efc912e19343a21142483a3dc22fb56cf8f"
+    },
+    "agentloom-sdk/qa/evidence/langchain-prompts-20261018/docs-check.txt": {
+      "original_sha256": "b7f46b78049859b937e010d2e5671dd903f23ce76a99e88db69a6c89f20914cb",
+      "current_sha256": "b7f46b78049859b937e010d2e5671dd903f23ce76a99e88db69a6c89f20914cb"
+    },
+    "agentloom-sdk/qa/evidence/langchain-prompts-20261018/focused.junit.xml": {
+      "original_sha256": "422e09344853c6e62d6a1b1c8088c7c041d48a44065758c4a2f8620df8678485",
+      "current_sha256": "422e09344853c6e62d6a1b1c8088c7c041d48a44065758c4a2f8620df8678485"
+    },
+    "agentloom-sdk/qa/evidence/langchain-prompts-20261018/focused.txt": {
+      "original_sha256": "715b966dd2d59ccd5dbe269eba51b073645d8f07df964cc3d6669cf4255475dd",
+      "current_sha256": "715b966dd2d59ccd5dbe269eba51b073645d8f07df964cc3d6669cf4255475dd"
+    },
+    "agentloom-sdk/qa/evidence/langchain-prompts-20261018/git-status-before.txt": {
+      "original_sha256": "c0ee55f9f59937b02fc6644e4a44c65c16211305c5a386580bef8ef78ed007c4",
+      "current_sha256": "c0ee55f9f59937b02fc6644e4a44c65c16211305c5a386580bef8ef78ed007c4"
+    },
+    "agentloom-sdk/qa/evidence/langchain-prompts-20261018/other-work-check.json": {
+      "original_sha256": "a38863afbe9932c3c6e1db3e2f62fa2309f322841e7a91dc608acccfd13bbd81",
+      "current_sha256": "a38863afbe9932c3c6e1db3e2f62fa2309f322841e7a91dc608acccfd13bbd81"
+    },
+    "agentloom-sdk/qa/evidence/langchain-prompts-20261018/output-boundaries.junit.xml": {
+      "original_sha256": "220ff327e0192dc6cbb29d3c70f1687229e15dd62c4676c13de4af204281bfa8",
+      "current_sha256": "220ff327e0192dc6cbb29d3c70f1687229e15dd62c4676c13de4af204281bfa8"
+    },
+    "agentloom-sdk/qa/evidence/langchain-prompts-20261018/output-boundaries.txt": {
+      "original_sha256": "1a4c7d8853e614aeb6da0bd80f8052864e943b9fa17125f971f27702215e2d18",
+      "current_sha256": "1a4c7d8853e614aeb6da0bd80f8052864e943b9fa17125f971f27702215e2d18"
+    },
+    "agentloom-sdk/qa/evidence/langchain-prompts-20261018/regression-command.json": {
+      "original_sha256": "12c0b8b0facd4c8bbb69096c90ab7fc897916d0fe7b2c4317704554da8ef41db",
+      "current_sha256": "12c0b8b0facd4c8bbb69096c90ab7fc897916d0fe7b2c4317704554da8ef41db"
+    },
+    "agentloom-sdk/qa/evidence/langchain-prompts-20261018/regression-source-after.json": {
+      "original_sha256": "ac432990efb7032b9c065fe78e93e3b93c3dc6f9268f1e42eeddce229d0f227c",
+      "current_sha256": "ac432990efb7032b9c065fe78e93e3b93c3dc6f9268f1e42eeddce229d0f227c"
+    },
+    "agentloom-sdk/qa/evidence/langchain-prompts-20261018/regression-source-before.json": {
+      "original_sha256": "ac432990efb7032b9c065fe78e93e3b93c3dc6f9268f1e42eeddce229d0f227c",
+      "current_sha256": "ac432990efb7032b9c065fe78e93e3b93c3dc6f9268f1e42eeddce229d0f227c"
+    },
+    "agentloom-sdk/qa/evidence/langchain-prompts-20261018/regression-summary.json": {
+      "original_sha256": "343fe117bfd1e6dfe173d3cc77f0455b9a0c6e8142c6544e77e25499d7d85d72",
+      "current_sha256": "343fe117bfd1e6dfe173d3cc77f0455b9a0c6e8142c6544e77e25499d7d85d72"
+    },
+    "agentloom-sdk/qa/evidence/langchain-prompts-20261018/regression.junit.xml": {
+      "original_sha256": "fb548b27e01d4e0812101fa3986f7fc407c74570aa2ddac5be839809224509ad",
+      "current_sha256": "fb548b27e01d4e0812101fa3986f7fc407c74570aa2ddac5be839809224509ad"
+    },
+    "agentloom-sdk/qa/evidence/langchain-prompts-20261018/regression.txt": {
+      "original_sha256": "d358b286b7288b11dc02cf6c7adcb3083d07bfc10e8d8fd0aa1317fde6166125",
+      "current_sha256": "d358b286b7288b11dc02cf6c7adcb3083d07bfc10e8d8fd0aa1317fde6166125"
+    },
+    "agentloom-sdk/qa/evidence/langchain-prompts-20261018/ruff-format.txt": {
+      "original_sha256": "1e2a3e2494e870c6c9673511106baaea0670f3f2754bba81ff924dc4a504d597",
+      "current_sha256": "1e2a3e2494e870c6c9673511106baaea0670f3f2754bba81ff924dc4a504d597"
+    },
+    "agentloom-sdk/qa/evidence/langchain-prompts-20261018/ruff.txt": {
+      "original_sha256": "82b3e6a6c090a57601d22943bd23fca9218d1031dbe5a7b754092f9a156b4f18",
+      "current_sha256": "82b3e6a6c090a57601d22943bd23fca9218d1031dbe5a7b754092f9a156b4f18"
+    },
+    "agentloom-sdk/qa/evidence/langchain-prompts-20261018/summary.json": {
+      "original_sha256": "e3b350d4d6701a946a661a51b5e6ac8469ceebfbbcbee020ac701b6f54547c75",
+      "current_sha256": "e3b350d4d6701a946a661a51b5e6ac8469ceebfbbcbee020ac701b6f54547c75"
+    },
+    "agentloom-sdk/qa/evidence/langchain-prompts-20261018/upstream-manifest.json": {
+      "original_sha256": "9c54f60d4a5dbe3700f2055e553924ffba84a329ec7da57abaf8d31e12b16718",
+      "current_sha256": "9c54f60d4a5dbe3700f2055e553924ffba84a329ec7da57abaf8d31e12b16718"
+    },
+    "agentloom-sdk/qa/evidence/langchain-prompts-20261018/upstream-prompts.json": {
+      "original_sha256": "56924ab8576881db0a3d5fc91886ce4bebbf56ceed76b386d1720222d1d48fc4",
+      "current_sha256": "56924ab8576881db0a3d5fc91886ce4bebbf56ceed76b386d1720222d1d48fc4"
+    },
+    "agentloom-sdk/qa/evidence/langchain-prompts-20261018/v1-checkpoints.json": {
+      "original_sha256": "78defb6bb46da94bbc962c0a1ea5c354c61b8849fa3d9c6f06af99aaa6481e34",
+      "current_sha256": "78defb6bb46da94bbc962c0a1ea5c354c61b8849fa3d9c6f06af99aaa6481e34"
+    },
+    "agentloom-sdk/qa/evidence/langchain-prompts-20261018/wheel-build.txt": {
+      "original_sha256": "334b88becfbe285c721a4a6c0406ad50ab5b60cd3634508920fc6d30124246d7",
+      "current_sha256": "334b88becfbe285c721a4a6c0406ad50ab5b60cd3634508920fc6d30124246d7"
+    },
+    "agentloom-sdk/qa/evidence/langchain-prompts-20261018/wheel-install.txt": {
+      "original_sha256": "2474cc86bec158b029225c4b522c57e8befc1bb82d765c4ce0bfa96975adc323",
+      "current_sha256": "2474cc86bec158b029225c4b522c57e8befc1bb82d765c4ce0bfa96975adc323"
+    },
+    "agentloom-sdk/qa/evidence/langchain-prompts-20261018/wheel-summary.json": {
+      "original_sha256": "c5eb751d2f588c6ce0819bdcee2d3772b0e4ecb0c2e9077102693383cd2a0386",
+      "current_sha256": "c5eb751d2f588c6ce0819bdcee2d3772b0e4ecb0c2e9077102693383cd2a0386"
+    },
+    "agentloom-sdk/qa/evidence/langchain-prompts-20261018/workspace-before.json": {
+      "original_sha256": "466a274aec9a78ec76bfb0e491c0797ef48a36ac9e0fd82e58ab5bab8e6496ad",
+      "current_sha256": "466a274aec9a78ec76bfb0e491c0797ef48a36ac9e0fd82e58ab5bab8e6496ad"
+    },
+    "agentloom-sdk/qa/evidence/mode-prompts-20261018/before-private-defaults-final-source-before.json": {
+      "original_sha256": "29b564bfe2db1ce0a9a54b1e5ea9308ba43c9bc84a5b134fe53d132d2b4ca26f",
+      "current_sha256": "29b564bfe2db1ce0a9a54b1e5ea9308ba43c9bc84a5b134fe53d132d2b4ca26f"
+    },
+    "agentloom-sdk/qa/evidence/mode-prompts-20261018/before-private-defaults-regression-final-command.json": {
+      "original_sha256": "03343f5b465a4aace8cf2fb64bfa23443e81fe2b4a47cf0aabe0b96099af37f4",
+      "current_sha256": "03343f5b465a4aace8cf2fb64bfa23443e81fe2b4a47cf0aabe0b96099af37f4"
+    },
+    "agentloom-sdk/qa/evidence/mode-prompts-20261018/before-private-defaults-regression-final.txt": {
+      "original_sha256": "a2447a04417b434a0f1b11a4f609075073afe02c8073b6f5fa2d57ad6b86820c",
+      "current_sha256": "a2447a04417b434a0f1b11a4f609075073afe02c8073b6f5fa2d57ad6b86820c"
+    },
+    "agentloom-sdk/qa/evidence/mode-prompts-20261018/before-shutdown-fix-final-source-after.json": {
+      "original_sha256": "d2f59802548944eb860c019513e8c0ce8a0f70adfe2c56afc351f76e54025267",
+      "current_sha256": "d2f59802548944eb860c019513e8c0ce8a0f70adfe2c56afc351f76e54025267"
+    },
+    "agentloom-sdk/qa/evidence/mode-prompts-20261018/before-shutdown-fix-final-source-before.json": {
+      "original_sha256": "d2f59802548944eb860c019513e8c0ce8a0f70adfe2c56afc351f76e54025267",
+      "current_sha256": "d2f59802548944eb860c019513e8c0ce8a0f70adfe2c56afc351f76e54025267"
+    },
+    "agentloom-sdk/qa/evidence/mode-prompts-20261018/before-shutdown-fix-regression-final-command.json": {
+      "original_sha256": "e871e8e046b91c676e36f60da53cffd82a23831a39f7db0013737e1a3745bcdd",
+      "current_sha256": "e871e8e046b91c676e36f60da53cffd82a23831a39f7db0013737e1a3745bcdd"
+    },
+    "agentloom-sdk/qa/evidence/mode-prompts-20261018/before-shutdown-fix-regression-final-summary.json": {
+      "original_sha256": "477ce1555e6e0c60a1cea043c0d760946b62032a8b36b33ebf4aa104f4ff1e17",
+      "current_sha256": "477ce1555e6e0c60a1cea043c0d760946b62032a8b36b33ebf4aa104f4ff1e17"
+    },
+    "agentloom-sdk/qa/evidence/mode-prompts-20261018/before-shutdown-fix-regression-final.junit.xml": {
+      "original_sha256": "cb8e1dd2f29b409671af60c72fb338698d6696ddd9ed383041b9d5718410c7e6",
+      "current_sha256": "cb8e1dd2f29b409671af60c72fb338698d6696ddd9ed383041b9d5718410c7e6"
+    },
+    "agentloom-sdk/qa/evidence/mode-prompts-20261018/before-shutdown-fix-regression-final.txt": {
+      "original_sha256": "63f5aab8be03e3dceb47d98311ecab9e16fa019bcd0f93a806e5f638863cf108",
+      "current_sha256": "63f5aab8be03e3dceb47d98311ecab9e16fa019bcd0f93a806e5f638863cf108"
+    },
+    "agentloom-sdk/qa/evidence/mode-prompts-20261018/docs-build.txt": {
+      "original_sha256": "82eb54d0c1ae3d71294a3cb181bac55e52f47a0bf82dd15ffd1ca455f19fe9b2",
+      "current_sha256": "82eb54d0c1ae3d71294a3cb181bac55e52f47a0bf82dd15ffd1ca455f19fe9b2"
+    },
+    "agentloom-sdk/qa/evidence/mode-prompts-20261018/docs-check.txt": {
+      "original_sha256": "5016fa2abdb7d85e7d75cf62167a349ff9dd984918566ef60c14fa14ecf5fa97",
+      "current_sha256": "5016fa2abdb7d85e7d75cf62167a349ff9dd984918566ef60c14fa14ecf5fa97"
+    },
+    "agentloom-sdk/qa/evidence/mode-prompts-20261018/documents-sha256.json": {
+      "original_sha256": "0f18ea7bd7d114689282a4c8179f351e3bb13d4c3b210b55d543dc38ebbd9eba",
+      "current_sha256": "0f18ea7bd7d114689282a4c8179f351e3bb13d4c3b210b55d543dc38ebbd9eba"
+    },
+    "agentloom-sdk/qa/evidence/mode-prompts-20261018/final-source-after.json": {
+      "original_sha256": "d61ac2dea71e281ae9574fbda3921a23df85bde7b2d005e56068c3e7ec48938e",
+      "current_sha256": "d61ac2dea71e281ae9574fbda3921a23df85bde7b2d005e56068c3e7ec48938e"
+    },
+    "agentloom-sdk/qa/evidence/mode-prompts-20261018/final-source-before.json": {
+      "original_sha256": "d61ac2dea71e281ae9574fbda3921a23df85bde7b2d005e56068c3e7ec48938e",
+      "current_sha256": "d61ac2dea71e281ae9574fbda3921a23df85bde7b2d005e56068c3e7ec48938e"
+    },
+    "agentloom-sdk/qa/evidence/mode-prompts-20261018/focused.junit.xml": {
+      "original_sha256": "12aa830d9e7cdb955520968d5de87c69c27727de768661fdbca61d303bcabe48",
+      "current_sha256": "12aa830d9e7cdb955520968d5de87c69c27727de768661fdbca61d303bcabe48"
+    },
+    "agentloom-sdk/qa/evidence/mode-prompts-20261018/focused.txt": {
+      "original_sha256": "c10675bcdd647a0b26000da16a54019473d62e6b18fc4f9d6c36721a072cdc29",
+      "current_sha256": "c10675bcdd647a0b26000da16a54019473d62e6b18fc4f9d6c36721a072cdc29"
+    },
+    "agentloom-sdk/qa/evidence/mode-prompts-20261018/foreign-files-check.json": {
+      "original_sha256": "c79edc603fabdd085d005146ff774f4b022b07a8462735888c4019b99fb2de34",
+      "current_sha256": "c79edc603fabdd085d005146ff774f4b022b07a8462735888c4019b99fb2de34"
+    },
+    "agentloom-sdk/qa/evidence/mode-prompts-20261018/interrupted-shutdown-refinement-final-source-before.json": {
+      "original_sha256": "8120269b40e82a83211e8231395edc21de62385d5ff8ae4d170e2c2524007f92",
+      "current_sha256": "8120269b40e82a83211e8231395edc21de62385d5ff8ae4d170e2c2524007f92"
+    },
+    "agentloom-sdk/qa/evidence/mode-prompts-20261018/interrupted-shutdown-refinement-regression-final-command.json": {
+      "original_sha256": "2eefa1eace440ee750ac794c80833eb375fc9f181cca3445e4273388387c855c",
+      "current_sha256": "2eefa1eace440ee750ac794c80833eb375fc9f181cca3445e4273388387c855c"
+    },
+    "agentloom-sdk/qa/evidence/mode-prompts-20261018/interrupted-shutdown-refinement-regression-final.txt": {
+      "original_sha256": "1d0b15d3b3cec73ba8a80749aae18b5f5514f11a82222fac073581fb9c5c0435",
+      "current_sha256": "1d0b15d3b3cec73ba8a80749aae18b5f5514f11a82222fac073581fb9c5c0435"
+    },
+    "agentloom-sdk/qa/evidence/mode-prompts-20261018/legacy-recovery.json": {
+      "original_sha256": "bbd4c5b471c1b31a214ef28b83a82c7dd8ded2805f2fd82c6ccb9e23e159f888",
+      "current_sha256": "bbd4c5b471c1b31a214ef28b83a82c7dd8ded2805f2fd82c6ccb9e23e159f888"
+    },
+    "agentloom-sdk/qa/evidence/mode-prompts-20261018/maintenance-after.junit.xml": {
+      "original_sha256": "9cfac01792892a594f1e9e19f2897630ac76dbef58d94595db264844a2965fd1",
+      "current_sha256": "9cfac01792892a594f1e9e19f2897630ac76dbef58d94595db264844a2965fd1"
+    },
+    "agentloom-sdk/qa/evidence/mode-prompts-20261018/maintenance-after.txt": {
+      "original_sha256": "590270659fa6f25c1ed32ad145554b3af200f35338cfcb98cd7060c679bc1cee",
+      "current_sha256": "590270659fa6f25c1ed32ad145554b3af200f35338cfcb98cd7060c679bc1cee"
+    },
+    "agentloom-sdk/qa/evidence/mode-prompts-20261018/maintenance-and-recovery.junit.xml": {
+      "original_sha256": "c19372e67d23b62fae90b10ecaceaf5d5cd0249c429bb29c07bf3a965afd4e54",
+      "current_sha256": "c19372e67d23b62fae90b10ecaceaf5d5cd0249c429bb29c07bf3a965afd4e54"
+    },
+    "agentloom-sdk/qa/evidence/mode-prompts-20261018/maintenance-and-recovery.txt": {
+      "original_sha256": "1624c179e10647ae5ef0842fce9db348b9bd96eec095fe9164e5da5ec989065d",
+      "current_sha256": "1624c179e10647ae5ef0842fce9db348b9bd96eec095fe9164e5da5ec989065d"
+    },
+    "agentloom-sdk/qa/evidence/mode-prompts-20261018/maintenance-before.junit.xml": {
+      "original_sha256": "b2a8089699cd3918bb396c2a0b3d8139f53ad92706b0a281b49b54488d2d5d13",
+      "current_sha256": "b2a8089699cd3918bb396c2a0b3d8139f53ad92706b0a281b49b54488d2d5d13"
+    },
+    "agentloom-sdk/qa/evidence/mode-prompts-20261018/maintenance-before.txt": {
+      "original_sha256": "a8c80a6341ec93afd4aa46ac2a4763c86a1da295704f6222cc46cab0492ab4ea",
+      "current_sha256": "a8c80a6341ec93afd4aa46ac2a4763c86a1da295704f6222cc46cab0492ab4ea"
+    },
+    "agentloom-sdk/qa/evidence/mode-prompts-20261018/maintenance-failure-state.json": {
+      "original_sha256": "68114212d6e153fcb2bca032903b1dab7321c5ad65f8578d7f4a65c591c8894d",
+      "current_sha256": "68114212d6e153fcb2bca032903b1dab7321c5ad65f8578d7f4a65c591c8894d"
+    },
+    "agentloom-sdk/qa/evidence/mode-prompts-20261018/maintenance-shutdown-before.json": {
+      "original_sha256": "4a5f6d2810f2071eefe565bb817a31b398b206ce43ec66eb10ccb08efa5d6058",
+      "current_sha256": "4a5f6d2810f2071eefe565bb817a31b398b206ce43ec66eb10ccb08efa5d6058"
+    },
+    "agentloom-sdk/qa/evidence/mode-prompts-20261018/ownership.json": {
+      "original_sha256": "055331f9621b99d7235451e1b0b376cd4bc1ccb3b7806c2a96ec47b88a0928da",
+      "current_sha256": "055331f9621b99d7235451e1b0b376cd4bc1ccb3b7806c2a96ec47b88a0928da"
+    },
+    "agentloom-sdk/qa/evidence/mode-prompts-20261018/regression-command.json": {
+      "original_sha256": "51f8ed6f62d94bbaeaf51464c6da0570277adb7cea3eeb83ea7b20164675f11f",
+      "current_sha256": "51f8ed6f62d94bbaeaf51464c6da0570277adb7cea3eeb83ea7b20164675f11f"
+    },
+    "agentloom-sdk/qa/evidence/mode-prompts-20261018/regression-final-command.json": {
+      "original_sha256": "a21a4400ed0de9d2a306c2a471f60479a7bab238fcd61b647af2ff6c985b3db5",
+      "current_sha256": "a21a4400ed0de9d2a306c2a471f60479a7bab238fcd61b647af2ff6c985b3db5"
+    },
+    "agentloom-sdk/qa/evidence/mode-prompts-20261018/regression-final-summary.json": {
+      "original_sha256": "fa607393babb2cd474facd4077d273572dd7d0ed0cdadf16fa7ad14367b52a9c",
+      "current_sha256": "fa607393babb2cd474facd4077d273572dd7d0ed0cdadf16fa7ad14367b52a9c"
+    },
+    "agentloom-sdk/qa/evidence/mode-prompts-20261018/regression-final.junit.xml": {
+      "original_sha256": "e86a0ac481e5ff8cd4190fec38b35ae91eda165e2c50297542d440cc8cf8fa46",
+      "current_sha256": "e86a0ac481e5ff8cd4190fec38b35ae91eda165e2c50297542d440cc8cf8fa46"
+    },
+    "agentloom-sdk/qa/evidence/mode-prompts-20261018/regression-final.txt": {
+      "original_sha256": "f0ff800b97f05bfebfc843aa2af25a110b8c86080d0284efabb7c3d31c9735d7",
+      "current_sha256": "f0ff800b97f05bfebfc843aa2af25a110b8c86080d0284efabb7c3d31c9735d7"
+    },
+    "agentloom-sdk/qa/evidence/mode-prompts-20261018/regression-summary.json": {
+      "original_sha256": "50dd15e1667d82a3f6369ea9ac688f5e23bd8adc0cfa25a66726689e0c2d117f",
+      "current_sha256": "50dd15e1667d82a3f6369ea9ac688f5e23bd8adc0cfa25a66726689e0c2d117f"
+    },
+    "agentloom-sdk/qa/evidence/mode-prompts-20261018/regression.junit.xml": {
+      "original_sha256": "b57aac0e2c311d66c0841ac8ddd991f6e0694969d6d7915397083b43ec1cc90d",
+      "current_sha256": "b57aac0e2c311d66c0841ac8ddd991f6e0694969d6d7915397083b43ec1cc90d"
+    },
+    "agentloom-sdk/qa/evidence/mode-prompts-20261018/regression.txt": {
+      "original_sha256": "a5476bd499c42c1ba55c1ac8863c9f75d91cd44f26271d8fa5794c3fa11bbbad",
+      "current_sha256": "a5476bd499c42c1ba55c1ac8863c9f75d91cd44f26271d8fa5794c3fa11bbbad"
+    },
+    "agentloom-sdk/qa/evidence/mode-prompts-20261018/retry-investigation.txt": {
+      "original_sha256": "44b39ca4cc40038379a072869dcdbc7c81ba0faf537d561badf9071ddb405c10",
+      "current_sha256": "44b39ca4cc40038379a072869dcdbc7c81ba0faf537d561badf9071ddb405c10"
+    },
+    "agentloom-sdk/qa/evidence/mode-prompts-20261018/ruff-format.txt": {
+      "original_sha256": "203e93364cb1cadf2891085bdf0d28057864d4a8c3d6594de13ce367c1fc9272",
+      "current_sha256": "203e93364cb1cadf2891085bdf0d28057864d4a8c3d6594de13ce367c1fc9272"
+    },
+    "agentloom-sdk/qa/evidence/mode-prompts-20261018/ruff.txt": {
+      "original_sha256": "82b3e6a6c090a57601d22943bd23fca9218d1031dbe5a7b754092f9a156b4f18",
+      "current_sha256": "82b3e6a6c090a57601d22943bd23fca9218d1031dbe5a7b754092f9a156b4f18"
+    },
+    "agentloom-sdk/qa/evidence/mode-prompts-20261018/sleep-interruption.json": {
+      "original_sha256": "bf5afb97dc348401069c7f66b3e51b8c4bf429fa5ad404fa5a09190cbb5f274c",
+      "current_sha256": "bf5afb97dc348401069c7f66b3e51b8c4bf429fa5ad404fa5a09190cbb5f274c"
+    },
+    "agentloom-sdk/qa/evidence/mode-prompts-20261018/source-after.json": {
+      "original_sha256": "29b564bfe2db1ce0a9a54b1e5ea9308ba43c9bc84a5b134fe53d132d2b4ca26f",
+      "current_sha256": "29b564bfe2db1ce0a9a54b1e5ea9308ba43c9bc84a5b134fe53d132d2b4ca26f"
+    },
+    "agentloom-sdk/qa/evidence/mode-prompts-20261018/source-before.json": {
+      "original_sha256": "29b564bfe2db1ce0a9a54b1e5ea9308ba43c9bc84a5b134fe53d132d2b4ca26f",
+      "current_sha256": "29b564bfe2db1ce0a9a54b1e5ea9308ba43c9bc84a5b134fe53d132d2b4ca26f"
+    },
+    "agentloom-sdk/qa/evidence/mode-prompts-20261018/summary.json": {
+      "original_sha256": "8021a526d8018c47cef2d0343a469c2463a2e642ed56e40699413bbeeff1b9e8",
+      "current_sha256": "8021a526d8018c47cef2d0343a469c2463a2e642ed56e40699413bbeeff1b9e8"
+    },
+    "agentloom-sdk/qa/evidence/mode-prompts-20261018/wheel-build.txt": {
+      "original_sha256": "e96f4417586bdc1a4e85e936a6805bf3641465521e576c240e377d443304573d",
+      "current_sha256": "e96f4417586bdc1a4e85e936a6805bf3641465521e576c240e377d443304573d"
+    },
+    "agentloom-sdk/qa/evidence/mode-prompts-20261018/wheel-install.txt": {
+      "original_sha256": "df34831849cbcc00c21527d48f48d849afcb39b692b52b875db6af78070ef423",
+      "current_sha256": "df34831849cbcc00c21527d48f48d849afcb39b692b52b875db6af78070ef423"
+    },
+    "agentloom-sdk/qa/evidence/mode-prompts-20261018/wheel-shutdown-before_root.json": {
+      "original_sha256": "d4a9038eb246df65fc7e095a4d77e6642429ac983c196b058fc9cfc5cd88e3d7",
+      "current_sha256": "d4a9038eb246df65fc7e095a4d77e6642429ac983c196b058fc9cfc5cd88e3d7"
+    },
+    "agentloom-sdk/qa/evidence/mode-prompts-20261018/wheel-shutdown-resume.json": {
+      "original_sha256": "b9fd1d20a9c3be6d684697d9dc0305776389cc3cc1be286578fe04d70c6aaa2c",
+      "current_sha256": "b9fd1d20a9c3be6d684697d9dc0305776389cc3cc1be286578fe04d70c6aaa2c"
+    },
+    "agentloom-sdk/qa/evidence/mode-prompts-20261018/wheel-summary.json": {
+      "original_sha256": "2b11c689c1260d06c5df9cd964fa29e95604a971c5c27aae395d6bcc150b306c",
+      "current_sha256": "2b11c689c1260d06c5df9cd964fa29e95604a971c5c27aae395d6bcc150b306c"
+    },
+    "agentloom-sdk/qa/evidence/node-protocol-20261018/docs-build.txt": {
+      "original_sha256": "0d732477778611cb8e858774a8db9efc912e19343a21142483a3dc22fb56cf8f",
+      "current_sha256": "0d732477778611cb8e858774a8db9efc912e19343a21142483a3dc22fb56cf8f"
+    },
+    "agentloom-sdk/qa/evidence/node-protocol-20261018/docs-check.txt": {
+      "original_sha256": "783030ce3f04fa4345982cec5bd4489cf0e445c16b4e3d692fb42e8705ea88c8",
+      "current_sha256": "783030ce3f04fa4345982cec5bd4489cf0e445c16b4e3d692fb42e8705ea88c8"
+    },
+    "agentloom-sdk/qa/evidence/node-protocol-20261018/protocol-focused.txt": {
+      "original_sha256": "c91e9cfcd88d178ed6443dd7c628de2f2c357dd9459486b2beae05f783ac9281",
+      "current_sha256": "c91e9cfcd88d178ed6443dd7c628de2f2c357dd9459486b2beae05f783ac9281"
+    },
+    "agentloom-sdk/qa/evidence/node-protocol-20261018/regression-summary.json": {
+      "original_sha256": "99f5e72ae4887363a93876da8dee034b1c97ef30a9dd3232c65635c79b65c5bc",
+      "current_sha256": "99f5e72ae4887363a93876da8dee034b1c97ef30a9dd3232c65635c79b65c5bc"
+    },
+    "agentloom-sdk/qa/evidence/node-protocol-20261018/regression.junit.xml": {
+      "original_sha256": "5349550f763d33d7f857830ff48629394bf48fabccfd6a16c9428629f67aa521",
+      "current_sha256": "5349550f763d33d7f857830ff48629394bf48fabccfd6a16c9428629f67aa521"
+    },
+    "agentloom-sdk/qa/evidence/node-protocol-20261018/regression.txt": {
+      "original_sha256": "4ecfd98589ac6ce37c729fc4ba9953846291664e37b2073d8e4cc63a13a04553",
+      "current_sha256": "4ecfd98589ac6ce37c729fc4ba9953846291664e37b2073d8e4cc63a13a04553"
+    },
+    "agentloom-sdk/qa/evidence/node-protocol-20261018/round9.txt": {
+      "original_sha256": "18699a45266365457cae65e27328329dcfdd3e0e4c1acaac9f5ec73e156bd318",
+      "current_sha256": "18699a45266365457cae65e27328329dcfdd3e0e4c1acaac9f5ec73e156bd318"
+    },
+    "agentloom-sdk/qa/evidence/node-protocol-20261018/ruff-format.txt": {
+      "original_sha256": "d28901f31d98caab0a8c71639625b1e9b8fff7ad3d8191448678d7e0840a37f0",
+      "current_sha256": "d28901f31d98caab0a8c71639625b1e9b8fff7ad3d8191448678d7e0840a37f0"
+    },
+    "agentloom-sdk/qa/evidence/node-protocol-20261018/ruff-lint.txt": {
+      "original_sha256": "82b3e6a6c090a57601d22943bd23fca9218d1031dbe5a7b754092f9a156b4f18",
+      "current_sha256": "82b3e6a6c090a57601d22943bd23fca9218d1031dbe5a7b754092f9a156b4f18"
+    },
+    "agentloom-sdk/qa/evidence/node-protocol-20261018/source-after.json": {
+      "original_sha256": "b9a92d9360a909ba8fe22861bffe85dc0a9b00c7f64745da1876db31569625a7",
+      "current_sha256": "b9a92d9360a909ba8fe22861bffe85dc0a9b00c7f64745da1876db31569625a7"
+    },
+    "agentloom-sdk/qa/evidence/node-protocol-20261018/source-before.json": {
+      "original_sha256": "b9a92d9360a909ba8fe22861bffe85dc0a9b00c7f64745da1876db31569625a7",
+      "current_sha256": "b9a92d9360a909ba8fe22861bffe85dc0a9b00c7f64745da1876db31569625a7"
+    },
+    "agentloom-sdk/qa/evidence/node-protocol-20261018/wheel-build.txt": {
+      "original_sha256": "65f7620a49a6aa0aa96c756998fca7e2963e8d1ea7a6e2837c8f0f807c09709c",
+      "current_sha256": "65f7620a49a6aa0aa96c756998fca7e2963e8d1ea7a6e2837c8f0f807c09709c"
+    },
+    "agentloom-sdk/qa/evidence/node-protocol-20261018/wheel-install.txt": {
+      "original_sha256": "f9e32ffbdac70c7ae612e05a0cc042236ae3e60d7462db7279b7ef1586993bb8",
+      "current_sha256": "f9e32ffbdac70c7ae612e05a0cc042236ae3e60d7462db7279b7ef1586993bb8"
+    },
+    "agentloom-sdk/qa/evidence/node-protocol-20261018/wheel-resume.json": {
+      "original_sha256": "a4306006a71d7b195c36d3c86a3ae7b26b9a31613af4b9dbb90572e4a0dafba0",
+      "current_sha256": "a4306006a71d7b195c36d3c86a3ae7b26b9a31613af4b9dbb90572e4a0dafba0"
+    },
+    "agentloom-sdk/qa/evidence/node-protocol-20261018/wheel-smoke-script.txt": {
+      "original_sha256": "b01f95673118bed9d6edef74709e9b1dbddd1d526a4015fb35e1c3a708478793",
+      "current_sha256": "b01f95673118bed9d6edef74709e9b1dbddd1d526a4015fb35e1c3a708478793"
+    },
+    "agentloom-sdk/qa/evidence/node-protocol-20261018/wheel-start.json": {
+      "original_sha256": "cae1d47ee088452c9a20a2d18f0c64071da74fc3da274bd70a043a9bdbb4fda7",
+      "current_sha256": "cae1d47ee088452c9a20a2d18f0c64071da74fc3da274bd70a043a9bdbb4fda7"
+    },
+    "agentloom-sdk/qa/evidence/node-protocol-20261018/wheel-summary.json": {
+      "original_sha256": "253778dedeaf4971d9431611105ee4afb9db7d347376444f51cb8d304640939a",
+      "current_sha256": "253778dedeaf4971d9431611105ee4afb9db7d347376444f51cb8d304640939a"
+    },
+    "agentloom-sdk/qa/evidence/properties-config-20261017/docs-build.txt": {
+      "original_sha256": "4405d50f34c655729a553b24d35cfaf082ec5110e790d65a59d80a6138450d8d",
+      "current_sha256": "4405d50f34c655729a553b24d35cfaf082ec5110e790d65a59d80a6138450d8d"
+    },
+    "agentloom-sdk/qa/evidence/properties-config-20261017/docs-check-before-evidence.txt": {
+      "original_sha256": "a30db5955cc6bc771385a834ad07cbb372fdc49c579925bfc94ac359df858a71",
+      "current_sha256": "a30db5955cc6bc771385a834ad07cbb372fdc49c579925bfc94ac359df858a71"
+    },
+    "agentloom-sdk/qa/evidence/properties-config-20261017/docs-check.txt": {
+      "original_sha256": "df7c380e8f9e6ee9872a323ad319dc41855e57df0b76b0d2ffb7515c8aacb47f",
+      "current_sha256": "df7c380e8f9e6ee9872a323ad319dc41855e57df0b76b0d2ffb7515c8aacb47f"
+    },
+    "agentloom-sdk/qa/evidence/properties-config-20261017/regression.junit.xml": {
+      "original_sha256": "42982a6894f2d19e661f66f1914b651e963504787af245968368a0be45ecd819",
+      "current_sha256": "42982a6894f2d19e661f66f1914b651e963504787af245968368a0be45ecd819"
+    },
+    "agentloom-sdk/qa/evidence/properties-config-20261017/regression.txt": {
+      "original_sha256": "699e187d5a2296b383e39f5f84811fa1849d0a44878190a911c20b66b456898a",
+      "current_sha256": "699e187d5a2296b383e39f5f84811fa1849d0a44878190a911c20b66b456898a"
+    },
+    "agentloom-sdk/qa/evidence/properties-config-20261017/ruff-format.txt": {
+      "original_sha256": "0e25936f296d6783c9ed43fd68bade26a8911c0a0482012f92297f6a797443ff",
+      "current_sha256": "0e25936f296d6783c9ed43fd68bade26a8911c0a0482012f92297f6a797443ff"
+    },
+    "agentloom-sdk/qa/evidence/properties-config-20261017/ruff.txt": {
+      "original_sha256": "82b3e6a6c090a57601d22943bd23fca9218d1031dbe5a7b754092f9a156b4f18",
+      "current_sha256": "82b3e6a6c090a57601d22943bd23fca9218d1031dbe5a7b754092f9a156b4f18"
+    },
+    "agentloom-sdk/qa/evidence/properties-config-20261017/run-source-sha256.json": {
+      "original_sha256": "236fa633a8f442fc06acf452556afd896826c6ab3671fe489ec5387c71ed092d",
+      "current_sha256": "236fa633a8f442fc06acf452556afd896826c6ab3671fe489ec5387c71ed092d"
+    },
+    "agentloom-sdk/qa/evidence/properties-config-20261017/smoke-first.json": {
+      "original_sha256": "d2fe5020cc4c1cc0f9dac289b280acab4b9883673e5b58db535b5cb32fc9f3c7",
+      "current_sha256": "d2fe5020cc4c1cc0f9dac289b280acab4b9883673e5b58db535b5cb32fc9f3c7"
+    },
+    "agentloom-sdk/qa/evidence/properties-config-20261017/smoke-second.json": {
+      "original_sha256": "0f1e1f4898da1b2b01cbacbfbee0c8512d17888e9ee962eb8195ac57c5313bce",
+      "current_sha256": "0f1e1f4898da1b2b01cbacbfbee0c8512d17888e9ee962eb8195ac57c5313bce"
+    },
+    "agentloom-sdk/qa/evidence/properties-config-20261017/summary.json": {
+      "original_sha256": "b30b9bd7c0fce56a08353c50d201e97ca686bb3fece7e5c275c14aeeaa847faf",
+      "current_sha256": "b30b9bd7c0fce56a08353c50d201e97ca686bb3fece7e5c275c14aeeaa847faf"
+    },
+    "agentloom-sdk/qa/evidence/properties-config-20261017/wheel-contents.json": {
+      "original_sha256": "6bf9a012b31026852a0414045b22dc2c410f551470016ff34975c6b7acc311fb",
+      "current_sha256": "6bf9a012b31026852a0414045b22dc2c410f551470016ff34975c6b7acc311fb"
+    },
+    "agentloom-sdk/qa/evidence/properties-config-20261017/wheel-install.txt": {
+      "original_sha256": "95900c902966cc4643aa7916510ef395af2cf736b73e3a8c30db9d4362bb2766",
+      "current_sha256": "95900c902966cc4643aa7916510ef395af2cf736b73e3a8c30db9d4362bb2766"
+    },
+    "agentloom-sdk/qa/evidence/properties-config-20261017/wheel-smoke-source.txt": {
+      "original_sha256": "61a3488189fcd9611d3169f07e2aeba1987d4386ffab110b391db40e86f04370",
+      "current_sha256": "61a3488189fcd9611d3169f07e2aeba1987d4386ffab110b391db40e86f04370"
+    },
+    "agentloom-sdk/qa/evidence/properties-config-20261017/wheel.txt": {
+      "original_sha256": "3ac166eaeb6b20dbc2c8bf67cb010cd681d85b34ae2d5bdacfdb3f82f28c0340",
+      "current_sha256": "3ac166eaeb6b20dbc2c8bf67cb010cd681d85b34ae2d5bdacfdb3f82f28c0340"
+    },
+    "agentloom-sdk/qa/evidence/recovery-contracts-20261018/baseline.junit.xml": {
+      "original_sha256": "10a7071f81d1a85db935d3e1463ca5afcce13389d7260178718482232826d30a",
+      "current_sha256": "10a7071f81d1a85db935d3e1463ca5afcce13389d7260178718482232826d30a"
+    },
+    "agentloom-sdk/qa/evidence/recovery-contracts-20261018/baseline.txt": {
+      "original_sha256": "f550149b5db742f77ccff3bc7ef6f4c4faa7f37ccc817081b3c27f738887653a",
+      "current_sha256": "f550149b5db742f77ccff3bc7ef6f4c4faa7f37ccc817081b3c27f738887653a"
+    },
+    "agentloom-sdk/qa/evidence/recovery-contracts-20261018/before-legacy-integral-default-check-focused.junit.xml": {
+      "original_sha256": "2e51f0d45f8845a3b8de4c1f8020b9cf5fde2e17d89febfb940f0560798039df",
+      "current_sha256": "2e51f0d45f8845a3b8de4c1f8020b9cf5fde2e17d89febfb940f0560798039df"
+    },
+    "agentloom-sdk/qa/evidence/recovery-contracts-20261018/before-legacy-integral-default-check-focused.txt": {
+      "original_sha256": "ec151f216f25198f7c52e72c9e55bf4be56b5bc5810699a5f58fae18fb63fadf",
+      "current_sha256": "ec151f216f25198f7c52e72c9e55bf4be56b5bc5810699a5f58fae18fb63fadf"
+    },
+    "agentloom-sdk/qa/evidence/recovery-contracts-20261018/before-model-fixture-correction-baseline.junit.xml": {
+      "original_sha256": "9ea74b4cbbaefec5e535f06c0308a3291eaeaefa30226d0aec9b53df997e4e72",
+      "current_sha256": "9ea74b4cbbaefec5e535f06c0308a3291eaeaefa30226d0aec9b53df997e4e72"
+    },
+    "agentloom-sdk/qa/evidence/recovery-contracts-20261018/before-model-fixture-correction-baseline.txt": {
+      "original_sha256": "c3daf8c2f2d5f8d021c4d709aa62652ddc25b80738705416dd9d792d8d8fa3a3",
+      "current_sha256": "c3daf8c2f2d5f8d021c4d709aa62652ddc25b80738705416dd9d792d8d8fa3a3"
+    },
+    "agentloom-sdk/qa/evidence/recovery-contracts-20261018/before-model-fixture-correction-focused.junit.xml": {
+      "original_sha256": "ab71dda15c1286e57e01462ca7a936a1e0a96bda8606fff7a1963cdb01ea52fc",
+      "current_sha256": "ab71dda15c1286e57e01462ca7a936a1e0a96bda8606fff7a1963cdb01ea52fc"
+    },
+    "agentloom-sdk/qa/evidence/recovery-contracts-20261018/before-model-fixture-correction-focused.txt": {
+      "original_sha256": "0b5283aa37db81297b2cc9245d04fe3b0ad495472a0bbfafef29d68a36592388",
+      "current_sha256": "0b5283aa37db81297b2cc9245d04fe3b0ad495472a0bbfafef29d68a36592388"
+    },
+    "agentloom-sdk/qa/evidence/recovery-contracts-20261018/diff-check.txt": {
+      "original_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "current_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "agentloom-sdk/qa/evidence/recovery-contracts-20261018/docs-build.txt": {
+      "original_sha256": "6f8097c3a1e45c4e94586ff55eaaeaa6b84e62db1292b267d0c515ba6232c961",
+      "current_sha256": "6f8097c3a1e45c4e94586ff55eaaeaa6b84e62db1292b267d0c515ba6232c961"
+    },
+    "agentloom-sdk/qa/evidence/recovery-contracts-20261018/docs-check.txt": {
+      "original_sha256": "5fd780c6ca567044b75ac4d322d8168481b3ec9b2b873924c420b86bb331ec87",
+      "current_sha256": "5fd780c6ca567044b75ac4d322d8168481b3ec9b2b873924c420b86bb331ec87"
+    },
+    "agentloom-sdk/qa/evidence/recovery-contracts-20261018/focused.junit.xml": {
+      "original_sha256": "41aedd82d1d2334226078c0f72ec31c8bbf4340123dc1493ebb398549a885304",
+      "current_sha256": "41aedd82d1d2334226078c0f72ec31c8bbf4340123dc1493ebb398549a885304"
+    },
+    "agentloom-sdk/qa/evidence/recovery-contracts-20261018/focused.txt": {
+      "original_sha256": "7dc40e554bc4219ead98f14056bfcc29657e015a7e6a4a3404b8cdd2b1ed89af",
+      "current_sha256": "7dc40e554bc4219ead98f14056bfcc29657e015a7e6a4a3404b8cdd2b1ed89af"
+    },
+    "agentloom-sdk/qa/evidence/recovery-contracts-20261018/implementation.diff": {
+      "original_sha256": "5c836225133fb78ba3bd623143c2fea2055ae50a5df3836915a0f954a03aee14",
+      "current_sha256": "5c836225133fb78ba3bd623143c2fea2055ae50a5df3836915a0f954a03aee14"
+    },
+    "agentloom-sdk/qa/evidence/recovery-contracts-20261018/legacy-source.json": {
+      "original_sha256": "3881279c25bf961895d94827a4b91ec480d30fe693daf47189ccdffead9abf95",
+      "current_sha256": "3881279c25bf961895d94827a4b91ec480d30fe693daf47189ccdffead9abf95"
+    },
+    "agentloom-sdk/qa/evidence/recovery-contracts-20261018/other-work-check.json": {
+      "original_sha256": "3aecd1f656290572f4926ca345dc206c77a5de5479b9e933fb3bc3238b43e186",
+      "current_sha256": "3aecd1f656290572f4926ca345dc206c77a5de5479b9e933fb3bc3238b43e186"
+    },
+    "agentloom-sdk/qa/evidence/recovery-contracts-20261018/regression-command.json": {
+      "original_sha256": "c711a54b0a221af54d3d4886f5111133ed16a8c8de11e4deb5e853c7d0debebe",
+      "current_sha256": "c711a54b0a221af54d3d4886f5111133ed16a8c8de11e4deb5e853c7d0debebe"
+    },
+    "agentloom-sdk/qa/evidence/recovery-contracts-20261018/regression-source-after.json": {
+      "original_sha256": "f6911f0d5e95db543289f0d540709e33e241aeb3bfa58c2b68a83902cd3f3326",
+      "current_sha256": "f6911f0d5e95db543289f0d540709e33e241aeb3bfa58c2b68a83902cd3f3326"
+    },
+    "agentloom-sdk/qa/evidence/recovery-contracts-20261018/regression-source-before.json": {
+      "original_sha256": "f6911f0d5e95db543289f0d540709e33e241aeb3bfa58c2b68a83902cd3f3326",
+      "current_sha256": "f6911f0d5e95db543289f0d540709e33e241aeb3bfa58c2b68a83902cd3f3326"
+    },
+    "agentloom-sdk/qa/evidence/recovery-contracts-20261018/regression-summary.json": {
+      "original_sha256": "486b1104f628b92b2331c856787f25cb0736da546d1ec86885d0ea2029533fc4",
+      "current_sha256": "486b1104f628b92b2331c856787f25cb0736da546d1ec86885d0ea2029533fc4"
+    },
+    "agentloom-sdk/qa/evidence/recovery-contracts-20261018/regression.junit.xml": {
+      "original_sha256": "7e1de4627a1f3cc3ac4a00dd95f900131c1da1c1337fc62e55c42fe26a8e4b58",
+      "current_sha256": "7e1de4627a1f3cc3ac4a00dd95f900131c1da1c1337fc62e55c42fe26a8e4b58"
+    },
+    "agentloom-sdk/qa/evidence/recovery-contracts-20261018/regression.txt": {
+      "original_sha256": "a178d9f4f02f643b739ee3595ccdcd0bfe424ebceaadaea0437282f8ffea49f6",
+      "current_sha256": "a178d9f4f02f643b739ee3595ccdcd0bfe424ebceaadaea0437282f8ffea49f6"
+    },
+    "agentloom-sdk/qa/evidence/recovery-contracts-20261018/ruff-format.txt": {
+      "original_sha256": "5eb321ace635f2f7f88ff00ff35f3534395bcbf69b5657bc6e720088152637b7",
+      "current_sha256": "5eb321ace635f2f7f88ff00ff35f3534395bcbf69b5657bc6e720088152637b7"
+    },
+    "agentloom-sdk/qa/evidence/recovery-contracts-20261018/ruff.txt": {
+      "original_sha256": "82b3e6a6c090a57601d22943bd23fca9218d1031dbe5a7b754092f9a156b4f18",
+      "current_sha256": "82b3e6a6c090a57601d22943bd23fca9218d1031dbe5a7b754092f9a156b4f18"
+    },
+    "agentloom-sdk/qa/evidence/recovery-contracts-20261018/summary.json": {
+      "original_sha256": "1541259210b58981b9599c2fd52dae7a8b2148140ad06ae3569616363485ec0a",
+      "current_sha256": "1541259210b58981b9599c2fd52dae7a8b2148140ad06ae3569616363485ec0a"
+    },
+    "agentloom-sdk/qa/evidence/recovery-contracts-20261018/wheel-build.txt": {
+      "original_sha256": "ce05a94563dfdbb9395a4e95d7a497afce59267a1d4936d1f6b1b4d2dd1f5496",
+      "current_sha256": "ce05a94563dfdbb9395a4e95d7a497afce59267a1d4936d1f6b1b4d2dd1f5496"
+    },
+    "agentloom-sdk/qa/evidence/recovery-contracts-20261018/wheel-install.txt": {
+      "original_sha256": "2474cc86bec158b029225c4b522c57e8befc1bb82d765c4ce0bfa96975adc323",
+      "current_sha256": "2474cc86bec158b029225c4b522c57e8befc1bb82d765c4ce0bfa96975adc323"
+    },
+    "agentloom-sdk/qa/evidence/recovery-contracts-20261018/wheel-summary.json": {
+      "original_sha256": "bbfdefe9e66609fb486c1754e214dcb04527f3c477748b35e75b00cad4975b58",
+      "current_sha256": "bbfdefe9e66609fb486c1754e214dcb04527f3c477748b35e75b00cad4975b58"
+    },
+    "agentloom-sdk/qa/evidence/recovery-contracts-20261018/workspace-before.json": {
+      "original_sha256": "f882492a68a2edfbe92c75918c43b4fbfcb4ad5b3ab17bfd42deaf9e5b844837",
+      "current_sha256": "f882492a68a2edfbe92c75918c43b4fbfcb4ad5b3ab17bfd42deaf9e5b844837"
+    },
+    "agentloom-sdk/qa/evidence/recovery-fixes-20261017/docs-build.txt": {
+      "original_sha256": "875450946a28918d0c5c15d34b2c88522e41cf2f235a85e35468b046319a7292",
+      "current_sha256": "875450946a28918d0c5c15d34b2c88522e41cf2f235a85e35468b046319a7292"
+    },
+    "agentloom-sdk/qa/evidence/recovery-fixes-20261017/docs-check.txt": {
+      "original_sha256": "b9246b813731197c261ce40940806400f8fb7835e54e599713da436b6b11a3dc",
+      "current_sha256": "b9246b813731197c261ce40940806400f8fb7835e54e599713da436b6b11a3dc"
+    },
+    "agentloom-sdk/qa/evidence/recovery-fixes-20261017/legacy.junit.xml": {
+      "original_sha256": "b4d7706ec3897ac2fe187ac4220f412a594346b1245fd2f5513a59c3c83cf66d",
+      "current_sha256": "b4d7706ec3897ac2fe187ac4220f412a594346b1245fd2f5513a59c3c83cf66d"
+    },
+    "agentloom-sdk/qa/evidence/recovery-fixes-20261017/legacy.txt": {
+      "original_sha256": "4d2de78644b0046a779ecf83726578b7f7bbe69ce9f7ffbebd9a9890957c415d",
+      "current_sha256": "4d2de78644b0046a779ecf83726578b7f7bbe69ce9f7ffbebd9a9890957c415d"
+    },
+    "agentloom-sdk/qa/evidence/recovery-fixes-20261017/regression.junit.xml": {
+      "original_sha256": "092afe4960dea2e36192003166dafa2c8ab73d30f3a4f31a2f70ba2e031fbe99",
+      "current_sha256": "092afe4960dea2e36192003166dafa2c8ab73d30f3a4f31a2f70ba2e031fbe99"
+    },
+    "agentloom-sdk/qa/evidence/recovery-fixes-20261017/regression.txt": {
+      "original_sha256": "3da64d1ceb1f53bf178febbb0d3cf1e70d0b38ba07a25ac0b9a3046e416b2571",
+      "current_sha256": "3da64d1ceb1f53bf178febbb0d3cf1e70d0b38ba07a25ac0b9a3046e416b2571"
+    },
+    "agentloom-sdk/qa/evidence/recovery-fixes-20261017/review-probes.junit.xml": {
+      "original_sha256": "1fa8f92c869b0c279e6ae1ed27d1caa9ceab116a341a4332fb1dc24765d5028c",
+      "current_sha256": "1fa8f92c869b0c279e6ae1ed27d1caa9ceab116a341a4332fb1dc24765d5028c"
+    },
+    "agentloom-sdk/qa/evidence/recovery-fixes-20261017/review-probes.txt": {
+      "original_sha256": "cf6e61b06775687a58905913a4741ffb575e9f9b72a8d9e395d3573b61300b90",
+      "current_sha256": "cf6e61b06775687a58905913a4741ffb575e9f9b72a8d9e395d3573b61300b90"
+    },
+    "agentloom-sdk/qa/evidence/recovery-fixes-20261017/ruff-format.txt": {
+      "original_sha256": "54073445325370522f5e8514f811bc815389f5402f1e4358dc9ec12dc81a0a61",
+      "current_sha256": "54073445325370522f5e8514f811bc815389f5402f1e4358dc9ec12dc81a0a61"
+    },
+    "agentloom-sdk/qa/evidence/recovery-fixes-20261017/ruff.txt": {
+      "original_sha256": "82b3e6a6c090a57601d22943bd23fca9218d1031dbe5a7b754092f9a156b4f18",
+      "current_sha256": "82b3e6a6c090a57601d22943bd23fca9218d1031dbe5a7b754092f9a156b4f18"
+    },
+    "agentloom-sdk/qa/evidence/recovery-fixes-20261017/smoke-first.json": {
+      "original_sha256": "0f0b915893a5291dedf0eba914275859fec5b4f08c75f4eecb6c99fcbe0b9711",
+      "current_sha256": "0f0b915893a5291dedf0eba914275859fec5b4f08c75f4eecb6c99fcbe0b9711"
+    },
+    "agentloom-sdk/qa/evidence/recovery-fixes-20261017/smoke-second.json": {
+      "original_sha256": "03908cb4244d545faf77b44f327f7d73948c6dbf106dfd26daf75448e85279bc",
+      "current_sha256": "03908cb4244d545faf77b44f327f7d73948c6dbf106dfd26daf75448e85279bc"
+    },
+    "agentloom-sdk/qa/evidence/recovery-fixes-20261017/summary.json": {
+      "original_sha256": "48217aea3e0a2c3a66c65d8efb3f5b168eb2f64521b08e363c6ee46b3656209d",
+      "current_sha256": "48217aea3e0a2c3a66c65d8efb3f5b168eb2f64521b08e363c6ee46b3656209d"
+    },
+    "agentloom-sdk/qa/evidence/recovery-fixes-20261017/wheel-contents.json": {
+      "original_sha256": "fd7385aca4e19e58839101bef7f4222535a9f1e66347a4f2d44a09a964ac94ee",
+      "current_sha256": "fd7385aca4e19e58839101bef7f4222535a9f1e66347a4f2d44a09a964ac94ee"
+    },
+    "agentloom-sdk/qa/evidence/recovery-fixes-20261017/wheel-install.txt": {
+      "original_sha256": "db06c192dfa2f82564ded26d4ccbd3b805775a67d33a89881e331c7a4a43cef3",
+      "current_sha256": "db06c192dfa2f82564ded26d4ccbd3b805775a67d33a89881e331c7a4a43cef3"
+    },
+    "agentloom-sdk/qa/evidence/recovery-fixes-20261017/wheel.txt": {
+      "original_sha256": "5c97c4e7e38c8347af0df91843fb53d65d9b31bedea29055952e4818d209f0d0",
+      "current_sha256": "5c97c4e7e38c8347af0df91843fb53d65d9b31bedea29055952e4818d209f0d0"
+    },
+    "agentloom-sdk/qa/evidence/review-220ebd4/before-empty-usage.junit.xml": {
+      "original_sha256": "e5d10d87b4a45ddff1f655b500eeb133c8274a6f814665b4bd5874bddb124186",
+      "current_sha256": "e5d10d87b4a45ddff1f655b500eeb133c8274a6f814665b4bd5874bddb124186"
+    },
+    "agentloom-sdk/qa/evidence/review-220ebd4/before-empty-usage.txt": {
+      "original_sha256": "bb80904471c4ff0e792bb46566ca376a4e0d4963de383ee21a2eb8efa8264490",
+      "current_sha256": "bb80904471c4ff0e792bb46566ca376a4e0d4963de383ee21a2eb8efa8264490"
+    },
+    "agentloom-sdk/qa/evidence/review-220ebd4/followup.junit.xml": {
+      "original_sha256": "0dd3782c221c816d1fdbdc731e702f9f1a59abadde82edb66fced819aaf9934d",
+      "current_sha256": "0dd3782c221c816d1fdbdc731e702f9f1a59abadde82edb66fced819aaf9934d"
+    },
+    "agentloom-sdk/qa/evidence/review-220ebd4/followup.txt": {
+      "original_sha256": "0645a42ff1a44ca49102ff8605b90ab35f739be24187cd68bb7eca3b2da76c3b",
+      "current_sha256": "0645a42ff1a44ca49102ff8605b90ab35f739be24187cd68bb7eca3b2da76c3b"
+    },
+    "agentloom-sdk/qa/evidence/review-220ebd4/regression.junit.xml": {
+      "original_sha256": "247944de7a511b41b3f284995ca77ede8ffca8591f92d23ab6fc116385f12353",
+      "current_sha256": "247944de7a511b41b3f284995ca77ede8ffca8591f92d23ab6fc116385f12353"
+    },
+    "agentloom-sdk/qa/evidence/review-220ebd4/regression.txt": {
+      "original_sha256": "d68eb7d29ca14a61d98df32c1d5e20445cbdd1ab16d74834c0b961d5dc254fe8",
+      "current_sha256": "d68eb7d29ca14a61d98df32c1d5e20445cbdd1ab16d74834c0b961d5dc254fe8"
+    },
+    "agentloom-sdk/qa/evidence/review-220ebd4/ruff-format.txt": {
+      "original_sha256": "0e8875b6c474ca3639d7a7112ea95c546141b46dca674c9c33d3e55821b32afe",
+      "current_sha256": "0e8875b6c474ca3639d7a7112ea95c546141b46dca674c9c33d3e55821b32afe"
+    },
+    "agentloom-sdk/qa/evidence/review-220ebd4/ruff.txt": {
+      "original_sha256": "82b3e6a6c090a57601d22943bd23fca9218d1031dbe5a7b754092f9a156b4f18",
+      "current_sha256": "82b3e6a6c090a57601d22943bd23fca9218d1031dbe5a7b754092f9a156b4f18"
+    },
+    "agentloom-sdk/qa/evidence/review-220ebd4/summary.json": {
+      "original_sha256": "3820f898815e0617d45bccbe0347eddb6fdc7e65eabf6992301cf23bcef30e77",
+      "current_sha256": "3820f898815e0617d45bccbe0347eddb6fdc7e65eabf6992301cf23bcef30e77"
+    },
+    "agentloom-sdk/qa/evidence/review-84b3355-round3/boundaries.junit.xml": {
+      "original_sha256": "a89b1fcb215f2177187680e568da3bb595df41ad1e1d09d85284c259019b4529",
+      "current_sha256": "a89b1fcb215f2177187680e568da3bb595df41ad1e1d09d85284c259019b4529"
+    },
+    "agentloom-sdk/qa/evidence/review-84b3355-round3/boundaries.txt": {
+      "original_sha256": "68514e044d9a514992c73e50cf69ac6895f118e6017048a9ac22b9e54883394a",
+      "current_sha256": "68514e044d9a514992c73e50cf69ac6895f118e6017048a9ac22b9e54883394a"
+    },
+    "agentloom-sdk/qa/evidence/review-84b3355-round3/regression.junit.xml": {
+      "original_sha256": "ee3b4cddad9f36d854a39cef93b3a7dd23ff20221cf64dd868299e04c89493ed",
+      "current_sha256": "ee3b4cddad9f36d854a39cef93b3a7dd23ff20221cf64dd868299e04c89493ed"
+    },
+    "agentloom-sdk/qa/evidence/review-84b3355-round3/regression.txt": {
+      "original_sha256": "bc12083f8aea81c56083530863f920344cfc52ca3082e19bf5e4447199a38fcb",
+      "current_sha256": "bc12083f8aea81c56083530863f920344cfc52ca3082e19bf5e4447199a38fcb"
+    },
+    "agentloom-sdk/qa/evidence/review-84b3355-round3/ruff-check.txt": {
+      "original_sha256": "82b3e6a6c090a57601d22943bd23fca9218d1031dbe5a7b754092f9a156b4f18",
+      "current_sha256": "82b3e6a6c090a57601d22943bd23fca9218d1031dbe5a7b754092f9a156b4f18"
+    },
+    "agentloom-sdk/qa/evidence/review-84b3355-round3/ruff-format.txt": {
+      "original_sha256": "2fcba2071ad461b6c9a1655f5f7af639c36f5ea07efd65ca7e56a9a0fa53b912",
+      "current_sha256": "2fcba2071ad461b6c9a1655f5f7af639c36f5ea07efd65ca7e56a9a0fa53b912"
+    },
+    "agentloom-sdk/qa/evidence/review-84b3355-round3/source-after.json": {
+      "original_sha256": "c02ff02b51801556bbfcab71165eebc68153cd1c2d3ab9edcb19f61bd4b1453c",
+      "current_sha256": "c02ff02b51801556bbfcab71165eebc68153cd1c2d3ab9edcb19f61bd4b1453c"
+    },
+    "agentloom-sdk/qa/evidence/review-84b3355-round3/source-before.json": {
+      "original_sha256": "77f0bcd2caff3e0b8d040c9afc48a140de252f17e5bf0c44b20205537039d56f",
+      "current_sha256": "77f0bcd2caff3e0b8d040c9afc48a140de252f17e5bf0c44b20205537039d56f"
+    },
+    "agentloom-sdk/qa/evidence/review-84b3355-round3/summary.json": {
+      "original_sha256": "7df1e6672c4574b9bb409eabc36ff5b795f0bbbb54e20bf72d857e015d633c0e",
+      "current_sha256": "7df1e6672c4574b9bb409eabc36ff5b795f0bbbb54e20bf72d857e015d633c0e"
+    },
+    "agentloom-sdk/qa/evidence/review-round10-20261019/audit-after.json": {
+      "original_sha256": "b7baee6082f30070c284307061d7445b93cee229b3728e1853bd157f506916f5",
+      "current_sha256": "b7baee6082f30070c284307061d7445b93cee229b3728e1853bd157f506916f5"
+    },
+    "agentloom-sdk/qa/evidence/review-round10-20261019/audit-before.json": {
+      "original_sha256": "5aa3ed1ee5354e6df9d977860eb98b94121669ab2e2ce3d66ad9e3f9611a7307",
+      "current_sha256": "5aa3ed1ee5354e6df9d977860eb98b94121669ab2e2ce3d66ad9e3f9611a7307"
+    },
+    "agentloom-sdk/qa/evidence/review-round10-20261019/baseline-check.txt": {
+      "original_sha256": "96eacfe616a7b6eb6cf079a5cc411bc19369ab85009b3392b7961d10d41c87a8",
+      "current_sha256": "96eacfe616a7b6eb6cf079a5cc411bc19369ab85009b3392b7961d10d41c87a8"
+    },
+    "agentloom-sdk/qa/evidence/review-round10-20261019/junit-incremental.xml": {
+      "original_sha256": "d9be035ea08c877ee99be95221ff982050ffcfcb340535a9fe1b638ad608dae7",
+      "current_sha256": "d9be035ea08c877ee99be95221ff982050ffcfcb340535a9fe1b638ad608dae7"
+    },
+    "agentloom-sdk/qa/evidence/review-round10-20261019/junit-initial.xml": {
+      "original_sha256": "53c665fe1cf04d9877288914a697fb268a5baa3427bcbfcf1fceeda049173655",
+      "current_sha256": "53c665fe1cf04d9877288914a697fb268a5baa3427bcbfcf1fceeda049173655"
+    },
+    "agentloom-sdk/qa/evidence/review-round10-20261019/junit.xml": {
+      "original_sha256": "36c79f5ef8d9493d8dfa0cbda5713766146cd64fef02f983b10941e9b56c4727",
+      "current_sha256": "36c79f5ef8d9493d8dfa0cbda5713766146cd64fef02f983b10941e9b56c4727"
+    },
+    "agentloom-sdk/qa/evidence/review-round10-20261019/lint.txt": {
+      "original_sha256": "82b3e6a6c090a57601d22943bd23fca9218d1031dbe5a7b754092f9a156b4f18",
+      "current_sha256": "82b3e6a6c090a57601d22943bd23fca9218d1031dbe5a7b754092f9a156b4f18"
+    },
+    "agentloom-sdk/qa/evidence/review-round10-20261019/pytest-incremental.log": {
+      "original_sha256": "c6f1c5cdc0b1ea651c21fe0e5844761a5fdd5ae07eb55c3f8f43a8f09a455e2b",
+      "current_sha256": "c6f1c5cdc0b1ea651c21fe0e5844761a5fdd5ae07eb55c3f8f43a8f09a455e2b"
+    },
+    "agentloom-sdk/qa/evidence/review-round10-20261019/pytest-initial.log": {
+      "original_sha256": "3f7fa31adbab079405d2269c208d5891d97847778b8340af0c00ec4e08a86a41",
+      "current_sha256": "3f7fa31adbab079405d2269c208d5891d97847778b8340af0c00ec4e08a86a41"
+    },
+    "agentloom-sdk/qa/evidence/review-round10-20261019/pytest.log": {
+      "original_sha256": "26edb6a71503b117dca3196399dd40c49a160639bfd2679402b5e6d3bd7229c5",
+      "current_sha256": "26edb6a71503b117dca3196399dd40c49a160639bfd2679402b5e6d3bd7229c5"
+    },
+    "agentloom-sdk/qa/evidence/review-round10-20261019/reviewed-diff-stat.txt": {
+      "original_sha256": "4cdde27d624dbf0951ea34e6b6d61483db428cb4f3337d77330323fba42751e4",
+      "current_sha256": "4cdde27d624dbf0951ea34e6b6d61483db428cb4f3337d77330323fba42751e4"
+    },
+    "agentloom-sdk/qa/evidence/review-round10-20261019/run-incremental.json": {
+      "original_sha256": "10c3da6ce2b9a96d1b2fb21b416a5d016c4cff54589442446d80c5d570ccc67f",
+      "current_sha256": "10c3da6ce2b9a96d1b2fb21b416a5d016c4cff54589442446d80c5d570ccc67f"
+    },
+    "agentloom-sdk/qa/evidence/review-round10-20261019/run-initial.json": {
+      "original_sha256": "93ea338243d6da102fda37a6b86437d246a68a92b8ebd235335867e8fc608eca",
+      "current_sha256": "93ea338243d6da102fda37a6b86437d246a68a92b8ebd235335867e8fc608eca"
+    },
+    "agentloom-sdk/qa/evidence/review-round10-20261019/run.json": {
+      "original_sha256": "d2c3f9966723289eda2f8e04e06ae98cf9dba308098e7463f425f46d6dd304f1",
+      "current_sha256": "d2c3f9966723289eda2f8e04e06ae98cf9dba308098e7463f425f46d6dd304f1"
+    },
+    "agentloom-sdk/qa/evidence/review-round10-20261019/summary.json": {
+      "original_sha256": "a827487323decc5811717a89a046cd26d6aa7a24488922c65a47084fab1c7bfc",
+      "current_sha256": "a827487323decc5811717a89a046cd26d6aa7a24488922c65a47084fab1c7bfc"
+    },
+    "agentloom-sdk/qa/evidence/review-round4-20261017/boundaries.junit.xml": {
+      "original_sha256": "cdcba10ac5d2b382a0212eab083bc5931abbf1bda4b7afa1816e22b3ee5cbb38",
+      "current_sha256": "cdcba10ac5d2b382a0212eab083bc5931abbf1bda4b7afa1816e22b3ee5cbb38"
+    },
+    "agentloom-sdk/qa/evidence/review-round4-20261017/boundaries.txt": {
+      "original_sha256": "a69e733821aa3828e6e72684367a18a0852673481202cec7ca895b03eeb5ad0a",
+      "current_sha256": "a69e733821aa3828e6e72684367a18a0852673481202cec7ca895b03eeb5ad0a"
+    },
+    "agentloom-sdk/qa/evidence/review-round4-20261017/regression.junit.xml": {
+      "original_sha256": "bea97455cfe98f2b8300cfb673c05675469fdda7bdc731209c8fbb3a921a2588",
+      "current_sha256": "bea97455cfe98f2b8300cfb673c05675469fdda7bdc731209c8fbb3a921a2588"
+    },
+    "agentloom-sdk/qa/evidence/review-round4-20261017/regression.txt": {
+      "original_sha256": "5331ad37e74ad31ae66383c646502a167e961c1c930797c16774cc0e33376d52",
+      "current_sha256": "5331ad37e74ad31ae66383c646502a167e961c1c930797c16774cc0e33376d52"
+    },
+    "agentloom-sdk/qa/evidence/review-round4-20261017/reviewed-source.diff": {
+      "original_sha256": "63d041fffaafba739c801ec5781c051f9160a10d6ce65741188adf5c2f6ba80f",
+      "current_sha256": "63d041fffaafba739c801ec5781c051f9160a10d6ce65741188adf5c2f6ba80f"
+    },
+    "agentloom-sdk/qa/evidence/review-round4-20261017/ruff-check.txt": {
+      "original_sha256": "82b3e6a6c090a57601d22943bd23fca9218d1031dbe5a7b754092f9a156b4f18",
+      "current_sha256": "82b3e6a6c090a57601d22943bd23fca9218d1031dbe5a7b754092f9a156b4f18"
+    },
+    "agentloom-sdk/qa/evidence/review-round4-20261017/ruff-format.txt": {
+      "original_sha256": "376c98847555bc08e6d0e81fe12f18c2e0f80f00d2279bb463c6b7c5f3d666c1",
+      "current_sha256": "376c98847555bc08e6d0e81fe12f18c2e0f80f00d2279bb463c6b7c5f3d666c1"
+    },
+    "agentloom-sdk/qa/evidence/review-round4-20261017/source-after.json": {
+      "original_sha256": "6146aa5a162462a45f54231896c46c2e52308c93e04badef3ff40999996f6065",
+      "current_sha256": "6146aa5a162462a45f54231896c46c2e52308c93e04badef3ff40999996f6065"
+    },
+    "agentloom-sdk/qa/evidence/review-round4-20261017/source-before.json": {
+      "original_sha256": "ccf6d6631f50a88910fac6aa479e4772b4871e6d2175ed5109fd7b90867f2ccc",
+      "current_sha256": "ccf6d6631f50a88910fac6aa479e4772b4871e6d2175ed5109fd7b90867f2ccc"
+    },
+    "agentloom-sdk/qa/evidence/review-round4-20261017/source-delivery.json": {
+      "original_sha256": "812b3aee1cb8bf910f862ce064d6b067d1d9b57db942626e8605bd6f65b227fb",
+      "current_sha256": "812b3aee1cb8bf910f862ce064d6b067d1d9b57db942626e8605bd6f65b227fb"
+    },
+    "agentloom-sdk/qa/evidence/review-round4-20261017/summary.json": {
+      "original_sha256": "c75dd902eaa9dec79c34bfac5ee92f34f9637249cc0a36811c80fe75f3917ccc",
+      "current_sha256": "c75dd902eaa9dec79c34bfac5ee92f34f9637249cc0a36811c80fe75f3917ccc"
+    },
+    "agentloom-sdk/qa/evidence/review-round5-20261017/boundaries.junit.xml": {
+      "original_sha256": "898e66c035c32350904fc0c07a6790f8dbdea810670dbb200a3469faf44076e6",
+      "current_sha256": "898e66c035c32350904fc0c07a6790f8dbdea810670dbb200a3469faf44076e6"
+    },
+    "agentloom-sdk/qa/evidence/review-round5-20261017/boundaries.txt": {
+      "original_sha256": "1d625c206f7c72c85ff35c869628df907130da296f0cafc4a405cb5804c0ca39",
+      "current_sha256": "1d625c206f7c72c85ff35c869628df907130da296f0cafc4a405cb5804c0ca39"
+    },
+    "agentloom-sdk/qa/evidence/review-round5-20261017/environment.json": {
+      "original_sha256": "2cbfd68df04c8b01180f4f1268a0b3a6b66b61e0fda5ada5bf0b15b654cedd56",
+      "current_sha256": "2cbfd68df04c8b01180f4f1268a0b3a6b66b61e0fda5ada5bf0b15b654cedd56"
+    },
+    "agentloom-sdk/qa/evidence/review-round5-20261017/recovery-probe-source.txt": {
+      "original_sha256": "1394382a67664791fcd3fbf20066e8ef04751b7c942ffae91a492c3338ed71e6",
+      "current_sha256": "1394382a67664791fcd3fbf20066e8ef04751b7c942ffae91a492c3338ed71e6"
+    },
+    "agentloom-sdk/qa/evidence/review-round5-20261017/recovery-probe.txt": {
+      "original_sha256": "0a92dd9fff042f02c3a2447f5c8181c6c5ed9bf4cc0e1dc33b63363400a53d15",
+      "current_sha256": "0a92dd9fff042f02c3a2447f5c8181c6c5ed9bf4cc0e1dc33b63363400a53d15"
+    },
+    "agentloom-sdk/qa/evidence/review-round5-20261017/regression.junit.xml": {
+      "original_sha256": "65cd00afc7213ee2cba59ac1a4f039edadd1156e6cd9bcf5f8adb7919bfdb976",
+      "current_sha256": "65cd00afc7213ee2cba59ac1a4f039edadd1156e6cd9bcf5f8adb7919bfdb976"
+    },
+    "agentloom-sdk/qa/evidence/review-round5-20261017/regression.txt": {
+      "original_sha256": "618c68283b67fb1bb93dfd0c1a9df5f5d2db8176b4cc1353b38cc4c0358d2a5a",
+      "current_sha256": "618c68283b67fb1bb93dfd0c1a9df5f5d2db8176b4cc1353b38cc4c0358d2a5a"
+    },
+    "agentloom-sdk/qa/evidence/review-round5-20261017/ruff-check.txt": {
+      "original_sha256": "82b3e6a6c090a57601d22943bd23fca9218d1031dbe5a7b754092f9a156b4f18",
+      "current_sha256": "82b3e6a6c090a57601d22943bd23fca9218d1031dbe5a7b754092f9a156b4f18"
+    },
+    "agentloom-sdk/qa/evidence/review-round5-20261017/ruff-format.txt": {
+      "original_sha256": "18ba381e222ff2e3d590e705f8802e5d9fe3aab8d52c82662caf0509de82dddc",
+      "current_sha256": "18ba381e222ff2e3d590e705f8802e5d9fe3aab8d52c82662caf0509de82dddc"
+    },
+    "agentloom-sdk/qa/evidence/review-round5-20261017/source-after.json": {
+      "original_sha256": "8cffef87085daa40b8e8ba9fbd581917ce586938c847a4dbce9495b92a31eaa4",
+      "current_sha256": "8cffef87085daa40b8e8ba9fbd581917ce586938c847a4dbce9495b92a31eaa4"
+    },
+    "agentloom-sdk/qa/evidence/review-round5-20261017/source-before.json": {
+      "original_sha256": "de32ea1f90bbee860c59cb59c9388262d4c0b78188f97abf22f80499a9f6f686",
+      "current_sha256": "de32ea1f90bbee860c59cb59c9388262d4c0b78188f97abf22f80499a9f6f686"
+    },
+    "agentloom-sdk/qa/evidence/review-round5-20261017/source-delivery.json": {
+      "original_sha256": "4e9ece0ea85f62a9344072879b2e03b8c7e01965b816b37c5dc5318102d1d8d8",
+      "current_sha256": "4e9ece0ea85f62a9344072879b2e03b8c7e01965b816b37c5dc5318102d1d8d8"
+    },
+    "agentloom-sdk/qa/evidence/review-round5-20261017/summary.json": {
+      "original_sha256": "4bd779c55beb61909301061160431a7e2471b3a9ae6c8eca83912d79a608168c",
+      "current_sha256": "4bd779c55beb61909301061160431a7e2471b3a9ae6c8eca83912d79a608168c"
+    },
+    "agentloom-sdk/qa/evidence/review-round6-20261018/boundaries.junit.xml": {
+      "original_sha256": "897f3d75aa4281cb5733a2fd9e512c2840814d8fca0d0eadc8c2b40aa7b410d8",
+      "current_sha256": "897f3d75aa4281cb5733a2fd9e512c2840814d8fca0d0eadc8c2b40aa7b410d8"
+    },
+    "agentloom-sdk/qa/evidence/review-round6-20261018/boundaries.txt": {
+      "original_sha256": "30bea11417ea1ea10143d25954ca35762fb7a7c03035188d72a8fd417759d2d4",
+      "current_sha256": "30bea11417ea1ea10143d25954ca35762fb7a7c03035188d72a8fd417759d2d4"
+    },
+    "agentloom-sdk/qa/evidence/review-round6-20261018/delivery-manifest.json": {
+      "original_sha256": "df6981507c76f8d181d34ba0b54b1bbb7131f9e84925bf47d8743beb6ae966ce",
+      "current_sha256": "df6981507c76f8d181d34ba0b54b1bbb7131f9e84925bf47d8743beb6ae966ce"
+    },
+    "agentloom-sdk/qa/evidence/review-round6-20261018/exploratory-probe-source.txt": {
+      "original_sha256": "f4d68896b574b3b3b198629558c3a49e558cc708dfb243fc2dada11f21d1e951",
+      "current_sha256": "f4d68896b574b3b3b198629558c3a49e558cc708dfb243fc2dada11f21d1e951"
+    },
+    "agentloom-sdk/qa/evidence/review-round6-20261018/probe_remaining.txt": {
+      "original_sha256": "6750e8475de9d579077fc6df98377a06850afc00fbed263eb6afd57db308470e",
+      "current_sha256": "6750e8475de9d579077fc6df98377a06850afc00fbed263eb6afd57db308470e"
+    },
+    "agentloom-sdk/qa/evidence/review-round6-20261018/regression.junit.xml": {
+      "original_sha256": "5b9870bb62f00517bc3ec15414e13815767a26606a8391bea3f62469e143493a",
+      "current_sha256": "5b9870bb62f00517bc3ec15414e13815767a26606a8391bea3f62469e143493a"
+    },
+    "agentloom-sdk/qa/evidence/review-round6-20261018/regression.txt": {
+      "original_sha256": "1771570d6d9e4f169c79660f64104e329cda92fbcc9fa91f45b2cbddb4a81f17",
+      "current_sha256": "1771570d6d9e4f169c79660f64104e329cda92fbcc9fa91f45b2cbddb4a81f17"
+    },
+    "agentloom-sdk/qa/evidence/review-round6-20261018/reviewed-source.diff": {
+      "original_sha256": "0bc98d05cf298b9d63a7ff5206fe7b356a8e443d57089ff0a5e98911aa2816b3",
+      "current_sha256": "0bc98d05cf298b9d63a7ff5206fe7b356a8e443d57089ff0a5e98911aa2816b3"
+    },
+    "agentloom-sdk/qa/evidence/review-round6-20261018/ruff-format.txt": {
+      "original_sha256": "c98b86154f37b741528126f09d3e8f3665921b1c314835ab85d52088185e14af",
+      "current_sha256": "c98b86154f37b741528126f09d3e8f3665921b1c314835ab85d52088185e14af"
+    },
+    "agentloom-sdk/qa/evidence/review-round6-20261018/ruff-lint.txt": {
+      "original_sha256": "82b3e6a6c090a57601d22943bd23fca9218d1031dbe5a7b754092f9a156b4f18",
+      "current_sha256": "82b3e6a6c090a57601d22943bd23fca9218d1031dbe5a7b754092f9a156b4f18"
+    },
+    "agentloom-sdk/qa/evidence/review-round6-20261018/source-after.json": {
+      "original_sha256": "ed931cbf219e07c38f62395d1e25062fb6b05172c73588c90106c5e29ed11d9d",
+      "current_sha256": "ed931cbf219e07c38f62395d1e25062fb6b05172c73588c90106c5e29ed11d9d"
+    },
+    "agentloom-sdk/qa/evidence/review-round6-20261018/source-before.json": {
+      "original_sha256": "8516c762f897092889afc03a56f61532c2be2f359035b6c01a8372a9cf9d288c",
+      "current_sha256": "8516c762f897092889afc03a56f61532c2be2f359035b6c01a8372a9cf9d288c"
+    },
+    "agentloom-sdk/qa/evidence/review-round6-20261018/summary.json": {
+      "original_sha256": "b18caf5f8753ac69c50b3c84e018f7343666359e47c0cd5f978fed5f0b37ddb1",
+      "current_sha256": "b18caf5f8753ac69c50b3c84e018f7343666359e47c0cd5f978fed5f0b37ddb1"
+    },
+    "agentloom-sdk/qa/evidence/review-round6-20261018/whitebox-conftest-source.txt": {
+      "original_sha256": "5f704140075e100794201216eb5019e80a8e9043e6d664bd3a11f8f43abd630b",
+      "current_sha256": "5f704140075e100794201216eb5019e80a8e9043e6d664bd3a11f8f43abd630b"
+    },
+    "agentloom-sdk/qa/evidence/review-round6-20261018/whitebox-corrected-source.txt": {
+      "original_sha256": "5bbd72f817d4cd453aedd661ebec6d8c844f55dda291b98f4ced2b51cd41b696",
+      "current_sha256": "5bbd72f817d4cd453aedd661ebec6d8c844f55dda291b98f4ced2b51cd41b696"
+    },
+    "agentloom-sdk/qa/evidence/review-round6-20261018/whitebox-corrected.junit.xml": {
+      "original_sha256": "e081b05b5c699591dbd03220844637fdfc96a8739669254be09b09cf37a9cb76",
+      "current_sha256": "e081b05b5c699591dbd03220844637fdfc96a8739669254be09b09cf37a9cb76"
+    },
+    "agentloom-sdk/qa/evidence/review-round6-20261018/whitebox-corrected.txt": {
+      "original_sha256": "34a88a774c13fc19bdac4c2d26f6dd93767d67cff0123411de657a60553734a6",
+      "current_sha256": "34a88a774c13fc19bdac4c2d26f6dd93767d67cff0123411de657a60553734a6"
+    },
+    "agentloom-sdk/qa/evidence/review-round6-20261018/whitebox-fixture-corrections.diff": {
+      "original_sha256": "2a15388f9e31a267575fef006f163ef1dd7ffe3dd0acc7ab3c32609ab0abf71b",
+      "current_sha256": "2a15388f9e31a267575fef006f163ef1dd7ffe3dd0acc7ab3c32609ab0abf71b"
+    },
+    "agentloom-sdk/qa/evidence/review-round6-20261018/whitebox-pytest.ini.txt": {
+      "original_sha256": "bd93c0612c6b92b08c22d4d96f460adc0c1ff8734bc21ef985ab1181c88fa397",
+      "current_sha256": "bd93c0612c6b92b08c22d4d96f460adc0c1ff8734bc21ef985ab1181c88fa397"
+    },
+    "agentloom-sdk/qa/evidence/review-round6-20261018/whitebox-ruff.txt": {
+      "original_sha256": "d31ef320772b773f8c05eb4a7f0b822e56f5935a32cf6709a7cedd846284d2b5",
+      "current_sha256": "d31ef320772b773f8c05eb4a7f0b822e56f5935a32cf6709a7cedd846284d2b5"
+    },
+    "agentloom-sdk/qa/evidence/review-round6-20261018/whitebox.junit.xml": {
+      "original_sha256": "c63a992d425ff4bc37a49a584f260b1bd72b1bb3d9b690a51d88ba840b7ddcb2",
+      "current_sha256": "c63a992d425ff4bc37a49a584f260b1bd72b1bb3d9b690a51d88ba840b7ddcb2"
+    },
+    "agentloom-sdk/qa/evidence/review-round6-20261018/whitebox.txt": {
+      "original_sha256": "b075796512671a57b760091fa5c0f0a558afa861f05a49795a29decc1bf33f4e",
+      "current_sha256": "b075796512671a57b760091fa5c0f0a558afa861f05a49795a29decc1bf33f4e"
+    },
+    "agentloom-sdk/qa/evidence/review-round7-20261018/boundaries.junit.xml": {
+      "original_sha256": "02bf7e7b522281b3a6c4e05ac23d3a25eb4dfb4ee04d00b839f5b148e7c67774",
+      "current_sha256": "02bf7e7b522281b3a6c4e05ac23d3a25eb4dfb4ee04d00b839f5b148e7c67774"
+    },
+    "agentloom-sdk/qa/evidence/review-round7-20261018/boundaries.txt": {
+      "original_sha256": "56d6477fe670fe0001301a7dbff4354ab4909271555947061d82ef62f3202f5b",
+      "current_sha256": "56d6477fe670fe0001301a7dbff4354ab4909271555947061d82ef62f3202f5b"
+    },
+    "agentloom-sdk/qa/evidence/review-round7-20261018/changes-from-round6.json": {
+      "original_sha256": "ae27169ea37b6b5ff265dbddad5dbe938ac561e2c7241d57231b09bc980faba1",
+      "current_sha256": "ae27169ea37b6b5ff265dbddad5dbe938ac561e2c7241d57231b09bc980faba1"
+    },
+    "agentloom-sdk/qa/evidence/review-round7-20261018/collection.txt": {
+      "original_sha256": "a0b8f274341d8e7bbb036a5b97571ca10307c9663e8f021ecc95c9cdd36b49e2",
+      "current_sha256": "a0b8f274341d8e7bbb036a5b97571ca10307c9663e8f021ecc95c9cdd36b49e2"
+    },
+    "agentloom-sdk/qa/evidence/review-round7-20261018/delivery-manifest.json": {
+      "original_sha256": "81cdc6dcbfa537997e29d2d29790dd9fabbc0921df8d8be90406bf7d026d74f9",
+      "current_sha256": "81cdc6dcbfa537997e29d2d29790dd9fabbc0921df8d8be90406bf7d026d74f9"
+    },
+    "agentloom-sdk/qa/evidence/review-round7-20261018/installed-probe-source.txt": {
+      "original_sha256": "4b7d2e1c175406ca8e27e37d33ef5aa521c6a886e1a9ae32a93a8c5ab445eaf3",
+      "current_sha256": "4b7d2e1c175406ca8e27e37d33ef5aa521c6a886e1a9ae32a93a8c5ab445eaf3"
+    },
+    "agentloom-sdk/qa/evidence/review-round7-20261018/installed-results.json": {
+      "original_sha256": "909df4222277e49e4e4671354d74ed775a3d29dad6df9315430f7c98dfa3e465",
+      "current_sha256": "909df4222277e49e4e4671354d74ed775a3d29dad6df9315430f7c98dfa3e465"
+    },
+    "agentloom-sdk/qa/evidence/review-round7-20261018/installed.txt": {
+      "original_sha256": "909df4222277e49e4e4671354d74ed775a3d29dad6df9315430f7c98dfa3e465",
+      "current_sha256": "909df4222277e49e4e4671354d74ed775a3d29dad6df9315430f7c98dfa3e465"
+    },
+    "agentloom-sdk/qa/evidence/review-round7-20261018/legacy-reconstruction.json": {
+      "original_sha256": "2dde20621fe0563016bc890aac299811d9e939c1619e6ab7b75591b4cf3fb7db",
+      "current_sha256": "2dde20621fe0563016bc890aac299811d9e939c1619e6ab7b75591b4cf3fb7db"
+    },
+    "agentloom-sdk/qa/evidence/review-round7-20261018/migration-process-source.txt": {
+      "original_sha256": "848c8b21b7494a69e85b2f798069d08dbb7ba1c018c48756fbc21a6391171d0a",
+      "current_sha256": "848c8b21b7494a69e85b2f798069d08dbb7ba1c018c48756fbc21a6391171d0a"
+    },
+    "agentloom-sdk/qa/evidence/review-round7-20261018/regression.junit.xml": {
+      "original_sha256": "8c9e33222e33ad50b25e8605f8af1812b3c615984b6ea8b1cf12b96d72689e65",
+      "current_sha256": "8c9e33222e33ad50b25e8605f8af1812b3c615984b6ea8b1cf12b96d72689e65"
+    },
+    "agentloom-sdk/qa/evidence/review-round7-20261018/regression.txt": {
+      "original_sha256": "51eb553b90035fb631d1d5bd2b57fc07d37cea2cd004f1e4cfaed9d5f0124859",
+      "current_sha256": "51eb553b90035fb631d1d5bd2b57fc07d37cea2cd004f1e4cfaed9d5f0124859"
+    },
+    "agentloom-sdk/qa/evidence/review-round7-20261018/reviewed-source.diff": {
+      "original_sha256": "14f0e6961f23dd3d22ea23960c473c2f7815fef8098c5c9a2e553b9b418cba37",
+      "current_sha256": "14f0e6961f23dd3d22ea23960c473c2f7815fef8098c5c9a2e553b9b418cba37"
+    },
+    "agentloom-sdk/qa/evidence/review-round7-20261018/ruff-format.txt": {
+      "original_sha256": "7a340da38ae65b1fde7d1e27b294de067e2bd0ac37ef92c9f1edbe0cafbed9ba",
+      "current_sha256": "7a340da38ae65b1fde7d1e27b294de067e2bd0ac37ef92c9f1edbe0cafbed9ba"
+    },
+    "agentloom-sdk/qa/evidence/review-round7-20261018/ruff-lint.txt": {
+      "original_sha256": "82b3e6a6c090a57601d22943bd23fca9218d1031dbe5a7b754092f9a156b4f18",
+      "current_sha256": "82b3e6a6c090a57601d22943bd23fca9218d1031dbe5a7b754092f9a156b4f18"
+    },
+    "agentloom-sdk/qa/evidence/review-round7-20261018/source-after.json": {
+      "original_sha256": "0b993b311db1f8d218287cc4ada1f73441dd0c9c850365a034eb78a8245a8bb7",
+      "current_sha256": "0b993b311db1f8d218287cc4ada1f73441dd0c9c850365a034eb78a8245a8bb7"
+    },
+    "agentloom-sdk/qa/evidence/review-round7-20261018/source-before.json": {
+      "original_sha256": "e84b70cc63e3e2721911f454043a1bcb34b251e35a2815f15c30fc38171f2ab6",
+      "current_sha256": "e84b70cc63e3e2721911f454043a1bcb34b251e35a2815f15c30fc38171f2ab6"
+    },
+    "agentloom-sdk/qa/evidence/review-round7-20261018/summary.json": {
+      "original_sha256": "2e8350b02dc905eeef6a1966145d43cc59ef9f388172c4ee1fd7eb348bbdc47b",
+      "current_sha256": "2e8350b02dc905eeef6a1966145d43cc59ef9f388172c4ee1fd7eb348bbdc47b"
+    },
+    "agentloom-sdk/qa/evidence/review-round7-20261018/wheel-build.txt": {
+      "original_sha256": "7bf19e35932ce8836d70e69c8adf37afe68ebb31281ccb4dc1bcc955279321d1",
+      "current_sha256": "7bf19e35932ce8836d70e69c8adf37afe68ebb31281ccb4dc1bcc955279321d1"
+    },
+    "agentloom-sdk/qa/evidence/review-round7-20261018/wheel-manifest.json": {
+      "original_sha256": "ee0112967b8a4a13255dbf9e35c2300ce9f6ed76a4af8b61d7b9f666d338129f",
+      "current_sha256": "ee0112967b8a4a13255dbf9e35c2300ce9f6ed76a4af8b61d7b9f666d338129f"
+    },
+    "agentloom-sdk/qa/evidence/review-round8-20261018/boundaries.junit.xml": {
+      "original_sha256": "5b7d4996e0e9ce70d7dbee26340a88ec0801228fc0bc4ce732cdb1a537684d10",
+      "current_sha256": "5b7d4996e0e9ce70d7dbee26340a88ec0801228fc0bc4ce732cdb1a537684d10"
+    },
+    "agentloom-sdk/qa/evidence/review-round8-20261018/boundaries.txt": {
+      "original_sha256": "d5a0b20248957b3496923b46881252114ef96db500bbc1af3fcfcbd5b12b0119",
+      "current_sha256": "d5a0b20248957b3496923b46881252114ef96db500bbc1af3fcfcbd5b12b0119"
+    },
+    "agentloom-sdk/qa/evidence/review-round8-20261018/changes-from-round7.json": {
+      "original_sha256": "d3b7f8243c43968286ab9ac67ef95a3283b9e4401fbfdaba316d14def2cb8c45",
+      "current_sha256": "d3b7f8243c43968286ab9ac67ef95a3283b9e4401fbfdaba316d14def2cb8c45"
+    },
+    "agentloom-sdk/qa/evidence/review-round8-20261018/environment.json": {
+      "original_sha256": "7538304c26e337262bba4f5935f747b30ee4f456b39853a3bababfe2a0c2384b",
+      "current_sha256": "7538304c26e337262bba4f5935f747b30ee4f456b39853a3bababfe2a0c2384b"
+    },
+    "agentloom-sdk/qa/evidence/review-round8-20261018/glob.junit.xml": {
+      "original_sha256": "55d7a0046b2d020613ca1b6a2bd88ca252849761bbd15c9301a8097638f064ff",
+      "current_sha256": "55d7a0046b2d020613ca1b6a2bd88ca252849761bbd15c9301a8097638f064ff"
+    },
+    "agentloom-sdk/qa/evidence/review-round8-20261018/glob.txt": {
+      "original_sha256": "aa2bd2050e2d9d9eff2731986d93845cd47c5c27afba20a2bfc7486ddb6fa19b",
+      "current_sha256": "aa2bd2050e2d9d9eff2731986d93845cd47c5c27afba20a2bfc7486ddb6fa19b"
+    },
+    "agentloom-sdk/qa/evidence/review-round8-20261018/installation.json": {
+      "original_sha256": "76b042e6de7ed14da701eecc8b48c239b8a1ac47181c8c4d843516368825af21",
+      "current_sha256": "76b042e6de7ed14da701eecc8b48c239b8a1ac47181c8c4d843516368825af21"
+    },
+    "agentloom-sdk/qa/evidence/review-round8-20261018/installation.txt": {
+      "original_sha256": "752bc341b28664e8af7c3c5a3929d305a08ab415057c2b558cebd4cc249eb93a",
+      "current_sha256": "752bc341b28664e8af7c3c5a3929d305a08ab415057c2b558cebd4cc249eb93a"
+    },
+    "agentloom-sdk/qa/evidence/review-round8-20261018/minimax-help.txt": {
+      "original_sha256": "b545ed09db07fe391ce211c9e48ecd7b186d0009e26ca97963d3603aa67b60f3",
+      "current_sha256": "b545ed09db07fe391ce211c9e48ecd7b186d0009e26ca97963d3603aa67b60f3"
+    },
+    "agentloom-sdk/qa/evidence/review-round8-20261018/regression-command.json": {
+      "original_sha256": "bafe191a24f821b76055480f708d3916451a8d74081c422ba0b84c7b79da1b93",
+      "current_sha256": "bafe191a24f821b76055480f708d3916451a8d74081c422ba0b84c7b79da1b93"
+    },
+    "agentloom-sdk/qa/evidence/review-round8-20261018/regression-summary.json": {
+      "original_sha256": "5038c35164ed59c12fd421e91f9d0cac15160f8b3ea38aade4174d401d32c5bf",
+      "current_sha256": "5038c35164ed59c12fd421e91f9d0cac15160f8b3ea38aade4174d401d32c5bf"
+    },
+    "agentloom-sdk/qa/evidence/review-round8-20261018/regression.junit.xml": {
+      "original_sha256": "1d8409a4ae68055746fde8be4588c18a84c146430199e5b088fd27e7098a0de7",
+      "current_sha256": "1d8409a4ae68055746fde8be4588c18a84c146430199e5b088fd27e7098a0de7"
+    },
+    "agentloom-sdk/qa/evidence/review-round8-20261018/regression.txt": {
+      "original_sha256": "72841bae6d5845a81eb99a3e00fc53704ab3e9972a8f4a6aafa873d575695482",
+      "current_sha256": "72841bae6d5845a81eb99a3e00fc53704ab3e9972a8f4a6aafa873d575695482"
+    },
+    "agentloom-sdk/qa/evidence/review-round8-20261018/ruff-auto-format.txt": {
+      "original_sha256": "b221fa32ed80fb2ebc9605eb60fdfa0a5eaa83ce614a9f728a4fa4632fbfa89a",
+      "current_sha256": "b221fa32ed80fb2ebc9605eb60fdfa0a5eaa83ce614a9f728a4fa4632fbfa89a"
+    },
+    "agentloom-sdk/qa/evidence/review-round8-20261018/ruff-auto-lint.txt": {
+      "original_sha256": "82b3e6a6c090a57601d22943bd23fca9218d1031dbe5a7b754092f9a156b4f18",
+      "current_sha256": "82b3e6a6c090a57601d22943bd23fca9218d1031dbe5a7b754092f9a156b4f18"
+    },
+    "agentloom-sdk/qa/evidence/review-round8-20261018/ruff-final-format.txt": {
+      "original_sha256": "a8974443d12f9736423157c869f658ab1b4fc18c2ff99f12bf2cb579052f9e5b",
+      "current_sha256": "a8974443d12f9736423157c869f658ab1b4fc18c2ff99f12bf2cb579052f9e5b"
+    },
+    "agentloom-sdk/qa/evidence/review-round8-20261018/ruff-final-lint.txt": {
+      "original_sha256": "82b3e6a6c090a57601d22943bd23fca9218d1031dbe5a7b754092f9a156b4f18",
+      "current_sha256": "82b3e6a6c090a57601d22943bd23fca9218d1031dbe5a7b754092f9a156b4f18"
+    },
+    "agentloom-sdk/qa/evidence/review-round8-20261018/ruff-format.txt": {
+      "original_sha256": "33f99a418126561b85341e98c22a323fea0793a216aaf462a2ac456d17342db9",
+      "current_sha256": "33f99a418126561b85341e98c22a323fea0793a216aaf462a2ac456d17342db9"
+    },
+    "agentloom-sdk/qa/evidence/review-round8-20261018/ruff-lint.txt": {
+      "original_sha256": "86f558f8981c336c4b85b03ca75745096c84004a60cba95ac7dc5125e8716f28",
+      "current_sha256": "86f558f8981c336c4b85b03ca75745096c84004a60cba95ac7dc5125e8716f28"
+    },
+    "agentloom-sdk/qa/evidence/review-round8-20261018/source-after.json": {
+      "original_sha256": "ddb0985be06403b246965207d5f350d189b154aca5e41d896f54bfd4fb73b00d",
+      "current_sha256": "ddb0985be06403b246965207d5f350d189b154aca5e41d896f54bfd4fb73b00d"
+    },
+    "agentloom-sdk/qa/evidence/review-round8-20261018/source-before.json": {
+      "original_sha256": "ddb0985be06403b246965207d5f350d189b154aca5e41d896f54bfd4fb73b00d",
+      "current_sha256": "ddb0985be06403b246965207d5f350d189b154aca5e41d896f54bfd4fb73b00d"
+    },
+    "agentloom-sdk/qa/evidence/review-round8-20261018/summary.json": {
+      "original_sha256": "5b4ea68ca0e23e808acd772026c1fe6dac36268256043cebd6e8950fda09ed39",
+      "current_sha256": "5b4ea68ca0e23e808acd772026c1fe6dac36268256043cebd6e8950fda09ed39"
+    },
+    "agentloom-sdk/qa/evidence/review-round8-20261018/verify_installation.py": {
+      "original_sha256": "56bbed8e8d82599befd6aa222e4fd0770222d59bfc749964706c3c62e84f25e4",
+      "current_sha256": "56bbed8e8d82599befd6aa222e4fd0770222d59bfc749964706c3c62e84f25e4"
+    },
+    "agentloom-sdk/qa/evidence/review-round9-20261018/artifact-check.json": {
+      "original_sha256": "d40acdf402f9b773533d101894fa3ac7697a91ef1659e1d86907f9eb7f5bf422",
+      "current_sha256": "d40acdf402f9b773533d101894fa3ac7697a91ef1659e1d86907f9eb7f5bf422"
+    },
+    "agentloom-sdk/qa/evidence/review-round9-20261018/baseline.json": {
+      "original_sha256": "e87e8c3df46fac75c33f76ed1e08c6f0747f1e4b1431076a96ad7c6aaef1d304",
+      "current_sha256": "e87e8c3df46fac75c33f76ed1e08c6f0747f1e4b1431076a96ad7c6aaef1d304"
+    },
+    "agentloom-sdk/qa/evidence/review-round9-20261018/before-glob-command.json": {
+      "original_sha256": "4fab3961d80dc41ee868e20855b029c38d9cba30047a2e85b07925b0d7c0638b",
+      "current_sha256": "4fab3961d80dc41ee868e20855b029c38d9cba30047a2e85b07925b0d7c0638b"
+    },
+    "agentloom-sdk/qa/evidence/review-round9-20261018/before-glob-junit.xml": {
+      "original_sha256": "203f9f9bc686b0d6cd6063f8a8f6459e97328fc23e54a5346d4214f3b7c327fd",
+      "current_sha256": "203f9f9bc686b0d6cd6063f8a8f6459e97328fc23e54a5346d4214f3b7c327fd"
+    },
+    "agentloom-sdk/qa/evidence/review-round9-20261018/before-glob-pytest.log": {
+      "original_sha256": "0d40f01b3e8c2b7c6037340eaf5e0bcacf19cf3a66b50d1874ca153ff2019563",
+      "current_sha256": "0d40f01b3e8c2b7c6037340eaf5e0bcacf19cf3a66b50d1874ca153ff2019563"
+    },
+    "agentloom-sdk/qa/evidence/review-round9-20261018/command.json": {
+      "original_sha256": "ae2f1f1c3a70a97d44c15c80de0eb1083d1968eb5597e62f685bd99e912118ee",
+      "current_sha256": "ae2f1f1c3a70a97d44c15c80de0eb1083d1968eb5597e62f685bd99e912118ee"
+    },
+    "agentloom-sdk/qa/evidence/review-round9-20261018/concurrent-changes.json": {
+      "original_sha256": "7aad51fb22444fd8151c1a1921463e7bdff52048970ec1fa7062ca48364ba66b",
+      "current_sha256": "7aad51fb22444fd8151c1a1921463e7bdff52048970ec1fa7062ca48364ba66b"
+    },
+    "agentloom-sdk/qa/evidence/review-round9-20261018/concurrent-changes.patch": {
+      "original_sha256": "dd1636f9016acf19206cc5de72ea2f9f271d2c426407c3fdb4157f590ab329a5",
+      "current_sha256": "dd1636f9016acf19206cc5de72ea2f9f271d2c426407c3fdb4157f590ab329a5"
+    },
+    "agentloom-sdk/qa/evidence/review-round9-20261018/glob-pathlib-oracle.json": {
+      "original_sha256": "e989a6d4320ba17223ebbf194e2ff2225e99a501909177b84a64130b874589a4",
+      "current_sha256": "e989a6d4320ba17223ebbf194e2ff2225e99a501909177b84a64130b874589a4"
+    },
+    "agentloom-sdk/qa/evidence/review-round9-20261018/initial-fixture-junit.xml": {
+      "original_sha256": "e75ebc83e1db83a8b3ca239aeeccb93719c3f6220cdad53cf1f6a22911e56c9b",
+      "current_sha256": "e75ebc83e1db83a8b3ca239aeeccb93719c3f6220cdad53cf1f6a22911e56c9b"
+    },
+    "agentloom-sdk/qa/evidence/review-round9-20261018/initial-fixture-pytest.log": {
+      "original_sha256": "ba53c9e6ecb8e759cbc51b6bac2d95f0063f8cbfae2854f5b817ad29abc4aba5",
+      "current_sha256": "ba53c9e6ecb8e759cbc51b6bac2d95f0063f8cbfae2854f5b817ad29abc4aba5"
+    },
+    "agentloom-sdk/qa/evidence/review-round9-20261018/initial-fixture-test-source.txt": {
+      "original_sha256": "e3e8605ed39ccc72be13c3320aa25f8ade897c5412af565dbd5b985565d4f69f",
+      "current_sha256": "e3e8605ed39ccc72be13c3320aa25f8ade897c5412af565dbd5b985565d4f69f"
+    },
+    "agentloom-sdk/qa/evidence/review-round9-20261018/junit.xml": {
+      "original_sha256": "03a4f5eeb2e8069e669e4aec1cd855832be187e91e428ef643af0f904fbba432",
+      "current_sha256": "03a4f5eeb2e8069e669e4aec1cd855832be187e91e428ef643af0f904fbba432"
+    },
+    "agentloom-sdk/qa/evidence/review-round9-20261018/pytest.log": {
+      "original_sha256": "bd8ae3ff08d37425e2a83eb82cd1f7f86c2d26ad6e5a6c8b74bfd923f56a7a06",
+      "current_sha256": "bd8ae3ff08d37425e2a83eb82cd1f7f86c2d26ad6e5a6c8b74bfd923f56a7a06"
+    },
+    "agentloom-sdk/qa/evidence/review-round9-20261018/source-after.json": {
+      "original_sha256": "970fde867398793a2a8ff89182afb57205a26033e67b548ec17985417fae5f1c",
+      "current_sha256": "970fde867398793a2a8ff89182afb57205a26033e67b548ec17985417fae5f1c"
+    },
+    "agentloom-sdk/qa/evidence/review-round9-20261018/source-at-report-close.json": {
+      "original_sha256": "33c9cf66754be33a44a791aa144247eb83004303f717a4c78e9efe1b423c03a8",
+      "current_sha256": "33c9cf66754be33a44a791aa144247eb83004303f717a4c78e9efe1b423c03a8"
+    },
+    "agentloom-sdk/qa/evidence/review-round9-20261018/source-before.json": {
+      "original_sha256": "970fde867398793a2a8ff89182afb57205a26033e67b548ec17985417fae5f1c",
+      "current_sha256": "970fde867398793a2a8ff89182afb57205a26033e67b548ec17985417fae5f1c"
+    },
+    "agentloom-sdk/qa/evidence/review-round9-20261018/summary.json": {
+      "original_sha256": "b1fa913b53141dfb1e0f11bdf655ef70c60bdd96fd33d22879c3b55e8029af95",
+      "current_sha256": "b1fa913b53141dfb1e0f11bdf655ef70c60bdd96fd33d22879c3b55e8029af95"
+    },
+    "agentloom-sdk/qa/evidence/review-round9-20261018/unicode-patch-oracle.json": {
+      "original_sha256": "7b084ffd41d6fc7b45ad3b6095c804a67af7da42edebe488f6d1d1e2bc606183",
+      "current_sha256": "7b084ffd41d6fc7b45ad3b6095c804a67af7da42edebe488f6d1d1e2bc606183"
+    },
+    "agentloom-sdk/qa/evidence/review-round9-fix-verification-20261018/added-cases.json": {
+      "original_sha256": "f7328a1ff90aead4b92f8ed38d7c95d9095dc2f1058663a04ea67e0dc74d85a3",
+      "current_sha256": "f7328a1ff90aead4b92f8ed38d7c95d9095dc2f1058663a04ea67e0dc74d85a3"
+    },
+    "agentloom-sdk/qa/evidence/review-round9-fix-verification-20261018/baseline-check.txt": {
+      "original_sha256": "96eacfe616a7b6eb6cf079a5cc411bc19369ab85009b3392b7961d10d41c87a8",
+      "current_sha256": "96eacfe616a7b6eb6cf079a5cc411bc19369ab85009b3392b7961d10d41c87a8"
+    },
+    "agentloom-sdk/qa/evidence/review-round9-fix-verification-20261018/final-baseline-check.txt": {
+      "original_sha256": "96eacfe616a7b6eb6cf079a5cc411bc19369ab85009b3392b7961d10d41c87a8",
+      "current_sha256": "96eacfe616a7b6eb6cf079a5cc411bc19369ab85009b3392b7961d10d41c87a8"
+    },
+    "agentloom-sdk/qa/evidence/review-round9-fix-verification-20261018/summary.json": {
+      "original_sha256": "4d30bf46a0b6981cfe7aaa37f1a0bc6965e2d4d2dd60307916c7eed21171c1da",
+      "current_sha256": "4d30bf46a0b6981cfe7aaa37f1a0bc6965e2d4d2dd60307916c7eed21171c1da"
+    },
+    "agentloom-sdk/qa/evidence/round10-fixes-20261019/baseline.junit.xml": {
+      "original_sha256": "2ada1802201308c43ba39848aa5e70b6b8ff147383f020ee92223b5c01abdeee",
+      "current_sha256": "2ada1802201308c43ba39848aa5e70b6b8ff147383f020ee92223b5c01abdeee"
+    },
+    "agentloom-sdk/qa/evidence/round10-fixes-20261019/baseline.txt": {
+      "original_sha256": "48f7f582d1d9eec46743018d86a80b17449f21c425f383ba874da3fea053157b",
+      "current_sha256": "48f7f582d1d9eec46743018d86a80b17449f21c425f383ba874da3fea053157b"
+    },
+    "agentloom-sdk/qa/evidence/round10-fixes-20261019/docs-build.txt": {
+      "original_sha256": "0990638027c0e8bee966998d754949af6dbbd86e776a3a81f44f040f33882622",
+      "current_sha256": "0990638027c0e8bee966998d754949af6dbbd86e776a3a81f44f040f33882622"
+    },
+    "agentloom-sdk/qa/evidence/round10-fixes-20261019/docs-check.txt": {
+      "original_sha256": "7dccf96ecb640431ce6167e486642935c1c3491315e92a3e7b73e4a3e624ec8c",
+      "current_sha256": "7dccf96ecb640431ce6167e486642935c1c3491315e92a3e7b73e4a3e624ec8c"
+    },
+    "agentloom-sdk/qa/evidence/round10-fixes-20261019/focused.junit.xml": {
+      "original_sha256": "d01acb2937a81ad3967a6dc9fee169ecff8a08241d2ef6c5c4ea8bf4eeb4f8f9",
+      "current_sha256": "d01acb2937a81ad3967a6dc9fee169ecff8a08241d2ef6c5c4ea8bf4eeb4f8f9"
+    },
+    "agentloom-sdk/qa/evidence/round10-fixes-20261019/focused.txt": {
+      "original_sha256": "9f4b94022f1a42ea1b6374174d37fb04a50b18dac1fac835226dc3e2e40ec25c",
+      "current_sha256": "9f4b94022f1a42ea1b6374174d37fb04a50b18dac1fac835226dc3e2e40ec25c"
+    },
+    "agentloom-sdk/qa/evidence/round10-fixes-20261019/qa-integrity.json": {
+      "original_sha256": "9631bb9a0ede0b650d45ba97ff59c481f9e79adc1a9ad47e645bc8e732cdc9bf",
+      "current_sha256": "9631bb9a0ede0b650d45ba97ff59c481f9e79adc1a9ad47e645bc8e732cdc9bf"
+    },
+    "agentloom-sdk/qa/evidence/round10-fixes-20261019/regression-summary.json": {
+      "original_sha256": "dd46a8b1fed0753b7064782035ab8a1959adfd466fd93637f5ff020b4639b7d9",
+      "current_sha256": "dd46a8b1fed0753b7064782035ab8a1959adfd466fd93637f5ff020b4639b7d9"
+    },
+    "agentloom-sdk/qa/evidence/round10-fixes-20261019/regression.junit.xml": {
+      "original_sha256": "6b81aa0db5af054958d8180b58c1c25750733676c17b661f416ace988acca902",
+      "current_sha256": "6b81aa0db5af054958d8180b58c1c25750733676c17b661f416ace988acca902"
+    },
+    "agentloom-sdk/qa/evidence/round10-fixes-20261019/regression.txt": {
+      "original_sha256": "c4c9fb50314e5b2f870986ecd7fd0bef6e2f87a9b93b09bf417f1ea3d7900288",
+      "current_sha256": "c4c9fb50314e5b2f870986ecd7fd0bef6e2f87a9b93b09bf417f1ea3d7900288"
+    },
+    "agentloom-sdk/qa/evidence/round10-fixes-20261019/ruff-format.txt": {
+      "original_sha256": "c53eecd93fbd42bd2109a3b8cb1ac1f3839c7d0dad32aedf4f8fa8f11477d6de",
+      "current_sha256": "c53eecd93fbd42bd2109a3b8cb1ac1f3839c7d0dad32aedf4f8fa8f11477d6de"
+    },
+    "agentloom-sdk/qa/evidence/round10-fixes-20261019/ruff-lint.txt": {
+      "original_sha256": "82b3e6a6c090a57601d22943bd23fca9218d1031dbe5a7b754092f9a156b4f18",
+      "current_sha256": "82b3e6a6c090a57601d22943bd23fca9218d1031dbe5a7b754092f9a156b4f18"
+    },
+    "agentloom-sdk/qa/evidence/round10-fixes-20261019/source-after.json": {
+      "original_sha256": "10cb3b77246d7a44e55e7d9bd8e0444031f764ea1f21afa34259fc17172c87d3",
+      "current_sha256": "10cb3b77246d7a44e55e7d9bd8e0444031f764ea1f21afa34259fc17172c87d3"
+    },
+    "agentloom-sdk/qa/evidence/round10-fixes-20261019/source-before.json": {
+      "original_sha256": "10cb3b77246d7a44e55e7d9bd8e0444031f764ea1f21afa34259fc17172c87d3",
+      "current_sha256": "10cb3b77246d7a44e55e7d9bd8e0444031f764ea1f21afa34259fc17172c87d3"
+    },
+    "agentloom-sdk/qa/evidence/round10-fixes-20261019/wheel-build.txt": {
+      "original_sha256": "6230220e5d618a63f20a65a2ac5b4f47e8691e4e60f4e9d6b3509a0c65bb073f",
+      "current_sha256": "6230220e5d618a63f20a65a2ac5b4f47e8691e4e60f4e9d6b3509a0c65bb073f"
+    },
+    "agentloom-sdk/qa/evidence/round10-fixes-20261019/wheel-install.txt": {
+      "original_sha256": "34df7101c1b1431c1a41b661878927cd05418b8ced0273f7c57b0c5ce2675be7",
+      "current_sha256": "34df7101c1b1431c1a41b661878927cd05418b8ced0273f7c57b0c5ce2675be7"
+    },
+    "agentloom-sdk/qa/evidence/round10-fixes-20261019/wheel-reopen.json": {
+      "original_sha256": "38b6d8ff3ab4ebb2cd830163106b7b73d5fc0a002200b4a886a8c1178d2b0fec",
+      "current_sha256": "38b6d8ff3ab4ebb2cd830163106b7b73d5fc0a002200b4a886a8c1178d2b0fec"
+    },
+    "agentloom-sdk/qa/evidence/round10-fixes-20261019/wheel-resume.json": {
+      "original_sha256": "0423af3cebd9ead5d0ecb7718fa32d4d5460ee2238de6840172fa4a2171eaeb8",
+      "current_sha256": "0423af3cebd9ead5d0ecb7718fa32d4d5460ee2238de6840172fa4a2171eaeb8"
+    },
+    "agentloom-sdk/qa/evidence/round10-fixes-20261019/wheel-smoke-script.txt": {
+      "original_sha256": "3475ed390c963fb47859c67485092b9380d88358acb803c06667339167b04a4f",
+      "current_sha256": "3475ed390c963fb47859c67485092b9380d88358acb803c06667339167b04a4f"
+    },
+    "agentloom-sdk/qa/evidence/round10-fixes-20261019/wheel-start.json": {
+      "original_sha256": "832ccb93ae1abcf438f0f77354694ae57acb6c2fecbb9da9ab416ee7b7128cca",
+      "current_sha256": "832ccb93ae1abcf438f0f77354694ae57acb6c2fecbb9da9ab416ee7b7128cca"
+    },
+    "agentloom-sdk/qa/evidence/round10-fixes-20261019/wheel-summary.json": {
+      "original_sha256": "edadea300f0294e0a5099c7fa9da02da996bdd510549e52ed24090fa956a2a89",
+      "current_sha256": "edadea300f0294e0a5099c7fa9da02da996bdd510549e52ed24090fa956a2a89"
+    },
+    "agentloom-sdk/qa/evidence/round3-fixes-20261017/boundaries-final.txt": {
+      "original_sha256": "dff8be6eabc9420ab86818dd59f3c29acde4b060ee285b95a55c4e929a43bd3a",
+      "current_sha256": "dff8be6eabc9420ab86818dd59f3c29acde4b060ee285b95a55c4e929a43bd3a"
+    },
+    "agentloom-sdk/qa/evidence/round3-fixes-20261017/boundaries.txt": {
+      "original_sha256": "2bdf9fc43a78aeff804d12bcf96e1248c5fb4cf35f201e88871fae51b3306ed3",
+      "current_sha256": "2bdf9fc43a78aeff804d12bcf96e1248c5fb4cf35f201e88871fae51b3306ed3"
+    },
+    "agentloom-sdk/qa/evidence/round3-fixes-20261017/completion-cut-first.txt": {
+      "original_sha256": "912348d67e30fbbfe68a769caeefe9e132e65735e1a2c80f019338282a9a8ac0",
+      "current_sha256": "912348d67e30fbbfe68a769caeefe9e132e65735e1a2c80f019338282a9a8ac0"
+    },
+    "agentloom-sdk/qa/evidence/round3-fixes-20261017/docs-build.txt": {
+      "original_sha256": "5d9917cb512ffe44369087050b02aef5a0274944368368df0d96b3bbd75f793a",
+      "current_sha256": "5d9917cb512ffe44369087050b02aef5a0274944368368df0d96b3bbd75f793a"
+    },
+    "agentloom-sdk/qa/evidence/round3-fixes-20261017/docs-check.txt": {
+      "original_sha256": "0de37a1faf03660d1c0f9b68c04578ba768cceb87e1d01aced24833c1700d4a4",
+      "current_sha256": "0de37a1faf03660d1c0f9b68c04578ba768cceb87e1d01aced24833c1700d4a4"
+    },
+    "agentloom-sdk/qa/evidence/round3-fixes-20261017/final-documents-sha256.json": {
+      "original_sha256": "50bf6ac8d2f02c1ac7221dc3d3612b6c58aa8ee12500021acbc5ac606e0dac61",
+      "current_sha256": "50bf6ac8d2f02c1ac7221dc3d3612b6c58aa8ee12500021acbc5ac606e0dac61"
+    },
+    "agentloom-sdk/qa/evidence/round3-fixes-20261017/first-regression.junit.xml": {
+      "original_sha256": "7294dbc3027c26a2e1196ea6da545d08076c94209e6eeb9c3044593a58ea9027",
+      "current_sha256": "7294dbc3027c26a2e1196ea6da545d08076c94209e6eeb9c3044593a58ea9027"
+    },
+    "agentloom-sdk/qa/evidence/round3-fixes-20261017/first-regression.txt": {
+      "original_sha256": "7bec63e63957bbac811f0c510e161e8b5677d40a9c7e854bdc7242dc999a2c9f",
+      "current_sha256": "7bec63e63957bbac811f0c510e161e8b5677d40a9c7e854bdc7242dc999a2c9f"
+    },
+    "agentloom-sdk/qa/evidence/round3-fixes-20261017/first-run-source-sha256.json": {
+      "original_sha256": "93718ba1bb22a7a4fae451c17bf5953af888199424e7e4bc916ab8191844cb09",
+      "current_sha256": "93718ba1bb22a7a4fae451c17bf5953af888199424e7e4bc916ab8191844cb09"
+    },
+    "agentloom-sdk/qa/evidence/round3-fixes-20261017/first-verification-environment.json": {
+      "original_sha256": "83968d76bf88ee78095c894a13069056d97677f1a80bb915fd18068144c33bbc",
+      "current_sha256": "83968d76bf88ee78095c894a13069056d97677f1a80bb915fd18068144c33bbc"
+    },
+    "agentloom-sdk/qa/evidence/round3-fixes-20261017/first-wheel-contents.json": {
+      "original_sha256": "bea577956c240342184c0e640259c37159b8803351abe16d8c5a73fb3f2aee2a",
+      "current_sha256": "bea577956c240342184c0e640259c37159b8803351abe16d8c5a73fb3f2aee2a"
+    },
+    "agentloom-sdk/qa/evidence/round3-fixes-20261017/first-wheel-environment.json": {
+      "original_sha256": "123e3c4d419e302afa2c0f66ae85c05333d0432568518ccbbf8ab7a1a31df985",
+      "current_sha256": "123e3c4d419e302afa2c0f66ae85c05333d0432568518ccbbf8ab7a1a31df985"
+    },
+    "agentloom-sdk/qa/evidence/round3-fixes-20261017/first-wheel-install.txt": {
+      "original_sha256": "f5711b91bfe46a0d1ccd9aece2c5ede6831499f6ccb0fc84277abd0ed2b723fe",
+      "current_sha256": "f5711b91bfe46a0d1ccd9aece2c5ede6831499f6ccb0fc84277abd0ed2b723fe"
+    },
+    "agentloom-sdk/qa/evidence/round3-fixes-20261017/first-wheel-smoke.json": {
+      "original_sha256": "0f24d2f8d80daf61d9ba3b4d7b74aa4eeb3f0e048c9974074cf2cf1827280df6",
+      "current_sha256": "0f24d2f8d80daf61d9ba3b4d7b74aa4eeb3f0e048c9974074cf2cf1827280df6"
+    },
+    "agentloom-sdk/qa/evidence/round3-fixes-20261017/first-wheel.txt": {
+      "original_sha256": "be12d18bd7ab6414fe2503b64f93c786c23cd0fab2df3256b04696034d284774",
+      "current_sha256": "be12d18bd7ab6414fe2503b64f93c786c23cd0fab2df3256b04696034d284774"
+    },
+    "agentloom-sdk/qa/evidence/round3-fixes-20261017/fixture-first.txt": {
+      "original_sha256": "2ead14dccdad44a0a05b26364718482b02dbf7e904a81f8ee671c9c2c6d3cb9d",
+      "current_sha256": "2ead14dccdad44a0a05b26364718482b02dbf7e904a81f8ee671c9c2c6d3cb9d"
+    },
+    "agentloom-sdk/qa/evidence/round3-fixes-20261017/fixture-process-first.txt": {
+      "original_sha256": "102298fc03a790d001e32b39bd545de8ca0cb51344f679e699c4bfce067f0c58",
+      "current_sha256": "102298fc03a790d001e32b39bd545de8ca0cb51344f679e699c4bfce067f0c58"
+    },
+    "agentloom-sdk/qa/evidence/round3-fixes-20261017/regression.junit.xml": {
+      "original_sha256": "4f4b5029f2cafe1145b1dec5cd17d8db6caaadf9541a858b7e84eaea1128ca26",
+      "current_sha256": "4f4b5029f2cafe1145b1dec5cd17d8db6caaadf9541a858b7e84eaea1128ca26"
+    },
+    "agentloom-sdk/qa/evidence/round3-fixes-20261017/regression.txt": {
+      "original_sha256": "887e7cf529d9cb6d9f9f9dd1b02549eb2ffc7ceaa0b1c177cfb64175fd9764d8",
+      "current_sha256": "887e7cf529d9cb6d9f9f9dd1b02549eb2ffc7ceaa0b1c177cfb64175fd9764d8"
+    },
+    "agentloom-sdk/qa/evidence/round3-fixes-20261017/ruff-format.txt": {
+      "original_sha256": "184b6bfbf75ff0afb5735687ad68f56f0140c93fd26fa8c144e3386b4e6c6ab1",
+      "current_sha256": "184b6bfbf75ff0afb5735687ad68f56f0140c93fd26fa8c144e3386b4e6c6ab1"
+    },
+    "agentloom-sdk/qa/evidence/round3-fixes-20261017/ruff.txt": {
+      "original_sha256": "82b3e6a6c090a57601d22943bd23fca9218d1031dbe5a7b754092f9a156b4f18",
+      "current_sha256": "82b3e6a6c090a57601d22943bd23fca9218d1031dbe5a7b754092f9a156b4f18"
+    },
+    "agentloom-sdk/qa/evidence/round3-fixes-20261017/run-source-sha256.json": {
+      "original_sha256": "24286698d8cdbc1094f9d8e155c8e03a4d03f289d897d2963a401fe9689995c7",
+      "current_sha256": "24286698d8cdbc1094f9d8e155c8e03a4d03f289d897d2963a401fe9689995c7"
+    },
+    "agentloom-sdk/qa/evidence/round3-fixes-20261017/summary.json": {
+      "original_sha256": "c98480d18f2d1f7f77f4f6744a09680dcfee85abf28e88d42d959c47a01c02e4",
+      "current_sha256": "c98480d18f2d1f7f77f4f6744a09680dcfee85abf28e88d42d959c47a01c02e4"
+    },
+    "agentloom-sdk/qa/evidence/round3-fixes-20261017/targeted.txt": {
+      "original_sha256": "a50f7261985c00d899e69ec596093fc9142ace2fd64991637f217c7ad0883f60",
+      "current_sha256": "a50f7261985c00d899e69ec596093fc9142ace2fd64991637f217c7ad0883f60"
+    },
+    "agentloom-sdk/qa/evidence/round3-fixes-20261017/verification-environment.json": {
+      "original_sha256": "2ca1bcf6f662b332a0c7520c47e590c33feccbf9f230c19aa8ee1b549dcd7920",
+      "current_sha256": "2ca1bcf6f662b332a0c7520c47e590c33feccbf9f230c19aa8ee1b549dcd7920"
+    },
+    "agentloom-sdk/qa/evidence/round3-fixes-20261017/wheel-contents.json": {
+      "original_sha256": "dc15b4973d36e42f52e02c3a8d3d0da04d3c6224134d9ca13b339d49e7cc86ce",
+      "current_sha256": "dc15b4973d36e42f52e02c3a8d3d0da04d3c6224134d9ca13b339d49e7cc86ce"
+    },
+    "agentloom-sdk/qa/evidence/round3-fixes-20261017/wheel-environment.json": {
+      "original_sha256": "8297d4e3323024ff440d2c2420a7c9796cb1658af1654f7582c3cd12d0ff58b9",
+      "current_sha256": "8297d4e3323024ff440d2c2420a7c9796cb1658af1654f7582c3cd12d0ff58b9"
+    },
+    "agentloom-sdk/qa/evidence/round3-fixes-20261017/wheel-install.txt": {
+      "original_sha256": "3932ad980a0d95cc220d5be6a28ff15a6ceb93caa3c5906d106a7fe2d88621e8",
+      "current_sha256": "3932ad980a0d95cc220d5be6a28ff15a6ceb93caa3c5906d106a7fe2d88621e8"
+    },
+    "agentloom-sdk/qa/evidence/round3-fixes-20261017/wheel-smoke-runner.txt": {
+      "original_sha256": "1e13701e25eaf17745d078b213937a563cf38639f2647e98ee4b43e8bd774309",
+      "current_sha256": "1e13701e25eaf17745d078b213937a563cf38639f2647e98ee4b43e8bd774309"
+    },
+    "agentloom-sdk/qa/evidence/round3-fixes-20261017/wheel-smoke-source.txt": {
+      "original_sha256": "c5fa021ee47530e15686dc91d166257d2b8c1ca1d9f975ce9773868d1c9bfd08",
+      "current_sha256": "c5fa021ee47530e15686dc91d166257d2b8c1ca1d9f975ce9773868d1c9bfd08"
+    },
+    "agentloom-sdk/qa/evidence/round3-fixes-20261017/wheel-smoke.json": {
+      "original_sha256": "2402c9c0a3ea2c4043069139ef3583328508d857bfd72304b781949a9ac638c8",
+      "current_sha256": "2402c9c0a3ea2c4043069139ef3583328508d857bfd72304b781949a9ac638c8"
+    },
+    "agentloom-sdk/qa/evidence/round3-fixes-20261017/wheel.txt": {
+      "original_sha256": "a890879219d968c6d747d8c530da4131ae7505c25af3d50d123842d004ff4714",
+      "current_sha256": "a890879219d968c6d747d8c530da4131ae7505c25af3d50d123842d004ff4714"
+    },
+    "agentloom-sdk/qa/evidence/round4-fixes-20261017/before-review-summary.json": {
+      "original_sha256": "8d6757f75f1fd47b77bc4fe93de0058e5c0836193987a76d256f195686b17328",
+      "current_sha256": "8d6757f75f1fd47b77bc4fe93de0058e5c0836193987a76d256f195686b17328"
+    },
+    "agentloom-sdk/qa/evidence/round4-fixes-20261017/before-round4.txt": {
+      "original_sha256": "99650faca78cd6e56853fa81bfab68b86a63f8ecb421a783f09d71cdc4202dfa",
+      "current_sha256": "99650faca78cd6e56853fa81bfab68b86a63f8ecb421a783f09d71cdc4202dfa"
+    },
+    "agentloom-sdk/qa/evidence/round4-fixes-20261017/before-source-sha256.json": {
+      "original_sha256": "c4dd07e794fbaedceed269ed113289836687c8be902b78128fec0f1a2dd4a265",
+      "current_sha256": "c4dd07e794fbaedceed269ed113289836687c8be902b78128fec0f1a2dd4a265"
+    },
+    "agentloom-sdk/qa/evidence/round4-fixes-20261017/collected-tests.txt": {
+      "original_sha256": "85b543278da8783cc365a1006a0c10c327e17dee7db5bc92b159864b2b35dc5f",
+      "current_sha256": "85b543278da8783cc365a1006a0c10c327e17dee7db5bc92b159864b2b35dc5f"
+    },
+    "agentloom-sdk/qa/evidence/round4-fixes-20261017/docs-build-before-summary.txt": {
+      "original_sha256": "4405d50f34c655729a553b24d35cfaf082ec5110e790d65a59d80a6138450d8d",
+      "current_sha256": "4405d50f34c655729a553b24d35cfaf082ec5110e790d65a59d80a6138450d8d"
+    },
+    "agentloom-sdk/qa/evidence/round4-fixes-20261017/docs-build-first.txt": {
+      "original_sha256": "f83dcfe4a7822cf56e8bae9c6962acb8c54f9e045d66b42005d1740f0928dd66",
+      "current_sha256": "f83dcfe4a7822cf56e8bae9c6962acb8c54f9e045d66b42005d1740f0928dd66"
+    },
+    "agentloom-sdk/qa/evidence/round4-fixes-20261017/docs-build.txt": {
+      "original_sha256": "5fbf76dc1e9936164732824c05a44331d75f343b38aaabd9cae8fa52b00b2b15",
+      "current_sha256": "5fbf76dc1e9936164732824c05a44331d75f343b38aaabd9cae8fa52b00b2b15"
+    },
+    "agentloom-sdk/qa/evidence/round4-fixes-20261017/docs-check-before-summary.txt": {
+      "original_sha256": "50d06d78041695c891a2fb4df412e7a041d0aa3f64c9f82e7cd3088fc59739b2",
+      "current_sha256": "50d06d78041695c891a2fb4df412e7a041d0aa3f64c9f82e7cd3088fc59739b2"
+    },
+    "agentloom-sdk/qa/evidence/round4-fixes-20261017/docs-check-first.txt": {
+      "original_sha256": "bb8a2514807d279566f1ec79e5e0ad709ce523fb595463a06cb8b4449c3e4a2e",
+      "current_sha256": "bb8a2514807d279566f1ec79e5e0ad709ce523fb595463a06cb8b4449c3e4a2e"
+    },
+    "agentloom-sdk/qa/evidence/round4-fixes-20261017/docs-check.txt": {
+      "original_sha256": "d66664a8371d8ea281160731391358f1e1d67ed7fc266f0a096302ba5435d6e4",
+      "current_sha256": "d66664a8371d8ea281160731391358f1e1d67ed7fc266f0a096302ba5435d6e4"
+    },
+    "agentloom-sdk/qa/evidence/round4-fixes-20261017/documents-sha256.json": {
+      "original_sha256": "9dd0efa2bb576b00bebdf5a910c05ffa382f3f5ec6dc170ab7765f67c1e711ac",
+      "current_sha256": "9dd0efa2bb576b00bebdf5a910c05ffa382f3f5ec6dc170ab7765f67c1e711ac"
+    },
+    "agentloom-sdk/qa/evidence/round4-fixes-20261017/focused-final.junit.xml": {
+      "original_sha256": "10fce64a502ca30816455419dc0364453e495b54eb4e4a1832c0663d0b75fd58",
+      "current_sha256": "10fce64a502ca30816455419dc0364453e495b54eb4e4a1832c0663d0b75fd58"
+    },
+    "agentloom-sdk/qa/evidence/round4-fixes-20261017/focused-final.txt": {
+      "original_sha256": "261b0ce785023bcbc9847217fdae79d3cfeaa3819ee951a239374cdc94143f0d",
+      "current_sha256": "261b0ce785023bcbc9847217fdae79d3cfeaa3819ee951a239374cdc94143f0d"
+    },
+    "agentloom-sdk/qa/evidence/round4-fixes-20261017/focused-first.junit.xml": {
+      "original_sha256": "3903b78301f104836b9705906480871f882ad4651a0931bdf656d8ebe35fb9a2",
+      "current_sha256": "3903b78301f104836b9705906480871f882ad4651a0931bdf656d8ebe35fb9a2"
+    },
+    "agentloom-sdk/qa/evidence/round4-fixes-20261017/focused-first.txt": {
+      "original_sha256": "07dd7654805527ce536c23bca19f62c9d29712107da1970570022d7efb7433af",
+      "current_sha256": "07dd7654805527ce536c23bca19f62c9d29712107da1970570022d7efb7433af"
+    },
+    "agentloom-sdk/qa/evidence/round4-fixes-20261017/regression-summary.json": {
+      "original_sha256": "71b7793ba30ed3f13ac13915dd69418d61124d481af94d1b67470c24a29065c0",
+      "current_sha256": "71b7793ba30ed3f13ac13915dd69418d61124d481af94d1b67470c24a29065c0"
+    },
+    "agentloom-sdk/qa/evidence/round4-fixes-20261017/regression.junit.xml": {
+      "original_sha256": "f8ebe4ca1f92d207c19dd21caa2fe4b508a50eb05c2ffacfdc584159392e4acc",
+      "current_sha256": "f8ebe4ca1f92d207c19dd21caa2fe4b508a50eb05c2ffacfdc584159392e4acc"
+    },
+    "agentloom-sdk/qa/evidence/round4-fixes-20261017/regression.txt": {
+      "original_sha256": "7bde490c3d161e31e04bee6ed38e45bc2cec439a468e3febcc55dad2ec2cd308",
+      "current_sha256": "7bde490c3d161e31e04bee6ed38e45bc2cec439a468e3febcc55dad2ec2cd308"
+    },
+    "agentloom-sdk/qa/evidence/round4-fixes-20261017/round4-first.junit.xml": {
+      "original_sha256": "12c50f15f84668151410f987e01df861edef737608279e7a03670a284d6dc21d",
+      "current_sha256": "12c50f15f84668151410f987e01df861edef737608279e7a03670a284d6dc21d"
+    },
+    "agentloom-sdk/qa/evidence/round4-fixes-20261017/round4-first.txt": {
+      "original_sha256": "ad7180d80f83adc3f3ce266c1703fe7175b4ab97dded122c7bb86f3a840b3d5b",
+      "current_sha256": "ad7180d80f83adc3f3ce266c1703fe7175b4ab97dded122c7bb86f3a840b3d5b"
+    },
+    "agentloom-sdk/qa/evidence/round4-fixes-20261017/ruff-format.txt": {
+      "original_sha256": "b1589e558de12a68704dd4a8223f2d36ac6a88906f2ee6989c0778b550734808",
+      "current_sha256": "b1589e558de12a68704dd4a8223f2d36ac6a88906f2ee6989c0778b550734808"
+    },
+    "agentloom-sdk/qa/evidence/round4-fixes-20261017/ruff.txt": {
+      "original_sha256": "82b3e6a6c090a57601d22943bd23fca9218d1031dbe5a7b754092f9a156b4f18",
+      "current_sha256": "82b3e6a6c090a57601d22943bd23fca9218d1031dbe5a7b754092f9a156b4f18"
+    },
+    "agentloom-sdk/qa/evidence/round4-fixes-20261017/run-source-sha256.json": {
+      "original_sha256": "de404c1bfdbd176218d44e15b5e515bbe39f5df12535a15cb4ed5d5085561d6e",
+      "current_sha256": "de404c1bfdbd176218d44e15b5e515bbe39f5df12535a15cb4ed5d5085561d6e"
+    },
+    "agentloom-sdk/qa/evidence/round4-fixes-20261017/summary.json": {
+      "original_sha256": "7a985bb49a57988d000881559f14d319084fe39f8fdb6b56cb50cf445ff61079",
+      "current_sha256": "7a985bb49a57988d000881559f14d319084fe39f8fdb6b56cb50cf445ff61079"
+    },
+    "agentloom-sdk/qa/evidence/round4-fixes-20261017/verification-environment.json": {
+      "original_sha256": "6a21c152ada4e2c333622a9c9bb7f574f09cf337cf1bd7a37164cf096b53d178",
+      "current_sha256": "6a21c152ada4e2c333622a9c9bb7f574f09cf337cf1bd7a37164cf096b53d178"
+    },
+    "agentloom-sdk/qa/evidence/round4-fixes-20261017/wheel-build.txt": {
+      "original_sha256": "13248f8e481faa2fa90f52aa77261bb451ebb1c8db9d2406f2609d308625b36c",
+      "current_sha256": "13248f8e481faa2fa90f52aa77261bb451ebb1c8db9d2406f2609d308625b36c"
+    },
+    "agentloom-sdk/qa/evidence/round4-fixes-20261017/wheel-install.txt": {
+      "original_sha256": "213ec79dff6426d7c44c903c5898b1458620a019f30f9e523856b9184f9e7431",
+      "current_sha256": "213ec79dff6426d7c44c903c5898b1458620a019f30f9e523856b9184f9e7431"
+    },
+    "agentloom-sdk/qa/evidence/round4-fixes-20261017/wheel-smoke-source.txt": {
+      "original_sha256": "9fd5977e7a4c082dade6123df0cdc9caf47903f96d83ec0e92c63e06b4f3143d",
+      "current_sha256": "9fd5977e7a4c082dade6123df0cdc9caf47903f96d83ec0e92c63e06b4f3143d"
+    },
+    "agentloom-sdk/qa/evidence/round4-fixes-20261017/wheel-summary.json": {
+      "original_sha256": "8046f013ac28925167b71322356329bbe388f6e1f07659425fae025285b80cda",
+      "current_sha256": "8046f013ac28925167b71322356329bbe388f6e1f07659425fae025285b80cda"
+    },
+    "agentloom-sdk/qa/evidence/round5-fixes-20261017/before.junit.xml": {
+      "original_sha256": "8715ca6eb7a5f77e43fa8dff1f5433c8fa749b6433c282c575a7311f5b990275",
+      "current_sha256": "8715ca6eb7a5f77e43fa8dff1f5433c8fa749b6433c282c575a7311f5b990275"
+    },
+    "agentloom-sdk/qa/evidence/round5-fixes-20261017/before.txt": {
+      "original_sha256": "fb7ac1548f0def176cdbf766c3e1a71538978f9f0771270ec94aa7f10b125400",
+      "current_sha256": "fb7ac1548f0def176cdbf766c3e1a71538978f9f0771270ec94aa7f10b125400"
+    },
+    "agentloom-sdk/qa/evidence/round5-fixes-20261017/boundaries.junit.xml": {
+      "original_sha256": "9265c388d2a7c08fdbf2c2935c2fce4d0897abe1921705b1cc10a3b2ae7beb8a",
+      "current_sha256": "9265c388d2a7c08fdbf2c2935c2fce4d0897abe1921705b1cc10a3b2ae7beb8a"
+    },
+    "agentloom-sdk/qa/evidence/round5-fixes-20261017/boundaries.txt": {
+      "original_sha256": "ca8703e9488bc0ab5e6952069473b44880154b021aa913e9a2c3db68db940c42",
+      "current_sha256": "ca8703e9488bc0ab5e6952069473b44880154b021aa913e9a2c3db68db940c42"
+    },
+    "agentloom-sdk/qa/evidence/round5-fixes-20261017/collected-tests.txt": {
+      "original_sha256": "8c1ff30fc46c925cf65d870fcd9552c096584f3d5e79d002f7cbd983d63c1aaf",
+      "current_sha256": "8c1ff30fc46c925cf65d870fcd9552c096584f3d5e79d002f7cbd983d63c1aaf"
+    },
+    "agentloom-sdk/qa/evidence/round5-fixes-20261017/completion-worker-source.txt": {
+      "original_sha256": "b3e8a02166e5bf930d87230eff8a55380743dea31c172b279dc3cb87e9e2d542",
+      "current_sha256": "b3e8a02166e5bf930d87230eff8a55380743dea31c172b279dc3cb87e9e2d542"
+    },
+    "agentloom-sdk/qa/evidence/round5-fixes-20261017/docs-build.txt": {
+      "original_sha256": "7f174ed5f6ea899a07e17ef2fc68e35e4d215b3130a4068d7c75e2c6bea82ecf",
+      "current_sha256": "7f174ed5f6ea899a07e17ef2fc68e35e4d215b3130a4068d7c75e2c6bea82ecf"
+    },
+    "agentloom-sdk/qa/evidence/round5-fixes-20261017/docs-check.txt": {
+      "original_sha256": "b8f049fe4c8c26154936408fcd8ac65ed917b31c2269c932489008aed8d8be2d",
+      "current_sha256": "b8f049fe4c8c26154936408fcd8ac65ed917b31c2269c932489008aed8d8be2d"
+    },
+    "agentloom-sdk/qa/evidence/round5-fixes-20261017/document-store-boundary.json": {
+      "original_sha256": "a3594c9459b41151509a5abc43e72b6da80e351459667b4a059ba385b4e0190d",
+      "current_sha256": "a3594c9459b41151509a5abc43e72b6da80e351459667b4a059ba385b4e0190d"
+    },
+    "agentloom-sdk/qa/evidence/round5-fixes-20261017/documents-sha256.json": {
+      "original_sha256": "79e1ccf4fa326a7afef95cb60cee88015b9ecb7e7f6e55569bc962893e516ac9",
+      "current_sha256": "79e1ccf4fa326a7afef95cb60cee88015b9ecb7e7f6e55569bc962893e516ac9"
+    },
+    "agentloom-sdk/qa/evidence/round5-fixes-20261017/error-contract-final.txt": {
+      "original_sha256": "7e254cea4678e6819d661c2309bfec8a025a32fc504882a1ee29df6fb2fa8e77",
+      "current_sha256": "7e254cea4678e6819d661c2309bfec8a025a32fc504882a1ee29df6fb2fa8e77"
+    },
+    "agentloom-sdk/qa/evidence/round5-fixes-20261017/final-source-after.json": {
+      "original_sha256": "bb541c8e2b4c6a559516be27b71abd39b2fdd7ecd6ca4358540399900c1edbd3",
+      "current_sha256": "bb541c8e2b4c6a559516be27b71abd39b2fdd7ecd6ca4358540399900c1edbd3"
+    },
+    "agentloom-sdk/qa/evidence/round5-fixes-20261017/final-source-before.json": {
+      "original_sha256": "bb541c8e2b4c6a559516be27b71abd39b2fdd7ecd6ca4358540399900c1edbd3",
+      "current_sha256": "bb541c8e2b4c6a559516be27b71abd39b2fdd7ecd6ca4358540399900c1edbd3"
+    },
+    "agentloom-sdk/qa/evidence/round5-fixes-20261017/final-validation.txt": {
+      "original_sha256": "12736e6d7f65a96dfe860e8dda43725588b348029d7e9151f59643413dfca608",
+      "current_sha256": "12736e6d7f65a96dfe860e8dda43725588b348029d7e9151f59643413dfca608"
+    },
+    "agentloom-sdk/qa/evidence/round5-fixes-20261017/focused-initial.txt": {
+      "original_sha256": "20b2170d06e676487c54b0ea307b82645366ebbfeaaf1fc273af3661f664e29d",
+      "current_sha256": "20b2170d06e676487c54b0ea307b82645366ebbfeaaf1fc273af3661f664e29d"
+    },
+    "agentloom-sdk/qa/evidence/round5-fixes-20261017/legacy-recovery-source.txt": {
+      "original_sha256": "525b1ac740f49c286d83a85e5690124caeecff0dc53aaf1135359208eaeb5bbd",
+      "current_sha256": "525b1ac740f49c286d83a85e5690124caeecff0dc53aaf1135359208eaeb5bbd"
+    },
+    "agentloom-sdk/qa/evidence/round5-fixes-20261017/legacy-recovery.txt": {
+      "original_sha256": "bf6d0123d913c96d6709ce113ac9d362b98e4398f088843048574c03088d0838",
+      "current_sha256": "bf6d0123d913c96d6709ce113ac9d362b98e4398f088843048574c03088d0838"
+    },
+    "agentloom-sdk/qa/evidence/round5-fixes-20261017/new-boundaries-final.junit.xml": {
+      "original_sha256": "d354766a7f500fc8e439f0ce63b6bdda14fc80a367f5fd04a40f9404df8f53e9",
+      "current_sha256": "d354766a7f500fc8e439f0ce63b6bdda14fc80a367f5fd04a40f9404df8f53e9"
+    },
+    "agentloom-sdk/qa/evidence/round5-fixes-20261017/new-boundaries-final.txt": {
+      "original_sha256": "8d630d9b4135b5842955a69248e601080a5f5300d662592d410734388af0d0c6",
+      "current_sha256": "8d630d9b4135b5842955a69248e601080a5f5300d662592d410734388af0d0c6"
+    },
+    "agentloom-sdk/qa/evidence/round5-fixes-20261017/new-boundaries.junit.xml": {
+      "original_sha256": "f05f8fe3ebd3c4709a032c8935689113863fcb2fcf6d69616c80e899795b1c83",
+      "current_sha256": "f05f8fe3ebd3c4709a032c8935689113863fcb2fcf6d69616c80e899795b1c83"
+    },
+    "agentloom-sdk/qa/evidence/round5-fixes-20261017/new-boundaries.txt": {
+      "original_sha256": "2e0067a6f2f8c41df5b110b313349f970b52b1e4d0a50b50b6a2557cc1f4907a",
+      "current_sha256": "2e0067a6f2f8c41df5b110b313349f970b52b1e4d0a50b50b6a2557cc1f4907a"
+    },
+    "agentloom-sdk/qa/evidence/round5-fixes-20261017/regression-command-source.txt": {
+      "original_sha256": "bf5363792c9d99d20e44de38cd2f32c8989debf9c0282bababebbdc704c7fd0a",
+      "current_sha256": "bf5363792c9d99d20e44de38cd2f32c8989debf9c0282bababebbdc704c7fd0a"
+    },
+    "agentloom-sdk/qa/evidence/round5-fixes-20261017/regression-final-summary.json": {
+      "original_sha256": "12736e6d7f65a96dfe860e8dda43725588b348029d7e9151f59643413dfca608",
+      "current_sha256": "12736e6d7f65a96dfe860e8dda43725588b348029d7e9151f59643413dfca608"
+    },
+    "agentloom-sdk/qa/evidence/round5-fixes-20261017/regression-final.junit.xml": {
+      "original_sha256": "f831935123363a5a5bff7d0c722a3ce1d48f81c046b984db0a3eff247693bbe3",
+      "current_sha256": "f831935123363a5a5bff7d0c722a3ce1d48f81c046b984db0a3eff247693bbe3"
+    },
+    "agentloom-sdk/qa/evidence/round5-fixes-20261017/regression-final.txt": {
+      "original_sha256": "107788534b08a10cc6f6c317dfc576f872a4037d8b73cb20a8be415b897d89dc",
+      "current_sha256": "107788534b08a10cc6f6c317dfc576f872a4037d8b73cb20a8be415b897d89dc"
+    },
+    "agentloom-sdk/qa/evidence/round5-fixes-20261017/regression.junit.xml": {
+      "original_sha256": "7ff08335890264ca09f8f35aadcad9a1eefab60552cb07b7b13f83017b9434a2",
+      "current_sha256": "7ff08335890264ca09f8f35aadcad9a1eefab60552cb07b7b13f83017b9434a2"
+    },
+    "agentloom-sdk/qa/evidence/round5-fixes-20261017/regression.txt": {
+      "original_sha256": "3a5c9c4a171f41bf292f4b94f61f635e0b3bb527da556b200084d50406127b53",
+      "current_sha256": "3a5c9c4a171f41bf292f4b94f61f635e0b3bb527da556b200084d50406127b53"
+    },
+    "agentloom-sdk/qa/evidence/round5-fixes-20261017/ruff-format.txt": {
+      "original_sha256": "f4d457398bc028782f539b5ebf8cdff3be54a8797b443d5c17d259f8ffa88d8c",
+      "current_sha256": "f4d457398bc028782f539b5ebf8cdff3be54a8797b443d5c17d259f8ffa88d8c"
+    },
+    "agentloom-sdk/qa/evidence/round5-fixes-20261017/ruff.txt": {
+      "original_sha256": "82b3e6a6c090a57601d22943bd23fca9218d1031dbe5a7b754092f9a156b4f18",
+      "current_sha256": "82b3e6a6c090a57601d22943bd23fca9218d1031dbe5a7b754092f9a156b4f18"
+    },
+    "agentloom-sdk/qa/evidence/round5-fixes-20261017/separate-probe-assessment.json": {
+      "original_sha256": "522d04cf14655eb634e8b630794a67cddf724d7e76595c2958eec9f48001377e",
+      "current_sha256": "522d04cf14655eb634e8b630794a67cddf724d7e76595c2958eec9f48001377e"
+    },
+    "agentloom-sdk/qa/evidence/round5-fixes-20261017/separate-probe-corrected.junit.xml": {
+      "original_sha256": "a5879b4b79e4036910c4d6403c2a5157404758eb53195a3425bb7723cce7b1f9",
+      "current_sha256": "a5879b4b79e4036910c4d6403c2a5157404758eb53195a3425bb7723cce7b1f9"
+    },
+    "agentloom-sdk/qa/evidence/round5-fixes-20261017/separate-probe-corrected.txt": {
+      "original_sha256": "b694f37d3b44c89c5d015bb8c71e6de9abb6ececc62608de237b825e87326bb1",
+      "current_sha256": "b694f37d3b44c89c5d015bb8c71e6de9abb6ececc62608de237b825e87326bb1"
+    },
+    "agentloom-sdk/qa/evidence/round5-fixes-20261017/separate-probe-initial.txt": {
+      "original_sha256": "335e29925e11359d05d610f98e7fd43920de7ed578f3353b710d2c90c27f2370",
+      "current_sha256": "335e29925e11359d05d610f98e7fd43920de7ed578f3353b710d2c90c27f2370"
+    },
+    "agentloom-sdk/qa/evidence/round5-fixes-20261017/separate-probe-root.txt": {
+      "original_sha256": "39d524835f696fdbb2def06b5da8bfdfec6a0fe60dda758780a9fea5a84d87be",
+      "current_sha256": "39d524835f696fdbb2def06b5da8bfdfec6a0fe60dda758780a9fea5a84d87be"
+    },
+    "agentloom-sdk/qa/evidence/round5-fixes-20261017/separate-probe-scratch-corrections.txt": {
+      "original_sha256": "fa24dc66a768e09201215d63a6874f024f5ee69d97b4502e2e3b7329b4c4fd55",
+      "current_sha256": "fa24dc66a768e09201215d63a6874f024f5ee69d97b4502e2e3b7329b4c4fd55"
+    },
+    "agentloom-sdk/qa/evidence/round5-fixes-20261017/separate-probe-snapshot.json": {
+      "original_sha256": "439e0ed574bd77e8050c1c00043ac914cc5ccc5a5c49baff43b38637af49147f",
+      "current_sha256": "439e0ed574bd77e8050c1c00043ac914cc5ccc5a5c49baff43b38637af49147f"
+    },
+    "agentloom-sdk/qa/evidence/round5-fixes-20261017/separate-probe-source.txt": {
+      "original_sha256": "2c59595cd8b8ec79ef482e209e24e6956e6e7e4fdf9319ab591dfdba6a2352d7",
+      "current_sha256": "2c59595cd8b8ec79ef482e209e24e6956e6e7e4fdf9319ab591dfdba6a2352d7"
+    },
+    "agentloom-sdk/qa/evidence/round5-fixes-20261017/separate-probe.junit.xml": {
+      "original_sha256": "e88f2d5bc99c2283e0f5358aa90f4ea2f3695ee5be3a94f7b9f7ea35e70de55c",
+      "current_sha256": "e88f2d5bc99c2283e0f5358aa90f4ea2f3695ee5be3a94f7b9f7ea35e70de55c"
+    },
+    "agentloom-sdk/qa/evidence/round5-fixes-20261017/separate-probe.txt": {
+      "original_sha256": "ffd669f02a03460e2bbf748b6842c1dac2942c89c7179bee965499d2b5153b28",
+      "current_sha256": "ffd669f02a03460e2bbf748b6842c1dac2942c89c7179bee965499d2b5153b28"
+    },
+    "agentloom-sdk/qa/evidence/round5-fixes-20261017/source-before-regression.json": {
+      "original_sha256": "72c63a36e1959ef0f5751b4fe891b5ceffadc90190be0565973bb9d216c37ea5",
+      "current_sha256": "72c63a36e1959ef0f5751b4fe891b5ceffadc90190be0565973bb9d216c37ea5"
+    },
+    "agentloom-sdk/qa/evidence/round5-fixes-20261017/summary.json": {
+      "original_sha256": "6b1878938dc909b2e85e6953f90df5209de56d79d29a72e1cd6c001ed1729a3e",
+      "current_sha256": "6b1878938dc909b2e85e6953f90df5209de56d79d29a72e1cd6c001ed1729a3e"
+    },
+    "agentloom-sdk/qa/evidence/round5-fixes-20261017/wheel-build.txt": {
+      "original_sha256": "feeba1236303701f242b6bda4d8238bb3e1a87eb89099906994308db0db37105",
+      "current_sha256": "feeba1236303701f242b6bda4d8238bb3e1a87eb89099906994308db0db37105"
+    },
+    "agentloom-sdk/qa/evidence/round5-fixes-20261017/wheel-final.txt": {
+      "original_sha256": "bf4cfdf675c351df37aefbeda961cf79e13d0c30ab40cb0fc8f81ba189355227",
+      "current_sha256": "bf4cfdf675c351df37aefbeda961cf79e13d0c30ab40cb0fc8f81ba189355227"
+    },
+    "agentloom-sdk/qa/evidence/round5-fixes-20261017/wheel-install.txt": {
+      "original_sha256": "9f8fb89545fa7b971f6b88dcefb145119ec2119666111d3db72f34730f0e05a7",
+      "current_sha256": "9f8fb89545fa7b971f6b88dcefb145119ec2119666111d3db72f34730f0e05a7"
+    },
+    "agentloom-sdk/qa/evidence/round5-fixes-20261017/wheel-summary.json": {
+      "original_sha256": "bf4cfdf675c351df37aefbeda961cf79e13d0c30ab40cb0fc8f81ba189355227",
+      "current_sha256": "bf4cfdf675c351df37aefbeda961cf79e13d0c30ab40cb0fc8f81ba189355227"
+    },
+    "agentloom-sdk/qa/evidence/round5-fixes-20261017/wheel-verification-source.txt": {
+      "original_sha256": "a964c6db83d3259c451eb6ac4c304c68414c6b6ad7fecdb380f2a5d83c7f782b",
+      "current_sha256": "a964c6db83d3259c451eb6ac4c304c68414c6b6ad7fecdb380f2a5d83c7f782b"
+    },
+    "agentloom-sdk/qa/evidence/round5-fixes-20261017/wheel.txt": {
+      "original_sha256": "ae2dd85826f7507a8ebe0484940e518f0bc72526daa60a1e2b9deef52e9fddaa",
+      "current_sha256": "ae2dd85826f7507a8ebe0484940e518f0bc72526daa60a1e2b9deef52e9fddaa"
+    },
+    "agentloom-sdk/qa/evidence/round8-fixes-20261018/docs-build.txt": {
+      "original_sha256": "b899034d9240b5a713e686fad220dfcdca9c5aa551e7efcb7fc37dd2b1cb437e",
+      "current_sha256": "b899034d9240b5a713e686fad220dfcdca9c5aa551e7efcb7fc37dd2b1cb437e"
+    },
+    "agentloom-sdk/qa/evidence/round8-fixes-20261018/docs-check.txt": {
+      "original_sha256": "0fe757425a26f763ba5c5321c22c5bf90feb1f9109ff9677373bb4f1b74ca447",
+      "current_sha256": "0fe757425a26f763ba5c5321c22c5bf90feb1f9109ff9677373bb4f1b74ca447"
+    },
+    "agentloom-sdk/qa/evidence/round8-fixes-20261018/initial-collection-regression-summary.json": {
+      "original_sha256": "9135ee49f922c9b2af3f71cd7356358db57ca86235ca24da414243ecc829833e",
+      "current_sha256": "9135ee49f922c9b2af3f71cd7356358db57ca86235ca24da414243ecc829833e"
+    },
+    "agentloom-sdk/qa/evidence/round8-fixes-20261018/initial-collection-regression.junit.xml": {
+      "original_sha256": "a85283ad94a720649d94f8315b39601d2041abea40833ff9d55d52aa9fd5b852",
+      "current_sha256": "a85283ad94a720649d94f8315b39601d2041abea40833ff9d55d52aa9fd5b852"
+    },
+    "agentloom-sdk/qa/evidence/round8-fixes-20261018/initial-collection-regression.txt": {
+      "original_sha256": "df672b0a715fb59008c928ef3a32b0fc4571f26b19bb4a5831c5cf0473f65349",
+      "current_sha256": "df672b0a715fb59008c928ef3a32b0fc4571f26b19bb4a5831c5cf0473f65349"
+    },
+    "agentloom-sdk/qa/evidence/round8-fixes-20261018/initial-collection-source-after.json": {
+      "original_sha256": "95fdcce1c7b692520d54c2a6f0a7d34064a0d0630b436e4494e654b451570ada",
+      "current_sha256": "95fdcce1c7b692520d54c2a6f0a7d34064a0d0630b436e4494e654b451570ada"
+    },
+    "agentloom-sdk/qa/evidence/round8-fixes-20261018/initial-collection-source-before.json": {
+      "original_sha256": "95fdcce1c7b692520d54c2a6f0a7d34064a0d0630b436e4494e654b451570ada",
+      "current_sha256": "95fdcce1c7b692520d54c2a6f0a7d34064a0d0630b436e4494e654b451570ada"
+    },
+    "agentloom-sdk/qa/evidence/round8-fixes-20261018/qa-integrity.json": {
+      "original_sha256": "2ae18a7d564ceaa87f9a61e7c3e35b93a54f986a27d495d4dfa2d304bc96f5ca",
+      "current_sha256": "2ae18a7d564ceaa87f9a61e7c3e35b93a54f986a27d495d4dfa2d304bc96f5ca"
+    },
+    "agentloom-sdk/qa/evidence/round8-fixes-20261018/regression-summary.json": {
+      "original_sha256": "21c8c0393bf29dbb0a16b67adbfef2a14cade124f18d25a1e5dd70ae32a20382",
+      "current_sha256": "21c8c0393bf29dbb0a16b67adbfef2a14cade124f18d25a1e5dd70ae32a20382"
+    },
+    "agentloom-sdk/qa/evidence/round8-fixes-20261018/regression.junit.xml": {
+      "original_sha256": "3836eaff44b787970e629b78317953e13a93577946b8f87087026f9aa5837fcc",
+      "current_sha256": "3836eaff44b787970e629b78317953e13a93577946b8f87087026f9aa5837fcc"
+    },
+    "agentloom-sdk/qa/evidence/round8-fixes-20261018/regression.txt": {
+      "original_sha256": "ba71a22c85d4adc7e7e87d65681da1ce193ba8c98543186da1bdd3cee57abdb5",
+      "current_sha256": "ba71a22c85d4adc7e7e87d65681da1ce193ba8c98543186da1bdd3cee57abdb5"
+    },
+    "agentloom-sdk/qa/evidence/round8-fixes-20261018/ruff-format.txt": {
+      "original_sha256": "692aa17a66e5a48293d97156d9c8b2690bef0a98514251662ef4832003fb0463",
+      "current_sha256": "692aa17a66e5a48293d97156d9c8b2690bef0a98514251662ef4832003fb0463"
+    },
+    "agentloom-sdk/qa/evidence/round8-fixes-20261018/ruff-lint.txt": {
+      "original_sha256": "82b3e6a6c090a57601d22943bd23fca9218d1031dbe5a7b754092f9a156b4f18",
+      "current_sha256": "82b3e6a6c090a57601d22943bd23fca9218d1031dbe5a7b754092f9a156b4f18"
+    },
+    "agentloom-sdk/qa/evidence/round8-fixes-20261018/source-after.json": {
+      "original_sha256": "9f24eb1ae5992b8a59e48ac260a0210e0f31fd726bbae093ba78ca10427c84c1",
+      "current_sha256": "9f24eb1ae5992b8a59e48ac260a0210e0f31fd726bbae093ba78ca10427c84c1"
+    },
+    "agentloom-sdk/qa/evidence/round8-fixes-20261018/source-before.json": {
+      "original_sha256": "9f24eb1ae5992b8a59e48ac260a0210e0f31fd726bbae093ba78ca10427c84c1",
+      "current_sha256": "9f24eb1ae5992b8a59e48ac260a0210e0f31fd726bbae093ba78ca10427c84c1"
+    },
+    "agentloom-sdk/qa/evidence/round8-fixes-20261018/verify_installation.py": {
+      "original_sha256": "953fadbb158eae935e8e533ab2d17cd0261df44f187755c0f53b75ed32c06603",
+      "current_sha256": "953fadbb158eae935e8e533ab2d17cd0261df44f187755c0f53b75ed32c06603"
+    },
+    "agentloom-sdk/qa/evidence/round8-fixes-20261018/wheel-build.txt": {
+      "original_sha256": "7ccee589baa106b4b6096f97149bc2cf7e32517491d4f7752f1972b1df45fd07",
+      "current_sha256": "7ccee589baa106b4b6096f97149bc2cf7e32517491d4f7752f1972b1df45fd07"
+    },
+    "agentloom-sdk/qa/evidence/round8-fixes-20261018/wheel-install.txt": {
+      "original_sha256": "72e8f4e3b38f7c7392cf73f4aeba899afdf4157c75e97ed0456b8c56d6b9cb12",
+      "current_sha256": "72e8f4e3b38f7c7392cf73f4aeba899afdf4157c75e97ed0456b8c56d6b9cb12"
+    },
+    "agentloom-sdk/qa/evidence/round8-fixes-20261018/wheel-summary.json": {
+      "original_sha256": "9e4f66eed10dd020f9b518d744de78555e10143e0ab99179f72ffb7fd522760d",
+      "current_sha256": "9e4f66eed10dd020f9b518d744de78555e10143e0ab99179f72ffb7fd522760d"
+    },
+    "agentloom-sdk/qa/evidence/summary.json": {
+      "original_sha256": "89f9ddc20b0507c3c67dcd0ec3c963c8995fb57912c9ca2bc184f6dc06022053",
+      "current_sha256": "89f9ddc20b0507c3c67dcd0ec3c963c8995fb57912c9ca2bc184f6dc06022053"
+    },
+    "agentloom-sdk/qa/evidence/wheel-smoke.json": {
+      "original_sha256": "4ee210ef01d6db151f08e4212e898b7b2d1b104a47faa3713b41a0831d84d3ff",
+      "current_sha256": "4ee210ef01d6db151f08e4212e898b7b2d1b104a47faa3713b41a0831d84d3ff"
+    },
+    "agentloom-sdk/qa/evidence/workspace-spi-20261018/before-completion-fix-wheel-build.txt": {
+      "original_sha256": "d5906ca581c0bb31d0839a9049c0be6f129b323f2fd2ce008d0a1218f77f17c9",
+      "current_sha256": "d5906ca581c0bb31d0839a9049c0be6f129b323f2fd2ce008d0a1218f77f17c9"
+    },
+    "agentloom-sdk/qa/evidence/workspace-spi-20261018/before-completion-fix-wheel-install.txt": {
+      "original_sha256": "72e8f4e3b38f7c7392cf73f4aeba899afdf4157c75e97ed0456b8c56d6b9cb12",
+      "current_sha256": "72e8f4e3b38f7c7392cf73f4aeba899afdf4157c75e97ed0456b8c56d6b9cb12"
+    },
+    "agentloom-sdk/qa/evidence/workspace-spi-20261018/before-completion-fix-wheel-summary.json": {
+      "original_sha256": "362783c3a000404e9f7fd6488e9e27d23a7e6ced99086ece0f63bec737c1b533",
+      "current_sha256": "362783c3a000404e9f7fd6488e9e27d23a7e6ced99086ece0f63bec737c1b533"
+    },
+    "agentloom-sdk/qa/evidence/workspace-spi-20261018/before-final-boundaries-regression-source-before.json": {
+      "original_sha256": "b609da696c42d6a253a3352350ffe00d7fc786ea5643fd81af0344321d0236f3",
+      "current_sha256": "b609da696c42d6a253a3352350ffe00d7fc786ea5643fd81af0344321d0236f3"
+    },
+    "agentloom-sdk/qa/evidence/workspace-spi-20261018/before-final-boundaries-regression.junit.xml": {
+      "original_sha256": "13a1e73cf516f6a78fa1100757d3caa7ad86ca979f78bf59800fc81c74b2ec16",
+      "current_sha256": "13a1e73cf516f6a78fa1100757d3caa7ad86ca979f78bf59800fc81c74b2ec16"
+    },
+    "agentloom-sdk/qa/evidence/workspace-spi-20261018/before-final-boundaries-regression.txt": {
+      "original_sha256": "709272d3ef1bff2c5784230a0fe1e3e36441f3ef4247e954f1950c59335eddf3",
+      "current_sha256": "709272d3ef1bff2c5784230a0fe1e3e36441f3ef4247e954f1950c59335eddf3"
+    },
+    "agentloom-sdk/qa/evidence/workspace-spi-20261018/before-final-boundaries-wheel-build.txt": {
+      "original_sha256": "c2cac735bf339e532c3723f4c16872be5b0fd72307a92433debc27dea7bc6867",
+      "current_sha256": "c2cac735bf339e532c3723f4c16872be5b0fd72307a92433debc27dea7bc6867"
+    },
+    "agentloom-sdk/qa/evidence/workspace-spi-20261018/before-final-boundaries-wheel-install.txt": {
+      "original_sha256": "72e8f4e3b38f7c7392cf73f4aeba899afdf4157c75e97ed0456b8c56d6b9cb12",
+      "current_sha256": "72e8f4e3b38f7c7392cf73f4aeba899afdf4157c75e97ed0456b8c56d6b9cb12"
+    },
+    "agentloom-sdk/qa/evidence/workspace-spi-20261018/before-final-boundaries-wheel-summary.json": {
+      "original_sha256": "e5279ed3be938b9c287329cef19c46b084403fc5d94a17255b3d1e0c92fdded6",
+      "current_sha256": "e5279ed3be938b9c287329cef19c46b084403fc5d94a17255b3d1e0c92fdded6"
+    },
+    "agentloom-sdk/qa/evidence/workspace-spi-20261018/docs-build.txt": {
+      "original_sha256": "1afc099275ceff426a0cdfadb0ec847394520fb5213fa984c85416378be4d6ec",
+      "current_sha256": "1afc099275ceff426a0cdfadb0ec847394520fb5213fa984c85416378be4d6ec"
+    },
+    "agentloom-sdk/qa/evidence/workspace-spi-20261018/docs-check.txt": {
+      "original_sha256": "4d3c94f0dcb0cdf5f71aae00d96a1d61b3152d94ad672744d76eda6b332708c3",
+      "current_sha256": "4d3c94f0dcb0cdf5f71aae00d96a1d61b3152d94ad672744d76eda6b332708c3"
+    },
+    "agentloom-sdk/qa/evidence/workspace-spi-20261018/focused.txt": {
+      "original_sha256": "4c07cbe1df0381ce703708d5f64a86a25b7c75051d09097da725a2701afab091",
+      "current_sha256": "4c07cbe1df0381ce703708d5f64a86a25b7c75051d09097da725a2701afab091"
+    },
+    "agentloom-sdk/qa/evidence/workspace-spi-20261018/initial-regression-source-before.json": {
+      "original_sha256": "99afd33775c52519606eae9706493f03c48ceaf4c9956bc1e0bea205ba131993",
+      "current_sha256": "99afd33775c52519606eae9706493f03c48ceaf4c9956bc1e0bea205ba131993"
+    },
+    "agentloom-sdk/qa/evidence/workspace-spi-20261018/initial-regression.junit.xml": {
+      "original_sha256": "b342d4422420c73099e3f2c0c76438ef4f13bd76f88f3c931a37070bdcfd5604",
+      "current_sha256": "b342d4422420c73099e3f2c0c76438ef4f13bd76f88f3c931a37070bdcfd5604"
+    },
+    "agentloom-sdk/qa/evidence/workspace-spi-20261018/initial-regression.txt": {
+      "original_sha256": "8f9a77d2eb52d9bc311cc887262eb2ca8ff39feab38edcd410019893a3a174bb",
+      "current_sha256": "8f9a77d2eb52d9bc311cc887262eb2ca8ff39feab38edcd410019893a3a174bb"
+    },
+    "agentloom-sdk/qa/evidence/workspace-spi-20261018/initial-wheel-build.txt": {
+      "original_sha256": "e64e8259c1eb1c082f14f684890a16376593269cff86a2544c0787a614eae8f0",
+      "current_sha256": "e64e8259c1eb1c082f14f684890a16376593269cff86a2544c0787a614eae8f0"
+    },
+    "agentloom-sdk/qa/evidence/workspace-spi-20261018/initial-wheel-install.txt": {
+      "original_sha256": "72e8f4e3b38f7c7392cf73f4aeba899afdf4157c75e97ed0456b8c56d6b9cb12",
+      "current_sha256": "72e8f4e3b38f7c7392cf73f4aeba899afdf4157c75e97ed0456b8c56d6b9cb12"
+    },
+    "agentloom-sdk/qa/evidence/workspace-spi-20261018/initial-wheel-summary.json": {
+      "original_sha256": "aca41d3f84a7396b2d79626cac1e69d7ef884aab9c85d4367cd917748862d6f7",
+      "current_sha256": "aca41d3f84a7396b2d79626cac1e69d7ef884aab9c85d4367cd917748862d6f7"
+    },
+    "agentloom-sdk/qa/evidence/workspace-spi-20261018/other-work-check.json": {
+      "original_sha256": "7f8c228850d340fc3960729b43e037050eb78c18e8f01c9e40d993557ae5dcf5",
+      "current_sha256": "7f8c228850d340fc3960729b43e037050eb78c18e8f01c9e40d993557ae5dcf5"
+    },
+    "agentloom-sdk/qa/evidence/workspace-spi-20261018/regression-command.json": {
+      "original_sha256": "7e10bfbf173f8b95846d94c01b5af02e2c9f0a8c77edc23a4b0822bbc176968a",
+      "current_sha256": "7e10bfbf173f8b95846d94c01b5af02e2c9f0a8c77edc23a4b0822bbc176968a"
+    },
+    "agentloom-sdk/qa/evidence/workspace-spi-20261018/regression-source-after.json": {
+      "original_sha256": "9bccfe2078483c6ce14c80b5de2d430fbae3e3394c2b266ee36364b26f2bb258",
+      "current_sha256": "9bccfe2078483c6ce14c80b5de2d430fbae3e3394c2b266ee36364b26f2bb258"
+    },
+    "agentloom-sdk/qa/evidence/workspace-spi-20261018/regression-source-before.json": {
+      "original_sha256": "9bccfe2078483c6ce14c80b5de2d430fbae3e3394c2b266ee36364b26f2bb258",
+      "current_sha256": "9bccfe2078483c6ce14c80b5de2d430fbae3e3394c2b266ee36364b26f2bb258"
+    },
+    "agentloom-sdk/qa/evidence/workspace-spi-20261018/regression-summary.json": {
+      "original_sha256": "908dee61f18718138782aebbfaf5ce34f4b5a3dd7812ccc3e5bfb672d7198e19",
+      "current_sha256": "908dee61f18718138782aebbfaf5ce34f4b5a3dd7812ccc3e5bfb672d7198e19"
+    },
+    "agentloom-sdk/qa/evidence/workspace-spi-20261018/regression.junit.xml": {
+      "original_sha256": "8652f03e56c2fc6091980a11636ea874550085bcf17d5755c7e0bbb15db6924a",
+      "current_sha256": "8652f03e56c2fc6091980a11636ea874550085bcf17d5755c7e0bbb15db6924a"
+    },
+    "agentloom-sdk/qa/evidence/workspace-spi-20261018/regression.txt": {
+      "original_sha256": "eefa45d7626fb6b06e306d982bba860ed7c113b3cf203485515753db56c030aa",
+      "current_sha256": "eefa45d7626fb6b06e306d982bba860ed7c113b3cf203485515753db56c030aa"
+    },
+    "agentloom-sdk/qa/evidence/workspace-spi-20261018/ruff-format.txt": {
+      "original_sha256": "c53eecd93fbd42bd2109a3b8cb1ac1f3839c7d0dad32aedf4f8fa8f11477d6de",
+      "current_sha256": "c53eecd93fbd42bd2109a3b8cb1ac1f3839c7d0dad32aedf4f8fa8f11477d6de"
+    },
+    "agentloom-sdk/qa/evidence/workspace-spi-20261018/ruff.txt": {
+      "original_sha256": "82b3e6a6c090a57601d22943bd23fca9218d1031dbe5a7b754092f9a156b4f18",
+      "current_sha256": "82b3e6a6c090a57601d22943bd23fca9218d1031dbe5a7b754092f9a156b4f18"
+    },
+    "agentloom-sdk/qa/evidence/workspace-spi-20261018/summary.json": {
+      "original_sha256": "4b0cd343744986584fe5ce5ee35de644bb46d38e24368a1ba15ba9d6e42209b1",
+      "current_sha256": "4b0cd343744986584fe5ce5ee35de644bb46d38e24368a1ba15ba9d6e42209b1"
+    },
+    "agentloom-sdk/qa/evidence/workspace-spi-20261018/wheel-build.txt": {
+      "original_sha256": "13e385563d03672bc44767d348714c6760c946862178459e7485c6a81efe9059",
+      "current_sha256": "13e385563d03672bc44767d348714c6760c946862178459e7485c6a81efe9059"
+    },
+    "agentloom-sdk/qa/evidence/workspace-spi-20261018/wheel-install.txt": {
+      "original_sha256": "72e8f4e3b38f7c7392cf73f4aeba899afdf4157c75e97ed0456b8c56d6b9cb12",
+      "current_sha256": "72e8f4e3b38f7c7392cf73f4aeba899afdf4157c75e97ed0456b8c56d6b9cb12"
+    },
+    "agentloom-sdk/qa/evidence/workspace-spi-20261018/wheel-summary.json": {
+      "original_sha256": "191a496fc6c29f8c1790c57716da0ab739de709d7bab8ae700a5b6bb554a7974",
+      "current_sha256": "191a496fc6c29f8c1790c57716da0ab739de709d7bab8ae700a5b6bb554a7974"
+    },
+    "agentloom-sdk/qa/evidence/workspace-spi-publish-20261018/docs-build.txt": {
+      "original_sha256": "a118dd0a9d9aa89376ece9bd63429dbe623290872bd3ede94871cf687d6ff972",
+      "current_sha256": "a118dd0a9d9aa89376ece9bd63429dbe623290872bd3ede94871cf687d6ff972"
+    },
+    "agentloom-sdk/qa/evidence/workspace-spi-publish-20261018/docs-check.txt": {
+      "original_sha256": "54ff383d4133d4ea2012718aac2d6ee8b3c3c3e757a0129bb8cae24f35220683",
+      "current_sha256": "54ff383d4133d4ea2012718aac2d6ee8b3c3c3e757a0129bb8cae24f35220683"
+    },
+    "agentloom-sdk/qa/evidence/workspace-spi-publish-20261018/focused.txt": {
+      "original_sha256": "f36233b89f38c451514da6d307f19a19c432763329b3c65f9561b51e9ac374a9",
+      "current_sha256": "f36233b89f38c451514da6d307f19a19c432763329b3c65f9561b51e9ac374a9"
+    },
+    "agentloom-sdk/qa/evidence/workspace-spi-publish-20261018/regression-summary.json": {
+      "original_sha256": "235e0d69acef8283c4cd16d34c5274d00dbef2f3f0f045a205eef4e6901c5dc3",
+      "current_sha256": "235e0d69acef8283c4cd16d34c5274d00dbef2f3f0f045a205eef4e6901c5dc3"
+    },
+    "agentloom-sdk/qa/evidence/workspace-spi-publish-20261018/regression.junit.xml": {
+      "original_sha256": "e4c8e290419fe530de10f491fd47953f8e61ea2c0116a00b457eb62ef8f593b0",
+      "current_sha256": "e4c8e290419fe530de10f491fd47953f8e61ea2c0116a00b457eb62ef8f593b0"
+    },
+    "agentloom-sdk/qa/evidence/workspace-spi-publish-20261018/regression.txt": {
+      "original_sha256": "f2a745cf3ab5bae2880001a1e22673684efbd222c31245131318ee91e98fe0f3",
+      "current_sha256": "f2a745cf3ab5bae2880001a1e22673684efbd222c31245131318ee91e98fe0f3"
+    },
+    "agentloom-sdk/qa/evidence/workspace-spi-publish-20261018/ruff-format.txt": {
+      "original_sha256": "fd01fabb05879ed27bbbdffdeb49178b92cfb42fd301063c0e3d033ce5083431",
+      "current_sha256": "fd01fabb05879ed27bbbdffdeb49178b92cfb42fd301063c0e3d033ce5083431"
+    },
+    "agentloom-sdk/qa/evidence/workspace-spi-publish-20261018/ruff.txt": {
+      "original_sha256": "82b3e6a6c090a57601d22943bd23fca9218d1031dbe5a7b754092f9a156b4f18",
+      "current_sha256": "82b3e6a6c090a57601d22943bd23fca9218d1031dbe5a7b754092f9a156b4f18"
+    },
+    "agentloom-sdk/qa/evidence/workspace-spi-publish-20261018/source-after.json": {
+      "original_sha256": "388bdf02243e66b5ba242f93d848d8a95da7d75fb7f043c41d9a3e956c3e7ad8",
+      "current_sha256": "388bdf02243e66b5ba242f93d848d8a95da7d75fb7f043c41d9a3e956c3e7ad8"
+    },
+    "agentloom-sdk/qa/evidence/workspace-spi-publish-20261018/source-before.json": {
+      "original_sha256": "388bdf02243e66b5ba242f93d848d8a95da7d75fb7f043c41d9a3e956c3e7ad8",
+      "current_sha256": "388bdf02243e66b5ba242f93d848d8a95da7d75fb7f043c41d9a3e956c3e7ad8"
+    },
+    "agentloom-sdk/qa/evidence/workspace-spi-publish-20261018/summary.json": {
+      "original_sha256": "c60602cca42f40df2a9f862a28bcea6eae6efcd1e029afdd26c4a960e752dc00",
+      "current_sha256": "c60602cca42f40df2a9f862a28bcea6eae6efcd1e029afdd26c4a960e752dc00"
+    },
+    "agentloom-sdk/qa/evidence/workspace-spi-publish-20261018/wheel-build.txt": {
+      "original_sha256": "023688600fb6a6696e11768a05b855fde50b22ea14909b961aa826056105bf90",
+      "current_sha256": "023688600fb6a6696e11768a05b855fde50b22ea14909b961aa826056105bf90"
+    },
+    "agentloom-sdk/qa/evidence/workspace-spi-publish-20261018/wheel-install.txt": {
+      "original_sha256": "72e8f4e3b38f7c7392cf73f4aeba899afdf4157c75e97ed0456b8c56d6b9cb12",
+      "current_sha256": "72e8f4e3b38f7c7392cf73f4aeba899afdf4157c75e97ed0456b8c56d6b9cb12"
+    },
+    "agentloom-sdk/qa/evidence/workspace-spi-publish-20261018/wheel-summary.json": {
+      "original_sha256": "e283e6d562525c8f07ebf3b7eb050acb8027bd9d3a2cedaf9e7af249d40ccf88",
+      "current_sha256": "e283e6d562525c8f07ebf3b7eb050acb8027bd9d3a2cedaf9e7af249d40ccf88"
+    },
+    "agentloom-sdk/qa/test_sdk_audit.py": {
+      "original_sha256": "75e22018c4df4ecb8d4ba1dbd31d1f3affd10839b72059c8f9fdf0171ec4165f",
+      "current_sha256": "75e22018c4df4ecb8d4ba1dbd31d1f3affd10839b72059c8f9fdf0171ec4165f"
+    },
+    "agentloom-sdk/qa/test_sdk_rereview.py": {
+      "original_sha256": "df17cc4ec0f09b09d3e2f6e8f0d885520bb53bdfbeaeedb49d8edf138f742873",
+      "current_sha256": "df17cc4ec0f09b09d3e2f6e8f0d885520bb53bdfbeaeedb49d8edf138f742873"
+    },
+    "agentloom-sdk/qa/test_sdk_review_round10.py": {
+      "original_sha256": "d34e0f378737a768a8cc61dde372fcd141d9ec31eb9da3e406a0057049e08200",
+      "current_sha256": "d34e0f378737a768a8cc61dde372fcd141d9ec31eb9da3e406a0057049e08200"
+    },
+    "agentloom-sdk/qa/test_sdk_review_round3.py": {
+      "original_sha256": "adc6b442ae71512491056a47e0c96f0b917d0dfa07960f14969510a582272c55",
+      "current_sha256": "adc6b442ae71512491056a47e0c96f0b917d0dfa07960f14969510a582272c55"
+    },
+    "agentloom-sdk/qa/test_sdk_review_round4.py": {
+      "original_sha256": "152b2a8de031055e5c94db660d8d714bb63786a22bd4b8219b9ca76819683dfe",
+      "current_sha256": "152b2a8de031055e5c94db660d8d714bb63786a22bd4b8219b9ca76819683dfe"
+    },
+    "agentloom-sdk/qa/test_sdk_review_round5.py": {
+      "original_sha256": "847277f082d0416baecc4ec486ab09f1f44425e655ca557bf942ed20fdd6fa02",
+      "current_sha256": "847277f082d0416baecc4ec486ab09f1f44425e655ca557bf942ed20fdd6fa02"
+    },
+    "agentloom-sdk/qa/test_sdk_review_round6.py": {
+      "original_sha256": "68287b814ad7b590438fea855eeaffeb041501a8f421912ba26f4fe164f7f7e0",
+      "current_sha256": "68287b814ad7b590438fea855eeaffeb041501a8f421912ba26f4fe164f7f7e0"
+    },
+    "agentloom-sdk/qa/test_sdk_review_round7.py": {
+      "original_sha256": "494cda059d51f4700bfd62fcc4427be5ad7c9a8d45b8985c0f3f8e37676c01c6",
+      "current_sha256": "494cda059d51f4700bfd62fcc4427be5ad7c9a8d45b8985c0f3f8e37676c01c6"
+    },
+    "agentloom-sdk/qa/test_sdk_review_round8.py": {
+      "original_sha256": "972f2b93c10f7a766283c50c2b2e5cef8d0868416f795a76b9c7622e2b50e41f",
+      "current_sha256": "972f2b93c10f7a766283c50c2b2e5cef8d0868416f795a76b9c7622e2b50e41f"
+    },
+    "agentloom-sdk/qa/test_sdk_review_round9.py": {
+      "original_sha256": "ae77bdac3d7e343531e1190e884851ee028e38dfc2655d5477db72c2283a2117",
+      "current_sha256": "ae77bdac3d7e343531e1190e884851ee028e38dfc2655d5477db72c2283a2117"
+    },
+    "agentloom-sdk/tests/conftest.py": {
+      "original_sha256": "38ac86e62919bd02a0782052bbb3c7f55f8819aa534cac82ce5a89d38fb75ca5",
+      "current_sha256": "38ac86e62919bd02a0782052bbb3c7f55f8819aa534cac82ce5a89d38fb75ca5"
+    },
+    "agentloom-sdk/tests/support/binding_process.py": {
+      "original_sha256": "76eb1d030934ee0f932ffa1ecbde67543f053ab2b7a52bf9cbf76e4b83330c97",
+      "current_sha256": "76eb1d030934ee0f932ffa1ecbde67543f053ab2b7a52bf9cbf76e4b83330c97"
+    },
+    "agentloom-sdk/tests/support/completion_process.py": {
+      "original_sha256": "b3e8a02166e5bf930d87230eff8a55380743dea31c172b279dc3cb87e9e2d542",
+      "current_sha256": "b3e8a02166e5bf930d87230eff8a55380743dea31c172b279dc3cb87e9e2d542"
+    },
+    "agentloom-sdk/tests/support/control_hook_process.py": {
+      "original_sha256": "a69e0da927bd1ba7b64151c341ed583e02e367b34f8060a07069937f7d5ab192",
+      "current_sha256": "a69e0da927bd1ba7b64151c341ed583e02e367b34f8060a07069937f7d5ab192"
+    },
+    "agentloom-sdk/tests/support/crash_process.py": {
+      "original_sha256": "77138c07a0226a8653b3a177838e4e6cff272078917a410a9425509b75a4564e",
+      "current_sha256": "77138c07a0226a8653b3a177838e4e6cff272078917a410a9425509b75a4564e"
+    },
+    "agentloom-sdk/tests/support/file_store_process.py": {
+      "original_sha256": "1cac810d8485471bcdbb762cd861f25af6ddb8fe3fc28a20a71bb6847a1555bf",
+      "current_sha256": "1cac810d8485471bcdbb762cd861f25af6ddb8fe3fc28a20a71bb6847a1555bf"
+    },
+    "agentloom-sdk/tests/support/mcp_process.py": {
+      "original_sha256": "e98b08aa9cd25ba6afbad7a56ba2280b0be053c5aa466df3174acb22125826ab",
+      "current_sha256": "e98b08aa9cd25ba6afbad7a56ba2280b0be053c5aa466df3174acb22125826ab"
+    },
+    "agentloom-sdk/tests/support/orphan_deadline_process.py": {
+      "original_sha256": "3fb4faa8f4ab965ca935deebdfe5c55024768b927cb24e31b1ab8cdf4aa59c7b",
+      "current_sha256": "3fb4faa8f4ab965ca935deebdfe5c55024768b927cb24e31b1ab8cdf4aa59c7b"
+    },
+    "agentloom-sdk/tests/support/prompt_process.py": {
+      "original_sha256": "f1af94f33882d9c28cadab0b0870a17bb23e7cccec1136371f76082fd4787ec3",
+      "current_sha256": "f1af94f33882d9c28cadab0b0870a17bb23e7cccec1136371f76082fd4787ec3"
+    },
+    "agentloom-sdk/tests/support/workspace_provider/pyproject.toml": {
+      "original_sha256": "234b9ad37caa73aca4b1695dd3bf8d3a352bb04ca3d8f369791b8c5bc11de29a",
+      "current_sha256": "234b9ad37caa73aca4b1695dd3bf8d3a352bb04ca3d8f369791b8c5bc11de29a"
+    },
+    "agentloom-sdk/tests/support/workspace_provider/src/loom_test_files/__init__.py": {
+      "original_sha256": "ec6273c41bd53c822b69b499def0719902e91758b006475ec0eadbc2c4d2fce4",
+      "current_sha256": "ec6273c41bd53c822b69b499def0719902e91758b006475ec0eadbc2c4d2fce4"
+    },
+    "agentloom-sdk/tests/support/workspace_provider/src/loom_test_files/unselected.py": {
+      "original_sha256": "7ac50e2f6c5c513cdacdc82dbd63772146af59e7e78cf73edde756f9104ada0d",
+      "current_sha256": "7ac50e2f6c5c513cdacdc82dbd63772146af59e7e78cf73edde756f9104ada0d"
+    },
+    "agentloom-sdk/tests/support/workspace_spi_process.py": {
+      "original_sha256": "7efc5b307b6a7e5184e1ef2d38eb6eafdaeeccb20f4bff42a4025b6c720e9ae1",
+      "current_sha256": "7efc5b307b6a7e5184e1ef2d38eb6eafdaeeccb20f4bff42a4025b6c720e9ae1"
+    },
+    "agentloom-sdk/tests/test_attempt_completion.py": {
+      "original_sha256": "a00e93408d1315a40f00f333e8207c0e3d0aaabea9eca6d073ea57b0fd6e74f1",
+      "current_sha256": "a00e93408d1315a40f00f333e8207c0e3d0aaabea9eca6d073ea57b0fd6e74f1"
+    },
+    "agentloom-sdk/tests/test_binding_process.py": {
+      "original_sha256": "3f2ece86b8201b8ace88b0194b054ba3e575c176afa5d9d83dc954e2ba5c9298",
+      "current_sha256": "3f2ece86b8201b8ace88b0194b054ba3e575c176afa5d9d83dc954e2ba5c9298"
+    },
+    "agentloom-sdk/tests/test_builder_contract.py": {
+      "original_sha256": "4839dc32f38965ae56064212d6f09fa97eeda1f7efe98c9b2686dbaf501af961",
+      "current_sha256": "4839dc32f38965ae56064212d6f09fa97eeda1f7efe98c9b2686dbaf501af961"
+    },
+    "agentloom-sdk/tests/test_capability_public_contract.py": {
+      "original_sha256": "cc88a19e66d887c850be0c1c36e05a69da4fbc2d29525229d9cc5955615ab7c0",
+      "current_sha256": "cc88a19e66d887c850be0c1c36e05a69da4fbc2d29525229d9cc5955615ab7c0"
+    },
+    "agentloom-sdk/tests/test_checkpoint_protocol.py": {
+      "original_sha256": "da06927ba51e31b45ede8fa089cd44e255dbf0de93a60759b4345f01eb6399b6",
+      "current_sha256": "da06927ba51e31b45ede8fa089cd44e255dbf0de93a60759b4345f01eb6399b6"
+    },
+    "agentloom-sdk/tests/test_completion_boundaries.py": {
+      "original_sha256": "0be3e9df6f3779218a67676af9c274c05ee773a9807da8cd839e993ed5fd3b7f",
+      "current_sha256": "0be3e9df6f3779218a67676af9c274c05ee773a9807da8cd839e993ed5fd3b7f"
+    },
+    "agentloom-sdk/tests/test_completion_cleanup.py": {
+      "original_sha256": "af8de1be229fe3af0eead16042f0b782d93a521b1d58e7f2c1d79f88de974f95",
+      "current_sha256": "af8de1be229fe3af0eead16042f0b782d93a521b1d58e7f2c1d79f88de974f95"
+    },
+    "agentloom-sdk/tests/test_completion_recovery.py": {
+      "original_sha256": "147943b93e69124a2d9a279af45b6340485bf501e52a1b9e3b69dc2034a1799c",
+      "current_sha256": "147943b93e69124a2d9a279af45b6340485bf501e52a1b9e3b69dc2034a1799c"
+    },
+    "agentloom-sdk/tests/test_control_and_history.py": {
+      "original_sha256": "333294408f33b908114c4c63d99b938c367db28ea04ffb7f00fcb052c63b679b",
+      "current_sha256": "333294408f33b908114c4c63d99b938c367db28ea04ffb7f00fcb052c63b679b"
+    },
+    "agentloom-sdk/tests/test_control_reconciliation.py": {
+      "original_sha256": "0e289c1c9c961010a41cb352a4ae00d8df8b13094309aff6416157ea2da94dcb",
+      "current_sha256": "0de5af8c1d3c26c537277ead4d0553083a05ccd2cc600f132fea3c1fc39dd221"
+    },
+    "agentloom-sdk/tests/test_definition_snapshots.py": {
+      "original_sha256": "ca328e96ea86dccfe7d4975cd67fb3396fec42894121cc436a7d9c20d772a42c",
+      "current_sha256": "ca328e96ea86dccfe7d4975cd67fb3396fec42894121cc436a7d9c20d772a42c"
+    },
+    "agentloom-sdk/tests/test_design_alignment.py": {
+      "original_sha256": "af2ccbe6ce86e97da32edaf4e6ca100e699788b088dec8dd12f78bbe7fa2e69a",
+      "current_sha256": "af2ccbe6ce86e97da32edaf4e6ca100e699788b088dec8dd12f78bbe7fa2e69a"
+    },
+    "agentloom-sdk/tests/test_environment_contract.py": {
+      "original_sha256": "cdcf006531d6e8eca125a68ece820baf91b5be5ffe5820669a0e6b11c00fec4e",
+      "current_sha256": "cdcf006531d6e8eca125a68ece820baf91b5be5ffe5820669a0e6b11c00fec4e"
+    },
+    "agentloom-sdk/tests/test_execution_contract.py": {
+      "original_sha256": "b694c3e9f21fbc7a8e968a835332ea58c5bda17ae8d8a65aa126e805cc971b78",
+      "current_sha256": "b694c3e9f21fbc7a8e968a835332ea58c5bda17ae8d8a65aa126e805cc971b78"
+    },
+    "agentloom-sdk/tests/test_file_store_contract.py": {
+      "original_sha256": "1792cfca99285a06f1526db789f1cd7e2b534ad62cb13f9cc44cbd7288717647",
+      "current_sha256": "1792cfca99285a06f1526db789f1cd7e2b534ad62cb13f9cc44cbd7288717647"
+    },
+    "agentloom-sdk/tests/test_final_output_boundaries.py": {
+      "original_sha256": "c495de41621a203638eb3acefbfff9fde67e5197d9ec73cccea8876c8e3cc266",
+      "current_sha256": "c495de41621a203638eb3acefbfff9fde67e5197d9ec73cccea8876c8e3cc266"
+    },
+    "agentloom-sdk/tests/test_followup_review.py": {
+      "original_sha256": "4419bdd8cd86a928baa053ce76126e312c9e84cda71c7210195a4fe12d8abe14",
+      "current_sha256": "4419bdd8cd86a928baa053ce76126e312c9e84cda71c7210195a4fe12d8abe14"
+    },
+    "agentloom-sdk/tests/test_history_execution_facts.py": {
+      "original_sha256": "2332722efa015961d69ae3775cb55bd11155888a0e360846446ae3e5c71dfce3",
+      "current_sha256": "2332722efa015961d69ae3775cb55bd11155888a0e360846446ae3e5c71dfce3"
+    },
+    "agentloom-sdk/tests/test_hook_context_contract.py": {
+      "original_sha256": "ea1698a78338f25b8e64421da991d9d4d92dbfaa4e060408ebb865f6369a559f",
+      "current_sha256": "ea1698a78338f25b8e64421da991d9d4d92dbfaa4e060408ebb865f6369a559f"
+    },
+    "agentloom-sdk/tests/test_hook_public_contract.py": {
+      "original_sha256": "0529646a7e1747867d5368b8d64e4c4fe67051eb972443464d4e806c997a0710",
+      "current_sha256": "0529646a7e1747867d5368b8d64e4c4fe67051eb972443464d4e806c997a0710"
+    },
+    "agentloom-sdk/tests/test_json_value_boundaries.py": {
+      "original_sha256": "1a522ac98f717d820179da290e054ea221a435903276c97f7915b6de45d8b7b0",
+      "current_sha256": "1a522ac98f717d820179da290e054ea221a435903276c97f7915b6de45d8b7b0"
+    },
+    "agentloom-sdk/tests/test_langchain_prompts.py": {
+      "original_sha256": "21cbd075da81221029b11fb484c2548e835b518cc56b51e36704aa442356fb40",
+      "current_sha256": "21cbd075da81221029b11fb484c2548e835b518cc56b51e36704aa442356fb40"
+    },
+    "agentloom-sdk/tests/test_maintenance_contract.py": {
+      "original_sha256": "6b3a3087e116ba0b3f128c15ac0406ee5d58c857792333d59bfc3594ff184543",
+      "current_sha256": "6b3a3087e116ba0b3f128c15ac0406ee5d58c857792333d59bfc3594ff184543"
+    },
+    "agentloom-sdk/tests/test_maintenance_shutdown.py": {
+      "original_sha256": "ac6ec6c2fb23259c85d25f1c7297b85885361cff22e1959e9e34e842b2d9a9ea",
+      "current_sha256": "ac6ec6c2fb23259c85d25f1c7297b85885361cff22e1959e9e34e842b2d9a9ea"
+    },
+    "agentloom-sdk/tests/test_mcp_protocol.py": {
+      "original_sha256": "358496474c11d9147dc1edbfe64ebc5ce8a562ade438375bd04d4fdd82792a88",
+      "current_sha256": "358496474c11d9147dc1edbfe64ebc5ce8a562ade438375bd04d4fdd82792a88"
+    },
+    "agentloom-sdk/tests/test_mcp_retry_contract.py": {
+      "original_sha256": "84f6843f8375c383ed1ff8acd7aaf42fbbe0ce28b5bb88f681a98fe3d8c1ee5c",
+      "current_sha256": "84f6843f8375c383ed1ff8acd7aaf42fbbe0ce28b5bb88f681a98fe3d8c1ee5c"
+    },
+    "agentloom-sdk/tests/test_mode_prompts.py": {
+      "original_sha256": "7cd337f7035850b4be7ac5605ef03c94aa41ab9d69a784f39af87bda3cb52997",
+      "current_sha256": "7cd337f7035850b4be7ac5605ef03c94aa41ab9d69a784f39af87bda3cb52997"
+    },
+    "agentloom-sdk/tests/test_model_material.py": {
+      "original_sha256": "b0266069a4c3f2569591094399d3811abfe148d756747ca2faa5fed7bd345f6e",
+      "current_sha256": "b0266069a4c3f2569591094399d3811abfe148d756747ca2faa5fed7bd345f6e"
+    },
+    "agentloom-sdk/tests/test_model_protocols.py": {
+      "original_sha256": "fe4723bf04444870865e4cfc79d12d8a9676605400f98f11e05fce8482f96fe1",
+      "current_sha256": "fe4723bf04444870865e4cfc79d12d8a9676605400f98f11e05fce8482f96fe1"
+    },
+    "agentloom-sdk/tests/test_node_boundaries.py": {
+      "original_sha256": "5612281d7e46a1e4cc6ae86e95b6839d15f6008d2c2d73528dec48dd22683ff0",
+      "current_sha256": "5612281d7e46a1e4cc6ae86e95b6839d15f6008d2c2d73528dec48dd22683ff0"
+    },
+    "agentloom-sdk/tests/test_node_protocol.py": {
+      "original_sha256": "95af3d370be1bafe83276f474f5a38701be7af23971b0ed1c3f1880812ef552b",
+      "current_sha256": "95af3d370be1bafe83276f474f5a38701be7af23971b0ed1c3f1880812ef552b"
+    },
+    "agentloom-sdk/tests/test_operation_error_boundaries.py": {
+      "original_sha256": "b7980ea052ed02b90a3526a1f7282bca8b8a14d888cc3bb9866a6a3042e105e7",
+      "current_sha256": "b7980ea052ed02b90a3526a1f7282bca8b8a14d888cc3bb9866a6a3042e105e7"
+    },
+    "agentloom-sdk/tests/test_persisted_json_depth.py": {
+      "original_sha256": "a1252c10694360dc90254f276d1c9c8c482fcc253ea94648547a7d960eff6a78",
+      "current_sha256": "a1252c10694360dc90254f276d1c9c8c482fcc253ea94648547a7d960eff6a78"
+    },
+    "agentloom-sdk/tests/test_persistence_contract.py": {
+      "original_sha256": "1af2d81f0bbc7692ec0ed0ff7e815cdd93615bcd5931361914f323ee164ee59f",
+      "current_sha256": "1af2d81f0bbc7692ec0ed0ff7e815cdd93615bcd5931361914f323ee164ee59f"
+    },
+    "agentloom-sdk/tests/test_prompt_recovery.py": {
+      "original_sha256": "dee7f1372ffbcd315dad59e1ae6cb4d4df523ee307925d086082fbefb6a4b414",
+      "current_sha256": "dee7f1372ffbcd315dad59e1ae6cb4d4df523ee307925d086082fbefb6a4b414"
+    },
+    "agentloom-sdk/tests/test_properties_contract.py": {
+      "original_sha256": "a6db6fe7a5232e27af09bb507b2de184e75ad8ea50e3586295660801067a799c",
+      "current_sha256": "a6db6fe7a5232e27af09bb507b2de184e75ad8ea50e3586295660801067a799c"
+    },
+    "agentloom-sdk/tests/test_public_event_depth.py": {
+      "original_sha256": "7ca688a20c8296ec08eab6813dfb33d8087ea1db82ac640786bd36f5c57f47e5",
+      "current_sha256": "7ca688a20c8296ec08eab6813dfb33d8087ea1db82ac640786bd36f5c57f47e5"
+    },
+    "agentloom-sdk/tests/test_public_result_projection.py": {
+      "original_sha256": "e4ad4cf7369d18d55198dbc17bb76b8e26f7a94f4256c86be0c81fd365e7ead9",
+      "current_sha256": "e4ad4cf7369d18d55198dbc17bb76b8e26f7a94f4256c86be0c81fd365e7ead9"
+    },
+    "agentloom-sdk/tests/test_public_validation.py": {
+      "original_sha256": "47d247587586adf019f7ad2644f575d9951dcb9e80aa8d0960a832293b2ef856",
+      "current_sha256": "47d247587586adf019f7ad2644f575d9951dcb9e80aa8d0960a832293b2ef856"
+    },
+    "agentloom-sdk/tests/test_recovery_binding_contract.py": {
+      "original_sha256": "aaccc9e6cd56d9dd992f1e447f054d403a8742e8b9560235b0ebb25099596811",
+      "current_sha256": "aaccc9e6cd56d9dd992f1e447f054d403a8742e8b9560235b0ebb25099596811"
+    },
+    "agentloom-sdk/tests/test_recovery_invariants.py": {
+      "original_sha256": "c9a8db602738891e596fce25b0e558b1a9454d1b5418d5a3b99432d3f51a3687",
+      "current_sha256": "c9a8db602738891e596fce25b0e558b1a9454d1b5418d5a3b99432d3f51a3687"
+    },
+    "agentloom-sdk/tests/test_result_and_scope_contract.py": {
+      "original_sha256": "3b269c156fa3f104059b6996f23e1629f873ebb711f9d29d7292315bf80e3822",
+      "current_sha256": "3b269c156fa3f104059b6996f23e1629f873ebb711f9d29d7292315bf80e3822"
+    },
+    "agentloom-sdk/tests/test_review_regressions.py": {
+      "original_sha256": "d2dbe4ac2ecf4bb5adb490e6116ca0b61f1e714695b6cff9734fa2a69707cca3",
+      "current_sha256": "d2dbe4ac2ecf4bb5adb490e6116ca0b61f1e714695b6cff9734fa2a69707cca3"
+    },
+    "agentloom-sdk/tests/test_review_whitebox_probe.py": {
+      "original_sha256": "b999e060206369ccedece12bee8d09f4274bb525db754ea836fbb25953c038ab",
+      "current_sha256": "b999e060206369ccedece12bee8d09f4274bb525db754ea836fbb25953c038ab"
+    },
+    "agentloom-sdk/tests/test_schema_contract.py": {
+      "original_sha256": "f3c83e4fb898c1f2338aaf29d8ff39f7d2f3f0ce839d735938f80c072b064054",
+      "current_sha256": "f3c83e4fb898c1f2338aaf29d8ff39f7d2f3f0ce839d735938f80c072b064054"
+    },
+    "agentloom-sdk/tests/test_skill_profile_contract.py": {
+      "original_sha256": "5dfc838895853cd44ee19ac7acee835804ec60501a809226479b9845b1be56de",
+      "current_sha256": "5dfc838895853cd44ee19ac7acee835804ec60501a809226479b9845b1be56de"
+    },
+    "agentloom-sdk/tests/test_test_runner.py": {
+      "original_sha256": "3b214573ae9981bd2e3313753f6886a4428ea8a451a3bac591f7d5e256842fa5",
+      "current_sha256": "3b214573ae9981bd2e3313753f6886a4428ea8a451a3bac591f7d5e256842fa5"
+    },
+    "agentloom-sdk/tests/test_usage_accounting.py": {
+      "original_sha256": "eb153301f3ab0a64a96bb129f08c0622e74a4ff8dcef67e9c8bfbf776ea1d867",
+      "current_sha256": "eb153301f3ab0a64a96bb129f08c0622e74a4ff8dcef67e9c8bfbf776ea1d867"
+    },
+    "agentloom-sdk/tests/test_usage_events.py": {
+      "original_sha256": "9c9ab3719d00a50ad3928d1b744bafe7277ae1b53a797b88f0395c69a33c731f",
+      "current_sha256": "9c9ab3719d00a50ad3928d1b744bafe7277ae1b53a797b88f0395c69a33c731f"
+    },
+    "agentloom-sdk/tests/test_workspace_glob.py": {
+      "original_sha256": "610c778d2f5e3da142fd78fb15204db803bb6a1c29543f5d8b7c2fadf00e70dc",
+      "current_sha256": "610c778d2f5e3da142fd78fb15204db803bb6a1c29543f5d8b7c2fadf00e70dc"
+    },
+    "agentloom-sdk/tests/test_workspace_leases.py": {
+      "original_sha256": "4f23c1bb7532369060b311b8aac887030f3bc84e84ff7cf378cb65d4b25bb754",
+      "current_sha256": "4f23c1bb7532369060b311b8aac887030f3bc84e84ff7cf378cb65d4b25bb754"
+    },
+    "agentloom-sdk/tests/test_workspace_spi.py": {
+      "original_sha256": "3624ea9db4def7fe823aa7f7609623d10e54f21cba867193f382a2ab72e3ad0b",
+      "current_sha256": "3624ea9db4def7fe823aa7f7609623d10e54f21cba867193f382a2ab72e3ad0b"
+    },
+    "agentloom-sdk/tests/test_workspace_spi_process.py": {
+      "original_sha256": "073ed4b5ced0fd310960a5e82431e846ea0524cbb84889ed15218b28e6c83b77",
+      "current_sha256": "073ed4b5ced0fd310960a5e82431e846ea0524cbb84889ed15218b28e6c83b77"
+    }
+  },
+  "reason": "Slow-revocation test uses a schedulable TTL and additionally asserts stable owner/epoch and renewed expiry; existing QA untouched."
+}

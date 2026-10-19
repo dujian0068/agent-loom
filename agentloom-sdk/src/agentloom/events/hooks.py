@@ -259,6 +259,11 @@ class HookHandler(EventBusImpl):
                 except InfrastructureError:
                     raise
                 except Exception as exc:
+                    if isinstance(exc, AgentLoomError) and exc.code in {
+                        "RUN_STOPPED",
+                        "RUN_TIMEOUT",
+                    }:
+                        raise
                     result, diagnostic = (
                         {"decision": "allow", "payload_patch": {}, "context_patch": {}},
                         error_record(exc),

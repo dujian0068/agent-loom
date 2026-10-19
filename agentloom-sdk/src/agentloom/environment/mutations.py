@@ -8,7 +8,9 @@ import stat
 
 from ..configuration import digest
 from ..errors import AgentLoomError
+from ..filesystem.posix import open_nofollow
 from ..workspace.paths import path_parts
+from .moves import move_file
 
 
 class FileMutations:
@@ -20,7 +22,7 @@ class FileMutations:
             return self._version(path, self._read_bytes(fd, name))
         if not stat.S_ISDIR(info.st_mode):
             raise AgentLoomError("FILE_TYPE_FORBIDDEN")
-        child = os.open(name, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW, dir_fd=fd)
+        child = open_nofollow(name, os.O_RDONLY | os.O_DIRECTORY, dir_fd=fd)
         try:
             entries = []
             for entry in sorted(os.listdir(child), key=lambda s: s.encode()):
@@ -50,6 +52,7 @@ class FileMutations:
         if (
             not isinstance(old_text, str)
             or not old_text
+            or not isinstance(new_text, str)
             or type(expected_matches) is not int
             or expected_matches < 1
         ):
@@ -87,6 +90,8 @@ class FileMutations:
     def patch(self, scope, path, unified_diff, if_match, guard=lambda: None):
         from .local import _parts
 
+        if not isinstance(unified_diff, str):
+            raise AgentLoomError("PATCH_FORMAT_INVALID", category="validation")
         original = self._whole_text(scope, path, guard)
         if self._version(path, original.encode())["etag"] != if_match:
             raise AgentLoomError("FILE_CHANGED", category="conflict")
@@ -95,6 +100,8 @@ class FileMutations:
             raise AgentLoomError("PATCH_FORMAT_INVALID")
         for header, prefix in zip(lines[:2], ("a/", "b/")):
             candidate = header[4:].rstrip("\r\n").split("\t", 1)[0].removeprefix(prefix)
+            if candidate == "/dev/null":
+                raise AgentLoomError("PATCH_PATH_MISMATCH", category="validation")
             if _parts(candidate) != _parts(path):
                 raise AgentLoomError("PATCH_PATH_MISMATCH")
         source, output, position, index, hunks = lf_lines(original), [], 0, 2, 0
@@ -157,16 +164,7 @@ class FileMutations:
                 if version["kind"] != "file":
                     raise AgentLoomError("DIRECTORY_MOVE_UNSUPPORTED")
                 # link() is atomic create-only; rename() could overwrite a late target.
-                os.link(
-                    source_name,
-                    dest_name,
-                    src_dir_fd=source_fd,
-                    dst_dir_fd=dest_fd,
-                    follow_symlinks=False,
-                )
-                os.unlink(source_name, dir_fd=source_fd)
-                os.fsync(source_fd)
-                os.fsync(dest_fd)
+                move_file(source_fd, source_name, dest_fd, dest_name)
                 return {**version, "path": destination}
 
     def delete(self, scope, path, if_match, guard=lambda: None, *, recursive=False):

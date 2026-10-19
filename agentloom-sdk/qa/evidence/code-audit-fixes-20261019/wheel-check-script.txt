@@ -1,0 +1,58 @@
+import hashlib
+import importlib
+import json
+import os
+import shutil
+import sys
+from pathlib import Path
+
+ROOT = Path('/Users/bmilk/code/project/agent-loom')
+INSTALLED = Path('/private/tmp/agentloom-code-audit-installed-20261019')
+TESTS = Path('/private/tmp/agentloom-code-audit-package-tests-20261019')
+EVIDENCE = ROOT / 'agentloom-sdk/qa/evidence/code-audit-fixes-20261019'
+os.environ['PYTHONPATH'] = str(INSTALLED)
+sys.path.insert(0, str(INSTALLED))
+
+import agentloom
+import pytest
+
+assert Path(agentloom.__file__).is_relative_to(INSTALLED)
+modules = (
+    'filesystem.posix', 'environment.fencing', 'environment.moves', 'environment.staging',
+    'capabilities.skill_files', 'models.response_protocol', 'nodes.effect_validation',
+)
+for name in modules:
+    module = importlib.import_module('agentloom.' + name)
+    assert Path(module.__file__).is_relative_to(INSTALLED)
+
+source = ROOT / 'agentloom-sdk/src/agentloom'
+manifest = {}
+for file in sorted(source.rglob('*')):
+    if not file.is_file() or '__pycache__' in file.parts:
+        continue
+    relative = file.relative_to(source)
+    target = INSTALLED / 'agentloom' / relative
+    assert target.read_bytes() == file.read_bytes(), relative
+    manifest[str(relative)] = hashlib.sha256(file.read_bytes()).hexdigest()
+
+TESTS.mkdir(exist_ok=True)
+(TESTS / 'pytest.ini').write_text('[pytest]\nasyncio_mode = auto\n')
+for name in (
+    'conftest.py', 'test_node_effect_contract.py', 'test_control_faults.py',
+    'test_workspace_faults.py', 'test_skill_files.py', 'test_response_shapes.py',
+    'test_mcp_diagnostics.py',
+):
+    shutil.copyfile(ROOT / 'agentloom-sdk/tests' / name, TESTS / name)
+os.chdir(TESTS)
+result = pytest.main([
+    '-q', '-ra', '-c', str(TESTS / 'pytest.ini'), '--rootdir', str(TESTS),
+    '--confcutdir', str(TESTS),
+    '--junitxml=' + str(EVIDENCE / 'wheel-tests.junit.xml'), str(TESTS),
+])
+summary = {
+    'installed_path': str(INSTALLED), 'source_files': len(manifest),
+    'source_matches': True, 'module_origins_verified': list(modules),
+    'pytest_exit_code': int(result), 'source_manifest': manifest,
+}
+(EVIDENCE / 'wheel-summary.json').write_text(json.dumps(summary, indent=2) + '\n')
+raise SystemExit(result)

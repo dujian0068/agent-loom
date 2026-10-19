@@ -1,10 +1,19 @@
 """Translate normalized context without losing stateless Responses continuation items."""
 
 from ..configuration import json_copy
-from ..errors import AgentLoomError
+from ..errors import AgentLoomError, ConfigurationError
+from .material import protocol_error
+from .response_protocol import validate_output
 
 
 def response_inputs(messages):
+    try:
+        return _response_inputs(messages)
+    except (KeyError, TypeError, AttributeError, IndexError, ConfigurationError) as exc:
+        raise protocol_error("Invalid Responses continuation") from exc
+
+
+def _response_inputs(messages):
     result, call_ids = [], {}
     for message in messages:
         if message["role"] == "tool":
@@ -31,6 +40,7 @@ def response_inputs(messages):
             )
             continue
         output = json_copy(state["output"])
+        validate_output(output)
         calls = iter(message.get("tool_calls", []))
         original_text = "".join(
             content["text"] if content["type"] == "output_text" else content["refusal"]

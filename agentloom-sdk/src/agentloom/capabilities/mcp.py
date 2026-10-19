@@ -88,7 +88,9 @@ class McpToolAdapter(ValueToolAdapter):
                         if tool.name == spec.name:
                             if actual is not None:
                                 raise AgentLoomError(
-                                    "MCP_CATALOG_MISMATCH", external_outcome="not_started"
+                                    "MCP_CATALOG_MISMATCH",
+                                    category="conflict",
+                                    external_outcome="not_started",
                                 )
                             actual = tool
                     if not page.nextCursor:
@@ -111,11 +113,12 @@ class McpToolAdapter(ValueToolAdapter):
                 )
                 try:
                     value = json_copy(result.model_dump(mode="json", exclude_none=True))
-                except ConfigurationError as exc:
+                except (ConfigurationError, ValueError, TypeError) as exc:
                     error = AgentLoomError(
                         "MCP_PROTOCOL_ERROR", category="protocol", external_outcome="known"
                     )
                     error.execution_fact = "completed"
+                    error.__cause__ = exc
                     report_completion(context, error=error)
                     raise error from exc
                 if result.isError:
@@ -129,7 +132,21 @@ class McpToolAdapter(ValueToolAdapter):
                 report_completion(context, value=value)
                 return value
         except Exception as exc:
-            raise _transport_error(exc) from exc
+            mapped = _transport_error(exc)
+            if mapped is exc:
+                raise
+            if _contains_exception(exc, mapped):
+                # A chosen leaf must not acquire its containing group as a cause.
+                raise mapped from mapped.__cause__
+            raise mapped from exc
+
+
+def _contains_exception(group, target):
+    return (
+        group is target
+        or isinstance(group, BaseExceptionGroup)
+        and any(_contains_exception(child, target) for child in group.exceptions)
+    )
 
 
 def _transport_error(exc):

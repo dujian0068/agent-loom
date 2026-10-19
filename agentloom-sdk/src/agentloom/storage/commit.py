@@ -4,6 +4,8 @@ from .base import TERMINAL, ExecutionLease
 
 
 def verify_lease(state, lease, now, *, allow_terminal=False):
+    if state is None:
+        raise LeaseLost()
     current = state.get("lease") or {}
     if (
         (not allow_terminal and state["status"] in TERMINAL)

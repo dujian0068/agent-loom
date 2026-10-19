@@ -142,6 +142,8 @@ result.read 根据 content scope、调用 NodeTask／角色或显式结果授权
 
 SDK 在使用边界验证包内路径、manifest 完整性、SKILL.md 元数据、受支持字段和读取范围。发现不支持的执行语义时报 SKILL_PROFILE_UNSUPPORTED；不静默声称与 Claude Code 全兼容。资源包只读挂载，脚本产物写授权工作区。
 
+当前本地 `SkillPackage.from_directory` 与 `DirectorySkillLoader` 使用同一文件读取边界：逐段拒绝包根、祖先及包内符号链接，只读取普通文件；包括 SKILL.md 在内的每个文件最大 20 MiB，读取期间变化会被拒绝。路径／权限／符号链接拒绝为 `SKILL_PATH_FORBIDDEN`（permission），超限为 `SKILL_CONTENT_TOO_LARGE`，版本变化为 `SKILL_CONTENT_CHANGED`；其他读取失败为 `SKILL_CONTENT_UNAVAILABLE`，按实际原因区分 not_found 和 unknown。导入阶段抛 ConfigurationError，运行时读取抛 AgentLoomError，不泄露宿主路径。
+
 ### 3.2 支持与读取
 
 标准 name／description／license／compatibility／metadata 保存。argument-hint 只作说明；`$ARGUMENTS` 与 `$1..$N` 按以下 `skill-args-v1` 规则做一次纯文本替换，未提供的位置渲染为空，不执行 shell、不二次解释变量：
@@ -322,6 +324,8 @@ Linux 文件 driver 以授权根 dirfd 使用 openat2 的 beneath/no-magic-links
 FileToolAdapter 将工具参数映射到 WorkspaceService；公共文件层验证参数、逻辑路径、授权和结果 DTO，WorkspaceBackend 实现全部 11 个操作、真实 I/O 与条件提交。edit／patch 可复用固定版本 read 加条件 write，不要求每种介质重写文本替换或补丁算法。ToolHandler 负责调用校验与路由，不另写一套文件行为。fs.write/edit/patch 的 content 限制为20MiB；更大材料通过已授权的脚本或外部准备流程生成文件并返回 artifact，不把无限正文塞入工具 JSON。
 
 每个调用输入先经 schema／scope 校验，再进入文件服务；路径不存在为 not_found，版本或匹配数量冲突为 conflict，越界／只读根为 permission，NFS错误保留发生阶段与外部结果。错误反馈含逻辑相对路径，不包含宿主路径。
+
+当前本地后端的文件 move 以 create-only 硬链接和源删除实现。跨设备返回 `FILE_MOVE_CROSS_DEVICE`；源删除失败时仅在源／目标仍指向原文件的情况下移除目标链接，保留源文件。身份发生变化或补偿失败返回 `FILE_MOVE_OUTCOME_UNKNOWN`，不能盲目重试。它尚不具备下一节的持久 mutation journal，进程中断窗口仍按未知结果处理。写入的 SDK 暂存文件在清理后同步父目录；后续 prepare 在工作区锁内清理残留普通暂存文件，不跟随符号链接，也不删除已发布的目标文件。
 
 ### 6.3 并发、原子替换与幂等
 

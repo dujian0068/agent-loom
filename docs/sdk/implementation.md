@@ -2,7 +2,7 @@
 
 日期：2026-10-19。实现版本：`agentloom-sdk 0.1.0a1`。当前推荐入口是 `PropertiesConfig → AgentLoom → build(AgentDefinition)`，默认使用文件系统保存执行状态。安装、可运行代码和接续步骤见 [SDK 接入指南](integration.md)。Workflow 按当前开发范围暂不接入。
 
-本页先说明当前状态与实现职责，再保留各阶段修复及验证记录。最新修复见[第十轮节点边界](#第十轮节点边界修复)，结构调整见[节点协议与检查点](#节点协议与检查点设计对齐)，文件接入机制见[文件提供者 SPI](#文件提供者-spi)。SDK 已按 LangChain 模板适配 ReAct／Planner／Executor，业务方只填写业务 Prompt，见[LangChain 模板适配](#langchain-模板适配与回归)。首次自动注入与第五轮修复分别保留在[模式提示词实现](#sdk-自动模式提示词)和[第五轮记录](#第五轮持久化-json-深度与异常记录修复)。其他 SDK 章节仍含完整目标设计，不能据此推定全部接口已发布。
+本页先说明当前状态与实现职责，再保留各阶段修复及验证记录。最新修复见[代码审计边界](#代码审计边界修复)，上一轮见[第十轮节点边界](#第十轮节点边界修复)，结构调整见[节点协议与检查点](#节点协议与检查点设计对齐)，文件接入机制见[文件提供者 SPI](#文件提供者-spi)。SDK 已按 LangChain 模板适配 ReAct／Planner／Executor，业务方只填写业务 Prompt，见[LangChain 模板适配](#langchain-模板适配与回归)。首次自动注入与第五轮修复分别保留在[模式提示词实现](#sdk-自动模式提示词)和[第五轮记录](#第五轮持久化-json-深度与异常记录修复)。其他 SDK 章节仍含完整目标设计，不能据此推定全部接口已发布。
 
 ## 当前接口与交付状态
 
@@ -19,6 +19,29 @@
 | 上下文与内容 | 原始／有效记录、历史、压缩、结果预览、按角色分片读取 | 完整值保存在执行快照；独立 ContentStore／BlobStore、ArtifactRef 输入和来源授权待实现 |
 | 存储与恢复 | FileRuntimeStore 默认、MemoryRuntimeStore 可选；不可变节点／图检查点、ScopeCommit 增量、提交回执、租约、单机进程恢复 | 无 SQLite／PostgreSQL 实现；跨机存储与任意历史版本迁移未实现 |
 | 事件总线 | 按类型＋版本分发、局部注册、业务 Handler、Hook 调用阶段持久化、已提交 RunEvent 观察 | 不等于完整可靠总线；独立 outbox、订阅 ACK 和全部持久等待合同待实现 |
+
+## 代码审计边界修复
+
+针对 2026-10-19 的代码审计，先实测并对照既有合同，再修复确认的问题。报告的 M1（Run 创建前 stop 关闭准入）符合停止抢先到达的设计；L11（完成回执拒绝普通 Python 异常）符合 `report_completion` 的强类型合同，两项行为保留。M3 的普通符号链接原本已被拒绝，本次修复的是末段换链竞态下的跨平台错误分类；L6／L8 的非法模型参数原本已被公共文件服务拦截，本次补齐本地后端直接调用的校验。
+
+| 审计项 | 修复与实际边界 |
+| --- | --- |
+| M2：Skill 导入与读取不一致 | `filesystem.posix` 统一逐段 no-follow、普通文件检查、20 MiB 单文件上限与版本一致性读取；`capabilities.skill_files` 负责 Skill 错误映射。包根、祖先和包内符号链接均拒绝，导入与运行时共享边界，不再借用工作区后端私有方法。 |
+| M3、L6／L7／L8／L13：文件错误边界 | 使用平台 `errno`，只在实际打开路径处转换符号链接错误；调用方 body 的错误保留。list limit、edit 文本类型在后端显式校验；`/dev/null` patch 头按不支持的路径拒绝，未增加整文件创建／删除语义。 |
+| M4：非法节点 effect 升级为基础设施故障 | `nodes.effect_validation` 校验完整提案形状、初始模型操作及引用归属；effects 在事务内检查可消费状态。非法提案回滚同次写集，只失败所属任务，Planner 和其他 Executor 可继续；真实票据／持久化不变量失败仍按基础设施故障处理。 |
+| M5、L2／L5：缺失执行事实 | 续租和 worker 读取遇到逻辑 Run 消失按 LeaseLost 退出；旧格式缺少决策操作返回明确的票据错误；补充输入索引与正文不一致返回 PERSISTENCE_INVARIANT_BROKEN。磁盘对象损坏仍由文件存储报告 STORE_CORRUPT，不伪装成可恢复的业务失败。 |
+| L1、L10：外部协议与诊断 | Responses 已知事件及续传材料先校验形状，非法材料归为模型协议错误；未知字符串事件名仍可忽略。MCP 已返回但无法序列化的结果保留 completed 事实与原异常原因，直接异常和 ExceptionGroup 都不再形成自指 cause。 |
+| L3、L9：控制信号与文件授权 | Hook 读取触发 Run 停止／总截止时直接传播，不伪造 allow；普通 Hook 错误仍遵守放行合同。缺失、损坏或类型非法的 epoch 文件拒绝工作区访问，不由普通操作重建授权；其他读取 I/O 故障作为基础设施错误处理。 |
+| L4、L12：文件故障补偿与暂存清理 | 跨设备 move 明确拒绝；创建目标硬链接后源删除失败时，先核对源与目标身份再补偿。证据变化或补偿失败返回 FILE_MOVE_OUTCOME_UNKNOWN，不误删替换文件或唯一副本。写暂存清理后同步目录；prepare 在锁内清理精确匹配的 SDK 普通暂存文件，不穿过符号链接。 |
+| 次要一致性问题 | 内存后端拒绝同 namespace 嵌套事务，与文件后端一致；第三方文件资源关闭保留 SDK 异常；MCP 目录不匹配统一为 conflict。 |
+
+新增 125 项回归分在 `test_node_effect_contract.py`、`test_control_faults.py`、`test_workspace_faults.py`、`test_skill_files.py`、`test_response_shapes.py`、`test_mcp_diagnostics.py`。覆盖内存／文件后端、非法 Executor 与兄弟任务隔离、异常提交的写集回滚、真实 SIGKILL 后暂存清理、目标被替换／源消失时的安全补偿、SDK 错误及原始 cause 的保留。新增用例 **125 passed**，既有相关测试 **180 passed**。
+
+首次完整回归为 **2019 passed、1 failed**；失败来自既有慢撤权测试的 120 ms 租约在并行调度时、进入撤权前已经过期，独立重跑 4 个场景均通过。该测试改为 1 秒租约和超过完整 TTL 的阻塞撤权，并加强 owner／epoch 不变及 expires_at 持续延长的断言；连同真实失权用例，**6 passed**。SDK 的失权校验未放宽，既有 QA 断言未修改。
+
+最终完整回归为 **2020 passed，364.68 秒**，无失败、错误或跳过；217 个源码／资源／测试／配置文件的运行前后摘要一致，`scripts/test_all.py --check` 确认结果与当前工作区匹配。独立安装 wheel 后，129 个源码／资源文件逐字节一致，新增 125 项回归在安装目录再次全部通过。Ruff lint／format、文档构建和站点检查通过。见[审计项处理清单](../../agentloom-sdk/qa/evidence/code-audit-fixes-20261019/fixes-summary.json)、[完整回归摘要](../../agentloom-sdk/qa/evidence/code-audit-fixes-20261019/regression-summary.json)、[完整日志](../../agentloom-sdk/qa/evidence/code-audit-fixes-20261019/regression.txt)、[安装包验证](../../agentloom-sdk/qa/evidence/code-audit-fixes-20261019/wheel-summary.json)及[既有测试完整性](../../agentloom-sdk/qa/evidence/code-audit-fixes-20261019/existing-tests-integrity.json)。首次失败日志与定向重跑证据也在同一目录保留。
+
+本次没有实现文件 mutation journal、跨机 fencing、完整可靠事件总线或 Workflow；进程在 move 的两次文件系统修改之间退出仍可能留下未知结果，不能把异常补偿等同于跨崩溃原子移动。排序差异和非法异步生成器返回值的可选诊断整理也未纳入本轮。
 
 ## 第十轮节点边界修复
 
@@ -68,7 +91,7 @@
 | `configuration.json_values/json_documents`、`operation_errors` | 边界 JSON 与内部文档的统一深度、迭代复制／冻结／RFC 8785；共享 OperationError 校验 |
 | `prompts.roles/protocol/templates/assembly/recovery` | LangChain 三角色适配、原生协议、版本目录、输入输出合同组装、Run 指令快照与恢复校验 |
 | `runtime.host/runner/agent_engine/agent_loop` | 本机宿主、每 Run 执行者、持久 ready／wait 调度和 ReAct 节点程序 |
-| `nodes.contracts/validation/driver/commands/effects/ports/lifecycle` | 引用编解码与共享语义校验、节点提交握手、激活授权及关闭诊断；Activate／Progress／Wait／Complete／Fail 命令 |
+| `nodes.contracts/validation/effect_validation/driver/commands/effects/ports/lifecycle` | 引用编解码、continuation 与 effect 语义校验、节点提交握手、激活授权及关闭诊断；Activate／Progress／Wait／Complete／Fail 命令 |
 | `runtime.batches/domain_handlers` | 持久批次准入规则，Context／Environment／GraphExecution 事件入口 |
 | `checkpoints.journal/snapshots` | 公共图信封、Agent 载荷、不可变节点版本与 ScopeCommit 重放、提交后合并图快照、Owner 删除 |
 | `runtime.calls/completion/handlers/usage` | 准入与重试、Attempt 完成回执、单次适配器调用、原子用量计量 |
@@ -76,9 +99,11 @@
 | `runtime.recovery/control/maintenance/cleanup/leases` | 恢复账本核验、停止和截止、撤权与清理重试、执行及清理租约 |
 | `events.hooks/hook_views/hook_reads/patches/control` | 有序 Hook、受限输入视图、读取授权、双补丁提交与无 Agent 控制收束 |
 | `context` | 消息物化、历史与补充顺序、受保护输入、预算、可恢复摘要、大结果读取 |
-| `capabilities`、`models` | 资源目录及结果合同、工具／MCP／Skill 适配；模型协议、完整材料与 usage 校验 |
+| `capabilities`、`models` | 资源目录及结果合同、工具／MCP／Skill 适配；skill_files 统一包文件边界，response_protocol 验证 Responses 形状；完整材料与 usage 校验 |
 | `workspace.contracts/properties/loader/local/service/results/runtime` | 文件接口与 DTO、参数组、选中提供者加载、本地适配、授权／结果检查和生命周期 |
-| `environment`、`storage` | POSIX 工作区和受限文件服务；JSON 文件事务、内存事务、提交回执和租约校验 |
+| `filesystem.posix` | 不依赖工作区的逐段 no-follow、普通文件有界读取、版本核验与遍历 |
+| `environment.local/mutations/fencing/moves/staging` | POSIX 工作区文件操作、epoch 授权、移动补偿和暂存清理 |
+| `storage` | JSON 文件事务、内存事务、提交回执和租约校验 |
 
 ```mermaid
 flowchart LR
@@ -111,6 +136,8 @@ flowchart LR
 
 ## 验证口径
 
+最新代码审计修复后的完整回归为 **2020 passed，0 failed，0 skipped**，详细边界和安装包验证见[代码审计边界修复](#代码审计边界修复)。以下记录为此前各阶段的固定源码结果。
+
 第八轮修复后的完整回归为 **1665 passed，0 failed，0 skipped**：SDK 1142 项、全部八轮 QA 523 项，约 385 秒。包含原第八轮 61 项及本次新增 67 项边界测试，没有排除用例或修改既有 QA 断言。189 个源码／资源／测试文件在回归前后摘要一致，见[本轮结果](../../agentloom-sdk/qa/evidence/round8-fixes-20261018/regression-summary.json)、[完整日志](../../agentloom-sdk/qa/evidence/round8-fixes-20261018/regression.txt)与[QA 完整性核对](../../agentloom-sdk/qa/evidence/round8-fixes-20261018/qa-integrity.json)。
 
 此前统一提交所有剩余改动，包括 LangChain 三角色模式提示词、恢复合同与公开事件修复、输出与异常结果校验、测试、文档、示例及历史验证证据。提交前重新完整执行 SDK 与七轮 QA：**1537 passed，0 failed，0 skipped**，其中 SDK 1075 项、QA 462 项，耗时 342.81 秒。189 个源码／资源／测试／示例文件在运行前后保持一致，没有排除用例或功能子集，见[该次完整回归](../../agentloom-sdk/qa/evidence/full-workspace-publish-20261018/regression-summary.json)和[日志](../../agentloom-sdk/qa/evidence/full-workspace-publish-20261018/regression.txt)。
@@ -136,7 +163,7 @@ flowchart LR
 - 默认 JSON 文件后端、显式选择的内存后端、幂等提交回执、租约 epoch fencing、独立进程恢复；已保存 raw / Hook result / 子任务 / 批次继续原阶段，没有可靠外部结果的调用标记 unknown。文件后端采用 namespace 文件锁、不可变记录和原子清单，不需要数据库。
 - 独立停止命令与停止前准入关闭，宿主关闭保留现场；终态与 CleanupJob 原子提交，清理独立领取租约、失败重试，不再次激活 Agent。
 
-源码按 `public`、`configuration`、`prompts`、`runtime`、`events`、`context`、`capabilities`、`workspace`、`environment`、`models`、`storage` 分包。具体接入见[接入指南](integration.md)，包安装说明见 [SDK README](../../agentloom-sdk/README.md)。
+源码按 `public`、`configuration`、`prompts`、`runtime`、`nodes`、`checkpoints`、`events`、`context`、`capabilities`、`workspace`、`environment`、`filesystem`、`models`、`storage` 分包。具体接入见[接入指南](integration.md)，包安装说明见 [SDK README](../../agentloom-sdk/README.md)。
 
 ## 第八轮租约与路径边界修复
 

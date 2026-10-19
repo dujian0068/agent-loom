@@ -6,47 +6,30 @@ are not sandboxed by it; script execution requires a separate SandboxGateway.
 
 from __future__ import annotations
 
-import fcntl
 import hashlib
 import json
 import os
 import shutil
 import stat
-import tempfile
 from contextlib import contextmanager
 from pathlib import Path, PurePosixPath
 
 from ..configuration import digest
 from ..errors import AgentLoomError, LeaseLost
+from ..filesystem.posix import open_directory as _directory
+from ..filesystem.posix import open_nofollow, read_regular
 from ..workspace.paths import path_parts as _parts
+from .fencing import LocalFencing
 from .limits import DEFAULT_FILE_READ_BYTES, MAX_FILE_BYTES, MAX_FILE_READ_BYTES
 from .mutations import FileMutations
+from .staging import cleanup_staging
 
 
 def _key(value):
     return hashlib.sha256(str(value).encode()).hexdigest()
 
 
-def _directory(path, *, create=False):
-    """Walk with dirfd and O_NOFOLLOW, including every ancestor of the root."""
-    fd = os.open("/", os.O_RDONLY | os.O_DIRECTORY)
-    try:
-        for part in Path(path).absolute().parts[1:]:
-            if create:
-                try:
-                    os.mkdir(part, mode=0o700, dir_fd=fd)
-                except FileExistsError:
-                    pass
-            nxt = os.open(part, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW, dir_fd=fd)
-            os.close(fd)
-            fd = nxt
-        return fd
-    except BaseException:
-        os.close(fd)
-        raise
-
-
-class LocalEnvironment(FileMutations):
+class LocalEnvironment(FileMutations, LocalFencing):
     """A single-machine file backend. No NFS fencing or OS process sandbox claims."""
 
     def prepare(
@@ -72,63 +55,22 @@ class LocalEnvironment(FileMutations):
         }
         with self._lock(scope):
             guard()
-            try:
-                with open(scope["lock"] + ".epoch") as fp:
-                    previous = json.load(fp)
-                if previous["run_id"] == str(run_id) and (
+            previous = self._read_epoch(scope, allow_missing=True)
+            if (
+                previous is not None
+                and previous["run_id"] == str(run_id)
+                and (
                     previous["epoch"] > epoch
                     or previous["epoch"] == epoch
                     and not previous["active"]
-                ):
-                    raise LeaseLost()
-            except FileNotFoundError:
-                pass
+                )
+            ):
+                raise LeaseLost()
             fd = _directory(path, create=True)
             os.close(fd)
+            cleanup_staging(path, guard)
             self._write_epoch(scope, {"run_id": str(run_id), "epoch": epoch, "active": True})
         return scope
-
-    @contextmanager
-    def _lock(self, scope):
-        fd = os.open(scope["lock"], os.O_CREAT | os.O_RDWR | os.O_NOFOLLOW, 0o600)
-        try:
-            fcntl.flock(fd, fcntl.LOCK_EX)
-            yield
-        finally:
-            fcntl.flock(fd, fcntl.LOCK_UN)
-            os.close(fd)
-
-    def _write_epoch(self, scope, value):
-        target = Path(scope["lock"] + ".epoch")
-        fd, name = tempfile.mkstemp(dir=target.parent)
-        try:
-            with os.fdopen(fd, "w") as fp:
-                json.dump(value, fp)
-                fp.flush()
-                os.fsync(fp.fileno())
-            os.replace(name, target)
-            dfd = _directory(target.parent)
-            try:
-                os.fsync(dfd)
-            finally:
-                os.close(dfd)
-        finally:
-            if os.path.exists(name):
-                os.unlink(name)
-
-    def _check(self, scope, guard):
-        guard()
-        with open(scope["lock"] + ".epoch") as fp:
-            epoch = json.load(fp)
-        if epoch != {"run_id": scope["run_id"], "epoch": scope["epoch"], "active": True}:
-            raise LeaseLost()
-
-    def revoke(self, scope):
-        with self._lock(scope):
-            with open(scope["lock"] + ".epoch") as fp:
-                value = json.load(fp)
-            if value["run_id"] == scope["run_id"] and value["epoch"] == scope["epoch"]:
-                self._write_epoch(scope, {**value, "active": False})
 
     @contextmanager
     def _parent(self, scope, path, *, parents=False):
@@ -143,7 +85,7 @@ class LocalEnvironment(FileMutations):
                         os.mkdir(part, mode=0o700, dir_fd=fd)
                     except FileExistsError:
                         pass
-                child = os.open(part, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW, dir_fd=fd)
+                child = open_nofollow(part, os.O_RDONLY | os.O_DIRECTORY, dir_fd=fd)
                 os.close(fd)
                 fd = child
             try:
@@ -152,10 +94,6 @@ class LocalEnvironment(FileMutations):
             except FileNotFoundError:
                 pass
             yield fd, parts[-1]
-        except OSError as exc:
-            if exc.errno in (20, 40):
-                raise AgentLoomError("SYMLINK_FORBIDDEN", category="permission") from exc
-            raise
         finally:
             os.close(fd)
 
@@ -171,22 +109,7 @@ class LocalEnvironment(FileMutations):
 
     @staticmethod
     def _read_bytes(fd, name):
-        file_fd = os.open(name, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK, dir_fd=fd)
-        with os.fdopen(file_fd, "rb") as fp:
-            before = os.fstat(fp.fileno())
-            if not stat.S_ISREG(before.st_mode):
-                raise AgentLoomError("FILE_TYPE_FORBIDDEN")
-            data = fp.read(MAX_FILE_BYTES + 1)
-            if len(data) > MAX_FILE_BYTES:
-                raise AgentLoomError("FILE_TOO_LARGE")
-            after = os.fstat(fp.fileno())
-
-            def stamp(s):
-                return (s.st_dev, s.st_ino, s.st_size, s.st_mtime_ns, s.st_ctime_ns)
-
-            if stamp(before) != stamp(after) or len(data) != after.st_size:
-                raise AgentLoomError("FILE_CHANGED", category="conflict")
-            return data
+        return read_regular(fd, name)
 
     @staticmethod
     def _version(path, data):
@@ -280,6 +203,7 @@ class LocalEnvironment(FileMutations):
                 finally:
                     try:
                         os.unlink(staging, dir_fd=fd)
+                        os.fsync(fd)
                     except FileNotFoundError:
                         pass
         return self._version(path, data)
@@ -315,7 +239,7 @@ class LocalEnvironment(FileMutations):
         import base64
 
         if type(limit) is not int or not 1 <= limit <= 1000:
-            raise AgentLoomError("INVALID_CURSOR")
+            raise AgentLoomError("FILE_ARGUMENTS_INVALID", category="validation")
         entries = self.list(scope, path, guard, versions=True)
         version = digest([[e["name"], e["kind"], e["etag"]] for e in entries])
         offset = 0

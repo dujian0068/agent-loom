@@ -21,6 +21,7 @@ from .contracts import (
     WaitCondition,
     continuation_ref,
 )
+from .effect_validation import validate_effect
 from .lifecycle import close_activation
 from .ports import bind_context
 from .validation import validate_payload
@@ -179,6 +180,7 @@ class NodeDriver:
             else f"progress:{activation_id}:{task['node_revision']}"
         )
         for effect in effects:
+            validate_effect(effect.to_dict())
             if effect.kind == "begin_model":
                 command_id = "begin:" + effect.body["operation"]["operation_id"]
         if isinstance(outcome, Progress):

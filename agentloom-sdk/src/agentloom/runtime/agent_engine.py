@@ -49,7 +49,11 @@ class AgentGraphEngine:
                 ):
                     from .completion import failure, success
 
-                    op = state["operations"][task["parent_operation"]]
+                    op = state["operations"].get(task["parent_operation"])
+                    if op is None:
+                        raise InfrastructureError(
+                            "PERSISTENCE_INVARIANT_BROKEN", field_path="task.parent_operation"
+                        )
                     if op["raw"] is None:
                         raw = (
                             success(task["result"])
@@ -64,6 +68,15 @@ class AgentGraphEngine:
     @staticmethod
     def _upgrade_task(state, task):
         # Explicit adapter for the supported pre-protocol v1 execution format.
+        parent = (
+            state["operations"].get(task["parent_operation"])
+            if task.get("parent_operation")
+            else None
+        )
+        if task.get("parent_operation") and parent is None:
+            raise InfrastructureError(
+                "PERSISTENCE_INVARIANT_BROKEN", field_path="task.parent_operation"
+            )
         phase = {
             "prepare": "prepare_context",
             "call_model": "prepare_model",
@@ -108,7 +121,7 @@ class AgentGraphEngine:
             input={
                 "content": state["initial_input"]["content"]
                 if task["parent_operation"] is None
-                else state["operations"][task["parent_operation"]]["request"]["arguments"]["task"]
+                else parent["request"]["arguments"]["task"]
             },
             wait_condition=None,
             resume_input_ref=None,

@@ -3,6 +3,7 @@ import time
 from contextlib import contextmanager
 
 from ..configuration.json_documents import copy_document
+from ..errors import InfrastructureError
 from .base import StoreQueries
 
 
@@ -42,18 +43,27 @@ class MemoryRuntimeStore(StoreQueries):
     def __init__(self):
         self._data = {}
         self._lock = threading.RLock()
+        self._held = threading.local()
 
     @contextmanager
     def transaction(self, namespace):
         with self._lock:
-            data = self._data.setdefault(namespace, {})
-            tx = _MemoryTransaction(data)
-            yield tx
-            for key, value in tx.pending.items():
-                if value is None:
-                    data.pop(key, None)
-                else:
-                    data[key] = value
+            held = getattr(self._held, "namespaces", set())
+            if namespace in held:
+                raise InfrastructureError("STORE_TRANSACTION_NESTED")
+            self._held.namespaces = held
+            held.add(namespace)
+            try:
+                data = self._data.setdefault(namespace, {})
+                tx = _MemoryTransaction(data)
+                yield tx
+                for key, value in tx.pending.items():
+                    if value is None:
+                        data.pop(key, None)
+                    else:
+                        data[key] = value
+            finally:
+                held.remove(namespace)
 
     def close(self):
         pass

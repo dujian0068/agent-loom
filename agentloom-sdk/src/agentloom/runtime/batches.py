@@ -47,7 +47,13 @@ def wake_waiters(state):
 
 
 def freeze_batch(state, task, model_op):
-    if model_op["ticket"] != "consumed" or model_op.get("consumption_kind") != "decision":
+    if not isinstance(model_op, dict) or (
+        model_op.get("task_id") != task["task_id"]
+        or model_op.get("event_type") != "model.generate"
+        or model_op.get("ticket") != "consumed"
+        or model_op.get("consumption_kind") != "decision"
+        or not isinstance(model_op.get("operation_id"), str)
+    ):
         raise InfrastructureError("BATCH_DECISION_TICKET_REQUIRED")
     batch_id = stable_id(task["task_id"], "batch", task["round"])
     batch = {

@@ -6,7 +6,7 @@ import time
 from ..configuration.json_documents import canonical_document as canonical
 from ..context import history_records, record
 from ..context.results import RESULT_READ_TOOL, ResultReadHandler
-from ..errors import AgentLoomError, InfrastructureError
+from ..errors import AgentLoomError, InfrastructureError, LeaseLost, RequestError
 from ..events import EventBusImpl, HandlerBinding, HookHandler
 from ..nodes import ReactContinuationV1
 from ..prompts.assembly import PROMPT_RECORD_KIND
@@ -124,7 +124,12 @@ class ExecutionRunner:
         self._heartbeat = None
 
     def state(self):
-        return self.runtime._load(self.run_id)
+        try:
+            return self.runtime._load(self.run_id)
+        except RequestError as exc:
+            if exc.code == "RUN_NOT_FOUND":
+                raise LeaseLost() from exc
+            raise
 
     def task(self, task_id):
         return self.runtime.store.read_path(self.runtime.namespace, self.run_id, ("tasks", task_id))

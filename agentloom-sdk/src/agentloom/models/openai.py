@@ -11,6 +11,7 @@ from ..types import ModelDescriptor, ModelResponse, ProviderEvent, ToolCall
 from .http import frame_json, sse_data, tool_arguments
 from .material import merge_usage, normalize_usage
 from .provider_errors import provider_error
+from .response_protocol import validate_frame
 from .responses import response_inputs
 
 
@@ -201,6 +202,7 @@ class OpenAIResponsesAdapter(_OpenAIAdapter):
             async with self._stream("/responses", body, context) as response:
                 async for raw in sse_data(response):
                     frame = frame_json(raw)
+                    validate_frame(frame)
                     kind = frame.get("type")
                     if kind == "response.created":
                         identity = frame["response"]["id"]

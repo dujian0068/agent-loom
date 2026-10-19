@@ -204,6 +204,8 @@ JSON 边界材料最多 128 层容器，标量深度为 0；工具结果计算�
 | Skill | `SkillPackage.from_directory`、`DirectorySkillLoader`、`SkillRegistration` 注册只读包，角色显式绑定；读取文本不执行脚本，也不授予额外工具权限 |
 | 脚本 | ScriptToolAdapter 需要调用方提供配套隔离环境与网关；默认 LocalEnvironment 不提供宿主 shell 执行。设计中的独立环境／沙箱 Protocol 尚未完整交付 |
 
+本地 Skill 包须使用无符号链接的实际目录，祖先目录也不能是符号链接；每个文件（含 SKILL.md）最多 20 MiB。导入和运行时读取使用同一校验，包文件发生变化会拒绝读取。遇到 `SKILL_PATH_FORBIDDEN` 检查路径和权限，`SKILL_CONTENT_TOO_LARGE` 调整包内材料，`SKILL_CONTENT_CHANGED` 重新导入确定的包版本；不要绕过 manifest 校验。
+
 大结果保留完整有效值，模型默认收到最多 64 KiB 的预览，并通过自动提供的 `result_read` 按授权分片读取。Planner 不能使用 Executor 的私有结果引用。
 
 ### Hook 输入与读取
@@ -230,7 +232,7 @@ hooked_agent = app.builder.with_options(hooks=hooks).build(definition)
 
 `event.payload_ref/context_refs`、记录的 `context_seq/effective_payload/visible_fields` 均遵守只读合同。`read_context()` 返回 `HookRecordPage(records, next_seq)`；用 `after_seq=next_seq` 继续分页，返回 None 时结束。reader 在回调结束后过期。
 
-request／response Hook 按 ordinal 执行，返回 `HookDecision` 的 allow／deny 及白名单 patch。非法 patch、普通异常和超时会保留诊断并放行；合法 deny 不因附带非法 patch 而失效。Hook 因此不能替代宿主的身份验证和资源授权。当前没有 ScriptHookHandler 或生命周期修改 Hook。
+request／response Hook 按 ordinal 执行，返回 `HookDecision` 的 allow／deny 及白名单 patch。非法 patch、普通异常和 Hook 自身超时会保留诊断并放行；合法 deny 不因附带非法 patch 而失效。Run 停止、总截止和执行权丢失属于控制信号，即使由 reader 触发也继续传播，不记录成 allow。Hook 因此不能替代宿主的身份验证和资源授权。当前没有 ScriptHookHandler 或生命周期修改 Hook。
 
 ## 6. 执行、补充、停止与查询
 
@@ -327,6 +329,8 @@ Plan 恢复还须传回原 Executor 表。已终态返回保存结果；有效 o
 
 合法模型 completed 和 MCP 已知响应在关闭流／会话前保存，接管者复用 raw 并继续后处理。关闭诊断不覆盖已完成结果；保存结果或提交回执失败按基础设施故障传播。停止与总截止仍阻止成功交付，失权仍拒绝旧 owner 写入。
 
+本地工作区的 `.agentloom` 授权文件须与工作区一并保留，不能用清理脚本删除。epoch 标记缺失、损坏或被符号链接替换时，普通文件调用与撤权返回 LeaseLost；其他读取 I/O 故障返回 WORKSPACE_FENCE_UNAVAILABLE。普通操作不重建标记。修复存储后由正常执行权领取和 prepare 流程重新准备工作区，不能修改 epoch 文件来延续旧句柄。遇到 FILE_MOVE_OUTCOME_UNKNOWN 应先核对源／目标事实，不能把它当作未执行后自动重试。
+
 默认 FileRuntimeStore 使用 JSON 对象、POSIX 文件锁和原子清单，支持单机多进程协作；MemoryRuntimeStore 需要显式注入且不能跨进程恢复。状态目录与可清理工作区分开，保持 SDK 文件清单与对象完整，不手动改写检查点。当前没有 SQLite 或 PostgreSQL 后端，不承诺 NFS／跨机协调及任意历史版本迁移。
 
 ## 8. 当前范围与验证
@@ -335,6 +339,6 @@ Plan 恢复还须传回原 Executor 表。已终态返回保存结果；有效 o
 
 接入验证至少覆盖：启动参数构造、角色权限绑定、一次真实业务调用、同 run_id 重开、停止／等待超时区别、维护状态查询。确定性脚本用于检查本地装配；真实模型端点和 MCP 服务需按部署环境另行联调。
 
-第八轮修复后的完整回归为 **1665 passed，0 failed，0 skipped**，包含 SDK 1142 项与全部八轮 QA 523 项，独立白盒探针一并执行。源码摘要、测试范围和完整日志见[验证记录](implementation.md#验证口径)。SDK 与独立文件提供者的安装包另通过 10 个进程验证场景，见[安装包验证](../../agentloom-sdk/qa/evidence/round8-fixes-20261018/wheel-summary.json)。这些验证使用本地模型及协议替身，未执行真实远端模型调用。
+2026-10-19 代码审计修复后的完整回归为 **2020 passed，0 failed，0 skipped**，执行全部 SDK、QA 和独立白盒用例；源码与测试在运行前后保持一致。新增 125 项故障回归在独立安装的 wheel 下也全部通过，见[验证记录](implementation.md#代码审计边界修复)。文件提供者此前另通过 10 个进程验证场景，见[文件 SPI 安装包验证](../../agentloom-sdk/qa/evidence/round8-fixes-20261018/wheel-summary.json)。这些验证使用本地模型及协议替身，未执行真实远端模型调用。
 
 本页 7 个 Python 代码块已通过本地验证，另验证停止、补充、等待超时和查询入口，共 8 个场景；真实模型片段仅验证构造，其余执行使用确定性模型，没有远端服务调用。[文档代码与验证结果](../../agentloom-sdk/qa/evidence/docs-integration-20261017/summary.json)独立保存，不计入上述 SDK 回归数量。

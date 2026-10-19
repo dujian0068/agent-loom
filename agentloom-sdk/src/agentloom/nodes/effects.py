@@ -5,6 +5,7 @@ from ..context import append
 from ..context.results import project_result
 from ..errors import InfrastructureError, RequestError
 from ..runtime.batches import freeze_batch
+from .effect_validation import require_effect, validate_effect, validate_model_intent
 
 
 def assistant_message(response):
@@ -29,6 +30,7 @@ def assistant_message(response):
 
 
 def apply_effect(state, task, effect):
+    validate_effect(effect)
     kind, body = effect["kind"], effect["body"]
     expected = body.get("expected_context_revision")
     if expected is not None and expected != task["context"]["revision"]:
@@ -47,15 +49,18 @@ def apply_effect(state, task, effect):
                     item["record_id"] = entry["record_id"]
     elif kind == "begin_model":
         op = copy_document(body["operation"])
-        if op["task_id"] != task["task_id"] or op["event_type"] != "model.generate":
-            raise RequestError("NODE_EFFECT_INVALID")
+        validate_model_intent(state, task, op)
         if op["operation_id"] in state["operations"]:
             raise RequestError("IDEMPOTENCY_CONFLICT")
         state["operations"][op["operation_id"]] = op
     elif kind == "accept_model":
-        op = state["operations"][body["operation_id"]]
-        if op["task_id"] != task["task_id"] or op["status"] != "succeeded":
-            raise RequestError("NODE_EFFECT_INVALID")
+        op = state["operations"].get(body["operation_id"])
+        require_effect(
+            op is not None
+            and op["task_id"] == task["task_id"]
+            and op["event_type"] == "model.generate"
+            and op["status"] == "succeeded"
+        )
         consume_ticket(state, op, "decision")
         candidate = op["response"]["result"]
         append(
@@ -71,13 +76,13 @@ def apply_effect(state, task, effect):
         if task["calls"]:
             freeze_batch(state, task, op)
     elif kind == "consume_batch":
-        batch = state["batches"][body["batch_id"]]
-        if (
-            batch["owner_task_id"] != task["task_id"]
-            or batch["delivery_state"] != "unconsumed"
-            or any(m["status"] != "settled" for m in batch["members"])
-        ):
-            raise InfrastructureError("BATCH_CONSUMPTION_INVALID")
+        batch = state["batches"].get(body["batch_id"])
+        require_effect(
+            batch is not None
+            and batch["owner_task_id"] == task["task_id"]
+            and batch["delivery_state"] == "unconsumed"
+            and all(m["status"] == "settled" for m in batch["members"])
+        )
         for member in batch["members"]:
             call, response = member["call"], member["response"]
             op = state["operations"].get(response.get("operation_id"))

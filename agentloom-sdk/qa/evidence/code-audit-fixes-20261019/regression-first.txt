@@ -1,0 +1,109 @@
+bringing up nodes...
+bringing up nodes...
+
+........................................................................ [  3%]
+........................................................................ [  7%]
+........................................................................ [ 10%]
+........................................................................ [ 14%]
+........................................................................ [ 17%]
+........................................................................ [ 21%]
+........................................................................ [ 24%]
+........................................................................ [ 28%]
+........................................................................ [ 32%]
+........................................................................ [ 35%]
+........................................................................ [ 39%]
+........................................................................ [ 42%]
+........................................................................ [ 46%]
+........................................................................ [ 49%]
+........................................................................ [ 53%]
+........................................................................ [ 57%]
+........................................................................ [ 60%]
+..........................F............................................. [ 64%]
+........................................................................ [ 67%]
+........................................................................ [ 71%]
+........................................................................ [ 74%]
+........................................................................ [ 78%]
+........................................................................ [ 81%]
+........................................................................ [ 85%]
+........................................................................ [ 89%]
+........................................................................ [ 92%]
+........................................................................ [ 96%]
+........................................................................ [ 99%]
+....                                                                     [100%]
+=================================== FAILURES ===================================
+_______ test_slow_revocation_renews_original_execution_lease[file-False] _______
+[gw0] darwin -- Python 3.12.14 /Users/bmilk/code/project/agent-loom/.venv/bin/python
+
+runtime_store = <agentloom.storage.filesystem.FileRuntimeStore object at 0x10ca0a9f0>
+build = <function build.<locals>.factory at 0x10cc2bd80>, orphan = False
+
+    @pytest.mark.parametrize("orphan", [False, True])
+    async def test_slow_revocation_renews_original_execution_lease(runtime_store, build, orphan):
+        entered = asyncio.Event()
+    
+        async def blocked(request):
+            entered.set()
+            await asyncio.Event().wait()
+    
+        class SlowEnvironment(LocalEnvironment):
+            def revoke(self, scope):
+                time.sleep(0.3)
+                return super().revoke(scope)
+    
+        async with RuntimeEngine(
+            store=runtime_store, environment=SlowEnvironment(), lease_seconds=0.12
+        ) as runtime:
+            handle = await build(runtime, blocked if orphan else lambda r: ModelResponse("done")).start(
+                "question",
+                run_id="slow",
+                session_id="s",
+            )
+            if orphan:
+                await asyncio.wait_for(entered.wait(), 2)
+            else:
+>               assert (await handle.wait(timeout_s=3)).status == "succeeded"
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/tests/test_control_reconciliation.py:303: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/public/handles.py:57: in wait
+    return await observe()
+           ^^^^^^^^^^^^^^^
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/public/handles.py:52: in observe
+    self._runtime.raise_local_failure(self.run_id)
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/runtime/host.py:158: in raise_local_failure
+    raise failure
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/runtime/host.py:335: in _drive
+    await runner.run()
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/runtime/runner.py:225: in run
+    await self._run()
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/runtime/runner.py:295: in _run
+    await monitor
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/runtime/runner.py:212: in _monitor
+    self.check_active()
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/runtime/runner.py:167: in check_active
+    verify_lease(state, self.lease, tx.now)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+state = {'deadline_at': 1792419696.806853, 'lease': {'epoch': 1, 'expires_at': 1792416096.9304278, 'worker_id': '00d09229-fd82-4756-b24a-ba35b680de62'}, 'status': 'running'}
+lease = ExecutionLease(run_id='slow', worker_id='00d09229-fd82-4756-b24a-ba35b680de62', epoch=1)
+now = 1792416096.932056
+
+    def verify_lease(state, lease, now, *, allow_terminal=False):
+        if state is None:
+            raise LeaseLost()
+        current = state.get("lease") or {}
+        if (
+            (not allow_terminal and state["status"] in TERMINAL)
+            or current.get("worker_id") != lease.worker_id
+            or current.get("epoch") != lease.epoch
+            or current.get("expires_at", 0) <= now
+        ):
+>           raise LeaseLost()
+E           agentloom.errors.LeaseLost: LEASE_LOST: Execution ownership has expired or was revoked
+
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/storage/commit.py:16: LeaseLost
+- generated xml file: /Users/bmilk/code/project/agent-loom/.agentloom/test-results/20261019-132015-877726Z/junit.xml -
+=========================== short test summary info ============================
+FAILED agentloom-sdk/tests/test_control_reconciliation.py::test_slow_revocation_renews_original_execution_lease[file-False]
+1 failed, 2019 passed in 359.41s (0:05:59)
