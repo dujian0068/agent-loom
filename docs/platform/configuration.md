@@ -85,6 +85,12 @@ WorkflowSession 对应 WorkflowApplication 的 SessionBinding；它不是所有�
 
 ## 3. 资源目录与导入
 
+应用编辑器分别配置 Tool、Skill 与 MCP。Plan 的入口定义和每个 Executor 各有独立的 capabilities，不能在装配时把所有角色的资源合并授权。MCP 绑定固定连接版本、member_key 与 Schema；启用连接但未选择成员不能通过发布校验。Skill 绑定只授权包及资源读取，exec 须独立授权。
+
+EnvironmentBindingDraft 在交互上分离三个概念：执行沙箱是否启用、工作区访问范围、工作文件是否保留。平台解析管理员登记的存储与环境模板，分配应用文件根；草稿不接受客户端提供的物理根目录。只读工作区与写文件能力冲突、exec 缺少可用沙箱等情况可保存在未完成草稿中，但 validate 必须报告，发布时再次检查资源可用性。
+
+当前 SDK 的 WorkspaceBinding.persistent_sandbox 只对应「在同一会话内保留工作文件」，不能用来实现「开启执行沙箱」。执行沙箱依赖配套的 EnvironmentProvider 与 SandboxGateway，当前默认 LocalEnvironment 不提供宿主进程隔离。工作区访问权限由实际能力绑定和受限文件视图共同实施，不能仅靠前端禁用写入控件。完整环境服务未接入时，平台不开放 exec；原型中的服务可用状态仅是交互模拟。
+
 ```text
 ResourceVersion
   resource_id, version, kind, content_ref, manifest_ref, content_hash
