@@ -5,6 +5,7 @@ import argparse
 import hashlib
 import json
 import os
+import shlex
 import signal
 import subprocess
 import sys
@@ -20,6 +21,19 @@ VENV_PYTHON = (
     ROOT / ".venv" / ("Scripts/python.exe" if os.name == "nt" else "bin/python")
 )
 PYTHON = str(VENV_PYTHON) if VENV_PYTHON.is_file() else sys.executable
+DEFAULT_MAX_WORKERS = 4
+
+
+def worker_count(value):
+    if value == "auto":
+        return min(DEFAULT_MAX_WORKERS, os.cpu_count() or 1)
+    try:
+        workers = int(value)
+    except ValueError as exc:
+        raise argparse.ArgumentTypeError("并发数必须是正整数或 auto。") from exc
+    if workers < 1:
+        raise argparse.ArgumentTypeError("并发数必须大于 0；使用 1 串行运行。")
+    return workers
 
 
 def save(path, value):
@@ -152,7 +166,19 @@ def check_latest():
     return 0 if valid else 2
 
 
-def run_all():
+def run_all(workers=1):
+    test_environment = environment()
+    if workers > 1 and not any(
+        name.lower().replace("_", "-") == "pytest-xdist"
+        for name in test_environment["packages"]
+    ):
+        install = shlex.join([PYTHON, "-m", "pip", "install", "pytest-xdist>=3.6,<4"])
+        print(
+            f"并发测试需要 pytest-xdist，请先运行：\n{install}\n"
+            "也可使用 --workers 1 串行运行。",
+            file=sys.stderr,
+        )
+        return 2
     started = datetime.now(timezone.utc)
     directory = RESULTS / started.strftime("%Y%m%d-%H%M%S-%fZ")
     directory.mkdir(parents=True)
@@ -168,10 +194,16 @@ def run_all():
         "--color=no",
         "-o",
         "addopts=",
-        str(SDK / "tests"),
-        str(SDK / "qa"),
-        f"--junitxml={directory / 'junit.xml'}",
     ]
+    if workers > 1:
+        command.extend(["-p", "xdist", "-n", str(workers), "--dist", "worksteal"])
+    command.extend(
+        [
+            str(SDK / "tests"),
+            str(SDK / "qa"),
+            f"--junitxml={directory / 'junit.xml'}",
+        ]
+    )
     summary = {
         "schema_version": 1,
         "directory": str(directory),
@@ -179,7 +211,12 @@ def run_all():
         "command": command,
         "scope": ["agentloom-sdk/tests", "agentloom-sdk/qa"],
         "git_before": git_state(),
-        "environment": environment(),
+        "environment": test_environment,
+        "execution": {
+            "mode": "parallel" if workers > 1 else "serial",
+            "workers": workers,
+            "distribution": "worksteal" if workers > 1 else None,
+        },
         "completed": False,
         "pytest_addopts_ignored": True,
     }
@@ -187,7 +224,10 @@ def run_all():
     # An interrupted run must not leave an older result marked as the latest run.
     save(RESULTS / "latest.json", summary)
     env = {**os.environ, "PYTEST_ADDOPTS": ""}
-    print(f"运行全部 SDK 与 QA 测试，结果目录：{directory}", flush=True)
+    print(
+        f"运行全部 SDK 与 QA 测试（{workers} 个进程），结果目录：{directory}",
+        flush=True,
+    )
     clock = time.monotonic()
     with (directory / "pytest.log").open("w", encoding="utf-8") as log:
         process = subprocess.Popen(
@@ -200,6 +240,7 @@ def run_all():
             encoding="utf-8",
             errors="replace",
             bufsize=1,
+            start_new_session=os.name == "posix",
         )
 
         def output(text):
@@ -212,11 +253,26 @@ def run_all():
                 output(line)
             code = process.wait()
         except KeyboardInterrupt:
-            process.send_signal(signal.SIGINT)
+            # xdist workers belong to this dedicated pytest process group.
+            # Interrupt/kill the group so cancelling the launcher leaves no workers.
+            def stop(*, force=False):
+                try:
+                    if os.name == "posix":
+                        os.killpg(
+                            process.pid, signal.SIGKILL if force else signal.SIGINT
+                        )
+                    elif not force:
+                        process.send_signal(signal.SIGINT)
+                    else:
+                        process.kill()
+                except ProcessLookupError:
+                    pass
+
+            stop()
             try:
                 remaining, _ = process.communicate(timeout=5)
             except subprocess.TimeoutExpired:
-                process.kill()
+                stop(force=True)
                 remaining, _ = process.communicate()
             output(remaining or "")
             code = 130
@@ -246,8 +302,16 @@ def main():
     parser.add_argument(
         "--check", action="store_true", help="只核对最近一次结果是否仍适用，不运行测试"
     )
+    parser.add_argument(
+        "-j",
+        "--workers",
+        type=worker_count,
+        default="auto",
+        metavar="N|auto",
+        help="并发进程数；默认 auto（CPU 数，最多 4），1 为串行",
+    )
     args = parser.parse_args()
-    return check_latest() if args.check else run_all()
+    return check_latest() if args.check else run_all(args.workers)
 
 
 if __name__ == "__main__":

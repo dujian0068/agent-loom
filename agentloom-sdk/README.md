@@ -294,9 +294,18 @@ Runtime 关闭会停止本机推进并保留检查点，不等同于用户停止
 ./scripts/test_all.py
 ```
 
+默认按 CPU 数启动最多 4 个独立 pytest worker 进程，各自隔离工作目录、环境变量和异步事件循环。使用 [pytest-xdist 的 worksteal 调度](https://pytest-xdist.readthedocs.io/en/stable/distribution.html)在 worker 之间分配用例，适用于本项目耗时差异较大的测试。并发单位是测试用例，单个慢用例内部仍按原流程执行。
+
+```sh
+./scripts/test_all.py --workers 8  # 指定 8 个进程，也可写 -j 8
+./scripts/test_all.py --workers 1  # 串行运行，便于排查并发问题
+```
+
+`test` 可选依赖已包含 pytest-xdist；已有虚拟环境首次使用并发时可执行 `.venv/bin/python -m pip install 'pytest-xdist>=3.6,<4'`。缺少依赖时脚本给出安装提示并退出，不会悄悄改成串行，也不会覆盖已有结果。
+
 脚本优先使用仓库 `.venv` 的 Python，否则使用当前 Python；依赖安装见上文。它运行 `agentloom-sdk/tests` 和 `agentloom-sdk/qa` 的全部测试，包括本地集成／进程恢复场景，无需真实 LLM Key。为避免漏跑，会清除 `PYTEST_ADDOPTS` 和配置中的 addopts 筛选参数；测试失败保留非零退出码。
 
-每次结果保存在 `.agentloom/test-results/<UTC时间戳>/`，包含实时输出的 `pytest.log`、`junit.xml`、`summary.json` 和测试前后的文件 SHA-256 清单；摘要记录 Git 版本、未提交状态、Python／依赖版本、统计和退出码。目录已由现有 `.gitignore` 的 `.agentloom/` 规则忽略，旧结果不会被覆盖。`.agentloom/test-results/latest.json` 指向最近一次运行的目录，并保存该次摘要。
+每次结果保存在 `.agentloom/test-results/<UTC时间戳>/`，包含实时输出的 `pytest.log`、合并所有 worker 结果的 `junit.xml`、`summary.json` 和测试前后的文件 SHA-256 清单；摘要记录 Git 版本、未提交状态、Python／依赖版本、并发数与调度方式、统计和退出码。目录已由现有 `.gitignore` 的 `.agentloom/` 规则忽略，旧结果不会被覆盖。`.agentloom/test-results/latest.json` 指向最近一次运行的目录，并保存该次摘要。macOS／Linux 下按 Ctrl+C 会向 pytest 及其 worker 进程组发送中断，超时后终止该进程组；中断结果标为未完成。
 
 交给审核者时提供 `latest.json` 和其中指定的完整结果目录。只核对已有结果能否复用，不执行测试：
 
