@@ -81,6 +81,7 @@
 #loom-platform-preview .lp-app-icon svg { width: 20px; height: 20px; }
 #loom-platform-preview .lp-app-body { flex: 1; min-width: 0; }
 #loom-platform-preview .lp-app p { color: var(--lp-muted); margin: 7px 0 0; font-size: 13px; }
+#loom-platform-preview .lp-description { white-space: pre-wrap; overflow-wrap: anywhere; }
 #loom-platform-preview .lp-app-actions { padding-left: 51px; display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 12px; }
 #loom-platform-preview .lp-callout { padding: 12px 14px; background: var(--lp-soft); border-radius: 8px; color: var(--lp-muted); font-size: 13px; margin: 15px 0; }
 #loom-platform-preview .lp-callout.lp-warning { background: var(--lp-warn-bg); color: var(--lp-warn); }
@@ -248,13 +249,15 @@
     return '<div class="lp-header"><p class="lp-eyebrow">产品研发空间</p><div class="lp-row lp-spread"><h1>团队应用</h1>' + (canEdit() ? button('新建应用', 'create', 'lp-primary') : '') + '</div><p class="lp-muted">应用在空间内共享，每位成员的会话独立保存。</p></div>' +
       applications.filter(function(a) { return canEdit() || a.version > 0; }).map(function(a) {
         const index = applications.indexOf(a);
-        return '<article class="lp-app"><div class="lp-app-head"><div class="lp-app-icon">' + icon(a.mode === 'Plan' ? 'workflow' : 'sparkles') + '</div><div class="lp-app-body"><div class="lp-row"><h2 style="margin:0">' + esc(a.name) + '</h2>' + badge(a.mode) + badge(gated(a) ? (a.job.failed ? '发布待处理' : '发布中') : a.version ? '可用' : '未发布', gated(a) ? 'lp-warning' : a.version ? 'lp-good' : '') + '</div><p>' + esc(a.description) + '</p></div></div><div class="lp-app-actions"><span class="lp-muted">' + (a.version ? '当前发布 v' + a.version : '保存并发布后，成员才可使用') + (canEdit() && (a.dirty || a.revision > a.publishedRevision) ? ' · 有未发布修改' : '') + '</span><div class="lp-row">' + (canEdit() ? button('编辑草稿', 'select-editor', '', false, ' data-index="' + index + '"') : '') + button(gated(a) && canEdit() ? '查看发布进度' : '使用应用', gated(a) && canEdit() ? 'select-releases' : 'select-chat', 'lp-primary', !a.version && !gated(a), ' data-index="' + index + '"') + '</div></div></article>';
+        const description = canEdit() ? a.savedDescription : a.publishedDescription;
+        return '<article class="lp-app"><div class="lp-app-head"><div class="lp-app-icon">' + icon(a.mode === 'Plan' ? 'workflow' : 'sparkles') + '</div><div class="lp-app-body"><div class="lp-row"><h2 style="margin:0">' + esc(a.name) + '</h2>' + badge(a.mode) + badge(gated(a) ? (a.job.failed ? '发布待处理' : '发布中') : a.version ? '可用' : '未发布', gated(a) ? 'lp-warning' : a.version ? 'lp-good' : '') + '</div><p class="lp-description">' + esc(description || '未填写应用描述') + '</p></div></div><div class="lp-app-actions"><span class="lp-muted">' + (a.version ? '当前发布 v' + a.version : '保存并发布后，成员才可使用') + (canEdit() && (a.dirty || a.revision > a.publishedRevision) ? ' · 有未发布修改' : '') + '</span><div class="lp-row">' + (canEdit() ? button('编辑草稿', 'select-editor', '', false, ' data-index="' + index + '"') : '') + button(gated(a) && canEdit() ? '查看发布进度' : '使用应用', gated(a) && canEdit() ? 'select-releases' : 'select-chat', 'lp-primary', !a.version && !gated(a), ' data-index="' + index + '"') + '</div></div></article>';
       }).join('') + '<div class="lp-callout">共享的是应用能力。普通成员只能查看和继续自己的会话。</div>';
   }
   function editorPage(app) {
     return appHeader(app) + '<div class="lp-row lp-spread"><div class="lp-row">' + badge('草稿 r' + app.revision) + '<span class="lp-muted">' + (app.version ? '当前发布 v' + app.version : '尚未发布') + '</span></div><span id="lp-save-state" class="lp-muted">' + (app.dirty ? '有未保存修改' : '草稿已保存') + '</span></div>' +
       (gated(app) ? '<div class="lp-callout lp-warning">v' + app.job.target + ' 正在发布。此处后续修改不会进入本次候选版本。</div>' : '') +
       (app.conflict ? '<div class="lp-callout lp-error" role="alert">草稿已被另一位成员更新，你的编辑仍保留。<div class="lp-row" style="margin-top:8px">' + button('比较差异', 'compare') + '</div></div>' : '') +
+      '<div class="lp-formsection"><h2>基本信息</h2><div class="lp-field"><label for="lp-description">应用描述（选填）</label><textarea id="lp-description" data-field="description" maxlength="2000" aria-describedby="lp-description-hint" placeholder="说明应用的用途、适用场景和预期结果">' + esc(app.description) + '</textarea><small id="lp-description-hint">最多 2000 字。用于应用列表展示，发布后对使用者生效。</small></div></div>' +
       '<div class="lp-formsection"><h2>模型与行为</h2><div class="lp-grid"><div class="lp-field"><label for="lp-model">模型连接</label><select id="lp-model" data-field="model"><option value="">请选择模型</option><option' + (app.model ? ' selected' : '') + '>团队通用模型</option></select><small>已授权连接 · 凭据由管理员维护</small></div><div class="lp-field"><label>执行模式</label><div style="padding:9px 0">' + esc(app.mode) + '</div><small>创建后不可更改</small></div></div><div class="lp-field" style="margin-top:18px"><label for="lp-prompt">系统提示词</label><textarea id="lp-prompt" data-field="prompt">' + esc(app.prompt) + '</textarea><small>说明任务目标、工作方式与结果要求。</small></div></div>' +
       '<div class="lp-formsection"><h2>可用能力</h2><label class="lp-check"><input type="checkbox" data-field="tools"' + (app.tools ? ' checked' : '') + '><span>读取项目变更 <span class="lp-muted">Tool · v1.2 · 固定版本</span></span></label><p class="lp-muted">选择已登记的可信能力，发布后版本固定。</p></div>' +
       (app.mode === 'Plan' ? '<div class="lp-formsection"><h2>专业执行器</h2><div class="lp-field"><label for="lp-executors">标识与职责</label><textarea id="lp-executors" data-field="executors">' + esc(app.executors || '') + '</textarea><small>属于当前应用，共享模型与策略，不独立发布。</small></div></div>' : '') +
@@ -379,8 +382,10 @@
     selected = nextIndex; view = destination; feedback(''); render(); saveState();
   }
   function persistDraft(app) {
+    if (app.description.length > 2000) { feedback('应用描述最多 2000 字，请缩短后保存。'); main.querySelector('#lp-description').focus(); return false; }
     if (options.scenario === 'conflict' && !app.conflictHandled) { app.conflict = true; render(); feedback('保存未完成：检测到另一位成员的更新。'); return false; }
-    app.revision += 1; app.dirty = false; app.valid = false; app.conflict = false; app.savedPrompt = app.prompt; app.savedModel = app.model; app.savedTools = app.tools; app.savedExecutors = app.executors; render(); feedback('草稿 r' + app.revision + ' 已保存。'); return true;
+    app.description = app.description.trim();
+    app.revision += 1; app.dirty = false; app.valid = false; app.conflict = false; app.savedDescription = app.description; app.savedPrompt = app.prompt; app.savedModel = app.model; app.savedTools = app.tools; app.savedExecutors = app.executors; render(); feedback('草稿 r' + app.revision + ' 已保存。'); return true;
   }
   function runUpdate(app, status) {
     app.run.status = status;
@@ -409,7 +414,7 @@
         job.failed = true; render(); feedback('发布停在运行清理阶段，候选版本未启用。'); return;
       }
       job.stage += 1;
-      if (job.stage === 4) { app.version = job.target; app.publishedRevision = job.revision; app.publishedPrompt = job.prompt; app.publishedModel = job.model; app.publishedTools = job.tools; render(); feedback('v' + app.version + ' 已发布。'); saveState(); }
+      if (job.stage === 4) { app.version = job.target; app.publishedRevision = job.revision; app.publishedDescription = job.description; app.publishedPrompt = job.prompt; app.publishedModel = job.model; app.publishedTools = job.tools; render(); feedback('v' + app.version + ' 已发布。'); saveState(); }
       else { render(); feedback(phases[job.stage]); advanceJob(app); }
     }, 1100);
   }
@@ -420,7 +425,7 @@
       app.run.typed = event.target.value;
       const send = main.querySelector('[data-action="send"]');
       if (send) send.disabled = !app.run.typed.trim() || app.run.supplements.some(function(s) { return s.state === 'sending'; }) || gated(app) || app.run.status === 'stopping' || !app.version || options.connection !== 'online' || ['submitting','saved','accepted'].includes(app.run.status);
-    } else if (['prompt','model','tools','executors'].includes(field)) {
+    } else if (['description','prompt','model','tools','executors'].includes(field)) {
       app[field] = field === 'tools' ? event.target.checked : event.target.value;
       app.dirty = true; app.valid = false; updateEditorButtons(app);
     }
@@ -444,12 +449,14 @@
     if (action.startsWith('select-')) { navigate(action.slice(7), Number(target.dataset.index)); return; }
     if (action === 'close') { closeDialog(); return; }
     if (action === 'create') {
-      openDialog('新建应用', '<div class="lp-field"><label for="lp-new-name">应用名称</label><input id="lp-new-name" maxlength="40" placeholder="例如：文档整理助手"></div><div class="lp-field" style="margin-top:16px"><label for="lp-new-mode">执行模式</label><select id="lp-new-mode"><option value="ReAct">ReAct · 一个 Agent 连续完成任务</option><option value="Plan">Plan · 计划与专业执行器分工</option></select><small>创建后不可更改</small></div><p id="lp-create-error" role="alert" class="lp-muted"></p><div class="lp-dialog-actions">' + button('取消','close') + button('创建并配置','confirm-create','lp-primary') + '</div>', 'create');
+      openDialog('新建应用', '<div class="lp-field"><label for="lp-new-name">应用名称</label><input id="lp-new-name" maxlength="100" placeholder="例如：文档整理助手"></div><div class="lp-field" style="margin-top:16px"><label for="lp-new-description">应用描述（选填）</label><textarea id="lp-new-description" maxlength="2000" aria-describedby="lp-new-description-hint" placeholder="例如：整理团队文档，提取关键结论并生成摘要。"></textarea><small id="lp-new-description-hint">说明应用的用途、适用场景和预期结果，最多 2000 字。创建后可继续修改。</small></div><div class="lp-field" style="margin-top:16px"><label for="lp-new-mode">执行模式</label><select id="lp-new-mode"><option value="ReAct">ReAct · 一个 Agent 连续完成任务</option><option value="Plan">Plan · 计划与专业执行器分工</option></select><small>创建后不可更改</small></div><p id="lp-create-error" role="alert" class="lp-muted"></p><div class="lp-dialog-actions">' + button('取消','close') + button('创建并配置','confirm-create','lp-primary') + '</div>', 'create');
     } else if (action === 'confirm-create') {
       const name = root.querySelector('#lp-new-name').value.trim();
-      if (!name) { root.querySelector('#lp-create-error').textContent = '请填写应用名称。'; return; }
+      if (!name || name.length > 100) { root.querySelector('#lp-create-error').textContent = '请填写 1–100 字的应用名称。'; root.querySelector('#lp-new-name').focus(); return; }
+      const description = root.querySelector('#lp-new-description').value.trim();
+      if (description.length > 2000) { root.querySelector('#lp-create-error').textContent = '应用描述最多 2000 字，请缩短后创建。'; root.querySelector('#lp-new-description').focus(); return; }
       const mode = root.querySelector('#lp-new-mode').value;
-      applications.push({name:name,mode:mode,description:'尚未发布的新应用',version:0,revision:1,publishedRevision:0,prompt:'',model:'',tools:false,dirty:false,valid:false,conflict:false,otherRuns:0,job:null,executors:'',savedPrompt:'',savedModel:'',savedTools:false,savedExecutors:'',run:{status:'idle',version:0,input:'',supplements:[],typed:'',timer:null}});
+      applications.push({name:name,mode:mode,description:description,savedDescription:description,publishedDescription:'',version:0,revision:1,publishedRevision:0,prompt:'',model:'',tools:false,dirty:false,valid:false,conflict:false,otherRuns:0,job:null,executors:'',savedPrompt:'',savedModel:'',savedTools:false,savedExecutors:'',run:{status:'idle',version:0,input:'',supplements:[],typed:'',timer:null}});
       closeDialog(); selected = applications.length - 1; view = 'editor'; render(); feedback('应用已创建，请配置模型和提示词。');
     } else if (action === 'save') persistDraft(app);
     else if (action === 'validate') {
@@ -458,15 +465,15 @@
       } else { app.valid = true; render(); feedback('配置校验通过；本次未调用真实模型。'); }
     } else if (action === 'publish') {
       const count = (active(run) ? 1 : 0) + app.otherRuns;
-      openDialog('发布 v' + (app.version + 1), '<p>将固定当前草稿 r' + app.revision + '，发布后空间成员可以使用。</p><dl class="lp-facts"><dt>本次配置</dt><dd>' + esc(app.mode) + ' · ' + esc(app.model) + '</dd><dt>变更范围</dt><dd>系统提示词与已选能力，以当前草稿为准</dd><dt>影响任务</dt><dd>' + count + ' 个活动任务' + (active(run) ? '（含你的 1 个任务）' : '') + '</dd></dl><div class="lp-callout lp-warning">' + (count ? '发布会停止旧配置上的活动任务。' : '') + '发布期间暂停新提问与补充输入。已完成历史保留。</div><div class="lp-dialog-actions">' + button('返回检查','close') + button(count ? '停止相关任务并发布 v' + (app.version + 1) : '发布 v' + (app.version + 1),'confirm-publish','lp-primary') + '</div>', 'publish');
+      openDialog('发布 v' + (app.version + 1), '<p>将固定当前草稿 r' + app.revision + '，发布后空间成员可以使用。</p><dl class="lp-facts"><dt>本次配置</dt><dd>' + esc(app.mode) + ' · ' + esc(app.model) + '</dd><dt>变更范围</dt><dd>应用描述、系统提示词与已选能力，以当前草稿为准</dd><dt>影响任务</dt><dd>' + count + ' 个活动任务' + (active(run) ? '（含你的 1 个任务）' : '') + '</dd></dl><div class="lp-callout lp-warning">' + (count ? '发布会停止旧配置上的活动任务。' : '') + '发布期间暂停新提问与补充输入。已完成历史保留。</div><div class="lp-dialog-actions">' + button('返回检查','close') + button(count ? '停止相关任务并发布 v' + (app.version + 1) : '发布 v' + (app.version + 1),'confirm-publish','lp-primary') + '</div>', 'publish');
     } else if (action === 'confirm-publish') {
-      app.job = {stage:0,target:app.version+1,revision:app.revision,prompt:app.prompt,model:app.model,tools:app.tools,executors:app.executors,failed:false,retried:false,timer:null};
+      app.job = {stage:0,target:app.version+1,revision:app.revision,description:app.description,prompt:app.prompt,model:app.model,tools:app.tools,executors:app.executors,failed:false,retried:false,timer:null};
       closeDialog(); view = 'releases'; render(); feedback('发布任务已创建，候选版本已固定。'); advanceJob(app);
     } else if (action === 'retry-publish') { app.job.failed = false; app.job.retried = true; render(); feedback('正在从失败阶段重试原发布任务。'); advanceJob(app); }
     else if (action === 'publish-diagnostic') {
       openDialog('发布诊断', '<dl class="lp-facts"><dt>候选版本</dt><dd>v' + app.job.target + '</dd><dt>失败阶段</dt><dd>等待运行清理</dd><dt>接入状态</dt><dd>新输入已暂停</dd><dt>处理方式</dt><dd>管理员处理清理异常后，重试原发布任务。</dd></dl><div class="lp-dialog-actions">' + button('关闭','close') + '</div>', 'diagnostic');
     } else if (action === 'version-detail') {
-      openDialog('当前发布 v' + app.version, '<p class="lp-muted">发布快照不可变，后续草稿不会修改此版本。</p><dl class="lp-facts"><dt>执行模式</dt><dd>' + app.mode + '</dd><dt>模型连接</dt><dd>' + esc(app.publishedModel) + '</dd><dt>能力版本</dt><dd>' + (app.publishedTools ? '读取项目变更 · v1.2' : '未选择工具') + '</dd></dl><h3>系统提示词</h3><p>' + esc(app.publishedPrompt) + '</p><div class="lp-dialog-actions">' + button('关闭','close') + '</div>', 'version');
+      openDialog('当前发布 v' + app.version, '<p class="lp-muted">发布快照不可变，后续草稿不会修改此版本。</p><dl class="lp-facts"><dt>应用描述</dt><dd class="lp-description">' + esc(app.publishedDescription || '未填写应用描述') + '</dd><dt>执行模式</dt><dd>' + app.mode + '</dd><dt>模型连接</dt><dd>' + esc(app.publishedModel) + '</dd><dt>能力版本</dt><dd>' + (app.publishedTools ? '读取项目变更 · v1.2' : '未选择工具') + '</dd></dl><h3>系统提示词</h3><p>' + esc(app.publishedPrompt) + '</p><div class="lp-dialog-actions">' + button('关闭','close') + '</div>', 'version');
     } else if (action === 'toggle-progress') { options.progress = !options.progress; render(); }
     else if (action === 'stop') stopRun(app);
     else if (action === 'send') {
@@ -505,14 +512,14 @@
       if (action === 'resolve-latest') app.prompt = '整理研发进展，重点列出尚未解决的问题。所有结论需来自用户提供的信息。';
       app.revision += 1; app.conflictHandled = true; app.conflict = false; app.dirty = true; app.valid = false; closeDialog(); render(); feedback('已对齐最新版本，请确认内容后保存。');
     } else if (action === 'discard') {
-      app.prompt = app.savedPrompt; app.model = app.savedModel; app.tools = app.savedTools; app.executors = app.savedExecutors; app.dirty = false; app.valid = false;
+      app.description = app.savedDescription; app.prompt = app.savedPrompt; app.model = app.savedModel; app.tools = app.savedTools; app.executors = app.savedExecutors; app.dirty = false; app.valid = false;
       closeDialog(); const destination = nextView; nextView = null; navigate(destination.view, destination.index);
     } else if (action === 'save-leave') {
       closeDialog(); if (persistDraft(app)) { const destination = nextView; nextView = null; navigate(destination.view, destination.index); }
     }
     saveState();
   });
-  applications.forEach(function(app) { app.savedPrompt = app.prompt; app.savedModel = app.model; app.savedTools = app.tools; app.savedExecutors = app.executors; app.publishedPrompt = app.prompt; app.publishedModel = app.model; app.publishedTools = app.tools; });
+  applications.forEach(function(app) { app.savedDescription = app.description; app.publishedDescription = app.description; app.savedPrompt = app.prompt; app.savedModel = app.model; app.savedTools = app.tools; app.savedExecutors = app.executors; app.publishedPrompt = app.prompt; app.publishedModel = app.model; app.publishedTools = app.tools; });
   dialog.addEventListener('cancel', function() { modal = null; });
   restore(window.openai && window.openai.widgetState);
   render();
