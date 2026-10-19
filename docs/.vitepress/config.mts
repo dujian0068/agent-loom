@@ -14,11 +14,13 @@ if (!base.startsWith("/") || !base.endsWith("/")) {
 
 const sharedReading = {
   text: "公共文档",
+  // These cross-section links use native navigation, including when a cached
+  // VitePress page module fails to load after a deployment.
   items: [
-    { text: "文档首页", link: "/" },
-    { text: "职责边界", link: "/sdk-platform-boundary" },
-    { text: "Agent 设计约定", link: "/agent-design-decisions" },
-    { text: "阅读指南", link: "/reading-guide" },
+    { text: "文档首页", link: "/", target: "_self" },
+    { text: "职责边界", link: "/sdk-platform-boundary", target: "_self" },
+    { text: "Agent 设计约定", link: "/agent-design-decisions", target: "_self" },
+    { text: "阅读指南", link: "/reading-guide", target: "_self" },
   ],
 };
 const sharedMaintenance = {
@@ -83,7 +85,7 @@ export default defineConfig({
             { text: "Platform 总览", link: "/platform/" },
             { text: "团队私有部署实施方案", link: "/platform/implementation-plan" },
             { text: "首版交互设计", link: "/platform/interaction-design" },
-            { text: "可点击交互原型", link: "/prototypes/platform-interaction/", target: "_blank", rel: "noopener noreferrer" },
+            { text: "可点击交互原型", link: "/prototypes/platform-interaction/index.html", target: "_blank", rel: "noopener noreferrer" },
             { text: "管理领域与实体", link: "/platform/domain-model" },
             { text: "配置、资源与发布", link: "/platform/configuration" },
             { text: "SDK 装配与恢复接入", link: "/platform/sdk-integration" },

@@ -144,6 +144,14 @@
 .loom-map-connector > span:last-child { color: var(--vp-c-brand-1); font-size: 15px; }
 .loom-map-footnote { display: flex; align-items: center; justify-content: center; gap: 7px; margin-top: 13px; font-size: 9px; color: var(--vp-c-text-3); }
 .loom-map-footnote > span { width: 4px; height: 4px; background: var(--vp-c-brand-1); border-radius: 50%; }
+.loom-prototype-banner { display: flex; align-items: center; gap: 20px; padding: 22px 26px; margin-bottom: 36px; border: 1px solid color-mix(in srgb, var(--vp-c-brand-1) 25%, var(--vp-c-divider)); border-radius: 12px; background: var(--loom-accent-surface); transition: border-color 0.2s, box-shadow 0.2s; }
+.loom-prototype-banner:hover { border-color: var(--vp-c-brand-1); box-shadow: var(--loom-shadow); }
+.loom-prototype-icon { display: grid; place-items: center; width: 46px; height: 46px; border: 1px solid var(--vp-c-divider); border-radius: 11px; background: var(--loom-surface); color: var(--vp-c-brand-1); flex-shrink: 0; }
+.loom-prototype-icon svg { width: 25px; height: 25px; stroke: currentColor; stroke-width: 1.4; stroke-linecap: round; stroke-linejoin: round; }
+.loom-prototype-kicker { font-size: 10px; color: var(--vp-c-brand-1); letter-spacing: 0.05em; }
+.loom-prototype-banner h2 { font-size: 18px; line-height: 1.6; font-weight: 650; margin: 3px 0; }
+.loom-prototype-banner p { font-size: 12px; color: var(--vp-c-text-2); line-height: 1.8; }
+.loom-prototype-action { margin-left: auto; display: flex; gap: 16px; align-items: center; white-space: nowrap; font-size: 12px; font-weight: 600; color: var(--vp-c-brand-1); }
 .loom-section-heading { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 18px; }
 .loom-section-heading h2 { font-size: 15px; line-height: 1.5; font-weight: 650; margin: 0; letter-spacing: -0.2px; }
 .loom-section-heading > span { font-size: 10px; color: var(--vp-c-text-3); }
@@ -218,6 +226,9 @@
   .loom-home h1 { font-size: 38px; letter-spacing: -1.4px; }
   .loom-home-description { font-size: 14px; }
   .loom-architecture { display: none; }
+  .loom-prototype-banner { gap: 12px; padding: 18px; flex-wrap: wrap; }
+  .loom-prototype-banner > div { flex: 1; min-width: 0; }
+  .loom-prototype-action { width: 100%; justify-content: flex-end; padding-top: 10px; border-top: 1px solid var(--vp-c-divider); }
   .loom-map-layer { padding: 11px 16px; }
   .loom-map-connector { padding: 8px 0; }
   .loom-module-grid, .loom-shared-grid { grid-template-columns: 1fr; }

@@ -54,6 +54,12 @@ const shared = [
       </div>
     </section>
 
+    <a class="loom-prototype-banner" :href="withBase('/prototypes/platform-interaction/index.html')" target="_blank" rel="noopener noreferrer" aria-label="体验 Platform 交互原型（新标签页）">
+      <span class="loom-prototype-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><rect x="3" y="4" width="18" height="16" rx="3" /><path d="M3 9h18M7 6.5h.01M10 6.5h.01M10 12l5 3-5 3z" /></svg></span>
+      <div><span class="loom-prototype-kicker">交互原型 · 示例数据</span><h2>Platform 交互体验</h2><p>从应用配置到发布与会话，直接体验平台的页面和操作流程。</p></div>
+      <span class="loom-prototype-action">进入体验 <span aria-hidden="true">↗</span></span>
+    </a>
+
     <section class="loom-module-section" aria-labelledby="loom-modules-title">
       <div class="loom-section-heading"><h2 id="loom-modules-title">选择你的阅读入口</h2><span>独立阅读，按需深入</span></div>
       <div class="loom-module-grid">
