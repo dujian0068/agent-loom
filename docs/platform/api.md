@@ -42,7 +42,7 @@
 | --- | --- | --- |
 | POST /agents/{a}/sessions | 建 SessionBinding，固定 Agent 和用户 | 延迟创建 SDK Session |
 | POST /workflows/{w}/sessions | 固定 Workflow 及状态输入类型 | 延迟创建 SDK Session |
-| POST /sessions/{s}/inputs | 保存提交意图；Agent 判定新提问或补充；Workflow 当前仅定义新 ExecutionRecord 输入 | ainvoke；直接 Agent 的活动补充调用 inputs.append |
+| POST /sessions/{s}/inputs | 保存提交意图并返回 202；Agent 判定新提问或补充；Workflow 当前仅定义新 ExecutionRecord 输入 | Worker 调用 start；直接 Agent 的活动补充调用 inputs.append |
 | GET /sessions/{s}/history | 验证会话可见性、分页投影 | 公共历史查询 |
 | GET /sessions/{s}/inputs | 返回正式输入及投递状态 | 公共输入查询 |
 | GET /runs/{r} | 合并 RunBinding 的应用和 Release 标识 | runs.get |
@@ -72,7 +72,7 @@ InputReceipt 至少包含 submission_id、input_id、session_id、run_id?、disp
 
 ## 5. 结果、SSE 与页面
 
-RunView 包含 platform application/release 标识，以及 SDK status、loops、deadline、result、error、cleanup_state、last_event_seq。平台投影必须注明 SDK 已确认的 revision；不能把投递成功等同于执行成功。
+目标 RunView 包含 platform application/release 标识，以及 SDK status、loops、deadline、result、error、cleanup_state、last_event_seq。当前首版按[实际查询映射](implementation-plan.md#查询-dto-和-sse)输出公开字段：SDK output 转为结果，usage 保留已暴露用量，revision、terminal_seq 和 cleanup_state 直接投影；精确 deadline、已用 Loop 明细及其他缺失字段需先补公共接口。平台投影必须注明 SDK 已确认的 revision；不能把投递成功等同于执行成功。
 
 SSE id 使用 SDK 根 ExecutionRecord 的公开单调 seq；断线续读已有事件，传输心跳没有业务 seq。SDK 模型流在内部聚合，页面接收明确进度和完整调用结果；最终答案只能由已提交终态返回。
 

@@ -12,6 +12,8 @@
 | [SDK 公共 API](sdk/public-api.md) | start、ainvoke、RunHandle、输入、停止和恢复 |
 | [SDK 默认工具与 SPI](sdk/builtin-tools-spi.md) | 默认工具、文件存储与沙箱扩展、事件调用和验收 |
 | [Platform 总览](platform/index.md) | 配置化平台设计入口 |
+| [团队私有部署实施方案](platform/implementation-plan.md) | 首版范围、模块、事务、SDK 接入及阶段验收 |
+| [Platform 首版交互设计](platform/interaction-design.md) | 页面结构、权限入口、配置发布、会话及异常反馈 |
 | [阅读指南](reading-guide.md) | 按角色选择阅读顺序 |
 | [整理复核记录](reorganization-review.md) | 已修正的不一致及尚未闭合的详细设计 |
 | [目录规划](directory-plan.md) | 实际目录与后续代码组织 |

@@ -2,6 +2,12 @@
 
 基于 agentloom-sdk 的低代码平台。当前只有目录骨架，没有可启动的前后端或部署脚本。
 
+首版面向团队私有部署，支持多人、空间权限和应用发布。工程范围、API／Worker 分工、数据约束和实施顺序见[团队私有部署实施方案](../docs/platform/implementation-plan.md)。
+
+页面、操作流程与状态反馈见[首版交互设计](../docs/platform/interaction-design.md)。
+
+[在线交互原型](https://doc.agentloom.bmilk.cn/prototypes/platform-interaction/)使用示例数据；源码与维护说明位于 [web/prototypes](web/prototypes/README.md)。
+
 ## 边界
 
 - 管理用户、空间、权限、应用、草稿与发布版本。

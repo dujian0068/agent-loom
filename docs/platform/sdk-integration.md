@@ -4,6 +4,8 @@
 
 当前推荐按 Worker／应用生命周期创建 `PropertiesConfig` 和 `AgentLoom`，由 `app.build(entry_definition, executors=...)` 为每次新请求装配独立 Agent。默认状态存储是 JSON 文件，无需平台业务库或数据库服务；平台不直接改写 SDK 执行现场。
 
+团队私有部署的工程方案将 Runtime 生命周期独立交给 RuntimeRegistry：Worker 使用 AgentBuilder 注入公开 RuntimeEngine，API 的查询／控制 Runtime 无需模型凭据。两种装配入口遵循同一 SDK 合同，具体作用域见[实施方案](implementation-plan.md#发布快照和-sdk-装配)。平台 mode=plan_executor 映射为 SDK mode="plan"；ReAct 构造时省略 executors，不能传空字典。
+
 ## 1. AssemblyService
 
 输入：已固定的 execution_snapshot_ref、运行身份、所需资源访问授权。
