@@ -1,6 +1,6 @@
 # SDK Agent 执行与轻量图调度
 
-状态：ReAct／Plan 的节点生成器协议、提交回执、持久等待、批次准入和角色恢复已实现；本页同时保留完整目标接口。实际分包和验证范围见[实现记录](implementation.md#节点协议与检查点设计对齐)。Workflow 编译与 super-step 尚未接入，见[工作流](workflow.md)。平台不调用内部阶段接口。
+状态：ReAct／Plan 的节点生成器协议、提交回执、模型／批次持久等待、批次准入和角色恢复已实现；预算 FIFO 等完整等待合同仍为目标，本页同时保留完整目标接口。实际分包和验证范围见[实现记录](implementation.md#第十轮节点边界修复)。Workflow 编译与 super-step 尚未接入，见[工作流](workflow.md)。平台不调用内部阶段接口。
 
 RuntimeEngine（运行时引擎）负责 SDK 的运行服务和执行托管，详细构造及生命周期见[装配设计](assembly.md#11-runtimeengine-管理的范围)。本文描述它装配的单次执行现场和图内算法；节点收到的 NodeContext 只包含当前任务身份、控制和已有服务的受限引用；ReactAgent.context 才保存角色的消息和 Loop 进度。
 
@@ -151,20 +151,22 @@ async def activate(task_ref, lease):
             receipt = await commits.commit(prepared, lease)
             state = receipt.task_view
             if isinstance(outcome, (Wait, Complete, Fail)):
-                await stream.aclose()
                 return ActivationReceipt(receipt)
             outcome = await stream.asend(receipt)          # 只有已提交 Progress 可以继续
     except CommitConflict as conflict:
-        await stream.aclose()
         return await reconcile_committed_or_requeue(task_ref, conflict.commit_key, lease)
     except (LeaseLost, PersistenceUnavailable):
-        await stream.aclose()                             # 不伪造业务 Fail；由接管续原事实
-        raise
+        raise                                            # 不伪造业务 Fail；由接管续原事实
     except StopAsyncIteration:
         return await fail_contract(task_ref, "NODE_MISSING_TERMINAL_OUTCOME", lease)
     except Exception as exc:
         return await fail_contract(task_ref, "NODE_IMPLEMENTATION_FAILED", lease, sanitize(exc))
+    finally:
+        node_context.control.close()                     # 结束当前激活的端口授权
+        await close_preserving_outcome(stream, primary=current_exception())
 ```
+
+`close_preserving_outcome` 在原 Driver 任务中关闭生成器，将普通清理错误保存为激活级诊断；诊断提交失败也不能替换已有回执、TaskResult 或原提交异常。取消和失权继续进入控制／接管路径。Wait 的恢复引用必须按原 kind、Owner、hash 和 value 还原，不能把引用信封重新包装成 value，也不能将 null／空载荷当作缺少引用。
 
 `validate_outcome` 拒绝越权状态写、不可序列化对象、跨角色 context、未提交 result 引用，以及 completed phase 搭配 Progress。`CommitConflict` 单独处理：先关闭旧 generator，按提交键查 receipt；已提交且任务终态则返回原 receipt，否则从已提交 continuation 将原任务重新排入 ready。未提交则重读并重新准备原阶段。不得盲目重放旧 generator 的副作用。取消必须由已持久控制信号触发，进程异常不是用户停止。
 

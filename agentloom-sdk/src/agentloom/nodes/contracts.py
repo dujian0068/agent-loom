@@ -1,6 +1,6 @@
 """Serializable node handoff contracts. No runtime clients enter these values."""
 
-from collections.abc import AsyncGenerator
+from collections.abc import AsyncGenerator, Mapping
 from dataclasses import dataclass, field, replace
 from typing import Any, Literal
 
@@ -31,8 +31,29 @@ class PayloadRef:
     content_hash: str = field(init=False)
 
     def __post_init__(self):
+        if not isinstance(self.owner_id, str) or not self.owner_id:
+            raise RequestError("NODE_REFERENCE_INVALID")
         object.__setattr__(self, "value", freeze_document(self.value))
         object.__setattr__(self, "content_hash", document_digest(self.value))
+
+    @classmethod
+    def from_dict(cls, saved, *, owner_id):
+        """Restore an inline reference without wrapping its envelope as material.
+
+        The envelope, owner and digest must match; a null value is still a
+        present reference. No other reference kind is supported by this codec.
+        """
+        if (
+            not isinstance(saved, Mapping)
+            or set(saved) != {"kind", "owner_id", "content_hash", "value"}
+            or saved["kind"] != "inline"
+            or saved["owner_id"] != owner_id
+        ):
+            raise RequestError("NODE_REFERENCE_INVALID")
+        ref = cls(saved["owner_id"], saved["value"])
+        if ref.content_hash != saved["content_hash"]:
+            raise RequestError("NODE_REFERENCE_INVALID")
+        return ref
 
     def to_dict(self):
         return {

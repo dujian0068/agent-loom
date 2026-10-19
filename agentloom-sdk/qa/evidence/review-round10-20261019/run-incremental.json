@@ -1,0 +1,24 @@
+{
+  "command": [
+    "/Users/bmilk/code/project/agent-loom/.venv/bin/python",
+    "-m",
+    "pytest",
+    "-q",
+    "-ra",
+    "-s",
+    "--tb=short",
+    "--color=no",
+    "-o",
+    "addopts=",
+    "qa/test_sdk_review_round10.py",
+    "-k",
+    "builtin_model_wait or plan_incremental",
+    "--junitxml=/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/evidence/review-round10-20261019/junit-incremental.xml"
+  ],
+  "cwd": "/Users/bmilk/code/project/agent-loom/agentloom-sdk",
+  "started_at": "2026-10-19T08:42:28.657332+08:00",
+  "finished_at": "2026-10-19T08:42:50.269691+08:00",
+  "duration_seconds": 21.612,
+  "exit_code": 1,
+  "test_sha256": "562eeec271de5dfb7320dcc060a803e00290de77ab0a8cf1a94f8438484adcfe"
+}

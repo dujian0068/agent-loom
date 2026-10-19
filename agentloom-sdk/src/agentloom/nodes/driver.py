@@ -2,6 +2,7 @@
 
 import asyncio
 import inspect
+import sys
 
 from ..configuration.json_documents import copy_document
 from ..errors import AgentLoomError, InfrastructureError, RequestError
@@ -20,7 +21,9 @@ from .contracts import (
     WaitCondition,
     continuation_ref,
 )
+from .lifecycle import close_activation
 from .ports import bind_context
+from .validation import validate_payload
 
 
 class NodeDriver:
@@ -49,6 +52,14 @@ class NodeDriver:
 
     async def activate(self, task_id, node):
         task = self.runner.task(task_id)
+        try:
+            resume = (
+                PayloadRef.from_dict(task["resume_input_ref"], owner_id=task_id)
+                if task.get("resume_input_ref") is not None
+                else None
+            )
+        except RequestError as exc:
+            raise InfrastructureError("NODE_RESUME_REFERENCE_INVALID") from exc
         activation_id = stable_id(
             task_id, "activation", task["activation_no"] + 1, self.runner.lease.epoch
         )
@@ -61,9 +72,7 @@ class NodeDriver:
                 NodeInput(
                     task_id,
                     PayloadRef(task_id, task["input"]),
-                    PayloadRef(task_id, task["resume_input_ref"])
-                    if task.get("resume_input_ref")
-                    else None,
+                    resume,
                 ),
                 continuation_ref(task),
                 context,
@@ -109,7 +118,9 @@ class NodeDriver:
         finally:
             context.control.close()
             if inspect.isasyncgen(stream):
-                await stream.aclose()
+                await close_activation(
+                    self.runner, task_id, activation_id, stream, primary=sys.exception()
+                )
 
     def _fail(self, task_id, activation_id, code):
         task = self.runner.task(task_id)
@@ -136,6 +147,7 @@ class NodeDriver:
                     or outcome.partial_result_ref.owner_id != task_id
                 ):
                     raise RequestError("NODE_OUTCOME_INVALID")
+                validate_payload(outcome.partial_result_ref, task_id)
                 body["partial_result_ref"] = outcome.partial_result_ref.to_dict()
             if outcome.accounting is not None:
                 body["accounting"] = copy_document(outcome.accounting)
@@ -147,6 +159,7 @@ class NodeDriver:
             raise RequestError("NODE_OUTCOME_INVALID")
         if ref.revision != task["node_revision"]:
             raise RequestError("COMMIT_CONFLICT")
+        validate_payload(ref, task_id)
         effects = outcome.writes if isinstance(outcome, Complete) else outcome.effects
         if not isinstance(effects, tuple) or not all(
             isinstance(effect, PreparedEffect) for effect in effects
@@ -176,6 +189,7 @@ class NodeDriver:
                 or outcome.output_ref.owner_id != task_id
             ):
                 raise RequestError("NODE_OUTCOME_INVALID")
+            validate_payload(outcome.output_ref, task_id)
             body["output"] = copy_document(outcome.output_ref.value)
             return "CompleteTask", body, f"validate:{task_id}:{task['round']}"
         if (
@@ -192,6 +206,7 @@ class NodeDriver:
             or outcome.resume_input_ref.owner_id != task_id
         ):
             raise RequestError("NODE_OUTCOME_INVALID")
+        validate_payload(outcome.resume_input_ref, task_id)
         body.update(
             condition=outcome.condition.to_dict(),
             resume_input_ref=outcome.resume_input_ref.to_dict(),

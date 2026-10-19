@@ -1,0 +1,9 @@
+{
+  "mode": "reopen",
+  "status": "succeeded",
+  "model_calls": 0,
+  "activation_count": 2,
+  "task_result_count": 1,
+  "resume_observed": 0,
+  "store": "FileRuntimeStore"
+}

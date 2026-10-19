@@ -1,0 +1,130 @@
+{
+  "review_id": "round10-incremental",
+  "review_date": "2026-10-19",
+  "timezone": "Asia/Shanghai",
+  "base": "6179c8e7678e43f7ecef7275abcffcf1be3740b0",
+  "head": "a5ec1bcd2b885bad5bfcce745f925be9771d08ed",
+  "baseline": {
+    "directory": ".agentloom/test-results/20261018-153852-709052Z",
+    "counts": {
+      "tests": 1764,
+      "passed": 1764,
+      "failed": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "reused_without_full_rerun": true,
+    "matched_before": true,
+    "matching_original_files_after": 198,
+    "changed_original_files": []
+  },
+  "targeted": {
+    "command": [
+      "/Users/bmilk/code/project/agent-loom/.venv/bin/python",
+      "-m",
+      "pytest",
+      "-q",
+      "-ra",
+      "-s",
+      "--tb=short",
+      "--color=no",
+      "-o",
+      "addopts=",
+      "qa/test_sdk_review_round10.py",
+      "--junitxml=/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/evidence/review-round10-20261019/junit.xml"
+    ],
+    "cwd": "/Users/bmilk/code/project/agent-loom/agentloom-sdk",
+    "started_at": "2026-10-19T08:43:57.663286+08:00",
+    "finished_at": "2026-10-19T08:44:20.630763+08:00",
+    "duration_seconds": 22.968,
+    "exit_code": 1,
+    "counts": {
+      "tests": 46,
+      "failed": 34,
+      "errors": 0,
+      "skipped": 0,
+      "passed": 12
+    },
+    "test_sha256": "d34e0f378737a768a8cc61dde372fcd141d9ec31eb9da3e406a0057049e08200"
+  },
+  "by_test_function": {
+    "test_wait_preserves_resume_payload_and_hash": {
+      "passed": 0,
+      "failed": 14,
+      "errors": 0,
+      "skipped": 0
+    },
+    "test_builtin_model_wait_delivers_its_saved_reference": {
+      "passed": 0,
+      "failed": 2,
+      "errors": 0,
+      "skipped": 0
+    },
+    "test_invalid_progress_is_rejected_before_commit": {
+      "passed": 0,
+      "failed": 10,
+      "errors": 0,
+      "skipped": 0
+    },
+    "test_rejected_progress_does_not_leave_unrecoverable_checkpoint": {
+      "passed": 0,
+      "failed": 2,
+      "errors": 0,
+      "skipped": 0
+    },
+    "test_generator_cleanup_cannot_erase_committed_complete": {
+      "passed": 0,
+      "failed": 2,
+      "errors": 0,
+      "skipped": 0
+    },
+    "test_malformed_latest_snapshot_falls_back_to_valid_ancestor": {
+      "passed": 2,
+      "failed": 4,
+      "errors": 0,
+      "skipped": 0
+    },
+    "test_plan_incremental_commit_boundaries_recover_without_duplicate_tools": {
+      "passed": 10,
+      "failed": 0,
+      "errors": 0,
+      "skipped": 0
+    }
+  },
+  "findings": [
+    {
+      "id": "R10-01",
+      "priority": "P2",
+      "title": "Wait 恢复重复包装 PayloadRef",
+      "failed_cases": 16
+    },
+    {
+      "id": "R10-02",
+      "priority": "P2",
+      "title": "非法 continuation 提交成功并污染恢复状态",
+      "failed_cases": 12
+    },
+    {
+      "id": "R10-03",
+      "priority": "P2",
+      "title": "生成器关闭异常遮蔽已提交 Complete",
+      "failed_cases": 2
+    },
+    {
+      "id": "R10-04",
+      "priority": "P2",
+      "title": "已知版本快照引用格式损坏时未回退",
+      "failed_cases": 4
+    }
+  ],
+  "partial_implementation_gaps": [
+    "G10-01 durable budget wait / FIFO wakeup",
+    "G10-02 typed RuntimeCommit coverage for non-node operations"
+  ],
+  "production_source_changes": false,
+  "real_llm_used": false,
+  "lint_exit_code": 0,
+  "new_test_manifest_files": [
+    "agentloom-sdk/qa/test_sdk_review_round10.py"
+  ]
+}

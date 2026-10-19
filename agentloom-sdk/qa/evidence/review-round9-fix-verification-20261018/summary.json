@@ -1,0 +1,82 @@
+{
+  "verified_at": "2026-10-18T15:53:30.124752+00:00",
+  "head": "a5ec1bcd2b885bad5bfcce745f925be9771d08ed",
+  "baseline_directory": "/Users/bmilk/code/project/agent-loom/.agentloom/test-results/20261018-153852-709052Z",
+  "baseline_check_exit_code": 0,
+  "baseline_summary_sha256": "cb7e8938831e4af5e637af242d951178ebcedc43e602bc9b0a31f9cd2419ba69",
+  "baseline_junit_sha256": "e64a4f6b293685b3fff8f4a2646e92296d91df1cd14d35b35c0d4ad01703117a",
+  "counts": {
+    "tests": 1764,
+    "failed": 0,
+    "errors": 0,
+    "skipped": 0,
+    "passed": 1764
+  },
+  "scopes": {
+    "sdk": 1192,
+    "qa": 572
+  },
+  "test_run_sources_unchanged": true,
+  "manifest_file_count": 198,
+  "baseline_git_before": "6179c8e7678e43f7ecef7275abcffcf1be3740b0",
+  "baseline_git_after": "a5ec1bcd2b885bad5bfcce745f925be9771d08ed",
+  "comparison": {
+    "previous_count": 1665,
+    "current_count": 1764,
+    "added_count": 99,
+    "removed_cases": [],
+    "added_by_file": {
+      "qa.test_sdk_review_round9": 49,
+      "tests.test_checkpoint_protocol": 18,
+      "tests.test_node_protocol": 32
+    },
+    "nonpassing_cases": []
+  },
+  "qa_integrity": {
+    "round9_original_sha256": "ae77bdac3d7e343531e1190e884851ee028e38dfc2655d5477db72c2283a2117",
+    "round9_current_sha256": "ae77bdac3d7e343531e1190e884851ee028e38dfc2655d5477db72c2283a2117",
+    "round9_unchanged": true,
+    "round9_cases": 49,
+    "round9_groups": {
+      "test_result_read_all_nonnegative_eof_offsets": 16,
+      "test_invalid_astream_cursor_reports_error_and_records_acceptance": 16,
+      "test_valid_astream_cursor_still_accepts_and_delivers_terminal": 4,
+      "test_exact_unified_patch_preserves_non_lf_utf8_characters": 6,
+      "test_glob_pattern_dot_and_repeated_separator_aliases": 7
+    },
+    "previous_qa_file_count": 8,
+    "previous_qa_changed_or_missing": []
+  },
+  "findings": {
+    "R9-01": "closed_for_original_reproduction",
+    "R9-02": "closed_for_original_reproduction",
+    "R9-03": "closed_for_original_reproduction",
+    "R9-R01": "unchanged_documented_design_risk"
+  },
+  "performance_observation": {
+    "previous_pytest_seconds": 378.88,
+    "current_pytest_seconds": 720.45,
+    "wall_time_ratio": 1.9015255489864866,
+    "old_testcase_sum_seconds": 378.49,
+    "same_cases_current_sum_seconds": 702.488,
+    "added_cases_sum_seconds": 17.489,
+    "highlight_case": {
+      "id": "tests.test_execution_contract::test_exact_last_loop_and_format_correction_budget[100]",
+      "previous_seconds": 117.214,
+      "current_seconds": 280.125
+    },
+    "conclusion": "Measured test-duration increase; no causal profiling or new performance run performed"
+  },
+  "execution_this_verification": {
+    "pytest_runs": 0,
+    "full_suite_rerun": false,
+    "production_code_modified": false,
+    "existing_tests_modified": false,
+    "llm_requests": 0
+  },
+  "report": "/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/REVIEW_RESULTS_2026-10-18_ROUND9_FIX_VERIFICATION.md",
+  "final_check_at": "2026-10-18T15:54:42.724110+00:00",
+  "final_baseline_check_exit_code": 0,
+  "report_sha256": "00c660572d139374f83747ce4eed2395241718e8f460052176768d83f22d1b1e",
+  "report_invalid_links": []
+}

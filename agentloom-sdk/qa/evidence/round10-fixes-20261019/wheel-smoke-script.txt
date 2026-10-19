@@ -1,0 +1,85 @@
+import asyncio
+import json
+import sys
+from pathlib import Path
+
+installed = Path('/tmp/agentloom-round10-installed')
+sys.path.insert(0, str(installed))
+import agentloom
+from agentloom import (
+    AgentDefinition, FileRuntimeStore, InfrastructureError, ModelResponse,
+    ReactAgent, RuntimeEngine, ScriptedModel, WorkspaceBinding,
+)
+from agentloom.nodes import Complete, ContinuationRef, PayloadRef, Wait, WaitCondition
+from agentloom.runtime.agent_engine import AgentGraphEngine
+
+assert Path(agentloom.__file__).is_relative_to(installed)
+root = Path('/tmp/agentloom-round10-process-state')
+mode = sys.argv[1]
+observations = []
+
+
+class Node:
+    async def activate(self, input, continuation, context):
+        try:
+            if continuation.value['phase'] == 'prepare_context':
+                yield Wait(
+                    ContinuationRef(input.task_id, {**continuation.value, 'phase': 'prepare_model'}, continuation.revision),
+                    WaitCondition('budget_available', context.scope.run_id),
+                    PayloadRef(input.task_id, None),
+                )
+                return
+            assert input.resume_input_ref.value is None
+            assert input.resume_input_ref.to_dict() == context.context_port.snapshot()['resume_input_ref']
+            observations.append(input.resume_input_ref.to_dict())
+            yield Complete(
+                PayloadRef(input.task_id, 'durable-output'),
+                ContinuationRef(input.task_id, {**continuation.value, 'phase': 'completed'}, continuation.revision),
+            )
+        finally:
+            raise ValueError('private node cleanup material')
+
+
+def checkpoint(command, state):
+    if mode == 'start' and command.startswith('wait:'):
+        raise RuntimeError('simulated exit after durable Wait')
+
+
+async def main():
+    AgentGraphEngine._node = lambda self, task_id: Node()
+    model = ScriptedModel(lambda r: ModelResponse('unused'))
+    store = FileRuntimeStore(root / 'state')
+    async with RuntimeEngine(store=store, checkpoint_callback=checkpoint) as runtime:
+        agent = ReactAgent(
+            runtime_engine=runtime,
+            definition=AgentDefinition('round10-installed', 'SYSTEM'),
+            model=model,
+            workspace=WorkspaceBinding(root / 'workspace'),
+        )
+        handle = await agent.start('go' if mode == 'start' else None, run_id='installed-resume')
+        if mode == 'start':
+            try:
+                await handle.wait(timeout_s=10)
+            except InfrastructureError as exc:
+                assert exc.code == 'COMMIT_ACKNOWLEDGEMENT_FAILED'
+            else:
+                raise AssertionError('Expected simulated exit')
+        else:
+            result = await handle.wait(timeout_s=10)
+            assert result.status == 'succeeded' and result.output.value == 'durable-output'
+        state = store.load_run_consistently('default', handle.run_id)
+        assert not model.requests
+        assert 'private node cleanup material' not in str(state)
+        assert all(a['cleanup_error']['code'] == 'NODE_GENERATOR_CLOSE_FAILED' for a in state['activations'].values())
+        if mode != 'start':
+            assert len(state['task_results']) == 1
+            assert len(state['activations']) == 2
+        print(json.dumps({
+            'mode': mode, 'status': state['status'], 'model_calls': len(model.requests),
+            'activation_count': len(state['activations']), 'task_result_count': len(state.get('task_results', {})),
+            'resume_observed': len(observations), 'store': type(store).__name__,
+        }))
+    store.close()
+
+
+asyncio.run(main())

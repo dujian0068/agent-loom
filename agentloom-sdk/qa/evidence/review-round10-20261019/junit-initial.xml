@@ -1,0 +1,275 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="30" skipped="0" tests="32" time="2.522" timestamp="2026-10-19T08:41:00.263943+08:00" hostname="bmilk"><testcase classname="qa.test_sdk_review_round10" name="test_wait_preserves_resume_payload_and_hash[memory-reference]" time="0.023"><failure message="AssertionError: assert {'content_has...d': 'saved'}}} == {'content_has...id': 'saved'}}&#10;  &#10;  Omitting 2 identical items, use -vv to show&#10;  Differing items:&#10;  {'value': {'content_hash': '600bef59de4515a8e0c4d4592816e013eb64b7355ce486aa4edf06c1a5496a9c', 'kind': 'inline', 'owner_id': '67767e0a-c1a3-490a-b0a0-ce012ae68150', 'value': {'generation': 1, 'operation_id': 'saved'}}} != {'value': {'generation': 1, 'operation_id': 'saved'}}&#10;  {'content_hash': 'b661abc54e36540b21d55121be40e9e11a2e8372ccbdfc582cde5777b4531161'} != {'content_hash': '600bef59de4515a8e0c4d4592816e013eb64b7355ce486aa4edf06c1a5496a9c'}&#10;  Use -v to get more diff">/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round10.py:87: in test_wait_preserves_resume_payload_and_hash
+    assert observed[0].to_dict() == expected.to_dict()
+E   AssertionError: assert {'content_has...d': 'saved'}}} == {'content_has...id': 'saved'}}
+E     
+E     Omitting 2 identical items, use -vv to show
+E     Differing items:
+E     {'value': {'content_hash': '600bef59de4515a8e0c4d4592816e013eb64b7355ce486aa4edf06c1a5496a9c', 'kind': 'inline', 'owner_id': '67767e0a-c1a3-490a-b0a0-ce012ae68150', 'value': {'generation': 1, 'operation_id': 'saved'}}} != {'value': {'generation': 1, 'operation_id': 'saved'}}
+E     {'content_hash': 'b661abc54e36540b21d55121be40e9e11a2e8372ccbdfc582cde5777b4531161'} != {'content_hash': '600bef59de4515a8e0c4d4592816e013eb64b7355ce486aa4edf06c1a5496a9c'}
+E     Use -v to get more diff</failure></testcase><testcase classname="qa.test_sdk_review_round10" name="test_wait_preserves_resume_payload_and_hash[memory-null]" time="0.013"><failure message="AssertionError: assert {'content_has...value': None}} == {'content_has...'value': None}&#10;  &#10;  Omitting 2 identical items, use -vv to show&#10;  Differing items:&#10;  {'value': {'content_hash': '74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b', 'kind': 'inline', 'owner_id': '1ff8478b-9859-4961-9ab8-9ad23d91073e', 'value': None}} != {'value': None}&#10;  {'content_hash': 'e3ecef9e041ded0a54221215c188c7d55f6b831586f5f3d33d2ad748647470a5'} != {'content_hash': '74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b'}&#10;  Use -v to get more diff">/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round10.py:87: in test_wait_preserves_resume_payload_and_hash
+    assert observed[0].to_dict() == expected.to_dict()
+E   AssertionError: assert {'content_has...value': None}} == {'content_has...'value': None}
+E     
+E     Omitting 2 identical items, use -vv to show
+E     Differing items:
+E     {'value': {'content_hash': '74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b', 'kind': 'inline', 'owner_id': '1ff8478b-9859-4961-9ab8-9ad23d91073e', 'value': None}} != {'value': None}
+E     {'content_hash': 'e3ecef9e041ded0a54221215c188c7d55f6b831586f5f3d33d2ad748647470a5'} != {'content_hash': '74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b'}
+E     Use -v to get more diff</failure></testcase><testcase classname="qa.test_sdk_review_round10" name="test_wait_preserves_resume_payload_and_hash[memory-empty_object]" time="0.013"><failure message="AssertionError: assert {'content_has... 'value': {}}} == {'content_has..., 'value': {}}&#10;  &#10;  Omitting 2 identical items, use -vv to show&#10;  Differing items:&#10;  {'value': {'content_hash': '44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a', 'kind': 'inline', 'owner_id': '54b437ff-d810-4a7c-a693-060de46a5348', 'value': {}}} != {'value': {}}&#10;  {'content_hash': '7fa7a043e12ce0b32bebee29dfe51c42ad86fbd2c1578efd7e1ead1e62324858'} != {'content_hash': '44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a'}&#10;  Use -v to get more diff">/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round10.py:87: in test_wait_preserves_resume_payload_and_hash
+    assert observed[0].to_dict() == expected.to_dict()
+E   AssertionError: assert {'content_has... 'value': {}}} == {'content_has..., 'value': {}}
+E     
+E     Omitting 2 identical items, use -vv to show
+E     Differing items:
+E     {'value': {'content_hash': '44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a', 'kind': 'inline', 'owner_id': '54b437ff-d810-4a7c-a693-060de46a5348', 'value': {}}} != {'value': {}}
+E     {'content_hash': '7fa7a043e12ce0b32bebee29dfe51c42ad86fbd2c1578efd7e1ead1e62324858'} != {'content_hash': '44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a'}
+E     Use -v to get more diff</failure></testcase><testcase classname="qa.test_sdk_review_round10" name="test_wait_preserves_resume_payload_and_hash[memory-empty_array]" time="0.013"><failure message="AssertionError: assert {'content_has... 'value': []}} == {'content_has..., 'value': []}&#10;  &#10;  Omitting 2 identical items, use -vv to show&#10;  Differing items:&#10;  {'value': {'content_hash': '4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945', 'kind': 'inline', 'owner_id': '2385e51a-ccc6-4049-b81b-ad887fe794d4', 'value': []}} != {'value': []}&#10;  {'content_hash': '42a6f2be432b9abb4ca0d94d7b239868794bb00d07a9b87ad50444e3203ae9a9'} != {'content_hash': '4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945'}&#10;  Use -v to get more diff">/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round10.py:87: in test_wait_preserves_resume_payload_and_hash
+    assert observed[0].to_dict() == expected.to_dict()
+E   AssertionError: assert {'content_has... 'value': []}} == {'content_has..., 'value': []}
+E     
+E     Omitting 2 identical items, use -vv to show
+E     Differing items:
+E     {'value': {'content_hash': '4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945', 'kind': 'inline', 'owner_id': '2385e51a-ccc6-4049-b81b-ad887fe794d4', 'value': []}} != {'value': []}
+E     {'content_hash': '42a6f2be432b9abb4ca0d94d7b239868794bb00d07a9b87ad50444e3203ae9a9'} != {'content_hash': '4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945'}
+E     Use -v to get more diff</failure></testcase><testcase classname="qa.test_sdk_review_round10" name="test_wait_preserves_resume_payload_and_hash[memory-false]" time="0.013"><failure message="AssertionError: assert {'content_has...alue': False}} == {'content_has...value': False}&#10;  &#10;  Omitting 2 identical items, use -vv to show&#10;  Differing items:&#10;  {'value': {'content_hash': 'fcbcf165908dd18a9e49f7ff27810176db8e9f63b4352213741664245224f8aa', 'kind': 'inline', 'owner_id': '5d599214-2a2e-4126-b42e-d81bc00b2e6d', 'value': False}} != {'value': False}&#10;  {'content_hash': 'f2240d943c9b79d8ef576a93525266c6ac1721d893507738ee701f71354f4bbb'} != {'content_hash': 'fcbcf165908dd18a9e49f7ff27810176db8e9f63b4352213741664245224f8aa'}&#10;  Use -v to get more diff">/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round10.py:87: in test_wait_preserves_resume_payload_and_hash
+    assert observed[0].to_dict() == expected.to_dict()
+E   AssertionError: assert {'content_has...alue': False}} == {'content_has...value': False}
+E     
+E     Omitting 2 identical items, use -vv to show
+E     Differing items:
+E     {'value': {'content_hash': 'fcbcf165908dd18a9e49f7ff27810176db8e9f63b4352213741664245224f8aa', 'kind': 'inline', 'owner_id': '5d599214-2a2e-4126-b42e-d81bc00b2e6d', 'value': False}} != {'value': False}
+E     {'content_hash': 'f2240d943c9b79d8ef576a93525266c6ac1721d893507738ee701f71354f4bbb'} != {'content_hash': 'fcbcf165908dd18a9e49f7ff27810176db8e9f63b4352213741664245224f8aa'}
+E     Use -v to get more diff</failure></testcase><testcase classname="qa.test_sdk_review_round10" name="test_wait_preserves_resume_payload_and_hash[memory-zero]" time="0.013"><failure message="AssertionError: assert {'content_has..., 'value': 0}} == {'content_has...', 'value': 0}&#10;  &#10;  Omitting 2 identical items, use -vv to show&#10;  Differing items:&#10;  {'value': {'content_hash': '5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9', 'kind': 'inline', 'owner_id': 'c5132b7f-03a0-436b-b3b6-39087a16857d', 'value': 0}} != {'value': 0}&#10;  {'content_hash': '226fe516c830793eddaf7afb864257a150a3096a563884ad1b24af681b66a767'} != {'content_hash': '5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9'}&#10;  Use -v to get more diff">/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round10.py:87: in test_wait_preserves_resume_payload_and_hash
+    assert observed[0].to_dict() == expected.to_dict()
+E   AssertionError: assert {'content_has..., 'value': 0}} == {'content_has...', 'value': 0}
+E     
+E     Omitting 2 identical items, use -vv to show
+E     Differing items:
+E     {'value': {'content_hash': '5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9', 'kind': 'inline', 'owner_id': 'c5132b7f-03a0-436b-b3b6-39087a16857d', 'value': 0}} != {'value': 0}
+E     {'content_hash': '226fe516c830793eddaf7afb864257a150a3096a563884ad1b24af681b66a767'} != {'content_hash': '5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9'}
+E     Use -v to get more diff</failure></testcase><testcase classname="qa.test_sdk_review_round10" name="test_wait_preserves_resume_payload_and_hash[memory-empty_text]" time="0.013"><failure message="AssertionError: assert {'content_has... 'value': ''}} == {'content_has..., 'value': ''}&#10;  &#10;  Omitting 2 identical items, use -vv to show&#10;  Differing items:&#10;  {'value': {'content_hash': '12ae32cb1ec02d01eda3581b127c1fee3b0dc53572ed6baf239721a03d82e126', 'kind': 'inline', 'owner_id': 'bc9c36ba-5ccd-4141-bd01-ea9affa43af9', 'value': ''}} != {'value': ''}&#10;  {'content_hash': 'ca2efc32f3967211b0354ea14496b0c07a01fd2ca54026953d4ae7198417df3e'} != {'content_hash': '12ae32cb1ec02d01eda3581b127c1fee3b0dc53572ed6baf239721a03d82e126'}&#10;  Use -v to get more diff">/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round10.py:87: in test_wait_preserves_resume_payload_and_hash
+    assert observed[0].to_dict() == expected.to_dict()
+E   AssertionError: assert {'content_has... 'value': ''}} == {'content_has..., 'value': ''}
+E     
+E     Omitting 2 identical items, use -vv to show
+E     Differing items:
+E     {'value': {'content_hash': '12ae32cb1ec02d01eda3581b127c1fee3b0dc53572ed6baf239721a03d82e126', 'kind': 'inline', 'owner_id': 'bc9c36ba-5ccd-4141-bd01-ea9affa43af9', 'value': ''}} != {'value': ''}
+E     {'content_hash': 'ca2efc32f3967211b0354ea14496b0c07a01fd2ca54026953d4ae7198417df3e'} != {'content_hash': '12ae32cb1ec02d01eda3581b127c1fee3b0dc53572ed6baf239721a03d82e126'}
+E     Use -v to get more diff</failure></testcase><testcase classname="qa.test_sdk_review_round10" name="test_wait_preserves_resume_payload_and_hash[file-reference]" time="0.078"><failure message="AssertionError: assert {'content_has...d': 'saved'}}} == {'content_has...id': 'saved'}}&#10;  &#10;  Omitting 2 identical items, use -vv to show&#10;  Differing items:&#10;  {'value': {'content_hash': '600bef59de4515a8e0c4d4592816e013eb64b7355ce486aa4edf06c1a5496a9c', 'kind': 'inline', 'owner_id': 'caa8eb49-42c6-4cd7-9e30-d07d59f056a0', 'value': {'generation': 1, 'operation_id': 'saved'}}} != {'value': {'generation': 1, 'operation_id': 'saved'}}&#10;  {'content_hash': '2b99b459dcc2950998817d7c166269f15499685529742957fbdedce54e05a3ad'} != {'content_hash': '600bef59de4515a8e0c4d4592816e013eb64b7355ce486aa4edf06c1a5496a9c'}&#10;  Use -v to get more diff">/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round10.py:87: in test_wait_preserves_resume_payload_and_hash
+    assert observed[0].to_dict() == expected.to_dict()
+E   AssertionError: assert {'content_has...d': 'saved'}}} == {'content_has...id': 'saved'}}
+E     
+E     Omitting 2 identical items, use -vv to show
+E     Differing items:
+E     {'value': {'content_hash': '600bef59de4515a8e0c4d4592816e013eb64b7355ce486aa4edf06c1a5496a9c', 'kind': 'inline', 'owner_id': 'caa8eb49-42c6-4cd7-9e30-d07d59f056a0', 'value': {'generation': 1, 'operation_id': 'saved'}}} != {'value': {'generation': 1, 'operation_id': 'saved'}}
+E     {'content_hash': '2b99b459dcc2950998817d7c166269f15499685529742957fbdedce54e05a3ad'} != {'content_hash': '600bef59de4515a8e0c4d4592816e013eb64b7355ce486aa4edf06c1a5496a9c'}
+E     Use -v to get more diff</failure></testcase><testcase classname="qa.test_sdk_review_round10" name="test_wait_preserves_resume_payload_and_hash[file-null]" time="0.078"><failure message="AssertionError: assert {'content_has...value': None}} == {'content_has...'value': None}&#10;  &#10;  Omitting 2 identical items, use -vv to show&#10;  Differing items:&#10;  {'value': {'content_hash': '74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b', 'kind': 'inline', 'owner_id': '80ab87ef-fc46-4f19-9549-aa95a850cf84', 'value': None}} != {'value': None}&#10;  {'content_hash': 'f1f7f18e227424a77da38fde2046cae8d3745c74ae1dad7b8fd1741d45e493c0'} != {'content_hash': '74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b'}&#10;  Use -v to get more diff">/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round10.py:87: in test_wait_preserves_resume_payload_and_hash
+    assert observed[0].to_dict() == expected.to_dict()
+E   AssertionError: assert {'content_has...value': None}} == {'content_has...'value': None}
+E     
+E     Omitting 2 identical items, use -vv to show
+E     Differing items:
+E     {'value': {'content_hash': '74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b', 'kind': 'inline', 'owner_id': '80ab87ef-fc46-4f19-9549-aa95a850cf84', 'value': None}} != {'value': None}
+E     {'content_hash': 'f1f7f18e227424a77da38fde2046cae8d3745c74ae1dad7b8fd1741d45e493c0'} != {'content_hash': '74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b'}
+E     Use -v to get more diff</failure></testcase><testcase classname="qa.test_sdk_review_round10" name="test_wait_preserves_resume_payload_and_hash[file-empty_object]" time="0.074"><failure message="AssertionError: assert {'content_has... 'value': {}}} == {'content_has..., 'value': {}}&#10;  &#10;  Omitting 2 identical items, use -vv to show&#10;  Differing items:&#10;  {'value': {'content_hash': '44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a', 'kind': 'inline', 'owner_id': 'b35783d2-fa8a-47e1-b7a1-e70d1948f4fe', 'value': {}}} != {'value': {}}&#10;  {'content_hash': 'a71713a3902344217900afbc7dbc3bdc43f4069ac1f9631eeeb129b19e57ad70'} != {'content_hash': '44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a'}&#10;  Use -v to get more diff">/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round10.py:87: in test_wait_preserves_resume_payload_and_hash
+    assert observed[0].to_dict() == expected.to_dict()
+E   AssertionError: assert {'content_has... 'value': {}}} == {'content_has..., 'value': {}}
+E     
+E     Omitting 2 identical items, use -vv to show
+E     Differing items:
+E     {'value': {'content_hash': '44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a', 'kind': 'inline', 'owner_id': 'b35783d2-fa8a-47e1-b7a1-e70d1948f4fe', 'value': {}}} != {'value': {}}
+E     {'content_hash': 'a71713a3902344217900afbc7dbc3bdc43f4069ac1f9631eeeb129b19e57ad70'} != {'content_hash': '44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a'}
+E     Use -v to get more diff</failure></testcase><testcase classname="qa.test_sdk_review_round10" name="test_wait_preserves_resume_payload_and_hash[file-empty_array]" time="0.076"><failure message="AssertionError: assert {'content_has... 'value': []}} == {'content_has..., 'value': []}&#10;  &#10;  Omitting 2 identical items, use -vv to show&#10;  Differing items:&#10;  {'value': {'content_hash': '4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945', 'kind': 'inline', 'owner_id': '5159d6dc-9101-46c2-bacd-10cefb8db9d6', 'value': []}} != {'value': []}&#10;  {'content_hash': '03851011d6cc53ef7813b35760f5cf762eec327de8b7002b763b1bd31f7f0832'} != {'content_hash': '4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945'}&#10;  Use -v to get more diff">/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round10.py:87: in test_wait_preserves_resume_payload_and_hash
+    assert observed[0].to_dict() == expected.to_dict()
+E   AssertionError: assert {'content_has... 'value': []}} == {'content_has..., 'value': []}
+E     
+E     Omitting 2 identical items, use -vv to show
+E     Differing items:
+E     {'value': {'content_hash': '4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945', 'kind': 'inline', 'owner_id': '5159d6dc-9101-46c2-bacd-10cefb8db9d6', 'value': []}} != {'value': []}
+E     {'content_hash': '03851011d6cc53ef7813b35760f5cf762eec327de8b7002b763b1bd31f7f0832'} != {'content_hash': '4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945'}
+E     Use -v to get more diff</failure></testcase><testcase classname="qa.test_sdk_review_round10" name="test_wait_preserves_resume_payload_and_hash[file-false]" time="0.078"><failure message="AssertionError: assert {'content_has...alue': False}} == {'content_has...value': False}&#10;  &#10;  Omitting 2 identical items, use -vv to show&#10;  Differing items:&#10;  {'value': {'content_hash': 'fcbcf165908dd18a9e49f7ff27810176db8e9f63b4352213741664245224f8aa', 'kind': 'inline', 'owner_id': '54c8f30a-aa66-4b54-aa56-ddf72875a72d', 'value': False}} != {'value': False}&#10;  {'content_hash': 'a32f606ff398ddeef5dc9f6abe7e503bbf803a3bb8eca34369b0f04e98eab62c'} != {'content_hash': 'fcbcf165908dd18a9e49f7ff27810176db8e9f63b4352213741664245224f8aa'}&#10;  Use -v to get more diff">/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round10.py:87: in test_wait_preserves_resume_payload_and_hash
+    assert observed[0].to_dict() == expected.to_dict()
+E   AssertionError: assert {'content_has...alue': False}} == {'content_has...value': False}
+E     
+E     Omitting 2 identical items, use -vv to show
+E     Differing items:
+E     {'value': {'content_hash': 'fcbcf165908dd18a9e49f7ff27810176db8e9f63b4352213741664245224f8aa', 'kind': 'inline', 'owner_id': '54c8f30a-aa66-4b54-aa56-ddf72875a72d', 'value': False}} != {'value': False}
+E     {'content_hash': 'a32f606ff398ddeef5dc9f6abe7e503bbf803a3bb8eca34369b0f04e98eab62c'} != {'content_hash': 'fcbcf165908dd18a9e49f7ff27810176db8e9f63b4352213741664245224f8aa'}
+E     Use -v to get more diff</failure></testcase><testcase classname="qa.test_sdk_review_round10" name="test_wait_preserves_resume_payload_and_hash[file-zero]" time="0.077"><failure message="AssertionError: assert {'content_has..., 'value': 0}} == {'content_has...', 'value': 0}&#10;  &#10;  Omitting 2 identical items, use -vv to show&#10;  Differing items:&#10;  {'value': {'content_hash': '5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9', 'kind': 'inline', 'owner_id': 'c7a86e6d-1439-43b8-9f5a-c4a07454b2ee', 'value': 0}} != {'value': 0}&#10;  {'content_hash': 'a01712e718b4daba4ccd82ee2d1a39e55ac97a965dbcc49341b6bc3090accfed'} != {'content_hash': '5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9'}&#10;  Use -v to get more diff">/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round10.py:87: in test_wait_preserves_resume_payload_and_hash
+    assert observed[0].to_dict() == expected.to_dict()
+E   AssertionError: assert {'content_has..., 'value': 0}} == {'content_has...', 'value': 0}
+E     
+E     Omitting 2 identical items, use -vv to show
+E     Differing items:
+E     {'value': {'content_hash': '5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9', 'kind': 'inline', 'owner_id': 'c7a86e6d-1439-43b8-9f5a-c4a07454b2ee', 'value': 0}} != {'value': 0}
+E     {'content_hash': 'a01712e718b4daba4ccd82ee2d1a39e55ac97a965dbcc49341b6bc3090accfed'} != {'content_hash': '5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9'}
+E     Use -v to get more diff</failure></testcase><testcase classname="qa.test_sdk_review_round10" name="test_wait_preserves_resume_payload_and_hash[file-empty_text]" time="0.061"><failure message="AssertionError: assert {'content_has... 'value': ''}} == {'content_has..., 'value': ''}&#10;  &#10;  Omitting 2 identical items, use -vv to show&#10;  Differing items:&#10;  {'value': {'content_hash': '12ae32cb1ec02d01eda3581b127c1fee3b0dc53572ed6baf239721a03d82e126', 'kind': 'inline', 'owner_id': '7be26b74-462c-40de-920f-d45e8b6e3af7', 'value': ''}} != {'value': ''}&#10;  {'content_hash': '175e3158adec8eb61e63e42a2d9865b4b016baf031ed3500320e0bfafb090bf8'} != {'content_hash': '12ae32cb1ec02d01eda3581b127c1fee3b0dc53572ed6baf239721a03d82e126'}&#10;  Use -v to get more diff">/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round10.py:87: in test_wait_preserves_resume_payload_and_hash
+    assert observed[0].to_dict() == expected.to_dict()
+E   AssertionError: assert {'content_has... 'value': ''}} == {'content_has..., 'value': ''}
+E     
+E     Omitting 2 identical items, use -vv to show
+E     Differing items:
+E     {'value': {'content_hash': '12ae32cb1ec02d01eda3581b127c1fee3b0dc53572ed6baf239721a03d82e126', 'kind': 'inline', 'owner_id': '7be26b74-462c-40de-920f-d45e8b6e3af7', 'value': ''}} != {'value': ''}
+E     {'content_hash': '175e3158adec8eb61e63e42a2d9865b4b016baf031ed3500320e0bfafb090bf8'} != {'content_hash': '12ae32cb1ec02d01eda3581b127c1fee3b0dc53572ed6baf239721a03d82e126'}
+E     Use -v to get more diff</failure></testcase><testcase classname="qa.test_sdk_review_round10" name="test_invalid_progress_is_rejected_before_commit[memory-completed_progress]" time="0.013"><failure message="AssertionError: assert ('succeeded' == 'failed'&#10;  &#10;  - failed&#10;  + succeeded)">/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round10.py:122: in test_invalid_progress_is_rejected_before_commit
+    assert result.status == "failed" and result.error["code"] == "NODE_OUTCOME_INVALID"
+E   AssertionError: assert ('succeeded' == 'failed'
+E     
+E     - failed
+E     + succeeded)</failure></testcase><testcase classname="qa.test_sdk_review_round10" name="test_invalid_progress_is_rejected_before_commit[memory-unknown_phase]" time="0.013"><failure message="AssertionError: assert ('succeeded' == 'failed'&#10;  &#10;  - failed&#10;  + succeeded)">/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round10.py:122: in test_invalid_progress_is_rejected_before_commit
+    assert result.status == "failed" and result.error["code"] == "NODE_OUTCOME_INVALID"
+E   AssertionError: assert ('succeeded' == 'failed'
+E     
+E     - failed
+E     + succeeded)</failure></testcase><testcase classname="qa.test_sdk_review_round10" name="test_invalid_progress_is_rejected_before_commit[memory-unsupported_version]" time="0.013"><failure message="AssertionError: assert ('succeeded' == 'failed'&#10;  &#10;  - failed&#10;  + succeeded)">/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round10.py:122: in test_invalid_progress_is_rejected_before_commit
+    assert result.status == "failed" and result.error["code"] == "NODE_OUTCOME_INVALID"
+E   AssertionError: assert ('succeeded' == 'failed'
+E     
+E     - failed
+E     + succeeded)</failure></testcase><testcase classname="qa.test_sdk_review_round10" name="test_invalid_progress_is_rejected_before_commit[memory-foreign_role]" time="0.013"><failure message="AssertionError: assert ('succeeded' == 'failed'&#10;  &#10;  - failed&#10;  + succeeded)">/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round10.py:122: in test_invalid_progress_is_rejected_before_commit
+    assert result.status == "failed" and result.error["code"] == "NODE_OUTCOME_INVALID"
+E   AssertionError: assert ('succeeded' == 'failed'
+E     
+E     - failed
+E     + succeeded)</failure></testcase><testcase classname="qa.test_sdk_review_round10" name="test_invalid_progress_is_rejected_before_commit[memory-negative_loop]" time="0.013"><failure message="AssertionError: assert ('succeeded' == 'failed'&#10;  &#10;  - failed&#10;  + succeeded)">/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round10.py:122: in test_invalid_progress_is_rejected_before_commit
+    assert result.status == "failed" and result.error["code"] == "NODE_OUTCOME_INVALID"
+E   AssertionError: assert ('succeeded' == 'failed'
+E     
+E     - failed
+E     + succeeded)</failure></testcase><testcase classname="qa.test_sdk_review_round10" name="test_invalid_progress_is_rejected_before_commit[file-completed_progress]" time="0.056"><failure message="AssertionError: assert ('succeeded' == 'failed'&#10;  &#10;  - failed&#10;  + succeeded)">/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round10.py:122: in test_invalid_progress_is_rejected_before_commit
+    assert result.status == "failed" and result.error["code"] == "NODE_OUTCOME_INVALID"
+E   AssertionError: assert ('succeeded' == 'failed'
+E     
+E     - failed
+E     + succeeded)</failure></testcase><testcase classname="qa.test_sdk_review_round10" name="test_invalid_progress_is_rejected_before_commit[file-unknown_phase]" time="0.070"><failure message="AssertionError: assert ('succeeded' == 'failed'&#10;  &#10;  - failed&#10;  + succeeded)">/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round10.py:122: in test_invalid_progress_is_rejected_before_commit
+    assert result.status == "failed" and result.error["code"] == "NODE_OUTCOME_INVALID"
+E   AssertionError: assert ('succeeded' == 'failed'
+E     
+E     - failed
+E     + succeeded)</failure></testcase><testcase classname="qa.test_sdk_review_round10" name="test_invalid_progress_is_rejected_before_commit[file-unsupported_version]" time="0.070"><failure message="AssertionError: assert ('succeeded' == 'failed'&#10;  &#10;  - failed&#10;  + succeeded)">/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round10.py:122: in test_invalid_progress_is_rejected_before_commit
+    assert result.status == "failed" and result.error["code"] == "NODE_OUTCOME_INVALID"
+E   AssertionError: assert ('succeeded' == 'failed'
+E     
+E     - failed
+E     + succeeded)</failure></testcase><testcase classname="qa.test_sdk_review_round10" name="test_invalid_progress_is_rejected_before_commit[file-foreign_role]" time="0.070"><failure message="AssertionError: assert ('succeeded' == 'failed'&#10;  &#10;  - failed&#10;  + succeeded)">/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round10.py:122: in test_invalid_progress_is_rejected_before_commit
+    assert result.status == "failed" and result.error["code"] == "NODE_OUTCOME_INVALID"
+E   AssertionError: assert ('succeeded' == 'failed'
+E     
+E     - failed
+E     + succeeded)</failure></testcase><testcase classname="qa.test_sdk_review_round10" name="test_invalid_progress_is_rejected_before_commit[file-negative_loop]" time="0.058"><failure message="AssertionError: assert ('succeeded' == 'failed'&#10;  &#10;  - failed&#10;  + succeeded)">/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round10.py:122: in test_invalid_progress_is_rejected_before_commit
+    assert result.status == "failed" and result.error["code"] == "NODE_OUTCOME_INVALID"
+E   AssertionError: assert ('succeeded' == 'failed'
+E     
+E     - failed
+E     + succeeded)</failure></testcase><testcase classname="qa.test_sdk_review_round10" name="test_generator_cleanup_cannot_erase_committed_complete[memory]" time="0.013"><failure message="agentloom.errors.InfrastructureError: EXECUTION_DRIVER_FAILED: ValueError">/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round10.py:131: in activate
+    yield Complete(
+E   GeneratorExit
+
+During handling of the above exception, another exception occurred:
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round10.py:140: in activate
+    raise ValueError("local cleanup failed")
+E   ValueError: local cleanup failed
+
+The above exception was the direct cause of the following exception:
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round10.py:146: in test_generator_cleanup_cannot_erase_committed_complete
+    result = await handle.wait(timeout_s=5)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/public/handles.py:57: in wait
+    return await observe()
+           ^^^^^^^^^^^^^^^
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/public/handles.py:52: in observe
+    self._runtime.raise_local_failure(self.run_id)
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/runtime/host.py:158: in raise_local_failure
+    raise failure
+E   agentloom.errors.InfrastructureError: EXECUTION_DRIVER_FAILED: ValueError</failure></testcase><testcase classname="qa.test_sdk_review_round10" name="test_generator_cleanup_cannot_erase_committed_complete[file]" time="0.065"><failure message="agentloom.errors.InfrastructureError: EXECUTION_DRIVER_FAILED: ValueError">/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round10.py:131: in activate
+    yield Complete(
+E   GeneratorExit
+
+During handling of the above exception, another exception occurred:
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round10.py:140: in activate
+    raise ValueError("local cleanup failed")
+E   ValueError: local cleanup failed
+
+The above exception was the direct cause of the following exception:
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round10.py:146: in test_generator_cleanup_cannot_erase_committed_complete
+    result = await handle.wait(timeout_s=5)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/public/handles.py:57: in wait
+    return await observe()
+           ^^^^^^^^^^^^^^^
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/public/handles.py:52: in observe
+    self._runtime.raise_local_failure(self.run_id)
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/runtime/host.py:158: in raise_local_failure
+    raise failure
+E   agentloom.errors.InfrastructureError: EXECUTION_DRIVER_FAILED: ValueError</failure></testcase><testcase classname="qa.test_sdk_review_round10" name="test_malformed_latest_snapshot_falls_back_to_valid_ancestor[memory-missing_blob]" time="0.082" /><testcase classname="qa.test_sdk_review_round10" name="test_malformed_latest_snapshot_falls_back_to_valid_ancestor[memory-missing_hash]" time="0.071"><failure message="agentloom.errors.InfrastructureError: CHECKPOINT_CORRUPT: CHECKPOINT_CORRUPT">/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/checkpoints/journal.py:201: in restore
+    return _restore(tx, namespace, state)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/checkpoints/journal.py:244: in _restore
+    payload = _read_version(
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/checkpoints/journal.py:53: in _read_version
+    and payload_ref["sha256"] == payload_ref["blob_id"]
+        ^^^^^^^^^^^^^^^^^^^^^
+E   KeyError: 'sha256'
+
+The above exception was the direct cause of the following exception:
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round10.py:190: in test_malformed_latest_snapshot_falls_back_to_valid_ancestor
+    restored = store.load_run_consistently("default", state["run_id"])
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/storage/base.py:39: in load_run_consistently
+    return restore(tx, namespace, state) if state else None
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/checkpoints/journal.py:203: in restore
+    raise InfrastructureError("CHECKPOINT_CORRUPT") from exc
+E   agentloom.errors.InfrastructureError: CHECKPOINT_CORRUPT: CHECKPOINT_CORRUPT</failure></testcase><testcase classname="qa.test_sdk_review_round10" name="test_malformed_latest_snapshot_falls_back_to_valid_ancestor[memory-null_ref]" time="0.072"><failure message="agentloom.errors.InfrastructureError: CHECKPOINT_CORRUPT: CHECKPOINT_CORRUPT">/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/checkpoints/journal.py:201: in restore
+    return _restore(tx, namespace, state)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/checkpoints/journal.py:243: in _restore
+    _require(checkpoint["engine_state_ref"]["content_scope_ref"]["namespace"] == namespace)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   TypeError: 'NoneType' object is not subscriptable
+
+The above exception was the direct cause of the following exception:
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round10.py:190: in test_malformed_latest_snapshot_falls_back_to_valid_ancestor
+    restored = store.load_run_consistently("default", state["run_id"])
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/storage/base.py:39: in load_run_consistently
+    return restore(tx, namespace, state) if state else None
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/checkpoints/journal.py:203: in restore
+    raise InfrastructureError("CHECKPOINT_CORRUPT") from exc
+E   agentloom.errors.InfrastructureError: CHECKPOINT_CORRUPT: CHECKPOINT_CORRUPT</failure></testcase><testcase classname="qa.test_sdk_review_round10" name="test_malformed_latest_snapshot_falls_back_to_valid_ancestor[file-missing_blob]" time="0.344" /><testcase classname="qa.test_sdk_review_round10" name="test_malformed_latest_snapshot_falls_back_to_valid_ancestor[file-missing_hash]" time="0.348"><failure message="agentloom.errors.InfrastructureError: CHECKPOINT_CORRUPT: CHECKPOINT_CORRUPT">/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/checkpoints/journal.py:201: in restore
+    return _restore(tx, namespace, state)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/checkpoints/journal.py:244: in _restore
+    payload = _read_version(
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/checkpoints/journal.py:53: in _read_version
+    and payload_ref["sha256"] == payload_ref["blob_id"]
+        ^^^^^^^^^^^^^^^^^^^^^
+E   KeyError: 'sha256'
+
+The above exception was the direct cause of the following exception:
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round10.py:190: in test_malformed_latest_snapshot_falls_back_to_valid_ancestor
+    restored = store.load_run_consistently("default", state["run_id"])
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/storage/base.py:39: in load_run_consistently
+    return restore(tx, namespace, state) if state else None
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/checkpoints/journal.py:203: in restore
+    raise InfrastructureError("CHECKPOINT_CORRUPT") from exc
+E   agentloom.errors.InfrastructureError: CHECKPOINT_CORRUPT: CHECKPOINT_CORRUPT</failure></testcase><testcase classname="qa.test_sdk_review_round10" name="test_malformed_latest_snapshot_falls_back_to_valid_ancestor[file-null_ref]" time="0.323"><failure message="agentloom.errors.InfrastructureError: CHECKPOINT_CORRUPT: CHECKPOINT_CORRUPT">/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/checkpoints/journal.py:201: in restore
+    return _restore(tx, namespace, state)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/checkpoints/journal.py:243: in _restore
+    _require(checkpoint["engine_state_ref"]["content_scope_ref"]["namespace"] == namespace)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   TypeError: 'NoneType' object is not subscriptable
+
+The above exception was the direct cause of the following exception:
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round10.py:190: in test_malformed_latest_snapshot_falls_back_to_valid_ancestor
+    restored = store.load_run_consistently("default", state["run_id"])
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/storage/base.py:39: in load_run_consistently
+    return restore(tx, namespace, state) if state else None
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/checkpoints/journal.py:203: in restore
+    raise InfrastructureError("CHECKPOINT_CORRUPT") from exc
+E   agentloom.errors.InfrastructureError: CHECKPOINT_CORRUPT: CHECKPOINT_CORRUPT</failure></testcase></testsuite></testsuites>

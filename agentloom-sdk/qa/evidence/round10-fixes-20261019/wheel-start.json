@@ -1,0 +1,9 @@
+{
+  "mode": "start",
+  "status": "running",
+  "model_calls": 0,
+  "activation_count": 1,
+  "task_result_count": 0,
+  "resume_observed": 0,
+  "store": "FileRuntimeStore"
+}

@@ -4,7 +4,7 @@ from uuid import NAMESPACE_URL, uuid5
 
 from ..configuration.json_documents import document_digest as digest
 from ..configuration.json_values import MAX_JSON_INTEGER
-from ..errors import InfrastructureError
+from ..errors import InfrastructureError, RequestError
 from ..prompts.recovery import validate_prompt_state
 from .usage import TOKEN_KEYS
 
@@ -230,7 +230,8 @@ def _validate(state):
 
 
 def _validate_graph(state):
-    from ..nodes import ReactContinuationV1
+    from ..nodes import PayloadRef
+    from ..nodes.validation import validate_continuation
     from .batches import TASK_TERMINAL, executor_slots, satisfied
 
     graph = state.get("graph")
@@ -239,24 +240,17 @@ def _validate_graph(state):
     if type(graph.get("protocol_version")) is not int or graph["protocol_version"] != 1:
         raise InfrastructureError("CHECKPOINT_VERSION_UNSUPPORTED")
     for task_id, task in state["tasks"].items():
-        continuation = ReactContinuationV1(**task["continuation"])
+        try:
+            validate_continuation(task["continuation"], task, state=state)
+            if task.get("resume_input_ref") is not None:
+                PayloadRef.from_dict(task["resume_input_ref"], owner_id=task_id)
+        except RequestError as exc:
+            if exc.field_path == "node.protocol_version":
+                raise InfrastructureError("NODE_PROTOCOL_VERSION_UNSUPPORTED") from exc
+            _require(False, exc.field_path or "node.resume_input_ref")
         _require(type(task["node_revision"]) is int and task["node_revision"] >= 0, "node.revision")
         _require(
             type(task["activation_no"]) is int and task["activation_no"] >= 0, "node.activation_no"
-        )
-        _require(
-            continuation.role_key == task["role_key"]
-            and continuation.role_loop_index == task["round"],
-            "node.continuation_binding",
-        )
-        _require(
-            continuation.context_revision_ref["context_id"] == task["context"]["context_id"]
-            and continuation.context_revision_ref["revision"] <= task["context"]["revision"],
-            "node.context_binding",
-        )
-        _require(
-            (continuation.phase == "completed") == (task["status"] in TASK_TERMINAL),
-            "node.terminal",
         )
         if task["status"] == "waiting":
             _require(

@@ -241,19 +241,33 @@ def _restore(tx, namespace, state):
             ):
                 raise InfrastructureError("CHECKPOINT_VERSION_UNSUPPORTED")
             _require(checkpoint["engine_state_ref"]["content_scope_ref"]["namespace"] == namespace)
-            payload = _read_version(
+            candidate = _read_version(
                 tx, state["run_id"], "agent_checkpoint", checkpoint["engine_state_ref"]
             )
             _require(
                 type(checkpoint["covered_commit_seq"]) is int
                 and 0 < checkpoint["covered_commit_seq"] <= head["scope_commit_seq"]
             )
-            seq, previous_hash = checkpoint["covered_commit_seq"], payload["delta_hash"]
+            _require(
+                isinstance(candidate["refs"], dict)
+                and isinstance(candidate["node_refs"], dict)
+                and isinstance(candidate["delta_hash"], str)
+            )
+            payload, seq, previous_hash = (
+                candidate,
+                checkpoint["covered_commit_seq"],
+                candidate["delta_hash"],
+            )
             break
         except InfrastructureError as exc:
             if exc.code != "CHECKPOINT_CORRUPT":
                 raise
-            checkpoint_id = checkpoint["previous_checkpoint_id"]
+        except (KeyError, TypeError, ValueError, AttributeError):
+            # A parsed, known-version snapshot can still have malformed fields.
+            # Treat those as candidate corruption, just like a missing blob.
+            pass
+        checkpoint_id = checkpoint["previous_checkpoint_id"]
+        _require(checkpoint_id is None or isinstance(checkpoint_id, str) and bool(checkpoint_id))
     refs = dict(payload["refs"]) if payload else {}
     node_refs = dict(payload["node_refs"]) if payload else {}
     for sequence in range(seq + 1, head["scope_commit_seq"] + 1):

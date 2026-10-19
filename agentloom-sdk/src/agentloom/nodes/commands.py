@@ -5,7 +5,8 @@ from dataclasses import dataclass
 from ..configuration.json_documents import copy_document, document_digest, freeze_document
 from ..errors import InfrastructureError, RequestError
 from ..runtime.batches import ready, satisfied, wake_waiters
-from .contracts import CommitReceipt
+from .contracts import CommitReceipt, PayloadRef
+from .validation import validate_continuation
 
 
 @dataclass(frozen=True)
@@ -36,7 +37,14 @@ class RuntimeCommit:
                 )
             )
             or self.command_kind
-            not in {"ActivateTask", "ProgressNode", "WaitNode", "CompleteTask", "FailTask"}
+            not in {
+                "ActivateTask",
+                "ProgressNode",
+                "WaitNode",
+                "CompleteTask",
+                "FailTask",
+                "RecordActivationCleanup",
+            }
             or not isinstance(self.body, dict)
         ):
             raise RequestError("RUNTIME_COMMIT_INVALID")
@@ -55,6 +63,14 @@ def apply_node_command(state, command, apply_effect):
         raise RequestError("COMMIT_CONFLICT")
     body = copy_document(command.body)
     kind = command.command_kind
+    if kind == "RecordActivationCleanup":
+        activation = state.get("activations", {}).get(command.activation_id)
+        if activation is None or activation["task_id"] != command.task_id:
+            raise RequestError("COMMIT_CONFLICT")
+        if body != {"code": "NODE_GENERATOR_CLOSE_FAILED"}:
+            raise RequestError("RUNTIME_COMMIT_INVALID")
+        activation["cleanup_error"] = body
+        return
     if kind == "ActivateTask":
         if task["status"] != "ready":
             raise RequestError("COMMIT_CONFLICT")
@@ -74,9 +90,33 @@ def apply_node_command(state, command, apply_effect):
             raise RequestError("COMMIT_CONFLICT")
         if kind not in {"ProgressNode", "WaitNode", "CompleteTask", "FailTask"}:
             raise RequestError("RUNTIME_COMMIT_INVALID")
-        for effect in body.get("effects", []):
+        effects = body.get("effects", [])
+        if not isinstance(effects, list) or any(
+            not isinstance(effect, dict)
+            or set(effect) != {"kind", "body"}
+            or not isinstance(effect["kind"], str)
+            or not isinstance(effect["body"], dict)
+            for effect in effects
+        ):
+            raise RequestError("NODE_OUTCOME_INVALID")
+        if kind != "FailTask":
+            advance = sum(e["kind"] in {"consume_batch", "format_feedback"} for e in effects)
+            validate_continuation(
+                body.get("continuation"),
+                task,
+                terminal=kind == "CompleteTask",
+                expected_round=task["round"] + advance,
+            )
+        elif effects:
+            raise RequestError("NODE_OUTCOME_INVALID")
+        if kind == "WaitNode":
+            PayloadRef.from_dict(body.get("resume_input_ref"), owner_id=command.task_id)
+        for effect in effects:
             apply_effect(state, task, effect)
         if kind != "FailTask":
+            validate_continuation(
+                body["continuation"], task, terminal=kind == "CompleteTask", state=state
+            )
             task["continuation"] = body["continuation"]
             task["continuation"]["context_revision_ref"] = {
                 "context_id": task["context"]["context_id"],

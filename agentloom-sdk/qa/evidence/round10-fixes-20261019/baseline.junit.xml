@@ -1,0 +1,2235 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="34" skipped="0" tests="46" time="12.920" timestamp="2026-10-19T08:50:07.000955+08:00" hostname="bmilk"><testcase classname="qa.test_sdk_review_round10" name="test_wait_preserves_resume_payload_and_hash[memory-reference]" time="0.018"><failure message="AssertionError: assert {'content_has...d': 'saved'}}} == {'content_has...id': 'saved'}}&#10;  &#10;  Omitting 2 identical items, use -vv to show&#10;  Differing items:&#10;  {'content_hash': 'dc624abf5e7dcd89a7190299768861aa7a3812c1178e6a295c523b27f860c6ee'} != {'content_hash': '600bef59de4515a8e0c4d4592816e013eb64b7355ce486aa4edf06c1a5496a9c'}&#10;  {'value': {'content_hash': '600bef59de4515a8e0c4d4592816e013eb64b7355ce486aa4edf06c1a5496a9c', 'kind': 'inline', 'owner_id': 'd59d16ce-244f-40bb-be99-e6c681046bbc', 'value': {'generation': 1, 'operation_id': 'saved'}}} != {'value': {'generation': 1, 'operation_id': 'saved'}}&#10;  Use -v to get more diff">store = &lt;agentloom.storage.memory.MemoryRuntimeStore object at 0x1079abfb0&gt;
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x1079abf80&gt;
+payload = {'generation': 1, 'operation_id': 'saved'}
+
+    @pytest.mark.parametrize(
+        "payload",
+        [{"operation_id": "saved", "generation": 1}, None, {}, [], False, 0, ""],
+        ids=["reference", "null", "empty_object", "empty_array", "false", "zero", "empty_text"],
+    )
+    async def test_wait_preserves_resume_payload_and_hash(store, monkeypatch, payload):
+        """runtime.md §3: both wait paths preserve the same durable resume reference."""
+        observed = []
+    
+        class Node:
+            async def activate(self, input, continuation, context):
+                if continuation.value["phase"] == "prepare_context":
+                    yield Wait(
+                        ContinuationRef(
+                            input.task_id,
+                            {**continuation.value, "phase": "prepare_model"},
+                            continuation.revision,
+                        ),
+                        WaitCondition("budget_available", context.scope.run_id),
+                        PayloadRef(input.task_id, payload),
+                    )
+                    return
+                observed.append(input.resume_input_ref)
+                yield Complete(
+                    PayloadRef(input.task_id, "done"),
+                    ContinuationRef(
+                        input.task_id,
+                        {**continuation.value, "phase": "completed"},
+                        continuation.revision,
+                    ),
+                )
+    
+        monkeypatch.setattr(AgentGraphEngine, "_node", lambda self, task_id: Node())
+        async with RuntimeEngine(store=store) as runtime:
+            result = await (await build(runtime).start("go")).wait(timeout_s=5)
+            assert result.status == "succeeded", result.error
+            expected = PayloadRef(observed[0].owner_id, payload)
+            print(
+                json.dumps(
+                    {
+                        "case": "wait_payload",
+                        "expected": expected.to_dict(),
+                        "actual": observed[0].to_dict(),
+                    },
+                    ensure_ascii=False,
+                )
+            )
+&gt;           assert observed[0].to_dict() == expected.to_dict()
+E           AssertionError: assert {'content_has...d': 'saved'}}} == {'content_has...id': 'saved'}}
+E             
+E             Omitting 2 identical items, use -vv to show
+E             Differing items:
+E             {'content_hash': 'dc624abf5e7dcd89a7190299768861aa7a3812c1178e6a295c523b27f860c6ee'} != {'content_hash': '600bef59de4515a8e0c4d4592816e013eb64b7355ce486aa4edf06c1a5496a9c'}
+E             {'value': {'content_hash': '600bef59de4515a8e0c4d4592816e013eb64b7355ce486aa4edf06c1a5496a9c', 'kind': 'inline', 'owner_id': 'd59d16ce-244f-40bb-be99-e6c681046bbc', 'value': {'generation': 1, 'operation_id': 'saved'}}} != {'value': {'generation': 1, 'operation_id': 'saved'}}
+E             Use -v to get more diff
+
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round10.py:105: AssertionError</failure></testcase><testcase classname="qa.test_sdk_review_round10" name="test_wait_preserves_resume_payload_and_hash[memory-null]" time="0.013"><failure message="AssertionError: assert {'content_has...value': None}} == {'content_has...'value': None}&#10;  &#10;  Omitting 2 identical items, use -vv to show&#10;  Differing items:&#10;  {'content_hash': 'b1223abe16bb2267e28db32b4f875052bdb6ef7f0b117abc26404a6b2e268398'} != {'content_hash': '74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b'}&#10;  {'value': {'content_hash': '74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b', 'kind': 'inline', 'owner_id': 'd34bc5ce-0193-4aad-a04f-ba361b040efe', 'value': None}} != {'value': None}&#10;  Use -v to get more diff">store = &lt;agentloom.storage.memory.MemoryRuntimeStore object at 0x1079dbaa0&gt;
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x1079d9c40&gt;
+payload = None
+
+    @pytest.mark.parametrize(
+        "payload",
+        [{"operation_id": "saved", "generation": 1}, None, {}, [], False, 0, ""],
+        ids=["reference", "null", "empty_object", "empty_array", "false", "zero", "empty_text"],
+    )
+    async def test_wait_preserves_resume_payload_and_hash(store, monkeypatch, payload):
+        """runtime.md §3: both wait paths preserve the same durable resume reference."""
+        observed = []
+    
+        class Node:
+            async def activate(self, input, continuation, context):
+                if continuation.value["phase"] == "prepare_context":
+                    yield Wait(
+                        ContinuationRef(
+                            input.task_id,
+                            {**continuation.value, "phase": "prepare_model"},
+                            continuation.revision,
+                        ),
+                        WaitCondition("budget_available", context.scope.run_id),
+                        PayloadRef(input.task_id, payload),
+                    )
+                    return
+                observed.append(input.resume_input_ref)
+                yield Complete(
+                    PayloadRef(input.task_id, "done"),
+                    ContinuationRef(
+                        input.task_id,
+                        {**continuation.value, "phase": "completed"},
+                        continuation.revision,
+                    ),
+                )
+    
+        monkeypatch.setattr(AgentGraphEngine, "_node", lambda self, task_id: Node())
+        async with RuntimeEngine(store=store) as runtime:
+            result = await (await build(runtime).start("go")).wait(timeout_s=5)
+            assert result.status == "succeeded", result.error
+            expected = PayloadRef(observed[0].owner_id, payload)
+            print(
+                json.dumps(
+                    {
+                        "case": "wait_payload",
+                        "expected": expected.to_dict(),
+                        "actual": observed[0].to_dict(),
+                    },
+                    ensure_ascii=False,
+                )
+            )
+&gt;           assert observed[0].to_dict() == expected.to_dict()
+E           AssertionError: assert {'content_has...value': None}} == {'content_has...'value': None}
+E             
+E             Omitting 2 identical items, use -vv to show
+E             Differing items:
+E             {'content_hash': 'b1223abe16bb2267e28db32b4f875052bdb6ef7f0b117abc26404a6b2e268398'} != {'content_hash': '74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b'}
+E             {'value': {'content_hash': '74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b', 'kind': 'inline', 'owner_id': 'd34bc5ce-0193-4aad-a04f-ba361b040efe', 'value': None}} != {'value': None}
+E             Use -v to get more diff
+
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round10.py:105: AssertionError</failure></testcase><testcase classname="qa.test_sdk_review_round10" name="test_wait_preserves_resume_payload_and_hash[memory-empty_object]" time="0.013"><failure message="AssertionError: assert {'content_has... 'value': {}}} == {'content_has..., 'value': {}}&#10;  &#10;  Omitting 2 identical items, use -vv to show&#10;  Differing items:&#10;  {'content_hash': 'e43b4cdfdf927cc5c4d0e67acca470d916f8946b197fdbf782512c60ceb7bc74'} != {'content_hash': '44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a'}&#10;  {'value': {'content_hash': '44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a', 'kind': 'inline', 'owner_id': '2ba34b91-3663-4199-9153-2e806b929d8a', 'value': {}}} != {'value': {}}&#10;  Use -v to get more diff">store = &lt;agentloom.storage.memory.MemoryRuntimeStore object at 0x107a00560&gt;
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x107a010d0&gt;
+payload = {}
+
+    @pytest.mark.parametrize(
+        "payload",
+        [{"operation_id": "saved", "generation": 1}, None, {}, [], False, 0, ""],
+        ids=["reference", "null", "empty_object", "empty_array", "false", "zero", "empty_text"],
+    )
+    async def test_wait_preserves_resume_payload_and_hash(store, monkeypatch, payload):
+        """runtime.md §3: both wait paths preserve the same durable resume reference."""
+        observed = []
+    
+        class Node:
+            async def activate(self, input, continuation, context):
+                if continuation.value["phase"] == "prepare_context":
+                    yield Wait(
+                        ContinuationRef(
+                            input.task_id,
+                            {**continuation.value, "phase": "prepare_model"},
+                            continuation.revision,
+                        ),
+                        WaitCondition("budget_available", context.scope.run_id),
+                        PayloadRef(input.task_id, payload),
+                    )
+                    return
+                observed.append(input.resume_input_ref)
+                yield Complete(
+                    PayloadRef(input.task_id, "done"),
+                    ContinuationRef(
+                        input.task_id,
+                        {**continuation.value, "phase": "completed"},
+                        continuation.revision,
+                    ),
+                )
+    
+        monkeypatch.setattr(AgentGraphEngine, "_node", lambda self, task_id: Node())
+        async with RuntimeEngine(store=store) as runtime:
+            result = await (await build(runtime).start("go")).wait(timeout_s=5)
+            assert result.status == "succeeded", result.error
+            expected = PayloadRef(observed[0].owner_id, payload)
+            print(
+                json.dumps(
+                    {
+                        "case": "wait_payload",
+                        "expected": expected.to_dict(),
+                        "actual": observed[0].to_dict(),
+                    },
+                    ensure_ascii=False,
+                )
+            )
+&gt;           assert observed[0].to_dict() == expected.to_dict()
+E           AssertionError: assert {'content_has... 'value': {}}} == {'content_has..., 'value': {}}
+E             
+E             Omitting 2 identical items, use -vv to show
+E             Differing items:
+E             {'content_hash': 'e43b4cdfdf927cc5c4d0e67acca470d916f8946b197fdbf782512c60ceb7bc74'} != {'content_hash': '44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a'}
+E             {'value': {'content_hash': '44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a', 'kind': 'inline', 'owner_id': '2ba34b91-3663-4199-9153-2e806b929d8a', 'value': {}}} != {'value': {}}
+E             Use -v to get more diff
+
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round10.py:105: AssertionError</failure></testcase><testcase classname="qa.test_sdk_review_round10" name="test_wait_preserves_resume_payload_and_hash[memory-empty_array]" time="0.013"><failure message="AssertionError: assert {'content_has... 'value': []}} == {'content_has..., 'value': []}&#10;  &#10;  Omitting 2 identical items, use -vv to show&#10;  Differing items:&#10;  {'content_hash': '112545aef80ad771c6440e36686397045417636cfc86e8f3d27732ac90843cc9'} != {'content_hash': '4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945'}&#10;  {'value': {'content_hash': '4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945', 'kind': 'inline', 'owner_id': '0e8546b8-47aa-4730-953e-6046d77b99e6', 'value': []}} != {'value': []}&#10;  Use -v to get more diff">store = &lt;agentloom.storage.memory.MemoryRuntimeStore object at 0x107a03d40&gt;
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x107a03ef0&gt;
+payload = []
+
+    @pytest.mark.parametrize(
+        "payload",
+        [{"operation_id": "saved", "generation": 1}, None, {}, [], False, 0, ""],
+        ids=["reference", "null", "empty_object", "empty_array", "false", "zero", "empty_text"],
+    )
+    async def test_wait_preserves_resume_payload_and_hash(store, monkeypatch, payload):
+        """runtime.md §3: both wait paths preserve the same durable resume reference."""
+        observed = []
+    
+        class Node:
+            async def activate(self, input, continuation, context):
+                if continuation.value["phase"] == "prepare_context":
+                    yield Wait(
+                        ContinuationRef(
+                            input.task_id,
+                            {**continuation.value, "phase": "prepare_model"},
+                            continuation.revision,
+                        ),
+                        WaitCondition("budget_available", context.scope.run_id),
+                        PayloadRef(input.task_id, payload),
+                    )
+                    return
+                observed.append(input.resume_input_ref)
+                yield Complete(
+                    PayloadRef(input.task_id, "done"),
+                    ContinuationRef(
+                        input.task_id,
+                        {**continuation.value, "phase": "completed"},
+                        continuation.revision,
+                    ),
+                )
+    
+        monkeypatch.setattr(AgentGraphEngine, "_node", lambda self, task_id: Node())
+        async with RuntimeEngine(store=store) as runtime:
+            result = await (await build(runtime).start("go")).wait(timeout_s=5)
+            assert result.status == "succeeded", result.error
+            expected = PayloadRef(observed[0].owner_id, payload)
+            print(
+                json.dumps(
+                    {
+                        "case": "wait_payload",
+                        "expected": expected.to_dict(),
+                        "actual": observed[0].to_dict(),
+                    },
+                    ensure_ascii=False,
+                )
+            )
+&gt;           assert observed[0].to_dict() == expected.to_dict()
+E           AssertionError: assert {'content_has... 'value': []}} == {'content_has..., 'value': []}
+E             
+E             Omitting 2 identical items, use -vv to show
+E             Differing items:
+E             {'content_hash': '112545aef80ad771c6440e36686397045417636cfc86e8f3d27732ac90843cc9'} != {'content_hash': '4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945'}
+E             {'value': {'content_hash': '4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945', 'kind': 'inline', 'owner_id': '0e8546b8-47aa-4730-953e-6046d77b99e6', 'value': []}} != {'value': []}
+E             Use -v to get more diff
+
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round10.py:105: AssertionError</failure></testcase><testcase classname="qa.test_sdk_review_round10" name="test_wait_preserves_resume_payload_and_hash[memory-false]" time="0.013"><failure message="AssertionError: assert {'content_has...alue': False}} == {'content_has...value': False}&#10;  &#10;  Omitting 2 identical items, use -vv to show&#10;  Differing items:&#10;  {'content_hash': '2045606295f7b664319eb57c29e97c29ec907c71b6320b307c560c20f03045cb'} != {'content_hash': 'fcbcf165908dd18a9e49f7ff27810176db8e9f63b4352213741664245224f8aa'}&#10;  {'value': {'content_hash': 'fcbcf165908dd18a9e49f7ff27810176db8e9f63b4352213741664245224f8aa', 'kind': 'inline', 'owner_id': '43a2c555-51a2-4d29-b3b2-0c39bdd3350b', 'value': False}} != {'value': False}&#10;  Use -v to get more diff">store = &lt;agentloom.storage.memory.MemoryRuntimeStore object at 0x107a9bc20&gt;
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x107a9b380&gt;
+payload = False
+
+    @pytest.mark.parametrize(
+        "payload",
+        [{"operation_id": "saved", "generation": 1}, None, {}, [], False, 0, ""],
+        ids=["reference", "null", "empty_object", "empty_array", "false", "zero", "empty_text"],
+    )
+    async def test_wait_preserves_resume_payload_and_hash(store, monkeypatch, payload):
+        """runtime.md §3: both wait paths preserve the same durable resume reference."""
+        observed = []
+    
+        class Node:
+            async def activate(self, input, continuation, context):
+                if continuation.value["phase"] == "prepare_context":
+                    yield Wait(
+                        ContinuationRef(
+                            input.task_id,
+                            {**continuation.value, "phase": "prepare_model"},
+                            continuation.revision,
+                        ),
+                        WaitCondition("budget_available", context.scope.run_id),
+                        PayloadRef(input.task_id, payload),
+                    )
+                    return
+                observed.append(input.resume_input_ref)
+                yield Complete(
+                    PayloadRef(input.task_id, "done"),
+                    ContinuationRef(
+                        input.task_id,
+                        {**continuation.value, "phase": "completed"},
+                        continuation.revision,
+                    ),
+                )
+    
+        monkeypatch.setattr(AgentGraphEngine, "_node", lambda self, task_id: Node())
+        async with RuntimeEngine(store=store) as runtime:
+            result = await (await build(runtime).start("go")).wait(timeout_s=5)
+            assert result.status == "succeeded", result.error
+            expected = PayloadRef(observed[0].owner_id, payload)
+            print(
+                json.dumps(
+                    {
+                        "case": "wait_payload",
+                        "expected": expected.to_dict(),
+                        "actual": observed[0].to_dict(),
+                    },
+                    ensure_ascii=False,
+                )
+            )
+&gt;           assert observed[0].to_dict() == expected.to_dict()
+E           AssertionError: assert {'content_has...alue': False}} == {'content_has...value': False}
+E             
+E             Omitting 2 identical items, use -vv to show
+E             Differing items:
+E             {'content_hash': '2045606295f7b664319eb57c29e97c29ec907c71b6320b307c560c20f03045cb'} != {'content_hash': 'fcbcf165908dd18a9e49f7ff27810176db8e9f63b4352213741664245224f8aa'}
+E             {'value': {'content_hash': 'fcbcf165908dd18a9e49f7ff27810176db8e9f63b4352213741664245224f8aa', 'kind': 'inline', 'owner_id': '43a2c555-51a2-4d29-b3b2-0c39bdd3350b', 'value': False}} != {'value': False}
+E             Use -v to get more diff
+
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round10.py:105: AssertionError</failure></testcase><testcase classname="qa.test_sdk_review_round10" name="test_wait_preserves_resume_payload_and_hash[memory-zero]" time="0.013"><failure message="AssertionError: assert {'content_has..., 'value': 0}} == {'content_has...', 'value': 0}&#10;  &#10;  Omitting 2 identical items, use -vv to show&#10;  Differing items:&#10;  {'content_hash': 'd46144de29cea27cfcffd70e0b34208a39e2f9f44eda69baad58c4fb68fb18d9'} != {'content_hash': '5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9'}&#10;  {'value': {'content_hash': '5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9', 'kind': 'inline', 'owner_id': 'ddbc2057-e115-4194-beed-85d1c3db6fdb', 'value': 0}} != {'value': 0}&#10;  Use -v to get more diff">store = &lt;agentloom.storage.memory.MemoryRuntimeStore object at 0x107ae4560&gt;
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x107ae46b0&gt;
+payload = 0
+
+    @pytest.mark.parametrize(
+        "payload",
+        [{"operation_id": "saved", "generation": 1}, None, {}, [], False, 0, ""],
+        ids=["reference", "null", "empty_object", "empty_array", "false", "zero", "empty_text"],
+    )
+    async def test_wait_preserves_resume_payload_and_hash(store, monkeypatch, payload):
+        """runtime.md §3: both wait paths preserve the same durable resume reference."""
+        observed = []
+    
+        class Node:
+            async def activate(self, input, continuation, context):
+                if continuation.value["phase"] == "prepare_context":
+                    yield Wait(
+                        ContinuationRef(
+                            input.task_id,
+                            {**continuation.value, "phase": "prepare_model"},
+                            continuation.revision,
+                        ),
+                        WaitCondition("budget_available", context.scope.run_id),
+                        PayloadRef(input.task_id, payload),
+                    )
+                    return
+                observed.append(input.resume_input_ref)
+                yield Complete(
+                    PayloadRef(input.task_id, "done"),
+                    ContinuationRef(
+                        input.task_id,
+                        {**continuation.value, "phase": "completed"},
+                        continuation.revision,
+                    ),
+                )
+    
+        monkeypatch.setattr(AgentGraphEngine, "_node", lambda self, task_id: Node())
+        async with RuntimeEngine(store=store) as runtime:
+            result = await (await build(runtime).start("go")).wait(timeout_s=5)
+            assert result.status == "succeeded", result.error
+            expected = PayloadRef(observed[0].owner_id, payload)
+            print(
+                json.dumps(
+                    {
+                        "case": "wait_payload",
+                        "expected": expected.to_dict(),
+                        "actual": observed[0].to_dict(),
+                    },
+                    ensure_ascii=False,
+                )
+            )
+&gt;           assert observed[0].to_dict() == expected.to_dict()
+E           AssertionError: assert {'content_has..., 'value': 0}} == {'content_has...', 'value': 0}
+E             
+E             Omitting 2 identical items, use -vv to show
+E             Differing items:
+E             {'content_hash': 'd46144de29cea27cfcffd70e0b34208a39e2f9f44eda69baad58c4fb68fb18d9'} != {'content_hash': '5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9'}
+E             {'value': {'content_hash': '5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9', 'kind': 'inline', 'owner_id': 'ddbc2057-e115-4194-beed-85d1c3db6fdb', 'value': 0}} != {'value': 0}
+E             Use -v to get more diff
+
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round10.py:105: AssertionError</failure></testcase><testcase classname="qa.test_sdk_review_round10" name="test_wait_preserves_resume_payload_and_hash[memory-empty_text]" time="0.013"><failure message="AssertionError: assert {'content_has... 'value': ''}} == {'content_has..., 'value': ''}&#10;  &#10;  Omitting 2 identical items, use -vv to show&#10;  Differing items:&#10;  {'content_hash': '8dfcee56ca1782e7ca39ef68a65760584f5f6c85d91d09b05e63d9ad6139b465'} != {'content_hash': '12ae32cb1ec02d01eda3581b127c1fee3b0dc53572ed6baf239721a03d82e126'}&#10;  {'value': {'content_hash': '12ae32cb1ec02d01eda3581b127c1fee3b0dc53572ed6baf239721a03d82e126', 'kind': 'inline', 'owner_id': '31a69281-e302-4073-88ad-258e49038e1f', 'value': ''}} != {'value': ''}&#10;  Use -v to get more diff">store = &lt;agentloom.storage.memory.MemoryRuntimeStore object at 0x107a9b6b0&gt;
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x107a9a300&gt;
+payload = ''
+
+    @pytest.mark.parametrize(
+        "payload",
+        [{"operation_id": "saved", "generation": 1}, None, {}, [], False, 0, ""],
+        ids=["reference", "null", "empty_object", "empty_array", "false", "zero", "empty_text"],
+    )
+    async def test_wait_preserves_resume_payload_and_hash(store, monkeypatch, payload):
+        """runtime.md §3: both wait paths preserve the same durable resume reference."""
+        observed = []
+    
+        class Node:
+            async def activate(self, input, continuation, context):
+                if continuation.value["phase"] == "prepare_context":
+                    yield Wait(
+                        ContinuationRef(
+                            input.task_id,
+                            {**continuation.value, "phase": "prepare_model"},
+                            continuation.revision,
+                        ),
+                        WaitCondition("budget_available", context.scope.run_id),
+                        PayloadRef(input.task_id, payload),
+                    )
+                    return
+                observed.append(input.resume_input_ref)
+                yield Complete(
+                    PayloadRef(input.task_id, "done"),
+                    ContinuationRef(
+                        input.task_id,
+                        {**continuation.value, "phase": "completed"},
+                        continuation.revision,
+                    ),
+                )
+    
+        monkeypatch.setattr(AgentGraphEngine, "_node", lambda self, task_id: Node())
+        async with RuntimeEngine(store=store) as runtime:
+            result = await (await build(runtime).start("go")).wait(timeout_s=5)
+            assert result.status == "succeeded", result.error
+            expected = PayloadRef(observed[0].owner_id, payload)
+            print(
+                json.dumps(
+                    {
+                        "case": "wait_payload",
+                        "expected": expected.to_dict(),
+                        "actual": observed[0].to_dict(),
+                    },
+                    ensure_ascii=False,
+                )
+            )
+&gt;           assert observed[0].to_dict() == expected.to_dict()
+E           AssertionError: assert {'content_has... 'value': ''}} == {'content_has..., 'value': ''}
+E             
+E             Omitting 2 identical items, use -vv to show
+E             Differing items:
+E             {'content_hash': '8dfcee56ca1782e7ca39ef68a65760584f5f6c85d91d09b05e63d9ad6139b465'} != {'content_hash': '12ae32cb1ec02d01eda3581b127c1fee3b0dc53572ed6baf239721a03d82e126'}
+E             {'value': {'content_hash': '12ae32cb1ec02d01eda3581b127c1fee3b0dc53572ed6baf239721a03d82e126', 'kind': 'inline', 'owner_id': '31a69281-e302-4073-88ad-258e49038e1f', 'value': ''}} != {'value': ''}
+E             Use -v to get more diff
+
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round10.py:105: AssertionError</failure></testcase><testcase classname="qa.test_sdk_review_round10" name="test_wait_preserves_resume_payload_and_hash[file-reference]" time="0.077"><failure message="AssertionError: assert {'content_has...d': 'saved'}}} == {'content_has...id': 'saved'}}&#10;  &#10;  Omitting 2 identical items, use -vv to show&#10;  Differing items:&#10;  {'content_hash': '446e15d21105737535123885b3e19251c759db34cf3d3790d31977bde6797475'} != {'content_hash': '600bef59de4515a8e0c4d4592816e013eb64b7355ce486aa4edf06c1a5496a9c'}&#10;  {'value': {'content_hash': '600bef59de4515a8e0c4d4592816e013eb64b7355ce486aa4edf06c1a5496a9c', 'kind': 'inline', 'owner_id': '2c80c12d-d826-4b59-988e-7d8ed7d137ea', 'value': {'generation': 1, 'operation_id': 'saved'}}} != {'value': {'generation': 1, 'operation_id': 'saved'}}&#10;  Use -v to get more diff">store = &lt;agentloom.storage.filesystem.FileRuntimeStore object at 0x107a02b10&gt;
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x107a01940&gt;
+payload = {'generation': 1, 'operation_id': 'saved'}
+
+    @pytest.mark.parametrize(
+        "payload",
+        [{"operation_id": "saved", "generation": 1}, None, {}, [], False, 0, ""],
+        ids=["reference", "null", "empty_object", "empty_array", "false", "zero", "empty_text"],
+    )
+    async def test_wait_preserves_resume_payload_and_hash(store, monkeypatch, payload):
+        """runtime.md §3: both wait paths preserve the same durable resume reference."""
+        observed = []
+    
+        class Node:
+            async def activate(self, input, continuation, context):
+                if continuation.value["phase"] == "prepare_context":
+                    yield Wait(
+                        ContinuationRef(
+                            input.task_id,
+                            {**continuation.value, "phase": "prepare_model"},
+                            continuation.revision,
+                        ),
+                        WaitCondition("budget_available", context.scope.run_id),
+                        PayloadRef(input.task_id, payload),
+                    )
+                    return
+                observed.append(input.resume_input_ref)
+                yield Complete(
+                    PayloadRef(input.task_id, "done"),
+                    ContinuationRef(
+                        input.task_id,
+                        {**continuation.value, "phase": "completed"},
+                        continuation.revision,
+                    ),
+                )
+    
+        monkeypatch.setattr(AgentGraphEngine, "_node", lambda self, task_id: Node())
+        async with RuntimeEngine(store=store) as runtime:
+            result = await (await build(runtime).start("go")).wait(timeout_s=5)
+            assert result.status == "succeeded", result.error
+            expected = PayloadRef(observed[0].owner_id, payload)
+            print(
+                json.dumps(
+                    {
+                        "case": "wait_payload",
+                        "expected": expected.to_dict(),
+                        "actual": observed[0].to_dict(),
+                    },
+                    ensure_ascii=False,
+                )
+            )
+&gt;           assert observed[0].to_dict() == expected.to_dict()
+E           AssertionError: assert {'content_has...d': 'saved'}}} == {'content_has...id': 'saved'}}
+E             
+E             Omitting 2 identical items, use -vv to show
+E             Differing items:
+E             {'content_hash': '446e15d21105737535123885b3e19251c759db34cf3d3790d31977bde6797475'} != {'content_hash': '600bef59de4515a8e0c4d4592816e013eb64b7355ce486aa4edf06c1a5496a9c'}
+E             {'value': {'content_hash': '600bef59de4515a8e0c4d4592816e013eb64b7355ce486aa4edf06c1a5496a9c', 'kind': 'inline', 'owner_id': '2c80c12d-d826-4b59-988e-7d8ed7d137ea', 'value': {'generation': 1, 'operation_id': 'saved'}}} != {'value': {'generation': 1, 'operation_id': 'saved'}}
+E             Use -v to get more diff
+
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round10.py:105: AssertionError</failure></testcase><testcase classname="qa.test_sdk_review_round10" name="test_wait_preserves_resume_payload_and_hash[file-null]" time="0.076"><failure message="AssertionError: assert {'content_has...value': None}} == {'content_has...'value': None}&#10;  &#10;  Omitting 2 identical items, use -vv to show&#10;  Differing items:&#10;  {'content_hash': '4bc673a68711373bd948321a49591bd210730a56a0f9af9e7cf92a421798ccf4'} != {'content_hash': '74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b'}&#10;  {'value': {'content_hash': '74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b', 'kind': 'inline', 'owner_id': '00a48a76-dcb4-4f33-9052-9d13c43b5f21', 'value': None}} != {'value': None}&#10;  Use -v to get more diff">store = &lt;agentloom.storage.filesystem.FileRuntimeStore object at 0x107a9ac60&gt;
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x107a98b30&gt;
+payload = None
+
+    @pytest.mark.parametrize(
+        "payload",
+        [{"operation_id": "saved", "generation": 1}, None, {}, [], False, 0, ""],
+        ids=["reference", "null", "empty_object", "empty_array", "false", "zero", "empty_text"],
+    )
+    async def test_wait_preserves_resume_payload_and_hash(store, monkeypatch, payload):
+        """runtime.md §3: both wait paths preserve the same durable resume reference."""
+        observed = []
+    
+        class Node:
+            async def activate(self, input, continuation, context):
+                if continuation.value["phase"] == "prepare_context":
+                    yield Wait(
+                        ContinuationRef(
+                            input.task_id,
+                            {**continuation.value, "phase": "prepare_model"},
+                            continuation.revision,
+                        ),
+                        WaitCondition("budget_available", context.scope.run_id),
+                        PayloadRef(input.task_id, payload),
+                    )
+                    return
+                observed.append(input.resume_input_ref)
+                yield Complete(
+                    PayloadRef(input.task_id, "done"),
+                    ContinuationRef(
+                        input.task_id,
+                        {**continuation.value, "phase": "completed"},
+                        continuation.revision,
+                    ),
+                )
+    
+        monkeypatch.setattr(AgentGraphEngine, "_node", lambda self, task_id: Node())
+        async with RuntimeEngine(store=store) as runtime:
+            result = await (await build(runtime).start("go")).wait(timeout_s=5)
+            assert result.status == "succeeded", result.error
+            expected = PayloadRef(observed[0].owner_id, payload)
+            print(
+                json.dumps(
+                    {
+                        "case": "wait_payload",
+                        "expected": expected.to_dict(),
+                        "actual": observed[0].to_dict(),
+                    },
+                    ensure_ascii=False,
+                )
+            )
+&gt;           assert observed[0].to_dict() == expected.to_dict()
+E           AssertionError: assert {'content_has...value': None}} == {'content_has...'value': None}
+E             
+E             Omitting 2 identical items, use -vv to show
+E             Differing items:
+E             {'content_hash': '4bc673a68711373bd948321a49591bd210730a56a0f9af9e7cf92a421798ccf4'} != {'content_hash': '74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b'}
+E             {'value': {'content_hash': '74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b', 'kind': 'inline', 'owner_id': '00a48a76-dcb4-4f33-9052-9d13c43b5f21', 'value': None}} != {'value': None}
+E             Use -v to get more diff
+
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round10.py:105: AssertionError</failure></testcase><testcase classname="qa.test_sdk_review_round10" name="test_wait_preserves_resume_payload_and_hash[file-empty_object]" time="0.075"><failure message="AssertionError: assert {'content_has... 'value': {}}} == {'content_has..., 'value': {}}&#10;  &#10;  Omitting 2 identical items, use -vv to show&#10;  Differing items:&#10;  {'content_hash': '5408ff20b9724445ab5a1c7c59f45ac672e9fcc93de606a60cbbf3ceebc2835a'} != {'content_hash': '44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a'}&#10;  {'value': {'content_hash': '44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a', 'kind': 'inline', 'owner_id': 'e2a3af66-66df-4dd0-ba4d-2b768b3896e1', 'value': {}}} != {'value': {}}&#10;  Use -v to get more diff">store = &lt;agentloom.storage.filesystem.FileRuntimeStore object at 0x107a01dc0&gt;
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x107a00bf0&gt;
+payload = {}
+
+    @pytest.mark.parametrize(
+        "payload",
+        [{"operation_id": "saved", "generation": 1}, None, {}, [], False, 0, ""],
+        ids=["reference", "null", "empty_object", "empty_array", "false", "zero", "empty_text"],
+    )
+    async def test_wait_preserves_resume_payload_and_hash(store, monkeypatch, payload):
+        """runtime.md §3: both wait paths preserve the same durable resume reference."""
+        observed = []
+    
+        class Node:
+            async def activate(self, input, continuation, context):
+                if continuation.value["phase"] == "prepare_context":
+                    yield Wait(
+                        ContinuationRef(
+                            input.task_id,
+                            {**continuation.value, "phase": "prepare_model"},
+                            continuation.revision,
+                        ),
+                        WaitCondition("budget_available", context.scope.run_id),
+                        PayloadRef(input.task_id, payload),
+                    )
+                    return
+                observed.append(input.resume_input_ref)
+                yield Complete(
+                    PayloadRef(input.task_id, "done"),
+                    ContinuationRef(
+                        input.task_id,
+                        {**continuation.value, "phase": "completed"},
+                        continuation.revision,
+                    ),
+                )
+    
+        monkeypatch.setattr(AgentGraphEngine, "_node", lambda self, task_id: Node())
+        async with RuntimeEngine(store=store) as runtime:
+            result = await (await build(runtime).start("go")).wait(timeout_s=5)
+            assert result.status == "succeeded", result.error
+            expected = PayloadRef(observed[0].owner_id, payload)
+            print(
+                json.dumps(
+                    {
+                        "case": "wait_payload",
+                        "expected": expected.to_dict(),
+                        "actual": observed[0].to_dict(),
+                    },
+                    ensure_ascii=False,
+                )
+            )
+&gt;           assert observed[0].to_dict() == expected.to_dict()
+E           AssertionError: assert {'content_has... 'value': {}}} == {'content_has..., 'value': {}}
+E             
+E             Omitting 2 identical items, use -vv to show
+E             Differing items:
+E             {'content_hash': '5408ff20b9724445ab5a1c7c59f45ac672e9fcc93de606a60cbbf3ceebc2835a'} != {'content_hash': '44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a'}
+E             {'value': {'content_hash': '44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a', 'kind': 'inline', 'owner_id': 'e2a3af66-66df-4dd0-ba4d-2b768b3896e1', 'value': {}}} != {'value': {}}
+E             Use -v to get more diff
+
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round10.py:105: AssertionError</failure></testcase><testcase classname="qa.test_sdk_review_round10" name="test_wait_preserves_resume_payload_and_hash[file-empty_array]" time="0.077"><failure message="AssertionError: assert {'content_has... 'value': []}} == {'content_has..., 'value': []}&#10;  &#10;  Omitting 2 identical items, use -vv to show&#10;  Differing items:&#10;  {'content_hash': 'b7b295a0b61783fb2ab5c33dd17abcb761f6a586caaddb9797e87b09ad1c441c'} != {'content_hash': '4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945'}&#10;  {'value': {'content_hash': '4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945', 'kind': 'inline', 'owner_id': '69705513-09f5-4b94-a814-368e5091f386', 'value': []}} != {'value': []}&#10;  Use -v to get more diff">store = &lt;agentloom.storage.filesystem.FileRuntimeStore object at 0x107ae6d20&gt;
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x107ae6a50&gt;
+payload = []
+
+    @pytest.mark.parametrize(
+        "payload",
+        [{"operation_id": "saved", "generation": 1}, None, {}, [], False, 0, ""],
+        ids=["reference", "null", "empty_object", "empty_array", "false", "zero", "empty_text"],
+    )
+    async def test_wait_preserves_resume_payload_and_hash(store, monkeypatch, payload):
+        """runtime.md §3: both wait paths preserve the same durable resume reference."""
+        observed = []
+    
+        class Node:
+            async def activate(self, input, continuation, context):
+                if continuation.value["phase"] == "prepare_context":
+                    yield Wait(
+                        ContinuationRef(
+                            input.task_id,
+                            {**continuation.value, "phase": "prepare_model"},
+                            continuation.revision,
+                        ),
+                        WaitCondition("budget_available", context.scope.run_id),
+                        PayloadRef(input.task_id, payload),
+                    )
+                    return
+                observed.append(input.resume_input_ref)
+                yield Complete(
+                    PayloadRef(input.task_id, "done"),
+                    ContinuationRef(
+                        input.task_id,
+                        {**continuation.value, "phase": "completed"},
+                        continuation.revision,
+                    ),
+                )
+    
+        monkeypatch.setattr(AgentGraphEngine, "_node", lambda self, task_id: Node())
+        async with RuntimeEngine(store=store) as runtime:
+            result = await (await build(runtime).start("go")).wait(timeout_s=5)
+            assert result.status == "succeeded", result.error
+            expected = PayloadRef(observed[0].owner_id, payload)
+            print(
+                json.dumps(
+                    {
+                        "case": "wait_payload",
+                        "expected": expected.to_dict(),
+                        "actual": observed[0].to_dict(),
+                    },
+                    ensure_ascii=False,
+                )
+            )
+&gt;           assert observed[0].to_dict() == expected.to_dict()
+E           AssertionError: assert {'content_has... 'value': []}} == {'content_has..., 'value': []}
+E             
+E             Omitting 2 identical items, use -vv to show
+E             Differing items:
+E             {'content_hash': 'b7b295a0b61783fb2ab5c33dd17abcb761f6a586caaddb9797e87b09ad1c441c'} != {'content_hash': '4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945'}
+E             {'value': {'content_hash': '4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945', 'kind': 'inline', 'owner_id': '69705513-09f5-4b94-a814-368e5091f386', 'value': []}} != {'value': []}
+E             Use -v to get more diff
+
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round10.py:105: AssertionError</failure></testcase><testcase classname="qa.test_sdk_review_round10" name="test_wait_preserves_resume_payload_and_hash[file-false]" time="0.062"><failure message="AssertionError: assert {'content_has...alue': False}} == {'content_has...value': False}&#10;  &#10;  Omitting 2 identical items, use -vv to show&#10;  Differing items:&#10;  {'content_hash': '873b6b8ebacba16dbd9d3cc18bc3edcd010aaeee1be9298b55924de96fcc6231'} != {'content_hash': 'fcbcf165908dd18a9e49f7ff27810176db8e9f63b4352213741664245224f8aa'}&#10;  {'value': {'content_hash': 'fcbcf165908dd18a9e49f7ff27810176db8e9f63b4352213741664245224f8aa', 'kind': 'inline', 'owner_id': 'f72e7e0f-0e42-4fd4-9339-1651b6a23749', 'value': False}} != {'value': False}&#10;  Use -v to get more diff">store = &lt;agentloom.storage.filesystem.FileRuntimeStore object at 0x107a38dd0&gt;
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x107a3aba0&gt;
+payload = False
+
+    @pytest.mark.parametrize(
+        "payload",
+        [{"operation_id": "saved", "generation": 1}, None, {}, [], False, 0, ""],
+        ids=["reference", "null", "empty_object", "empty_array", "false", "zero", "empty_text"],
+    )
+    async def test_wait_preserves_resume_payload_and_hash(store, monkeypatch, payload):
+        """runtime.md §3: both wait paths preserve the same durable resume reference."""
+        observed = []
+    
+        class Node:
+            async def activate(self, input, continuation, context):
+                if continuation.value["phase"] == "prepare_context":
+                    yield Wait(
+                        ContinuationRef(
+                            input.task_id,
+                            {**continuation.value, "phase": "prepare_model"},
+                            continuation.revision,
+                        ),
+                        WaitCondition("budget_available", context.scope.run_id),
+                        PayloadRef(input.task_id, payload),
+                    )
+                    return
+                observed.append(input.resume_input_ref)
+                yield Complete(
+                    PayloadRef(input.task_id, "done"),
+                    ContinuationRef(
+                        input.task_id,
+                        {**continuation.value, "phase": "completed"},
+                        continuation.revision,
+                    ),
+                )
+    
+        monkeypatch.setattr(AgentGraphEngine, "_node", lambda self, task_id: Node())
+        async with RuntimeEngine(store=store) as runtime:
+            result = await (await build(runtime).start("go")).wait(timeout_s=5)
+            assert result.status == "succeeded", result.error
+            expected = PayloadRef(observed[0].owner_id, payload)
+            print(
+                json.dumps(
+                    {
+                        "case": "wait_payload",
+                        "expected": expected.to_dict(),
+                        "actual": observed[0].to_dict(),
+                    },
+                    ensure_ascii=False,
+                )
+            )
+&gt;           assert observed[0].to_dict() == expected.to_dict()
+E           AssertionError: assert {'content_has...alue': False}} == {'content_has...value': False}
+E             
+E             Omitting 2 identical items, use -vv to show
+E             Differing items:
+E             {'content_hash': '873b6b8ebacba16dbd9d3cc18bc3edcd010aaeee1be9298b55924de96fcc6231'} != {'content_hash': 'fcbcf165908dd18a9e49f7ff27810176db8e9f63b4352213741664245224f8aa'}
+E             {'value': {'content_hash': 'fcbcf165908dd18a9e49f7ff27810176db8e9f63b4352213741664245224f8aa', 'kind': 'inline', 'owner_id': 'f72e7e0f-0e42-4fd4-9339-1651b6a23749', 'value': False}} != {'value': False}
+E             Use -v to get more diff
+
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round10.py:105: AssertionError</failure></testcase><testcase classname="qa.test_sdk_review_round10" name="test_wait_preserves_resume_payload_and_hash[file-zero]" time="0.076"><failure message="AssertionError: assert {'content_has..., 'value': 0}} == {'content_has...', 'value': 0}&#10;  &#10;  Omitting 2 identical items, use -vv to show&#10;  Differing items:&#10;  {'content_hash': '1ddb239406157f9b99969af33756b8573dc180e444d1a4e19246573bca4402b7'} != {'content_hash': '5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9'}&#10;  {'value': {'content_hash': '5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9', 'kind': 'inline', 'owner_id': 'e08fa3a4-7f0f-46d6-a28d-e5e4779340f5', 'value': 0}} != {'value': 0}&#10;  Use -v to get more diff">store = &lt;agentloom.storage.filesystem.FileRuntimeStore object at 0x107ae61b0&gt;
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x107ae7e30&gt;
+payload = 0
+
+    @pytest.mark.parametrize(
+        "payload",
+        [{"operation_id": "saved", "generation": 1}, None, {}, [], False, 0, ""],
+        ids=["reference", "null", "empty_object", "empty_array", "false", "zero", "empty_text"],
+    )
+    async def test_wait_preserves_resume_payload_and_hash(store, monkeypatch, payload):
+        """runtime.md §3: both wait paths preserve the same durable resume reference."""
+        observed = []
+    
+        class Node:
+            async def activate(self, input, continuation, context):
+                if continuation.value["phase"] == "prepare_context":
+                    yield Wait(
+                        ContinuationRef(
+                            input.task_id,
+                            {**continuation.value, "phase": "prepare_model"},
+                            continuation.revision,
+                        ),
+                        WaitCondition("budget_available", context.scope.run_id),
+                        PayloadRef(input.task_id, payload),
+                    )
+                    return
+                observed.append(input.resume_input_ref)
+                yield Complete(
+                    PayloadRef(input.task_id, "done"),
+                    ContinuationRef(
+                        input.task_id,
+                        {**continuation.value, "phase": "completed"},
+                        continuation.revision,
+                    ),
+                )
+    
+        monkeypatch.setattr(AgentGraphEngine, "_node", lambda self, task_id: Node())
+        async with RuntimeEngine(store=store) as runtime:
+            result = await (await build(runtime).start("go")).wait(timeout_s=5)
+            assert result.status == "succeeded", result.error
+            expected = PayloadRef(observed[0].owner_id, payload)
+            print(
+                json.dumps(
+                    {
+                        "case": "wait_payload",
+                        "expected": expected.to_dict(),
+                        "actual": observed[0].to_dict(),
+                    },
+                    ensure_ascii=False,
+                )
+            )
+&gt;           assert observed[0].to_dict() == expected.to_dict()
+E           AssertionError: assert {'content_has..., 'value': 0}} == {'content_has...', 'value': 0}
+E             
+E             Omitting 2 identical items, use -vv to show
+E             Differing items:
+E             {'content_hash': '1ddb239406157f9b99969af33756b8573dc180e444d1a4e19246573bca4402b7'} != {'content_hash': '5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9'}
+E             {'value': {'content_hash': '5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9', 'kind': 'inline', 'owner_id': 'e08fa3a4-7f0f-46d6-a28d-e5e4779340f5', 'value': 0}} != {'value': 0}
+E             Use -v to get more diff
+
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round10.py:105: AssertionError</failure></testcase><testcase classname="qa.test_sdk_review_round10" name="test_wait_preserves_resume_payload_and_hash[file-empty_text]" time="0.075"><failure message="AssertionError: assert {'content_has... 'value': ''}} == {'content_has..., 'value': ''}&#10;  &#10;  Omitting 2 identical items, use -vv to show&#10;  Differing items:&#10;  {'content_hash': '3c7fbd52bcf0db9729d802de13fcecace8ce42906be5dd7fe1e39c29fb8d21fe'} != {'content_hash': '12ae32cb1ec02d01eda3581b127c1fee3b0dc53572ed6baf239721a03d82e126'}&#10;  {'value': {'content_hash': '12ae32cb1ec02d01eda3581b127c1fee3b0dc53572ed6baf239721a03d82e126', 'kind': 'inline', 'owner_id': '04e0a71a-f128-49fb-a989-b12de59defff', 'value': ''}} != {'value': ''}&#10;  Use -v to get more diff">store = &lt;agentloom.storage.filesystem.FileRuntimeStore object at 0x107a00830&gt;
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x107a02570&gt;
+payload = ''
+
+    @pytest.mark.parametrize(
+        "payload",
+        [{"operation_id": "saved", "generation": 1}, None, {}, [], False, 0, ""],
+        ids=["reference", "null", "empty_object", "empty_array", "false", "zero", "empty_text"],
+    )
+    async def test_wait_preserves_resume_payload_and_hash(store, monkeypatch, payload):
+        """runtime.md §3: both wait paths preserve the same durable resume reference."""
+        observed = []
+    
+        class Node:
+            async def activate(self, input, continuation, context):
+                if continuation.value["phase"] == "prepare_context":
+                    yield Wait(
+                        ContinuationRef(
+                            input.task_id,
+                            {**continuation.value, "phase": "prepare_model"},
+                            continuation.revision,
+                        ),
+                        WaitCondition("budget_available", context.scope.run_id),
+                        PayloadRef(input.task_id, payload),
+                    )
+                    return
+                observed.append(input.resume_input_ref)
+                yield Complete(
+                    PayloadRef(input.task_id, "done"),
+                    ContinuationRef(
+                        input.task_id,
+                        {**continuation.value, "phase": "completed"},
+                        continuation.revision,
+                    ),
+                )
+    
+        monkeypatch.setattr(AgentGraphEngine, "_node", lambda self, task_id: Node())
+        async with RuntimeEngine(store=store) as runtime:
+            result = await (await build(runtime).start("go")).wait(timeout_s=5)
+            assert result.status == "succeeded", result.error
+            expected = PayloadRef(observed[0].owner_id, payload)
+            print(
+                json.dumps(
+                    {
+                        "case": "wait_payload",
+                        "expected": expected.to_dict(),
+                        "actual": observed[0].to_dict(),
+                    },
+                    ensure_ascii=False,
+                )
+            )
+&gt;           assert observed[0].to_dict() == expected.to_dict()
+E           AssertionError: assert {'content_has... 'value': ''}} == {'content_has..., 'value': ''}
+E             
+E             Omitting 2 identical items, use -vv to show
+E             Differing items:
+E             {'content_hash': '3c7fbd52bcf0db9729d802de13fcecace8ce42906be5dd7fe1e39c29fb8d21fe'} != {'content_hash': '12ae32cb1ec02d01eda3581b127c1fee3b0dc53572ed6baf239721a03d82e126'}
+E             {'value': {'content_hash': '12ae32cb1ec02d01eda3581b127c1fee3b0dc53572ed6baf239721a03d82e126', 'kind': 'inline', 'owner_id': '04e0a71a-f128-49fb-a989-b12de59defff', 'value': ''}} != {'value': ''}
+E             Use -v to get more diff
+
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round10.py:105: AssertionError</failure></testcase><testcase classname="qa.test_sdk_review_round10" name="test_builtin_model_wait_delivers_its_saved_reference[memory]" time="0.030"><failure message="AssertionError: assert {'content_has...3991a04404'}}} == {'kind': 'inl...63991a04404'}}&#10;  &#10;  Omitting 2 identical items, use -vv to show&#10;  Differing items:&#10;  {'content_hash': 'd7f35f68d8acfbf4dd2f0dbee34a7743a71284a8c96dce15aadae74443f15bd0'} != {'content_hash': '838b72f65b43b631ee082bde92c86b8527291185f4e13e1fcd316916c48b7f50'}&#10;  {'value': {'content_hash': '838b72f65b43b631ee082bde92c86b8527291185f4e13e1fcd316916c48b7f50', 'kind': 'inline', 'owner_id': '3f204be6-a103-4199-a184-cf1939d33167', 'value': {'operation_id': '2bf9811a-bfde-5ee7-aad2-063991a04404'}}} != {'value': {'operation_id': '2bf9811a-bfde-5ee7-aad2-063991a04404'}}&#10;  Use -v to get more diff">store = &lt;agentloom.storage.memory.MemoryRuntimeStore object at 0x107a02510&gt;
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x107a037a0&gt;
+
+    async def test_builtin_model_wait_delivers_its_saved_reference(store, monkeypatch):
+        """Observe the real ReAct node's pending-operation wait, without replacing it."""
+        activate = AgentNode.activate
+        observations = []
+    
+        def observe(self, input, continuation, context):
+            if input.resume_input_ref is not None:
+                observations.append(
+                    (
+                        input.resume_input_ref.to_dict(),
+                        context.context_port.snapshot()["resume_input_ref"],
+                    )
+                )
+            return activate(self, input, continuation, context)
+    
+        monkeypatch.setattr(AgentNode, "activate", observe)
+        async with RuntimeEngine(store=store) as runtime:
+            result = await (await build(runtime).start("go")).wait(timeout_s=5)
+            assert result.status == "succeeded"
+            assert observations
+            for actual, saved in observations:
+                print(json.dumps({"case": "builtin_resume", "actual": actual, "saved": saved}))
+&gt;               assert actual == saved
+E               AssertionError: assert {'content_has...3991a04404'}}} == {'kind': 'inl...63991a04404'}}
+E                 
+E                 Omitting 2 identical items, use -vv to show
+E                 Differing items:
+E                 {'content_hash': 'd7f35f68d8acfbf4dd2f0dbee34a7743a71284a8c96dce15aadae74443f15bd0'} != {'content_hash': '838b72f65b43b631ee082bde92c86b8527291185f4e13e1fcd316916c48b7f50'}
+E                 {'value': {'content_hash': '838b72f65b43b631ee082bde92c86b8527291185f4e13e1fcd316916c48b7f50', 'kind': 'inline', 'owner_id': '3f204be6-a103-4199-a184-cf1939d33167', 'value': {'operation_id': '2bf9811a-bfde-5ee7-aad2-063991a04404'}}} != {'value': {'operation_id': '2bf9811a-bfde-5ee7-aad2-063991a04404'}}
+E                 Use -v to get more diff
+
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round10.py:130: AssertionError</failure></testcase><testcase classname="qa.test_sdk_review_round10" name="test_builtin_model_wait_delivers_its_saved_reference[file]" time="0.137"><failure message="AssertionError: assert {'content_has...1b405e5d1c'}}} == {'content_has...51b405e5d1c'}}&#10;  &#10;  Omitting 2 identical items, use -vv to show&#10;  Differing items:&#10;  {'content_hash': '81cc52f5308c97736d281d7268bef34e452515659403ab86ab2dfc631a254b3e'} != {'content_hash': '70810232bc508d602fa8a951d8a091c976a292b17762210986138e42cf58c02a'}&#10;  {'value': {'content_hash': '70810232bc508d602fa8a951d8a091c976a292b17762210986138e42cf58c02a', 'kind': 'inline', 'owner_id': 'a260831d-20a3-4c40-94b0-8ae9bf9d904b', 'value': {'operation_id': '9a42d5df-6a3e-57cf-b775-f51b405e5d1c'}}} != {'value': {'operation_id': '9a42d5df-6a3e-57cf-b775-f51b405e5d1c'}}&#10;  Use -v to get more diff">store = &lt;agentloom.storage.filesystem.FileRuntimeStore object at 0x107af70b0&gt;
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x107af6090&gt;
+
+    async def test_builtin_model_wait_delivers_its_saved_reference(store, monkeypatch):
+        """Observe the real ReAct node's pending-operation wait, without replacing it."""
+        activate = AgentNode.activate
+        observations = []
+    
+        def observe(self, input, continuation, context):
+            if input.resume_input_ref is not None:
+                observations.append(
+                    (
+                        input.resume_input_ref.to_dict(),
+                        context.context_port.snapshot()["resume_input_ref"],
+                    )
+                )
+            return activate(self, input, continuation, context)
+    
+        monkeypatch.setattr(AgentNode, "activate", observe)
+        async with RuntimeEngine(store=store) as runtime:
+            result = await (await build(runtime).start("go")).wait(timeout_s=5)
+            assert result.status == "succeeded"
+            assert observations
+            for actual, saved in observations:
+                print(json.dumps({"case": "builtin_resume", "actual": actual, "saved": saved}))
+&gt;               assert actual == saved
+E               AssertionError: assert {'content_has...1b405e5d1c'}}} == {'content_has...51b405e5d1c'}}
+E                 
+E                 Omitting 2 identical items, use -vv to show
+E                 Differing items:
+E                 {'content_hash': '81cc52f5308c97736d281d7268bef34e452515659403ab86ab2dfc631a254b3e'} != {'content_hash': '70810232bc508d602fa8a951d8a091c976a292b17762210986138e42cf58c02a'}
+E                 {'value': {'content_hash': '70810232bc508d602fa8a951d8a091c976a292b17762210986138e42cf58c02a', 'kind': 'inline', 'owner_id': 'a260831d-20a3-4c40-94b0-8ae9bf9d904b', 'value': {'operation_id': '9a42d5df-6a3e-57cf-b775-f51b405e5d1c'}}} != {'value': {'operation_id': '9a42d5df-6a3e-57cf-b775-f51b405e5d1c'}}
+E                 Use -v to get more diff
+
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round10.py:130: AssertionError</failure></testcase><testcase classname="qa.test_sdk_review_round10" name="test_invalid_progress_is_rejected_before_commit[memory-completed_progress]" time="0.013"><failure message="AssertionError: assert ('succeeded' == 'failed'&#10;  &#10;  - failed&#10;  + succeeded)">store = &lt;agentloom.storage.memory.MemoryRuntimeStore object at 0x107a9b740&gt;
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x107a9b620&gt;
+field = 'phase', value = 'completed'
+
+    @pytest.mark.parametrize(
+        "field,value",
+        [
+            ("phase", "completed"),
+            ("phase", "unknown_phase"),
+            ("protocol_version", 2),
+            ("role_key", "foreign_executor"),
+            ("role_loop_index", -1),
+        ],
+        ids=[
+            "completed_progress",
+            "unknown_phase",
+            "unsupported_version",
+            "foreign_role",
+            "negative_loop",
+        ],
+    )
+    async def test_invalid_progress_is_rejected_before_commit(store, monkeypatch, field, value):
+        """runtime.md §3 requires phase/binding/version validation at the commit gate."""
+        receipts = []
+    
+        class Node:
+            async def activate(self, input, continuation, context):
+                invalid = {**continuation.value, field: value}
+                receipts.append(
+                    (yield Progress(ContinuationRef(input.task_id, invalid, continuation.revision)))
+                )
+                current = context.context_port.snapshot()
+                yield Complete(
+                    PayloadRef(input.task_id, "accepted-invalid-progress"),
+                    ContinuationRef(
+                        input.task_id,
+                        {**continuation.value, "phase": "completed"},
+                        current["node_revision"],
+                    ),
+                )
+    
+        monkeypatch.setattr(AgentGraphEngine, "_node", lambda self, task_id: Node())
+        async with RuntimeEngine(store=store) as runtime:
+            result = await (await build(runtime).start("go")).wait(timeout_s=5)
+            print(
+                json.dumps(
+                    {
+                        "case": "invalid_progress",
+                        "field": field,
+                        "value": value,
+                        "received_commit_receipts": len(receipts),
+                        "status": result.status,
+                        "error": result.error,
+                    },
+                    ensure_ascii=False,
+                )
+            )
+&gt;           assert result.status == "failed" and result.error["code"] == "NODE_OUTCOME_INVALID"
+E           AssertionError: assert ('succeeded' == 'failed'
+E             
+E             - failed
+E             + succeeded)
+
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round10.py:186: AssertionError</failure></testcase><testcase classname="qa.test_sdk_review_round10" name="test_invalid_progress_is_rejected_before_commit[memory-unknown_phase]" time="0.013"><failure message="AssertionError: assert ('succeeded' == 'failed'&#10;  &#10;  - failed&#10;  + succeeded)">store = &lt;agentloom.storage.memory.MemoryRuntimeStore object at 0x107a99d60&gt;
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x107a9bf50&gt;
+field = 'phase', value = 'unknown_phase'
+
+    @pytest.mark.parametrize(
+        "field,value",
+        [
+            ("phase", "completed"),
+            ("phase", "unknown_phase"),
+            ("protocol_version", 2),
+            ("role_key", "foreign_executor"),
+            ("role_loop_index", -1),
+        ],
+        ids=[
+            "completed_progress",
+            "unknown_phase",
+            "unsupported_version",
+            "foreign_role",
+            "negative_loop",
+        ],
+    )
+    async def test_invalid_progress_is_rejected_before_commit(store, monkeypatch, field, value):
+        """runtime.md §3 requires phase/binding/version validation at the commit gate."""
+        receipts = []
+    
+        class Node:
+            async def activate(self, input, continuation, context):
+                invalid = {**continuation.value, field: value}
+                receipts.append(
+                    (yield Progress(ContinuationRef(input.task_id, invalid, continuation.revision)))
+                )
+                current = context.context_port.snapshot()
+                yield Complete(
+                    PayloadRef(input.task_id, "accepted-invalid-progress"),
+                    ContinuationRef(
+                        input.task_id,
+                        {**continuation.value, "phase": "completed"},
+                        current["node_revision"],
+                    ),
+                )
+    
+        monkeypatch.setattr(AgentGraphEngine, "_node", lambda self, task_id: Node())
+        async with RuntimeEngine(store=store) as runtime:
+            result = await (await build(runtime).start("go")).wait(timeout_s=5)
+            print(
+                json.dumps(
+                    {
+                        "case": "invalid_progress",
+                        "field": field,
+                        "value": value,
+                        "received_commit_receipts": len(receipts),
+                        "status": result.status,
+                        "error": result.error,
+                    },
+                    ensure_ascii=False,
+                )
+            )
+&gt;           assert result.status == "failed" and result.error["code"] == "NODE_OUTCOME_INVALID"
+E           AssertionError: assert ('succeeded' == 'failed'
+E             
+E             - failed
+E             + succeeded)
+
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round10.py:186: AssertionError</failure></testcase><testcase classname="qa.test_sdk_review_round10" name="test_invalid_progress_is_rejected_before_commit[memory-unsupported_version]" time="0.013"><failure message="AssertionError: assert ('succeeded' == 'failed'&#10;  &#10;  - failed&#10;  + succeeded)">store = &lt;agentloom.storage.memory.MemoryRuntimeStore object at 0x107a014f0&gt;
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x107a01b50&gt;
+field = 'protocol_version', value = 2
+
+    @pytest.mark.parametrize(
+        "field,value",
+        [
+            ("phase", "completed"),
+            ("phase", "unknown_phase"),
+            ("protocol_version", 2),
+            ("role_key", "foreign_executor"),
+            ("role_loop_index", -1),
+        ],
+        ids=[
+            "completed_progress",
+            "unknown_phase",
+            "unsupported_version",
+            "foreign_role",
+            "negative_loop",
+        ],
+    )
+    async def test_invalid_progress_is_rejected_before_commit(store, monkeypatch, field, value):
+        """runtime.md §3 requires phase/binding/version validation at the commit gate."""
+        receipts = []
+    
+        class Node:
+            async def activate(self, input, continuation, context):
+                invalid = {**continuation.value, field: value}
+                receipts.append(
+                    (yield Progress(ContinuationRef(input.task_id, invalid, continuation.revision)))
+                )
+                current = context.context_port.snapshot()
+                yield Complete(
+                    PayloadRef(input.task_id, "accepted-invalid-progress"),
+                    ContinuationRef(
+                        input.task_id,
+                        {**continuation.value, "phase": "completed"},
+                        current["node_revision"],
+                    ),
+                )
+    
+        monkeypatch.setattr(AgentGraphEngine, "_node", lambda self, task_id: Node())
+        async with RuntimeEngine(store=store) as runtime:
+            result = await (await build(runtime).start("go")).wait(timeout_s=5)
+            print(
+                json.dumps(
+                    {
+                        "case": "invalid_progress",
+                        "field": field,
+                        "value": value,
+                        "received_commit_receipts": len(receipts),
+                        "status": result.status,
+                        "error": result.error,
+                    },
+                    ensure_ascii=False,
+                )
+            )
+&gt;           assert result.status == "failed" and result.error["code"] == "NODE_OUTCOME_INVALID"
+E           AssertionError: assert ('succeeded' == 'failed'
+E             
+E             - failed
+E             + succeeded)
+
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round10.py:186: AssertionError</failure></testcase><testcase classname="qa.test_sdk_review_round10" name="test_invalid_progress_is_rejected_before_commit[memory-foreign_role]" time="0.014"><failure message="AssertionError: assert ('succeeded' == 'failed'&#10;  &#10;  - failed&#10;  + succeeded)">store = &lt;agentloom.storage.memory.MemoryRuntimeStore object at 0x1079db0e0&gt;
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x1079dad20&gt;
+field = 'role_key', value = 'foreign_executor'
+
+    @pytest.mark.parametrize(
+        "field,value",
+        [
+            ("phase", "completed"),
+            ("phase", "unknown_phase"),
+            ("protocol_version", 2),
+            ("role_key", "foreign_executor"),
+            ("role_loop_index", -1),
+        ],
+        ids=[
+            "completed_progress",
+            "unknown_phase",
+            "unsupported_version",
+            "foreign_role",
+            "negative_loop",
+        ],
+    )
+    async def test_invalid_progress_is_rejected_before_commit(store, monkeypatch, field, value):
+        """runtime.md §3 requires phase/binding/version validation at the commit gate."""
+        receipts = []
+    
+        class Node:
+            async def activate(self, input, continuation, context):
+                invalid = {**continuation.value, field: value}
+                receipts.append(
+                    (yield Progress(ContinuationRef(input.task_id, invalid, continuation.revision)))
+                )
+                current = context.context_port.snapshot()
+                yield Complete(
+                    PayloadRef(input.task_id, "accepted-invalid-progress"),
+                    ContinuationRef(
+                        input.task_id,
+                        {**continuation.value, "phase": "completed"},
+                        current["node_revision"],
+                    ),
+                )
+    
+        monkeypatch.setattr(AgentGraphEngine, "_node", lambda self, task_id: Node())
+        async with RuntimeEngine(store=store) as runtime:
+            result = await (await build(runtime).start("go")).wait(timeout_s=5)
+            print(
+                json.dumps(
+                    {
+                        "case": "invalid_progress",
+                        "field": field,
+                        "value": value,
+                        "received_commit_receipts": len(receipts),
+                        "status": result.status,
+                        "error": result.error,
+                    },
+                    ensure_ascii=False,
+                )
+            )
+&gt;           assert result.status == "failed" and result.error["code"] == "NODE_OUTCOME_INVALID"
+E           AssertionError: assert ('succeeded' == 'failed'
+E             
+E             - failed
+E             + succeeded)
+
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round10.py:186: AssertionError</failure></testcase><testcase classname="qa.test_sdk_review_round10" name="test_invalid_progress_is_rejected_before_commit[memory-negative_loop]" time="0.013"><failure message="AssertionError: assert ('succeeded' == 'failed'&#10;  &#10;  - failed&#10;  + succeeded)">store = &lt;agentloom.storage.memory.MemoryRuntimeStore object at 0x107af6f90&gt;
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x107af5370&gt;
+field = 'role_loop_index', value = -1
+
+    @pytest.mark.parametrize(
+        "field,value",
+        [
+            ("phase", "completed"),
+            ("phase", "unknown_phase"),
+            ("protocol_version", 2),
+            ("role_key", "foreign_executor"),
+            ("role_loop_index", -1),
+        ],
+        ids=[
+            "completed_progress",
+            "unknown_phase",
+            "unsupported_version",
+            "foreign_role",
+            "negative_loop",
+        ],
+    )
+    async def test_invalid_progress_is_rejected_before_commit(store, monkeypatch, field, value):
+        """runtime.md §3 requires phase/binding/version validation at the commit gate."""
+        receipts = []
+    
+        class Node:
+            async def activate(self, input, continuation, context):
+                invalid = {**continuation.value, field: value}
+                receipts.append(
+                    (yield Progress(ContinuationRef(input.task_id, invalid, continuation.revision)))
+                )
+                current = context.context_port.snapshot()
+                yield Complete(
+                    PayloadRef(input.task_id, "accepted-invalid-progress"),
+                    ContinuationRef(
+                        input.task_id,
+                        {**continuation.value, "phase": "completed"},
+                        current["node_revision"],
+                    ),
+                )
+    
+        monkeypatch.setattr(AgentGraphEngine, "_node", lambda self, task_id: Node())
+        async with RuntimeEngine(store=store) as runtime:
+            result = await (await build(runtime).start("go")).wait(timeout_s=5)
+            print(
+                json.dumps(
+                    {
+                        "case": "invalid_progress",
+                        "field": field,
+                        "value": value,
+                        "received_commit_receipts": len(receipts),
+                        "status": result.status,
+                        "error": result.error,
+                    },
+                    ensure_ascii=False,
+                )
+            )
+&gt;           assert result.status == "failed" and result.error["code"] == "NODE_OUTCOME_INVALID"
+E           AssertionError: assert ('succeeded' == 'failed'
+E             
+E             - failed
+E             + succeeded)
+
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round10.py:186: AssertionError</failure></testcase><testcase classname="qa.test_sdk_review_round10" name="test_invalid_progress_is_rejected_before_commit[file-completed_progress]" time="0.071"><failure message="AssertionError: assert ('succeeded' == 'failed'&#10;  &#10;  - failed&#10;  + succeeded)">store = &lt;agentloom.storage.filesystem.FileRuntimeStore object at 0x107a39670&gt;
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x107a38b30&gt;
+field = 'phase', value = 'completed'
+
+    @pytest.mark.parametrize(
+        "field,value",
+        [
+            ("phase", "completed"),
+            ("phase", "unknown_phase"),
+            ("protocol_version", 2),
+            ("role_key", "foreign_executor"),
+            ("role_loop_index", -1),
+        ],
+        ids=[
+            "completed_progress",
+            "unknown_phase",
+            "unsupported_version",
+            "foreign_role",
+            "negative_loop",
+        ],
+    )
+    async def test_invalid_progress_is_rejected_before_commit(store, monkeypatch, field, value):
+        """runtime.md §3 requires phase/binding/version validation at the commit gate."""
+        receipts = []
+    
+        class Node:
+            async def activate(self, input, continuation, context):
+                invalid = {**continuation.value, field: value}
+                receipts.append(
+                    (yield Progress(ContinuationRef(input.task_id, invalid, continuation.revision)))
+                )
+                current = context.context_port.snapshot()
+                yield Complete(
+                    PayloadRef(input.task_id, "accepted-invalid-progress"),
+                    ContinuationRef(
+                        input.task_id,
+                        {**continuation.value, "phase": "completed"},
+                        current["node_revision"],
+                    ),
+                )
+    
+        monkeypatch.setattr(AgentGraphEngine, "_node", lambda self, task_id: Node())
+        async with RuntimeEngine(store=store) as runtime:
+            result = await (await build(runtime).start("go")).wait(timeout_s=5)
+            print(
+                json.dumps(
+                    {
+                        "case": "invalid_progress",
+                        "field": field,
+                        "value": value,
+                        "received_commit_receipts": len(receipts),
+                        "status": result.status,
+                        "error": result.error,
+                    },
+                    ensure_ascii=False,
+                )
+            )
+&gt;           assert result.status == "failed" and result.error["code"] == "NODE_OUTCOME_INVALID"
+E           AssertionError: assert ('succeeded' == 'failed'
+E             
+E             - failed
+E             + succeeded)
+
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round10.py:186: AssertionError</failure></testcase><testcase classname="qa.test_sdk_review_round10" name="test_invalid_progress_is_rejected_before_commit[file-unknown_phase]" time="0.066"><failure message="AssertionError: assert ('succeeded' == 'failed'&#10;  &#10;  - failed&#10;  + succeeded)">store = &lt;agentloom.storage.filesystem.FileRuntimeStore object at 0x107ba16a0&gt;
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x107ba20c0&gt;
+field = 'phase', value = 'unknown_phase'
+
+    @pytest.mark.parametrize(
+        "field,value",
+        [
+            ("phase", "completed"),
+            ("phase", "unknown_phase"),
+            ("protocol_version", 2),
+            ("role_key", "foreign_executor"),
+            ("role_loop_index", -1),
+        ],
+        ids=[
+            "completed_progress",
+            "unknown_phase",
+            "unsupported_version",
+            "foreign_role",
+            "negative_loop",
+        ],
+    )
+    async def test_invalid_progress_is_rejected_before_commit(store, monkeypatch, field, value):
+        """runtime.md §3 requires phase/binding/version validation at the commit gate."""
+        receipts = []
+    
+        class Node:
+            async def activate(self, input, continuation, context):
+                invalid = {**continuation.value, field: value}
+                receipts.append(
+                    (yield Progress(ContinuationRef(input.task_id, invalid, continuation.revision)))
+                )
+                current = context.context_port.snapshot()
+                yield Complete(
+                    PayloadRef(input.task_id, "accepted-invalid-progress"),
+                    ContinuationRef(
+                        input.task_id,
+                        {**continuation.value, "phase": "completed"},
+                        current["node_revision"],
+                    ),
+                )
+    
+        monkeypatch.setattr(AgentGraphEngine, "_node", lambda self, task_id: Node())
+        async with RuntimeEngine(store=store) as runtime:
+            result = await (await build(runtime).start("go")).wait(timeout_s=5)
+            print(
+                json.dumps(
+                    {
+                        "case": "invalid_progress",
+                        "field": field,
+                        "value": value,
+                        "received_commit_receipts": len(receipts),
+                        "status": result.status,
+                        "error": result.error,
+                    },
+                    ensure_ascii=False,
+                )
+            )
+&gt;           assert result.status == "failed" and result.error["code"] == "NODE_OUTCOME_INVALID"
+E           AssertionError: assert ('succeeded' == 'failed'
+E             
+E             - failed
+E             + succeeded)
+
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round10.py:186: AssertionError</failure></testcase><testcase classname="qa.test_sdk_review_round10" name="test_invalid_progress_is_rejected_before_commit[file-unsupported_version]" time="0.069"><failure message="AssertionError: assert ('succeeded' == 'failed'&#10;  &#10;  - failed&#10;  + succeeded)">store = &lt;agentloom.storage.filesystem.FileRuntimeStore object at 0x107ba3bc0&gt;
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x107ba02f0&gt;
+field = 'protocol_version', value = 2
+
+    @pytest.mark.parametrize(
+        "field,value",
+        [
+            ("phase", "completed"),
+            ("phase", "unknown_phase"),
+            ("protocol_version", 2),
+            ("role_key", "foreign_executor"),
+            ("role_loop_index", -1),
+        ],
+        ids=[
+            "completed_progress",
+            "unknown_phase",
+            "unsupported_version",
+            "foreign_role",
+            "negative_loop",
+        ],
+    )
+    async def test_invalid_progress_is_rejected_before_commit(store, monkeypatch, field, value):
+        """runtime.md §3 requires phase/binding/version validation at the commit gate."""
+        receipts = []
+    
+        class Node:
+            async def activate(self, input, continuation, context):
+                invalid = {**continuation.value, field: value}
+                receipts.append(
+                    (yield Progress(ContinuationRef(input.task_id, invalid, continuation.revision)))
+                )
+                current = context.context_port.snapshot()
+                yield Complete(
+                    PayloadRef(input.task_id, "accepted-invalid-progress"),
+                    ContinuationRef(
+                        input.task_id,
+                        {**continuation.value, "phase": "completed"},
+                        current["node_revision"],
+                    ),
+                )
+    
+        monkeypatch.setattr(AgentGraphEngine, "_node", lambda self, task_id: Node())
+        async with RuntimeEngine(store=store) as runtime:
+            result = await (await build(runtime).start("go")).wait(timeout_s=5)
+            print(
+                json.dumps(
+                    {
+                        "case": "invalid_progress",
+                        "field": field,
+                        "value": value,
+                        "received_commit_receipts": len(receipts),
+                        "status": result.status,
+                        "error": result.error,
+                    },
+                    ensure_ascii=False,
+                )
+            )
+&gt;           assert result.status == "failed" and result.error["code"] == "NODE_OUTCOME_INVALID"
+E           AssertionError: assert ('succeeded' == 'failed'
+E             
+E             - failed
+E             + succeeded)
+
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round10.py:186: AssertionError</failure></testcase><testcase classname="qa.test_sdk_review_round10" name="test_invalid_progress_is_rejected_before_commit[file-foreign_role]" time="0.069"><failure message="AssertionError: assert ('succeeded' == 'failed'&#10;  &#10;  - failed&#10;  + succeeded)">store = &lt;agentloom.storage.filesystem.FileRuntimeStore object at 0x107ae74d0&gt;
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x107ae6210&gt;
+field = 'role_key', value = 'foreign_executor'
+
+    @pytest.mark.parametrize(
+        "field,value",
+        [
+            ("phase", "completed"),
+            ("phase", "unknown_phase"),
+            ("protocol_version", 2),
+            ("role_key", "foreign_executor"),
+            ("role_loop_index", -1),
+        ],
+        ids=[
+            "completed_progress",
+            "unknown_phase",
+            "unsupported_version",
+            "foreign_role",
+            "negative_loop",
+        ],
+    )
+    async def test_invalid_progress_is_rejected_before_commit(store, monkeypatch, field, value):
+        """runtime.md §3 requires phase/binding/version validation at the commit gate."""
+        receipts = []
+    
+        class Node:
+            async def activate(self, input, continuation, context):
+                invalid = {**continuation.value, field: value}
+                receipts.append(
+                    (yield Progress(ContinuationRef(input.task_id, invalid, continuation.revision)))
+                )
+                current = context.context_port.snapshot()
+                yield Complete(
+                    PayloadRef(input.task_id, "accepted-invalid-progress"),
+                    ContinuationRef(
+                        input.task_id,
+                        {**continuation.value, "phase": "completed"},
+                        current["node_revision"],
+                    ),
+                )
+    
+        monkeypatch.setattr(AgentGraphEngine, "_node", lambda self, task_id: Node())
+        async with RuntimeEngine(store=store) as runtime:
+            result = await (await build(runtime).start("go")).wait(timeout_s=5)
+            print(
+                json.dumps(
+                    {
+                        "case": "invalid_progress",
+                        "field": field,
+                        "value": value,
+                        "received_commit_receipts": len(receipts),
+                        "status": result.status,
+                        "error": result.error,
+                    },
+                    ensure_ascii=False,
+                )
+            )
+&gt;           assert result.status == "failed" and result.error["code"] == "NODE_OUTCOME_INVALID"
+E           AssertionError: assert ('succeeded' == 'failed'
+E             
+E             - failed
+E             + succeeded)
+
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round10.py:186: AssertionError</failure></testcase><testcase classname="qa.test_sdk_review_round10" name="test_invalid_progress_is_rejected_before_commit[file-negative_loop]" time="0.071"><failure message="AssertionError: assert ('succeeded' == 'failed'&#10;  &#10;  - failed&#10;  + succeeded)">store = &lt;agentloom.storage.filesystem.FileRuntimeStore object at 0x107a98f50&gt;
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x107a99280&gt;
+field = 'role_loop_index', value = -1
+
+    @pytest.mark.parametrize(
+        "field,value",
+        [
+            ("phase", "completed"),
+            ("phase", "unknown_phase"),
+            ("protocol_version", 2),
+            ("role_key", "foreign_executor"),
+            ("role_loop_index", -1),
+        ],
+        ids=[
+            "completed_progress",
+            "unknown_phase",
+            "unsupported_version",
+            "foreign_role",
+            "negative_loop",
+        ],
+    )
+    async def test_invalid_progress_is_rejected_before_commit(store, monkeypatch, field, value):
+        """runtime.md §3 requires phase/binding/version validation at the commit gate."""
+        receipts = []
+    
+        class Node:
+            async def activate(self, input, continuation, context):
+                invalid = {**continuation.value, field: value}
+                receipts.append(
+                    (yield Progress(ContinuationRef(input.task_id, invalid, continuation.revision)))
+                )
+                current = context.context_port.snapshot()
+                yield Complete(
+                    PayloadRef(input.task_id, "accepted-invalid-progress"),
+                    ContinuationRef(
+                        input.task_id,
+                        {**continuation.value, "phase": "completed"},
+                        current["node_revision"],
+                    ),
+                )
+    
+        monkeypatch.setattr(AgentGraphEngine, "_node", lambda self, task_id: Node())
+        async with RuntimeEngine(store=store) as runtime:
+            result = await (await build(runtime).start("go")).wait(timeout_s=5)
+            print(
+                json.dumps(
+                    {
+                        "case": "invalid_progress",
+                        "field": field,
+                        "value": value,
+                        "received_commit_receipts": len(receipts),
+                        "status": result.status,
+                        "error": result.error,
+                    },
+                    ensure_ascii=False,
+                )
+            )
+&gt;           assert result.status == "failed" and result.error["code"] == "NODE_OUTCOME_INVALID"
+E           AssertionError: assert ('succeeded' == 'failed'
+E             
+E             - failed
+E             + succeeded)
+
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round10.py:186: AssertionError</failure></testcase><testcase classname="qa.test_sdk_review_round10" name="test_rejected_progress_does_not_leave_unrecoverable_checkpoint[memory]" time="0.027"><failure message="agentloom.errors.InfrastructureError: PERSISTENCE_INVARIANT_BROKEN: Committed execution facts disagree: node.terminal">store = &lt;agentloom.storage.memory.MemoryRuntimeStore object at 0x107a3aab0&gt;
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x107a3a690&gt;
+
+    async def test_rejected_progress_does_not_leave_unrecoverable_checkpoint(store, monkeypatch):
+        """A malformed phase must become a task error before it can poison takeover."""
+        cuts = []
+    
+        class Node:
+            async def activate(self, input, continuation, context):
+                yield Progress(
+                    ContinuationRef(
+                        input.task_id,
+                        {**continuation.value, "phase": "completed"},
+                        continuation.revision,
+                    )
+                )
+                yield Complete(
+                    PayloadRef(input.task_id, "unexpected"),
+                    ContinuationRef(
+                        input.task_id,
+                        continuation.value,
+                        context.context_port.snapshot()["node_revision"],
+                    ),
+                )
+    
+        def checkpoint(command, state):
+            if command.startswith("progress:"):
+                cuts.append(command)
+                raise RuntimeError("simulated exit after an invalid progress commit")
+    
+        monkeypatch.setattr(AgentGraphEngine, "_node", lambda self, task_id: Node())
+        async with RuntimeEngine(store=store, checkpoint_callback=checkpoint) as runtime:
+            handle = await build(runtime).start("go", run_id="invalid-progress-recovery")
+            try:
+                result = await handle.wait(timeout_s=5)
+            except InfrastructureError:
+                assert cuts
+                state = runtime._load(handle.run_id)
+                root = state["tasks"][state["root_task_id"]]
+                print(
+                    json.dumps(
+                        {
+                            "case": "invalid_progress_checkpoint",
+                            "status": root["status"],
+                            "phase": root["continuation"]["phase"],
+                        }
+                    )
+                )
+            else:
+                assert result.status == "failed" and result.error["code"] == "NODE_OUTCOME_INVALID"
+                return
+        async with RuntimeEngine(store=store) as recovered:
+&gt;           result = await (await build(recovered).start(run_id="invalid-progress-recovery")).wait(
+                timeout_s=5
+            )
+
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round10.py:239: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/public/handles.py:57: in wait
+    return await observe()
+           ^^^^^^^^^^^^^^^
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/public/handles.py:52: in observe
+    self._runtime.raise_local_failure(self.run_id)
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/runtime/host.py:158: in raise_local_failure
+    raise failure
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/runtime/host.py:327: in _drive
+    validate_recovery(self._load(run_id))
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/runtime/recovery.py:32: in validate_recovery
+    _validate_graph(state)
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/runtime/recovery.py:257: in _validate_graph
+    _require(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+condition = False, field = 'node.terminal'
+
+    def _require(condition, field):
+        if not condition:
+&gt;           raise InfrastructureError(
+                "PERSISTENCE_INVARIANT_BROKEN",
+                "Committed execution facts disagree: " + field,
+                category="infrastructure",
+                phase="recover",
+                field_path=field,
+            )
+E           agentloom.errors.InfrastructureError: PERSISTENCE_INVARIANT_BROKEN: Committed execution facts disagree: node.terminal
+
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/runtime/recovery.py:14: InfrastructureError</failure></testcase><testcase classname="qa.test_sdk_review_round10" name="test_rejected_progress_does_not_leave_unrecoverable_checkpoint[file]" time="0.071"><failure message="agentloom.errors.InfrastructureError: PERSISTENCE_INVARIANT_BROKEN: Committed execution facts disagree: node.terminal">store = &lt;agentloom.storage.filesystem.FileRuntimeStore object at 0x107a3a960&gt;
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x107a3b020&gt;
+
+    async def test_rejected_progress_does_not_leave_unrecoverable_checkpoint(store, monkeypatch):
+        """A malformed phase must become a task error before it can poison takeover."""
+        cuts = []
+    
+        class Node:
+            async def activate(self, input, continuation, context):
+                yield Progress(
+                    ContinuationRef(
+                        input.task_id,
+                        {**continuation.value, "phase": "completed"},
+                        continuation.revision,
+                    )
+                )
+                yield Complete(
+                    PayloadRef(input.task_id, "unexpected"),
+                    ContinuationRef(
+                        input.task_id,
+                        continuation.value,
+                        context.context_port.snapshot()["node_revision"],
+                    ),
+                )
+    
+        def checkpoint(command, state):
+            if command.startswith("progress:"):
+                cuts.append(command)
+                raise RuntimeError("simulated exit after an invalid progress commit")
+    
+        monkeypatch.setattr(AgentGraphEngine, "_node", lambda self, task_id: Node())
+        async with RuntimeEngine(store=store, checkpoint_callback=checkpoint) as runtime:
+            handle = await build(runtime).start("go", run_id="invalid-progress-recovery")
+            try:
+                result = await handle.wait(timeout_s=5)
+            except InfrastructureError:
+                assert cuts
+                state = runtime._load(handle.run_id)
+                root = state["tasks"][state["root_task_id"]]
+                print(
+                    json.dumps(
+                        {
+                            "case": "invalid_progress_checkpoint",
+                            "status": root["status"],
+                            "phase": root["continuation"]["phase"],
+                        }
+                    )
+                )
+            else:
+                assert result.status == "failed" and result.error["code"] == "NODE_OUTCOME_INVALID"
+                return
+        async with RuntimeEngine(store=store) as recovered:
+&gt;           result = await (await build(recovered).start(run_id="invalid-progress-recovery")).wait(
+                timeout_s=5
+            )
+
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round10.py:239: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/public/handles.py:57: in wait
+    return await observe()
+           ^^^^^^^^^^^^^^^
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/public/handles.py:52: in observe
+    self._runtime.raise_local_failure(self.run_id)
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/runtime/host.py:158: in raise_local_failure
+    raise failure
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/runtime/host.py:327: in _drive
+    validate_recovery(self._load(run_id))
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/runtime/recovery.py:32: in validate_recovery
+    _validate_graph(state)
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/runtime/recovery.py:257: in _validate_graph
+    _require(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+condition = False, field = 'node.terminal'
+
+    def _require(condition, field):
+        if not condition:
+&gt;           raise InfrastructureError(
+                "PERSISTENCE_INVARIANT_BROKEN",
+                "Committed execution facts disagree: " + field,
+                category="infrastructure",
+                phase="recover",
+                field_path=field,
+            )
+E           agentloom.errors.InfrastructureError: PERSISTENCE_INVARIANT_BROKEN: Committed execution facts disagree: node.terminal
+
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/runtime/recovery.py:14: InfrastructureError</failure></testcase><testcase classname="qa.test_sdk_review_round10" name="test_generator_cleanup_cannot_erase_committed_complete[memory]" time="0.014"><failure message="agentloom.errors.InfrastructureError: EXECUTION_DRIVER_FAILED: ValueError">self = &lt;test_sdk_review_round10.test_generator_cleanup_cannot_erase_committed_complete.&lt;locals&gt;.Node object at 0x107c47f20&gt;
+input = NodeInput(task_id='191fbe62-f175-4979-9c7c-573561e5627d', input_ref=PayloadRef(owner_id='191fbe62-f175-4979-9c7c-573561e5627d', content_hash='4f3a978d913219b53792acaf830af85afa51ee4b6b16b17b459e1190a6af120f'), resume_input_ref=None)
+continuation = ContinuationRef(owner_id='191fbe62-f175-4979-9c7c-573561e5627d', content_hash='55f19e05470f4910135444360af4638eb837ba0a6e4560ed8e313469fc9431c3', revision=1)
+context = NodeContext(scope=InvocationScopeRef(run_id='6e0341c5-3c5c-4b12-9133-9a2be18cf4b3', graph_id='338ff979-ab79-489a-913e-... at 0x107c47d70&gt;, environment_port=&lt;agentloom.nodes.ports.EnvironmentPort object at 0x107c47b60&gt;, delegation_port=None)
+
+    async def activate(self, input, continuation, context):
+        try:
+&gt;           yield Complete(
+                PayloadRef(input.task_id, "durable-output"),
+                ContinuationRef(
+                    input.task_id,
+                    {**continuation.value, "phase": "completed"},
+                    continuation.revision,
+                ),
+            )
+E           GeneratorExit
+
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round10.py:251: GeneratorExit
+
+During handling of the above exception, another exception occurred:
+
+self = &lt;test_sdk_review_round10.test_generator_cleanup_cannot_erase_committed_complete.&lt;locals&gt;.Node object at 0x107c47f20&gt;
+input = NodeInput(task_id='191fbe62-f175-4979-9c7c-573561e5627d', input_ref=PayloadRef(owner_id='191fbe62-f175-4979-9c7c-573561e5627d', content_hash='4f3a978d913219b53792acaf830af85afa51ee4b6b16b17b459e1190a6af120f'), resume_input_ref=None)
+continuation = ContinuationRef(owner_id='191fbe62-f175-4979-9c7c-573561e5627d', content_hash='55f19e05470f4910135444360af4638eb837ba0a6e4560ed8e313469fc9431c3', revision=1)
+context = NodeContext(scope=InvocationScopeRef(run_id='6e0341c5-3c5c-4b12-9133-9a2be18cf4b3', graph_id='338ff979-ab79-489a-913e-... at 0x107c47d70&gt;, environment_port=&lt;agentloom.nodes.ports.EnvironmentPort object at 0x107c47b60&gt;, delegation_port=None)
+
+    async def activate(self, input, continuation, context):
+        try:
+            yield Complete(
+                PayloadRef(input.task_id, "durable-output"),
+                ContinuationRef(
+                    input.task_id,
+                    {**continuation.value, "phase": "completed"},
+                    continuation.revision,
+                ),
+            )
+        finally:
+&gt;           raise ValueError("local cleanup failed")
+E           ValueError: local cleanup failed
+
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round10.py:260: ValueError
+
+The above exception was the direct cause of the following exception:
+
+store = &lt;agentloom.storage.memory.MemoryRuntimeStore object at 0x107ba2840&gt;
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x107ba2690&gt;
+
+    async def test_generator_cleanup_cannot_erase_committed_complete(store, monkeypatch):
+        """Once Complete is committed, generator cleanup cannot lose its receipt/result."""
+    
+        class Node:
+            async def activate(self, input, continuation, context):
+                try:
+                    yield Complete(
+                        PayloadRef(input.task_id, "durable-output"),
+                        ContinuationRef(
+                            input.task_id,
+                            {**continuation.value, "phase": "completed"},
+                            continuation.revision,
+                        ),
+                    )
+                finally:
+                    raise ValueError("local cleanup failed")
+    
+        monkeypatch.setattr(AgentGraphEngine, "_node", lambda self, task_id: Node())
+        async with RuntimeEngine(store=store) as runtime:
+            handle = await build(runtime).start("go")
+            try:
+&gt;               result = await handle.wait(timeout_s=5)
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round10.py:266: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/public/handles.py:57: in wait
+    return await observe()
+           ^^^^^^^^^^^^^^^
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/public/handles.py:52: in observe
+    self._runtime.raise_local_failure(self.run_id)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = &lt;agentloom.runtime.host.RuntimeEngine object at 0x107c46f30&gt;
+run_id = '6e0341c5-3c5c-4b12-9133-9a2be18cf4b3'
+
+    def raise_local_failure(self, run_id):
+        failure = self._failures.get(run_id)
+        if failure:
+&gt;           raise failure
+E           agentloom.errors.InfrastructureError: EXECUTION_DRIVER_FAILED: ValueError
+
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/runtime/host.py:158: InfrastructureError</failure></testcase><testcase classname="qa.test_sdk_review_round10" name="test_generator_cleanup_cannot_erase_committed_complete[file]" time="0.053"><failure message="agentloom.errors.InfrastructureError: EXECUTION_DRIVER_FAILED: ValueError">self = &lt;test_sdk_review_round10.test_generator_cleanup_cannot_erase_committed_complete.&lt;locals&gt;.Node object at 0x107c5ca40&gt;
+input = NodeInput(task_id='1d00edf7-9cda-4677-aa2d-79981ad19de2', input_ref=PayloadRef(owner_id='1d00edf7-9cda-4677-aa2d-79981ad19de2', content_hash='4f3a978d913219b53792acaf830af85afa51ee4b6b16b17b459e1190a6af120f'), resume_input_ref=None)
+continuation = ContinuationRef(owner_id='1d00edf7-9cda-4677-aa2d-79981ad19de2', content_hash='6cefbcaac548b4fbb009986e42574fadc2968ebb97b19ca777eb039d398ba8f7', revision=1)
+context = NodeContext(scope=InvocationScopeRef(run_id='50743d6a-4194-44c0-b20f-71039666ee45', graph_id='f367471b-574e-47cb-8652-... at 0x107c44470&gt;, environment_port=&lt;agentloom.nodes.ports.EnvironmentPort object at 0x107c44170&gt;, delegation_port=None)
+
+    async def activate(self, input, continuation, context):
+        try:
+&gt;           yield Complete(
+                PayloadRef(input.task_id, "durable-output"),
+                ContinuationRef(
+                    input.task_id,
+                    {**continuation.value, "phase": "completed"},
+                    continuation.revision,
+                ),
+            )
+E           GeneratorExit
+
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round10.py:251: GeneratorExit
+
+During handling of the above exception, another exception occurred:
+
+self = &lt;test_sdk_review_round10.test_generator_cleanup_cannot_erase_committed_complete.&lt;locals&gt;.Node object at 0x107c5ca40&gt;
+input = NodeInput(task_id='1d00edf7-9cda-4677-aa2d-79981ad19de2', input_ref=PayloadRef(owner_id='1d00edf7-9cda-4677-aa2d-79981ad19de2', content_hash='4f3a978d913219b53792acaf830af85afa51ee4b6b16b17b459e1190a6af120f'), resume_input_ref=None)
+continuation = ContinuationRef(owner_id='1d00edf7-9cda-4677-aa2d-79981ad19de2', content_hash='6cefbcaac548b4fbb009986e42574fadc2968ebb97b19ca777eb039d398ba8f7', revision=1)
+context = NodeContext(scope=InvocationScopeRef(run_id='50743d6a-4194-44c0-b20f-71039666ee45', graph_id='f367471b-574e-47cb-8652-... at 0x107c44470&gt;, environment_port=&lt;agentloom.nodes.ports.EnvironmentPort object at 0x107c44170&gt;, delegation_port=None)
+
+    async def activate(self, input, continuation, context):
+        try:
+            yield Complete(
+                PayloadRef(input.task_id, "durable-output"),
+                ContinuationRef(
+                    input.task_id,
+                    {**continuation.value, "phase": "completed"},
+                    continuation.revision,
+                ),
+            )
+        finally:
+&gt;           raise ValueError("local cleanup failed")
+E           ValueError: local cleanup failed
+
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round10.py:260: ValueError
+
+The above exception was the direct cause of the following exception:
+
+store = &lt;agentloom.storage.filesystem.FileRuntimeStore object at 0x107c5c620&gt;
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x107c5d880&gt;
+
+    async def test_generator_cleanup_cannot_erase_committed_complete(store, monkeypatch):
+        """Once Complete is committed, generator cleanup cannot lose its receipt/result."""
+    
+        class Node:
+            async def activate(self, input, continuation, context):
+                try:
+                    yield Complete(
+                        PayloadRef(input.task_id, "durable-output"),
+                        ContinuationRef(
+                            input.task_id,
+                            {**continuation.value, "phase": "completed"},
+                            continuation.revision,
+                        ),
+                    )
+                finally:
+                    raise ValueError("local cleanup failed")
+    
+        monkeypatch.setattr(AgentGraphEngine, "_node", lambda self, task_id: Node())
+        async with RuntimeEngine(store=store) as runtime:
+            handle = await build(runtime).start("go")
+            try:
+&gt;               result = await handle.wait(timeout_s=5)
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round10.py:266: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/public/handles.py:57: in wait
+    return await observe()
+           ^^^^^^^^^^^^^^^
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/public/handles.py:52: in observe
+    self._runtime.raise_local_failure(self.run_id)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = &lt;agentloom.runtime.host.RuntimeEngine object at 0x107c5e450&gt;
+run_id = '50743d6a-4194-44c0-b20f-71039666ee45'
+
+    def raise_local_failure(self, run_id):
+        failure = self._failures.get(run_id)
+        if failure:
+&gt;           raise failure
+E           agentloom.errors.InfrastructureError: EXECUTION_DRIVER_FAILED: ValueError
+
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/runtime/host.py:158: InfrastructureError</failure></testcase><testcase classname="qa.test_sdk_review_round10" name="test_malformed_latest_snapshot_falls_back_to_valid_ancestor[memory-missing_blob]" time="0.077" /><testcase classname="qa.test_sdk_review_round10" name="test_malformed_latest_snapshot_falls_back_to_valid_ancestor[memory-missing_hash]" time="0.074"><failure message="agentloom.errors.InfrastructureError: CHECKPOINT_CORRUPT: CHECKPOINT_CORRUPT">tx = &lt;agentloom.storage.memory._MemoryTransaction object at 0x107ba02f0&gt;
+namespace = 'default'
+state = {'activations': {'1203ba4c-13f8-5463-ba7e-2743e8a40141': {'lease_epoch': 1, 'start_node_revision': 15, 'status': 'comp...'capabilities': [], 'description': '', 'input_schema': None, 'name': 'review10', ...}}, ...}, 'cleanup_job': None, ...}
+
+    def restore(tx, namespace, state):
+        try:
+&gt;           return _restore(tx, namespace, state)
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/checkpoints/journal.py:201: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/checkpoints/journal.py:244: in _restore
+    payload = _read_version(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+tx = &lt;agentloom.storage.memory._MemoryTransaction object at 0x107ba02f0&gt;
+run_id = 'round10-checkpoint', name = 'agent_checkpoint'
+ref = {'blob_id': '1c7a27e5f4e6fb5ad885f79685255bca105b41bbe17771f6d25877f42914cd9e', 'content_scope_ref': {'namespace': 'default', 'scope_key': 'round10-checkpoint'}, 'kind': 'blob', 'media_type': 'application/json', ...}
+
+    def _read_version(tx, run_id, name, ref):
+        payload_ref = ref if isinstance(ref, dict) else None
+        if payload_ref is not None:
+            _require(
+                payload_ref["kind"] == "blob"
+                and payload_ref["content_scope_ref"]["scope_key"] == run_id
+&gt;               and payload_ref["sha256"] == payload_ref["blob_id"]
+                    ^^^^^^^^^^^^^^^^^^^^^
+            )
+E           KeyError: 'sha256'
+
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/checkpoints/journal.py:53: KeyError
+
+The above exception was the direct cause of the following exception:
+
+store = &lt;agentloom.storage.memory.MemoryRuntimeStore object at 0x107a98a10&gt;
+damage = 'missing_hash'
+
+    @pytest.mark.parametrize("damage", ["missing_blob", "missing_hash", "null_ref"])
+    async def test_malformed_latest_snapshot_falls_back_to_valid_ancestor(store, damage):
+        """checkpoints.md §5: load the most recent valid snapshot and replay its deltas."""
+        state = await checkpointed_run(store)
+        with store.transaction("default") as tx:
+            head = tx.get("graph_heads", state["graph_id"])
+            snapshot = tx.get("graph_checkpoints", head["head_checkpoint_id"])
+            assert snapshot["previous_checkpoint_id"] is not None
+            if damage == "missing_blob":
+                tx.delete("checkpoint_versions", snapshot["engine_state_ref"]["blob_id"])
+            elif damage == "missing_hash":
+                del snapshot["engine_state_ref"]["sha256"]
+            else:
+                snapshot["engine_state_ref"] = None
+            tx.put("graph_checkpoints", head["head_checkpoint_id"], snapshot)
+&gt;       restored = store.load_run_consistently("default", state["run_id"])
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round10.py:321: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/storage/base.py:39: in load_run_consistently
+    return restore(tx, namespace, state) if state else None
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+tx = &lt;agentloom.storage.memory._MemoryTransaction object at 0x107ba02f0&gt;
+namespace = 'default'
+state = {'activations': {'1203ba4c-13f8-5463-ba7e-2743e8a40141': {'lease_epoch': 1, 'start_node_revision': 15, 'status': 'comp...'capabilities': [], 'description': '', 'input_schema': None, 'name': 'review10', ...}}, ...}, 'cleanup_job': None, ...}
+
+    def restore(tx, namespace, state):
+        try:
+            return _restore(tx, namespace, state)
+        except (KeyError, TypeError, ValueError, AttributeError) as exc:
+&gt;           raise InfrastructureError("CHECKPOINT_CORRUPT") from exc
+E           agentloom.errors.InfrastructureError: CHECKPOINT_CORRUPT: CHECKPOINT_CORRUPT
+
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/checkpoints/journal.py:203: InfrastructureError</failure></testcase><testcase classname="qa.test_sdk_review_round10" name="test_malformed_latest_snapshot_falls_back_to_valid_ancestor[memory-null_ref]" time="0.073"><failure message="agentloom.errors.InfrastructureError: CHECKPOINT_CORRUPT: CHECKPOINT_CORRUPT">tx = &lt;agentloom.storage.memory._MemoryTransaction object at 0x107af5eb0&gt;
+namespace = 'default'
+state = {'activations': {'29240c78-b769-55ca-91ec-30c3065a33f4': {'lease_epoch': 1, 'start_node_revision': 6, 'status': 'compl...'capabilities': [], 'description': '', 'input_schema': None, 'name': 'review10', ...}}, ...}, 'cleanup_job': None, ...}
+
+    def restore(tx, namespace, state):
+        try:
+&gt;           return _restore(tx, namespace, state)
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/checkpoints/journal.py:201: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+tx = &lt;agentloom.storage.memory._MemoryTransaction object at 0x107af5eb0&gt;
+namespace = 'default'
+state = {'activations': {'29240c78-b769-55ca-91ec-30c3065a33f4': {'lease_epoch': 1, 'start_node_revision': 6, 'status': 'compl...'capabilities': [], 'description': '', 'input_schema': None, 'name': 'review10', ...}}, ...}, 'cleanup_job': None, ...}
+
+    def _restore(tx, namespace, state):
+        """Restore through the agent codec at one consistent store watermark."""
+        scope_id = state["graph_id"]
+        head = tx.get("graph_heads", scope_id)
+        if head is None:
+            if state.get("graph", {}).get("protocol_version"):
+                raise InfrastructureError("CHECKPOINT_CORRUPT")
+            return state  # explicitly supported pre-node-protocol checkpoint
+        _require(type(head["scope_commit_seq"]) is int and head["scope_commit_seq"] &gt; 0)
+        if head["engine_kind"] != "agent" or (
+            type(head["engine_protocol_version"]) is not int or head["engine_protocol_version"] != 1
+        ):
+            raise InfrastructureError("CHECKPOINT_VERSION_UNSUPPORTED")
+        checkpoint_id = head["head_checkpoint_id"]
+        payload, seq, previous_hash = None, 0, None
+        visited = set()
+        while checkpoint_id:
+            _require(checkpoint_id not in visited)
+            visited.add(checkpoint_id)
+            checkpoint = tx.get("graph_checkpoints", checkpoint_id)
+            _require(checkpoint is not None)
+            try:
+                _require(
+                    checkpoint["namespace"] == namespace
+                    and checkpoint["run_id"] == state["run_id"]
+                    and checkpoint["graph_execution_id"] == scope_id
+                )
+                if (
+                    (
+                        type(checkpoint["format_version"]) is not int
+                        or checkpoint["format_version"] != FORMAT_VERSION
+                    )
+                    or checkpoint["engine_kind"] != "agent"
+                    or type(checkpoint["engine_protocol_version"]) is not int
+                    or checkpoint["engine_protocol_version"] != AGENT_PROTOCOL_VERSION
+                ):
+                    raise InfrastructureError("CHECKPOINT_VERSION_UNSUPPORTED")
+&gt;               _require(checkpoint["engine_state_ref"]["content_scope_ref"]["namespace"] == namespace)
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E               TypeError: 'NoneType' object is not subscriptable
+
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/checkpoints/journal.py:243: TypeError
+
+The above exception was the direct cause of the following exception:
+
+store = &lt;agentloom.storage.memory.MemoryRuntimeStore object at 0x107ae4410&gt;
+damage = 'null_ref'
+
+    @pytest.mark.parametrize("damage", ["missing_blob", "missing_hash", "null_ref"])
+    async def test_malformed_latest_snapshot_falls_back_to_valid_ancestor(store, damage):
+        """checkpoints.md §5: load the most recent valid snapshot and replay its deltas."""
+        state = await checkpointed_run(store)
+        with store.transaction("default") as tx:
+            head = tx.get("graph_heads", state["graph_id"])
+            snapshot = tx.get("graph_checkpoints", head["head_checkpoint_id"])
+            assert snapshot["previous_checkpoint_id"] is not None
+            if damage == "missing_blob":
+                tx.delete("checkpoint_versions", snapshot["engine_state_ref"]["blob_id"])
+            elif damage == "missing_hash":
+                del snapshot["engine_state_ref"]["sha256"]
+            else:
+                snapshot["engine_state_ref"] = None
+            tx.put("graph_checkpoints", head["head_checkpoint_id"], snapshot)
+&gt;       restored = store.load_run_consistently("default", state["run_id"])
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round10.py:321: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/storage/base.py:39: in load_run_consistently
+    return restore(tx, namespace, state) if state else None
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+tx = &lt;agentloom.storage.memory._MemoryTransaction object at 0x107af5eb0&gt;
+namespace = 'default'
+state = {'activations': {'29240c78-b769-55ca-91ec-30c3065a33f4': {'lease_epoch': 1, 'start_node_revision': 6, 'status': 'compl...'capabilities': [], 'description': '', 'input_schema': None, 'name': 'review10', ...}}, ...}, 'cleanup_job': None, ...}
+
+    def restore(tx, namespace, state):
+        try:
+            return _restore(tx, namespace, state)
+        except (KeyError, TypeError, ValueError, AttributeError) as exc:
+&gt;           raise InfrastructureError("CHECKPOINT_CORRUPT") from exc
+E           agentloom.errors.InfrastructureError: CHECKPOINT_CORRUPT: CHECKPOINT_CORRUPT
+
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/checkpoints/journal.py:203: InfrastructureError</failure></testcase><testcase classname="qa.test_sdk_review_round10" name="test_malformed_latest_snapshot_falls_back_to_valid_ancestor[file-missing_blob]" time="0.316" /><testcase classname="qa.test_sdk_review_round10" name="test_malformed_latest_snapshot_falls_back_to_valid_ancestor[file-missing_hash]" time="0.337"><failure message="agentloom.errors.InfrastructureError: CHECKPOINT_CORRUPT: CHECKPOINT_CORRUPT">tx = &lt;agentloom.storage.filesystem._FileTransaction object at 0x107d8a1e0&gt;
+namespace = 'default'
+state = {'activations': {'0bdaca77-2bb9-56a7-a28b-b77417175e89': {'lease_epoch': 1, 'start_node_revision': 24, 'status': 'runn...'capabilities': [], 'description': '', 'input_schema': None, 'name': 'review10', ...}}, ...}, 'cleanup_job': None, ...}
+
+    def restore(tx, namespace, state):
+        try:
+&gt;           return _restore(tx, namespace, state)
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/checkpoints/journal.py:201: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/checkpoints/journal.py:244: in _restore
+    payload = _read_version(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+tx = &lt;agentloom.storage.filesystem._FileTransaction object at 0x107d8a1e0&gt;
+run_id = 'round10-checkpoint', name = 'agent_checkpoint'
+ref = {'blob_id': 'c1ebafc8456f17962276d24329fe7f5e6163ce61e44f7cd3296f3ebefd534611', 'content_scope_ref': {'namespace': 'default', 'scope_key': 'round10-checkpoint'}, 'kind': 'blob', 'media_type': 'application/json', ...}
+
+    def _read_version(tx, run_id, name, ref):
+        payload_ref = ref if isinstance(ref, dict) else None
+        if payload_ref is not None:
+            _require(
+                payload_ref["kind"] == "blob"
+                and payload_ref["content_scope_ref"]["scope_key"] == run_id
+&gt;               and payload_ref["sha256"] == payload_ref["blob_id"]
+                    ^^^^^^^^^^^^^^^^^^^^^
+            )
+E           KeyError: 'sha256'
+
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/checkpoints/journal.py:53: KeyError
+
+The above exception was the direct cause of the following exception:
+
+store = &lt;agentloom.storage.filesystem.FileRuntimeStore object at 0x107e44710&gt;
+damage = 'missing_hash'
+
+    @pytest.mark.parametrize("damage", ["missing_blob", "missing_hash", "null_ref"])
+    async def test_malformed_latest_snapshot_falls_back_to_valid_ancestor(store, damage):
+        """checkpoints.md §5: load the most recent valid snapshot and replay its deltas."""
+        state = await checkpointed_run(store)
+        with store.transaction("default") as tx:
+            head = tx.get("graph_heads", state["graph_id"])
+            snapshot = tx.get("graph_checkpoints", head["head_checkpoint_id"])
+            assert snapshot["previous_checkpoint_id"] is not None
+            if damage == "missing_blob":
+                tx.delete("checkpoint_versions", snapshot["engine_state_ref"]["blob_id"])
+            elif damage == "missing_hash":
+                del snapshot["engine_state_ref"]["sha256"]
+            else:
+                snapshot["engine_state_ref"] = None
+            tx.put("graph_checkpoints", head["head_checkpoint_id"], snapshot)
+&gt;       restored = store.load_run_consistently("default", state["run_id"])
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round10.py:321: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/storage/base.py:39: in load_run_consistently
+    return restore(tx, namespace, state) if state else None
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+tx = &lt;agentloom.storage.filesystem._FileTransaction object at 0x107d8a1e0&gt;
+namespace = 'default'
+state = {'activations': {'0bdaca77-2bb9-56a7-a28b-b77417175e89': {'lease_epoch': 1, 'start_node_revision': 24, 'status': 'runn...'capabilities': [], 'description': '', 'input_schema': None, 'name': 'review10', ...}}, ...}, 'cleanup_job': None, ...}
+
+    def restore(tx, namespace, state):
+        try:
+            return _restore(tx, namespace, state)
+        except (KeyError, TypeError, ValueError, AttributeError) as exc:
+&gt;           raise InfrastructureError("CHECKPOINT_CORRUPT") from exc
+E           agentloom.errors.InfrastructureError: CHECKPOINT_CORRUPT: CHECKPOINT_CORRUPT
+
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/checkpoints/journal.py:203: InfrastructureError</failure></testcase><testcase classname="qa.test_sdk_review_round10" name="test_malformed_latest_snapshot_falls_back_to_valid_ancestor[file-null_ref]" time="0.338"><failure message="agentloom.errors.InfrastructureError: CHECKPOINT_CORRUPT: CHECKPOINT_CORRUPT">tx = &lt;agentloom.storage.filesystem._FileTransaction object at 0x107e5a360&gt;
+namespace = 'default'
+state = {'activations': {'2643bf7e-4a66-53ac-a987-47415d96b663': {'lease_epoch': 1, 'start_node_revision': 24, 'status': 'runn...'capabilities': [], 'description': '', 'input_schema': None, 'name': 'review10', ...}}, ...}, 'cleanup_job': None, ...}
+
+    def restore(tx, namespace, state):
+        try:
+&gt;           return _restore(tx, namespace, state)
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/checkpoints/journal.py:201: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+tx = &lt;agentloom.storage.filesystem._FileTransaction object at 0x107e5a360&gt;
+namespace = 'default'
+state = {'activations': {'2643bf7e-4a66-53ac-a987-47415d96b663': {'lease_epoch': 1, 'start_node_revision': 24, 'status': 'runn...'capabilities': [], 'description': '', 'input_schema': None, 'name': 'review10', ...}}, ...}, 'cleanup_job': None, ...}
+
+    def _restore(tx, namespace, state):
+        """Restore through the agent codec at one consistent store watermark."""
+        scope_id = state["graph_id"]
+        head = tx.get("graph_heads", scope_id)
+        if head is None:
+            if state.get("graph", {}).get("protocol_version"):
+                raise InfrastructureError("CHECKPOINT_CORRUPT")
+            return state  # explicitly supported pre-node-protocol checkpoint
+        _require(type(head["scope_commit_seq"]) is int and head["scope_commit_seq"] &gt; 0)
+        if head["engine_kind"] != "agent" or (
+            type(head["engine_protocol_version"]) is not int or head["engine_protocol_version"] != 1
+        ):
+            raise InfrastructureError("CHECKPOINT_VERSION_UNSUPPORTED")
+        checkpoint_id = head["head_checkpoint_id"]
+        payload, seq, previous_hash = None, 0, None
+        visited = set()
+        while checkpoint_id:
+            _require(checkpoint_id not in visited)
+            visited.add(checkpoint_id)
+            checkpoint = tx.get("graph_checkpoints", checkpoint_id)
+            _require(checkpoint is not None)
+            try:
+                _require(
+                    checkpoint["namespace"] == namespace
+                    and checkpoint["run_id"] == state["run_id"]
+                    and checkpoint["graph_execution_id"] == scope_id
+                )
+                if (
+                    (
+                        type(checkpoint["format_version"]) is not int
+                        or checkpoint["format_version"] != FORMAT_VERSION
+                    )
+                    or checkpoint["engine_kind"] != "agent"
+                    or type(checkpoint["engine_protocol_version"]) is not int
+                    or checkpoint["engine_protocol_version"] != AGENT_PROTOCOL_VERSION
+                ):
+                    raise InfrastructureError("CHECKPOINT_VERSION_UNSUPPORTED")
+&gt;               _require(checkpoint["engine_state_ref"]["content_scope_ref"]["namespace"] == namespace)
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E               TypeError: 'NoneType' object is not subscriptable
+
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/checkpoints/journal.py:243: TypeError
+
+The above exception was the direct cause of the following exception:
+
+store = &lt;agentloom.storage.filesystem.FileRuntimeStore object at 0x107de6330&gt;
+damage = 'null_ref'
+
+    @pytest.mark.parametrize("damage", ["missing_blob", "missing_hash", "null_ref"])
+    async def test_malformed_latest_snapshot_falls_back_to_valid_ancestor(store, damage):
+        """checkpoints.md §5: load the most recent valid snapshot and replay its deltas."""
+        state = await checkpointed_run(store)
+        with store.transaction("default") as tx:
+            head = tx.get("graph_heads", state["graph_id"])
+            snapshot = tx.get("graph_checkpoints", head["head_checkpoint_id"])
+            assert snapshot["previous_checkpoint_id"] is not None
+            if damage == "missing_blob":
+                tx.delete("checkpoint_versions", snapshot["engine_state_ref"]["blob_id"])
+            elif damage == "missing_hash":
+                del snapshot["engine_state_ref"]["sha256"]
+            else:
+                snapshot["engine_state_ref"] = None
+            tx.put("graph_checkpoints", head["head_checkpoint_id"], snapshot)
+&gt;       restored = store.load_run_consistently("default", state["run_id"])
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round10.py:321: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/storage/base.py:39: in load_run_consistently
+    return restore(tx, namespace, state) if state else None
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+tx = &lt;agentloom.storage.filesystem._FileTransaction object at 0x107e5a360&gt;
+namespace = 'default'
+state = {'activations': {'2643bf7e-4a66-53ac-a987-47415d96b663': {'lease_epoch': 1, 'start_node_revision': 24, 'status': 'runn...'capabilities': [], 'description': '', 'input_schema': None, 'name': 'review10', ...}}, ...}, 'cleanup_job': None, ...}
+
+    def restore(tx, namespace, state):
+        try:
+            return _restore(tx, namespace, state)
+        except (KeyError, TypeError, ValueError, AttributeError) as exc:
+&gt;           raise InfrastructureError("CHECKPOINT_CORRUPT") from exc
+E           agentloom.errors.InfrastructureError: CHECKPOINT_CORRUPT: CHECKPOINT_CORRUPT
+
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/checkpoints/journal.py:203: InfrastructureError</failure></testcase><testcase classname="qa.test_sdk_review_round10" name="test_plan_incremental_commit_boundaries_recover_without_duplicate_tools[memory-None]" time="0.466" /><testcase classname="qa.test_sdk_review_round10" name="test_plan_incremental_commit_boundaries_recover_without_duplicate_tools[memory-admit:]" time="0.488" /><testcase classname="qa.test_sdk_review_round10" name="test_plan_incremental_commit_boundaries_recover_without_duplicate_tools[memory-delegate-start:]" time="0.488" /><testcase classname="qa.test_sdk_review_round10" name="test_plan_incremental_commit_boundaries_recover_without_duplicate_tools[memory-validate:]" time="0.494" /><testcase classname="qa.test_sdk_review_round10" name="test_plan_incremental_commit_boundaries_recover_without_duplicate_tools[memory-consume:]" time="0.502" /><testcase classname="qa.test_sdk_review_round10" name="test_plan_incremental_commit_boundaries_recover_without_duplicate_tools[file-None]" time="1.494" /><testcase classname="qa.test_sdk_review_round10" name="test_plan_incremental_commit_boundaries_recover_without_duplicate_tools[file-admit:]" time="1.482" /><testcase classname="qa.test_sdk_review_round10" name="test_plan_incremental_commit_boundaries_recover_without_duplicate_tools[file-delegate-start:]" time="1.551" /><testcase classname="qa.test_sdk_review_round10" name="test_plan_incremental_commit_boundaries_recover_without_duplicate_tools[file-validate:]" time="1.569" /><testcase classname="qa.test_sdk_review_round10" name="test_plan_incremental_commit_boundaries_recover_without_duplicate_tools[file-consume:]" time="1.562" /></testsuite></testsuites>

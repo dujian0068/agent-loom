@@ -1,0 +1,471 @@
+{"case": "wait_payload", "expected": {"kind": "inline", "owner_id": "483d2f61-2f15-49b6-af75-301ab8e29b0a", "content_hash": "600bef59de4515a8e0c4d4592816e013eb64b7355ce486aa4edf06c1a5496a9c", "value": {"operation_id": "saved", "generation": 1}}, "actual": {"kind": "inline", "owner_id": "483d2f61-2f15-49b6-af75-301ab8e29b0a", "content_hash": "fec298c0ec8195017e6ec386abd074133dd53afa7691a6d22b0c6ba4658ea86a", "value": {"kind": "inline", "owner_id": "483d2f61-2f15-49b6-af75-301ab8e29b0a", "content_hash": "600bef59de4515a8e0c4d4592816e013eb64b7355ce486aa4edf06c1a5496a9c", "value": {"operation_id": "saved", "generation": 1}}}}
+F{"case": "wait_payload", "expected": {"kind": "inline", "owner_id": "c30acc59-4bde-4957-a225-8d02764faeb2", "content_hash": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b", "value": null}, "actual": {"kind": "inline", "owner_id": "c30acc59-4bde-4957-a225-8d02764faeb2", "content_hash": "f5116c9b33bd1b630fefb5f0b88459cb6bcafb4b7d9085d2b8cd2dfd79c4c58d", "value": {"kind": "inline", "owner_id": "c30acc59-4bde-4957-a225-8d02764faeb2", "content_hash": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b", "value": null}}}
+F{"case": "wait_payload", "expected": {"kind": "inline", "owner_id": "f36a8727-03ca-4f59-b8ad-523dd1d975a8", "content_hash": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a", "value": {}}, "actual": {"kind": "inline", "owner_id": "f36a8727-03ca-4f59-b8ad-523dd1d975a8", "content_hash": "c0c757d6ff4bb82c8391d9525540e82f0e4bf5b15c7238ed6089bd72b59cbe5c", "value": {"kind": "inline", "owner_id": "f36a8727-03ca-4f59-b8ad-523dd1d975a8", "content_hash": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a", "value": {}}}}
+F{"case": "wait_payload", "expected": {"kind": "inline", "owner_id": "4558709e-2cd0-45df-b09f-a109238b7ecc", "content_hash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945", "value": []}, "actual": {"kind": "inline", "owner_id": "4558709e-2cd0-45df-b09f-a109238b7ecc", "content_hash": "9ac815188cd7ca9180af69f241c1790b3a13c60f4ab2232104463ccb3dd9220e", "value": {"kind": "inline", "owner_id": "4558709e-2cd0-45df-b09f-a109238b7ecc", "content_hash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945", "value": []}}}
+F{"case": "wait_payload", "expected": {"kind": "inline", "owner_id": "d8a9c96a-8e80-4abf-a79b-2dc2580b86b7", "content_hash": "fcbcf165908dd18a9e49f7ff27810176db8e9f63b4352213741664245224f8aa", "value": false}, "actual": {"kind": "inline", "owner_id": "d8a9c96a-8e80-4abf-a79b-2dc2580b86b7", "content_hash": "fe2849c76a751dc8a3169e5e8331e7350b994b701ffd8bb0834f6fa56ff3e369", "value": {"kind": "inline", "owner_id": "d8a9c96a-8e80-4abf-a79b-2dc2580b86b7", "content_hash": "fcbcf165908dd18a9e49f7ff27810176db8e9f63b4352213741664245224f8aa", "value": false}}}
+F{"case": "wait_payload", "expected": {"kind": "inline", "owner_id": "4522685f-cfc3-4480-a112-1d361ae27338", "content_hash": "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9", "value": 0}, "actual": {"kind": "inline", "owner_id": "4522685f-cfc3-4480-a112-1d361ae27338", "content_hash": "34f092966d96455c69a57bfc919b495b32ecae3f761676b7293652e0d1e080e9", "value": {"kind": "inline", "owner_id": "4522685f-cfc3-4480-a112-1d361ae27338", "content_hash": "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9", "value": 0}}}
+F{"case": "wait_payload", "expected": {"kind": "inline", "owner_id": "18a15ff2-e9af-439a-ab17-cb300ee60b59", "content_hash": "12ae32cb1ec02d01eda3581b127c1fee3b0dc53572ed6baf239721a03d82e126", "value": ""}, "actual": {"kind": "inline", "owner_id": "18a15ff2-e9af-439a-ab17-cb300ee60b59", "content_hash": "4fff53a7dc120131f5a1ee1d8600b89c5cdc7da41c4428c96e136918c9390028", "value": {"kind": "inline", "owner_id": "18a15ff2-e9af-439a-ab17-cb300ee60b59", "content_hash": "12ae32cb1ec02d01eda3581b127c1fee3b0dc53572ed6baf239721a03d82e126", "value": ""}}}
+F{"case": "wait_payload", "expected": {"kind": "inline", "owner_id": "d4207c80-9edd-4fd8-a924-464bd8d066cc", "content_hash": "600bef59de4515a8e0c4d4592816e013eb64b7355ce486aa4edf06c1a5496a9c", "value": {"operation_id": "saved", "generation": 1}}, "actual": {"kind": "inline", "owner_id": "d4207c80-9edd-4fd8-a924-464bd8d066cc", "content_hash": "c9b08912ee83d40a756713ef8665b819cc974670bafe80f518837d85117df30e", "value": {"content_hash": "600bef59de4515a8e0c4d4592816e013eb64b7355ce486aa4edf06c1a5496a9c", "kind": "inline", "owner_id": "d4207c80-9edd-4fd8-a924-464bd8d066cc", "value": {"generation": 1, "operation_id": "saved"}}}}
+F{"case": "wait_payload", "expected": {"kind": "inline", "owner_id": "3c6019ed-70ed-4d6e-b9ee-9eb71b6dacff", "content_hash": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b", "value": null}, "actual": {"kind": "inline", "owner_id": "3c6019ed-70ed-4d6e-b9ee-9eb71b6dacff", "content_hash": "26733871ab86f7870076eccd3c8b4c49c69e56915a2e80f6107e8760539bb074", "value": {"content_hash": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b", "kind": "inline", "owner_id": "3c6019ed-70ed-4d6e-b9ee-9eb71b6dacff", "value": null}}}
+F{"case": "wait_payload", "expected": {"kind": "inline", "owner_id": "edb30f12-2a4f-4b4c-9dbf-f99fce5112f4", "content_hash": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a", "value": {}}, "actual": {"kind": "inline", "owner_id": "edb30f12-2a4f-4b4c-9dbf-f99fce5112f4", "content_hash": "f0c253469e6473ad84b3a468dd819adfc0473b4601145294aed375f311bae888", "value": {"content_hash": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a", "kind": "inline", "owner_id": "edb30f12-2a4f-4b4c-9dbf-f99fce5112f4", "value": {}}}}
+F{"case": "wait_payload", "expected": {"kind": "inline", "owner_id": "454c12e4-c705-4ec8-93dd-74b29f600467", "content_hash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945", "value": []}, "actual": {"kind": "inline", "owner_id": "454c12e4-c705-4ec8-93dd-74b29f600467", "content_hash": "e16707215c7b1afd33b08cd5e38bc42c4dcf1d3cd254eb63d207d0d3844a0637", "value": {"content_hash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945", "kind": "inline", "owner_id": "454c12e4-c705-4ec8-93dd-74b29f600467", "value": []}}}
+F{"case": "wait_payload", "expected": {"kind": "inline", "owner_id": "2de4a49a-0b50-4d17-b84c-a180662077b2", "content_hash": "fcbcf165908dd18a9e49f7ff27810176db8e9f63b4352213741664245224f8aa", "value": false}, "actual": {"kind": "inline", "owner_id": "2de4a49a-0b50-4d17-b84c-a180662077b2", "content_hash": "22ff5fc81beb8605307de2ed521df068c7516b2fb3da1ffe754012962b5b5d88", "value": {"content_hash": "fcbcf165908dd18a9e49f7ff27810176db8e9f63b4352213741664245224f8aa", "kind": "inline", "owner_id": "2de4a49a-0b50-4d17-b84c-a180662077b2", "value": false}}}
+F{"case": "wait_payload", "expected": {"kind": "inline", "owner_id": "e349e119-bbc8-4453-be53-7abd1a0e3a08", "content_hash": "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9", "value": 0}, "actual": {"kind": "inline", "owner_id": "e349e119-bbc8-4453-be53-7abd1a0e3a08", "content_hash": "3a59288b05e196fdbf09a4a76956397cde9356c084f3aeaac565b013b39c9e1d", "value": {"content_hash": "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9", "kind": "inline", "owner_id": "e349e119-bbc8-4453-be53-7abd1a0e3a08", "value": 0}}}
+F{"case": "wait_payload", "expected": {"kind": "inline", "owner_id": "cba54ebc-af7e-4c29-b432-94e86d010df0", "content_hash": "12ae32cb1ec02d01eda3581b127c1fee3b0dc53572ed6baf239721a03d82e126", "value": ""}, "actual": {"kind": "inline", "owner_id": "cba54ebc-af7e-4c29-b432-94e86d010df0", "content_hash": "e611aac573f3a98419e001271dd2fa88a727d6ba76808a5e7284f5929990e77c", "value": {"content_hash": "12ae32cb1ec02d01eda3581b127c1fee3b0dc53572ed6baf239721a03d82e126", "kind": "inline", "owner_id": "cba54ebc-af7e-4c29-b432-94e86d010df0", "value": ""}}}
+F{"case": "builtin_resume", "actual": {"kind": "inline", "owner_id": "0e83d4cb-db74-4cbe-a214-a00443e7db60", "content_hash": "db6737404aa70f9fb01fa5f733832523876dee2fe96d83e51eb4f22f28b69d56", "value": {"kind": "inline", "owner_id": "0e83d4cb-db74-4cbe-a214-a00443e7db60", "content_hash": "536666f6ad7c7b7c8ff2b922af3b4133c773f596ef895cd2c377f420b5746599", "value": {"operation_id": "c85f1d3d-0fd9-5473-a697-7e6166fc88ff"}}}, "saved": {"kind": "inline", "owner_id": "0e83d4cb-db74-4cbe-a214-a00443e7db60", "content_hash": "536666f6ad7c7b7c8ff2b922af3b4133c773f596ef895cd2c377f420b5746599", "value": {"operation_id": "c85f1d3d-0fd9-5473-a697-7e6166fc88ff"}}}
+F{"case": "builtin_resume", "actual": {"kind": "inline", "owner_id": "0af01410-9015-407e-ab86-edab9a5e3c8f", "content_hash": "e5b3a68ba023c41635db102a5152ccefa34b3b97f7045ca829c048eb6b2eb414", "value": {"content_hash": "e209a5d5712e1f1db3867535552b3a3683e8e65296bc94520ec28e9beb4753c3", "kind": "inline", "owner_id": "0af01410-9015-407e-ab86-edab9a5e3c8f", "value": {"operation_id": "6a3eb3cf-f58b-58f9-85a0-ee39c0ca796a"}}}, "saved": {"content_hash": "e209a5d5712e1f1db3867535552b3a3683e8e65296bc94520ec28e9beb4753c3", "kind": "inline", "owner_id": "0af01410-9015-407e-ab86-edab9a5e3c8f", "value": {"operation_id": "6a3eb3cf-f58b-58f9-85a0-ee39c0ca796a"}}}
+F{"case": "invalid_progress", "field": "phase", "value": "completed", "received_commit_receipts": 1, "status": "succeeded", "error": null}
+F{"case": "invalid_progress", "field": "phase", "value": "unknown_phase", "received_commit_receipts": 1, "status": "succeeded", "error": null}
+F{"case": "invalid_progress", "field": "protocol_version", "value": 2, "received_commit_receipts": 1, "status": "succeeded", "error": null}
+F{"case": "invalid_progress", "field": "role_key", "value": "foreign_executor", "received_commit_receipts": 1, "status": "succeeded", "error": null}
+F{"case": "invalid_progress", "field": "role_loop_index", "value": -1, "received_commit_receipts": 1, "status": "succeeded", "error": null}
+F{"case": "invalid_progress", "field": "phase", "value": "completed", "received_commit_receipts": 1, "status": "succeeded", "error": null}
+F{"case": "invalid_progress", "field": "phase", "value": "unknown_phase", "received_commit_receipts": 1, "status": "succeeded", "error": null}
+F{"case": "invalid_progress", "field": "protocol_version", "value": 2, "received_commit_receipts": 1, "status": "succeeded", "error": null}
+F{"case": "invalid_progress", "field": "role_key", "value": "foreign_executor", "received_commit_receipts": 1, "status": "succeeded", "error": null}
+F{"case": "invalid_progress", "field": "role_loop_index", "value": -1, "received_commit_receipts": 1, "status": "succeeded", "error": null}
+F{"case": "invalid_progress_checkpoint", "status": "running", "phase": "completed"}
+F{"case": "invalid_progress_checkpoint", "status": "running", "phase": "completed"}
+F{"case": "close_after_complete", "error": "EXECUTION_DRIVER_FAILED", "run_status": "running", "task_status": "succeeded", "task_result": "durable-output", "result_count": 1}
+F{"case": "close_after_complete", "error": "EXECUTION_DRIVER_FAILED", "run_status": "running", "task_status": "succeeded", "task_result": "durable-output", "result_count": 1}
+F.FF.FF{"case": "plan_boundary", "cut": null, "effects": ["worker_a", "worker_b"], "status": "succeeded", "task_count": 3}
+.{"case": "plan_boundary", "cut": "admit:", "effects": ["worker_a", "worker_b"], "status": "succeeded", "task_count": 3}
+.{"case": "plan_boundary", "cut": "delegate-start:", "effects": ["worker_a", "worker_b"], "status": "succeeded", "task_count": 3}
+.{"case": "plan_boundary", "cut": "validate:", "effects": ["worker_a", "worker_b"], "status": "succeeded", "task_count": 3}
+.{"case": "plan_boundary", "cut": "consume:", "effects": ["worker_a", "worker_b"], "status": "succeeded", "task_count": 3}
+.{"case": "plan_boundary", "cut": null, "effects": ["worker_a", "worker_b"], "status": "succeeded", "task_count": 3}
+.{"case": "plan_boundary", "cut": "admit:", "effects": ["worker_a", "worker_b"], "status": "succeeded", "task_count": 3}
+.{"case": "plan_boundary", "cut": "delegate-start:", "effects": ["worker_a", "worker_b"], "status": "succeeded", "task_count": 3}
+.{"case": "plan_boundary", "cut": "validate:", "effects": ["worker_a", "worker_b"], "status": "succeeded", "task_count": 3}
+.{"case": "plan_boundary", "cut": "consume:", "effects": ["worker_a", "worker_b"], "status": "succeeded", "task_count": 3}
+.
+=================================== FAILURES ===================================
+________ test_wait_preserves_resume_payload_and_hash[memory-reference] _________
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round10.py:105: in test_wait_preserves_resume_payload_and_hash
+    assert observed[0].to_dict() == expected.to_dict()
+E   AssertionError: assert {'content_has...d': 'saved'}}} == {'content_has...id': 'saved'}}
+E     
+E     Omitting 2 identical items, use -vv to show
+E     Differing items:
+E     {'content_hash': 'fec298c0ec8195017e6ec386abd074133dd53afa7691a6d22b0c6ba4658ea86a'} != {'content_hash': '600bef59de4515a8e0c4d4592816e013eb64b7355ce486aa4edf06c1a5496a9c'}
+E     {'value': {'content_hash': '600bef59de4515a8e0c4d4592816e013eb64b7355ce486aa4edf06c1a5496a9c', 'kind': 'inline', 'owner_id': '483d2f61-2f15-49b6-af75-301ab8e29b0a', 'value': {'generation': 1, 'operation_id': 'saved'}}} != {'value': {'generation': 1, 'operation_id': 'saved'}}
+E     Use -v to get more diff
+___________ test_wait_preserves_resume_payload_and_hash[memory-null] ___________
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round10.py:105: in test_wait_preserves_resume_payload_and_hash
+    assert observed[0].to_dict() == expected.to_dict()
+E   AssertionError: assert {'content_has...value': None}} == {'content_has...'value': None}
+E     
+E     Omitting 2 identical items, use -vv to show
+E     Differing items:
+E     {'content_hash': 'f5116c9b33bd1b630fefb5f0b88459cb6bcafb4b7d9085d2b8cd2dfd79c4c58d'} != {'content_hash': '74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b'}
+E     {'value': {'content_hash': '74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b', 'kind': 'inline', 'owner_id': 'c30acc59-4bde-4957-a225-8d02764faeb2', 'value': None}} != {'value': None}
+E     Use -v to get more diff
+_______ test_wait_preserves_resume_payload_and_hash[memory-empty_object] _______
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round10.py:105: in test_wait_preserves_resume_payload_and_hash
+    assert observed[0].to_dict() == expected.to_dict()
+E   AssertionError: assert {'content_has... 'value': {}}} == {'content_has..., 'value': {}}
+E     
+E     Omitting 2 identical items, use -vv to show
+E     Differing items:
+E     {'content_hash': 'c0c757d6ff4bb82c8391d9525540e82f0e4bf5b15c7238ed6089bd72b59cbe5c'} != {'content_hash': '44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a'}
+E     {'value': {'content_hash': '44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a', 'kind': 'inline', 'owner_id': 'f36a8727-03ca-4f59-b8ad-523dd1d975a8', 'value': {}}} != {'value': {}}
+E     Use -v to get more diff
+_______ test_wait_preserves_resume_payload_and_hash[memory-empty_array] ________
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round10.py:105: in test_wait_preserves_resume_payload_and_hash
+    assert observed[0].to_dict() == expected.to_dict()
+E   AssertionError: assert {'content_has... 'value': []}} == {'content_has..., 'value': []}
+E     
+E     Omitting 2 identical items, use -vv to show
+E     Differing items:
+E     {'content_hash': '9ac815188cd7ca9180af69f241c1790b3a13c60f4ab2232104463ccb3dd9220e'} != {'content_hash': '4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945'}
+E     {'value': {'content_hash': '4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945', 'kind': 'inline', 'owner_id': '4558709e-2cd0-45df-b09f-a109238b7ecc', 'value': []}} != {'value': []}
+E     Use -v to get more diff
+__________ test_wait_preserves_resume_payload_and_hash[memory-false] ___________
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round10.py:105: in test_wait_preserves_resume_payload_and_hash
+    assert observed[0].to_dict() == expected.to_dict()
+E   AssertionError: assert {'content_has...alue': False}} == {'content_has...value': False}
+E     
+E     Omitting 2 identical items, use -vv to show
+E     Differing items:
+E     {'content_hash': 'fe2849c76a751dc8a3169e5e8331e7350b994b701ffd8bb0834f6fa56ff3e369'} != {'content_hash': 'fcbcf165908dd18a9e49f7ff27810176db8e9f63b4352213741664245224f8aa'}
+E     {'value': {'content_hash': 'fcbcf165908dd18a9e49f7ff27810176db8e9f63b4352213741664245224f8aa', 'kind': 'inline', 'owner_id': 'd8a9c96a-8e80-4abf-a79b-2dc2580b86b7', 'value': False}} != {'value': False}
+E     Use -v to get more diff
+___________ test_wait_preserves_resume_payload_and_hash[memory-zero] ___________
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round10.py:105: in test_wait_preserves_resume_payload_and_hash
+    assert observed[0].to_dict() == expected.to_dict()
+E   AssertionError: assert {'content_has..., 'value': 0}} == {'content_has...', 'value': 0}
+E     
+E     Omitting 2 identical items, use -vv to show
+E     Differing items:
+E     {'content_hash': '34f092966d96455c69a57bfc919b495b32ecae3f761676b7293652e0d1e080e9'} != {'content_hash': '5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9'}
+E     {'value': {'content_hash': '5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9', 'kind': 'inline', 'owner_id': '4522685f-cfc3-4480-a112-1d361ae27338', 'value': 0}} != {'value': 0}
+E     Use -v to get more diff
+________ test_wait_preserves_resume_payload_and_hash[memory-empty_text] ________
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round10.py:105: in test_wait_preserves_resume_payload_and_hash
+    assert observed[0].to_dict() == expected.to_dict()
+E   AssertionError: assert {'content_has... 'value': ''}} == {'content_has..., 'value': ''}
+E     
+E     Omitting 2 identical items, use -vv to show
+E     Differing items:
+E     {'content_hash': '4fff53a7dc120131f5a1ee1d8600b89c5cdc7da41c4428c96e136918c9390028'} != {'content_hash': '12ae32cb1ec02d01eda3581b127c1fee3b0dc53572ed6baf239721a03d82e126'}
+E     {'value': {'content_hash': '12ae32cb1ec02d01eda3581b127c1fee3b0dc53572ed6baf239721a03d82e126', 'kind': 'inline', 'owner_id': '18a15ff2-e9af-439a-ab17-cb300ee60b59', 'value': ''}} != {'value': ''}
+E     Use -v to get more diff
+_________ test_wait_preserves_resume_payload_and_hash[file-reference] __________
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round10.py:105: in test_wait_preserves_resume_payload_and_hash
+    assert observed[0].to_dict() == expected.to_dict()
+E   AssertionError: assert {'content_has...d': 'saved'}}} == {'content_has...id': 'saved'}}
+E     
+E     Omitting 2 identical items, use -vv to show
+E     Differing items:
+E     {'content_hash': 'c9b08912ee83d40a756713ef8665b819cc974670bafe80f518837d85117df30e'} != {'content_hash': '600bef59de4515a8e0c4d4592816e013eb64b7355ce486aa4edf06c1a5496a9c'}
+E     {'value': {'content_hash': '600bef59de4515a8e0c4d4592816e013eb64b7355ce486aa4edf06c1a5496a9c', 'kind': 'inline', 'owner_id': 'd4207c80-9edd-4fd8-a924-464bd8d066cc', 'value': {'generation': 1, 'operation_id': 'saved'}}} != {'value': {'generation': 1, 'operation_id': 'saved'}}
+E     Use -v to get more diff
+____________ test_wait_preserves_resume_payload_and_hash[file-null] ____________
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round10.py:105: in test_wait_preserves_resume_payload_and_hash
+    assert observed[0].to_dict() == expected.to_dict()
+E   AssertionError: assert {'content_has...value': None}} == {'content_has...'value': None}
+E     
+E     Omitting 2 identical items, use -vv to show
+E     Differing items:
+E     {'content_hash': '26733871ab86f7870076eccd3c8b4c49c69e56915a2e80f6107e8760539bb074'} != {'content_hash': '74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b'}
+E     {'value': {'content_hash': '74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b', 'kind': 'inline', 'owner_id': '3c6019ed-70ed-4d6e-b9ee-9eb71b6dacff', 'value': None}} != {'value': None}
+E     Use -v to get more diff
+________ test_wait_preserves_resume_payload_and_hash[file-empty_object] ________
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round10.py:105: in test_wait_preserves_resume_payload_and_hash
+    assert observed[0].to_dict() == expected.to_dict()
+E   AssertionError: assert {'content_has... 'value': {}}} == {'content_has..., 'value': {}}
+E     
+E     Omitting 2 identical items, use -vv to show
+E     Differing items:
+E     {'content_hash': 'f0c253469e6473ad84b3a468dd819adfc0473b4601145294aed375f311bae888'} != {'content_hash': '44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a'}
+E     {'value': {'content_hash': '44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a', 'kind': 'inline', 'owner_id': 'edb30f12-2a4f-4b4c-9dbf-f99fce5112f4', 'value': {}}} != {'value': {}}
+E     Use -v to get more diff
+________ test_wait_preserves_resume_payload_and_hash[file-empty_array] _________
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round10.py:105: in test_wait_preserves_resume_payload_and_hash
+    assert observed[0].to_dict() == expected.to_dict()
+E   AssertionError: assert {'content_has... 'value': []}} == {'content_has..., 'value': []}
+E     
+E     Omitting 2 identical items, use -vv to show
+E     Differing items:
+E     {'content_hash': 'e16707215c7b1afd33b08cd5e38bc42c4dcf1d3cd254eb63d207d0d3844a0637'} != {'content_hash': '4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945'}
+E     {'value': {'content_hash': '4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945', 'kind': 'inline', 'owner_id': '454c12e4-c705-4ec8-93dd-74b29f600467', 'value': []}} != {'value': []}
+E     Use -v to get more diff
+___________ test_wait_preserves_resume_payload_and_hash[file-false] ____________
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round10.py:105: in test_wait_preserves_resume_payload_and_hash
+    assert observed[0].to_dict() == expected.to_dict()
+E   AssertionError: assert {'content_has...alue': False}} == {'content_has...value': False}
+E     
+E     Omitting 2 identical items, use -vv to show
+E     Differing items:
+E     {'content_hash': '22ff5fc81beb8605307de2ed521df068c7516b2fb3da1ffe754012962b5b5d88'} != {'content_hash': 'fcbcf165908dd18a9e49f7ff27810176db8e9f63b4352213741664245224f8aa'}
+E     {'value': {'content_hash': 'fcbcf165908dd18a9e49f7ff27810176db8e9f63b4352213741664245224f8aa', 'kind': 'inline', 'owner_id': '2de4a49a-0b50-4d17-b84c-a180662077b2', 'value': False}} != {'value': False}
+E     Use -v to get more diff
+____________ test_wait_preserves_resume_payload_and_hash[file-zero] ____________
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round10.py:105: in test_wait_preserves_resume_payload_and_hash
+    assert observed[0].to_dict() == expected.to_dict()
+E   AssertionError: assert {'content_has..., 'value': 0}} == {'content_has...', 'value': 0}
+E     
+E     Omitting 2 identical items, use -vv to show
+E     Differing items:
+E     {'content_hash': '3a59288b05e196fdbf09a4a76956397cde9356c084f3aeaac565b013b39c9e1d'} != {'content_hash': '5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9'}
+E     {'value': {'content_hash': '5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9', 'kind': 'inline', 'owner_id': 'e349e119-bbc8-4453-be53-7abd1a0e3a08', 'value': 0}} != {'value': 0}
+E     Use -v to get more diff
+_________ test_wait_preserves_resume_payload_and_hash[file-empty_text] _________
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round10.py:105: in test_wait_preserves_resume_payload_and_hash
+    assert observed[0].to_dict() == expected.to_dict()
+E   AssertionError: assert {'content_has... 'value': ''}} == {'content_has..., 'value': ''}
+E     
+E     Omitting 2 identical items, use -vv to show
+E     Differing items:
+E     {'content_hash': 'e611aac573f3a98419e001271dd2fa88a727d6ba76808a5e7284f5929990e77c'} != {'content_hash': '12ae32cb1ec02d01eda3581b127c1fee3b0dc53572ed6baf239721a03d82e126'}
+E     {'value': {'content_hash': '12ae32cb1ec02d01eda3581b127c1fee3b0dc53572ed6baf239721a03d82e126', 'kind': 'inline', 'owner_id': 'cba54ebc-af7e-4c29-b432-94e86d010df0', 'value': ''}} != {'value': ''}
+E     Use -v to get more diff
+_________ test_builtin_model_wait_delivers_its_saved_reference[memory] _________
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round10.py:130: in test_builtin_model_wait_delivers_its_saved_reference
+    assert actual == saved
+E   AssertionError: assert {'content_has...6166fc88ff'}}} == {'kind': 'inl...e6166fc88ff'}}
+E     
+E     Omitting 2 identical items, use -vv to show
+E     Differing items:
+E     {'content_hash': 'db6737404aa70f9fb01fa5f733832523876dee2fe96d83e51eb4f22f28b69d56'} != {'content_hash': '536666f6ad7c7b7c8ff2b922af3b4133c773f596ef895cd2c377f420b5746599'}
+E     {'value': {'content_hash': '536666f6ad7c7b7c8ff2b922af3b4133c773f596ef895cd2c377f420b5746599', 'kind': 'inline', 'owner_id': '0e83d4cb-db74-4cbe-a214-a00443e7db60', 'value': {'operation_id': 'c85f1d3d-0fd9-5473-a697-7e6166fc88ff'}}} != {'value': {'operation_id': 'c85f1d3d-0fd9-5473-a697-7e6166fc88ff'}}
+E     Use -v to get more diff
+__________ test_builtin_model_wait_delivers_its_saved_reference[file] __________
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round10.py:130: in test_builtin_model_wait_delivers_its_saved_reference
+    assert actual == saved
+E   AssertionError: assert {'content_has...39c0ca796a'}}} == {'content_has...e39c0ca796a'}}
+E     
+E     Omitting 2 identical items, use -vv to show
+E     Differing items:
+E     {'content_hash': 'e5b3a68ba023c41635db102a5152ccefa34b3b97f7045ca829c048eb6b2eb414'} != {'content_hash': 'e209a5d5712e1f1db3867535552b3a3683e8e65296bc94520ec28e9beb4753c3'}
+E     {'value': {'content_hash': 'e209a5d5712e1f1db3867535552b3a3683e8e65296bc94520ec28e9beb4753c3', 'kind': 'inline', 'owner_id': '0af01410-9015-407e-ab86-edab9a5e3c8f', 'value': {'operation_id': '6a3eb3cf-f58b-58f9-85a0-ee39c0ca796a'}}} != {'value': {'operation_id': '6a3eb3cf-f58b-58f9-85a0-ee39c0ca796a'}}
+E     Use -v to get more diff
+__ test_invalid_progress_is_rejected_before_commit[memory-completed_progress] __
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round10.py:186: in test_invalid_progress_is_rejected_before_commit
+    assert result.status == "failed" and result.error["code"] == "NODE_OUTCOME_INVALID"
+E   AssertionError: assert ('succeeded' == 'failed'
+E     
+E     - failed
+E     + succeeded)
+____ test_invalid_progress_is_rejected_before_commit[memory-unknown_phase] _____
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round10.py:186: in test_invalid_progress_is_rejected_before_commit
+    assert result.status == "failed" and result.error["code"] == "NODE_OUTCOME_INVALID"
+E   AssertionError: assert ('succeeded' == 'failed'
+E     
+E     - failed
+E     + succeeded)
+_ test_invalid_progress_is_rejected_before_commit[memory-unsupported_version] __
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round10.py:186: in test_invalid_progress_is_rejected_before_commit
+    assert result.status == "failed" and result.error["code"] == "NODE_OUTCOME_INVALID"
+E   AssertionError: assert ('succeeded' == 'failed'
+E     
+E     - failed
+E     + succeeded)
+_____ test_invalid_progress_is_rejected_before_commit[memory-foreign_role] _____
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round10.py:186: in test_invalid_progress_is_rejected_before_commit
+    assert result.status == "failed" and result.error["code"] == "NODE_OUTCOME_INVALID"
+E   AssertionError: assert ('succeeded' == 'failed'
+E     
+E     - failed
+E     + succeeded)
+____ test_invalid_progress_is_rejected_before_commit[memory-negative_loop] _____
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round10.py:186: in test_invalid_progress_is_rejected_before_commit
+    assert result.status == "failed" and result.error["code"] == "NODE_OUTCOME_INVALID"
+E   AssertionError: assert ('succeeded' == 'failed'
+E     
+E     - failed
+E     + succeeded)
+___ test_invalid_progress_is_rejected_before_commit[file-completed_progress] ___
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round10.py:186: in test_invalid_progress_is_rejected_before_commit
+    assert result.status == "failed" and result.error["code"] == "NODE_OUTCOME_INVALID"
+E   AssertionError: assert ('succeeded' == 'failed'
+E     
+E     - failed
+E     + succeeded)
+_____ test_invalid_progress_is_rejected_before_commit[file-unknown_phase] ______
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round10.py:186: in test_invalid_progress_is_rejected_before_commit
+    assert result.status == "failed" and result.error["code"] == "NODE_OUTCOME_INVALID"
+E   AssertionError: assert ('succeeded' == 'failed'
+E     
+E     - failed
+E     + succeeded)
+__ test_invalid_progress_is_rejected_before_commit[file-unsupported_version] ___
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round10.py:186: in test_invalid_progress_is_rejected_before_commit
+    assert result.status == "failed" and result.error["code"] == "NODE_OUTCOME_INVALID"
+E   AssertionError: assert ('succeeded' == 'failed'
+E     
+E     - failed
+E     + succeeded)
+______ test_invalid_progress_is_rejected_before_commit[file-foreign_role] ______
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round10.py:186: in test_invalid_progress_is_rejected_before_commit
+    assert result.status == "failed" and result.error["code"] == "NODE_OUTCOME_INVALID"
+E   AssertionError: assert ('succeeded' == 'failed'
+E     
+E     - failed
+E     + succeeded)
+_____ test_invalid_progress_is_rejected_before_commit[file-negative_loop] ______
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round10.py:186: in test_invalid_progress_is_rejected_before_commit
+    assert result.status == "failed" and result.error["code"] == "NODE_OUTCOME_INVALID"
+E   AssertionError: assert ('succeeded' == 'failed'
+E     
+E     - failed
+E     + succeeded)
+____ test_rejected_progress_does_not_leave_unrecoverable_checkpoint[memory] ____
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round10.py:239: in test_rejected_progress_does_not_leave_unrecoverable_checkpoint
+    result = await (await build(recovered).start(run_id="invalid-progress-recovery")).wait(
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/public/handles.py:57: in wait
+    return await observe()
+           ^^^^^^^^^^^^^^^
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/public/handles.py:52: in observe
+    self._runtime.raise_local_failure(self.run_id)
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/runtime/host.py:158: in raise_local_failure
+    raise failure
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/runtime/host.py:327: in _drive
+    validate_recovery(self._load(run_id))
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/runtime/recovery.py:32: in validate_recovery
+    _validate_graph(state)
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/runtime/recovery.py:257: in _validate_graph
+    _require(
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/runtime/recovery.py:14: in _require
+    raise InfrastructureError(
+E   agentloom.errors.InfrastructureError: PERSISTENCE_INVARIANT_BROKEN: Committed execution facts disagree: node.terminal
+_____ test_rejected_progress_does_not_leave_unrecoverable_checkpoint[file] _____
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round10.py:239: in test_rejected_progress_does_not_leave_unrecoverable_checkpoint
+    result = await (await build(recovered).start(run_id="invalid-progress-recovery")).wait(
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/public/handles.py:57: in wait
+    return await observe()
+           ^^^^^^^^^^^^^^^
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/public/handles.py:52: in observe
+    self._runtime.raise_local_failure(self.run_id)
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/runtime/host.py:158: in raise_local_failure
+    raise failure
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/runtime/host.py:327: in _drive
+    validate_recovery(self._load(run_id))
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/runtime/recovery.py:32: in validate_recovery
+    _validate_graph(state)
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/runtime/recovery.py:257: in _validate_graph
+    _require(
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/runtime/recovery.py:14: in _require
+    raise InfrastructureError(
+E   agentloom.errors.InfrastructureError: PERSISTENCE_INVARIANT_BROKEN: Committed execution facts disagree: node.terminal
+________ test_generator_cleanup_cannot_erase_committed_complete[memory] ________
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round10.py:251: in activate
+    yield Complete(
+E   GeneratorExit
+
+During handling of the above exception, another exception occurred:
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round10.py:260: in activate
+    raise ValueError("local cleanup failed")
+E   ValueError: local cleanup failed
+
+The above exception was the direct cause of the following exception:
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round10.py:266: in test_generator_cleanup_cannot_erase_committed_complete
+    result = await handle.wait(timeout_s=5)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/public/handles.py:57: in wait
+    return await observe()
+           ^^^^^^^^^^^^^^^
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/public/handles.py:52: in observe
+    self._runtime.raise_local_failure(self.run_id)
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/runtime/host.py:158: in raise_local_failure
+    raise failure
+E   agentloom.errors.InfrastructureError: EXECUTION_DRIVER_FAILED: ValueError
+_________ test_generator_cleanup_cannot_erase_committed_complete[file] _________
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round10.py:251: in activate
+    yield Complete(
+E   GeneratorExit
+
+During handling of the above exception, another exception occurred:
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round10.py:260: in activate
+    raise ValueError("local cleanup failed")
+E   ValueError: local cleanup failed
+
+The above exception was the direct cause of the following exception:
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round10.py:266: in test_generator_cleanup_cannot_erase_committed_complete
+    result = await handle.wait(timeout_s=5)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/public/handles.py:57: in wait
+    return await observe()
+           ^^^^^^^^^^^^^^^
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/public/handles.py:52: in observe
+    self._runtime.raise_local_failure(self.run_id)
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/runtime/host.py:158: in raise_local_failure
+    raise failure
+E   agentloom.errors.InfrastructureError: EXECUTION_DRIVER_FAILED: ValueError
+_ test_malformed_latest_snapshot_falls_back_to_valid_ancestor[memory-missing_hash] _
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/checkpoints/journal.py:201: in restore
+    return _restore(tx, namespace, state)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/checkpoints/journal.py:244: in _restore
+    payload = _read_version(
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/checkpoints/journal.py:53: in _read_version
+    and payload_ref["sha256"] == payload_ref["blob_id"]
+        ^^^^^^^^^^^^^^^^^^^^^
+E   KeyError: 'sha256'
+
+The above exception was the direct cause of the following exception:
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round10.py:321: in test_malformed_latest_snapshot_falls_back_to_valid_ancestor
+    restored = store.load_run_consistently("default", state["run_id"])
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/storage/base.py:39: in load_run_consistently
+    return restore(tx, namespace, state) if state else None
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/checkpoints/journal.py:203: in restore
+    raise InfrastructureError("CHECKPOINT_CORRUPT") from exc
+E   agentloom.errors.InfrastructureError: CHECKPOINT_CORRUPT: CHECKPOINT_CORRUPT
+_ test_malformed_latest_snapshot_falls_back_to_valid_ancestor[memory-null_ref] _
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/checkpoints/journal.py:201: in restore
+    return _restore(tx, namespace, state)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/checkpoints/journal.py:243: in _restore
+    _require(checkpoint["engine_state_ref"]["content_scope_ref"]["namespace"] == namespace)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   TypeError: 'NoneType' object is not subscriptable
+
+The above exception was the direct cause of the following exception:
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round10.py:321: in test_malformed_latest_snapshot_falls_back_to_valid_ancestor
+    restored = store.load_run_consistently("default", state["run_id"])
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/storage/base.py:39: in load_run_consistently
+    return restore(tx, namespace, state) if state else None
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/checkpoints/journal.py:203: in restore
+    raise InfrastructureError("CHECKPOINT_CORRUPT") from exc
+E   agentloom.errors.InfrastructureError: CHECKPOINT_CORRUPT: CHECKPOINT_CORRUPT
+_ test_malformed_latest_snapshot_falls_back_to_valid_ancestor[file-missing_hash] _
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/checkpoints/journal.py:201: in restore
+    return _restore(tx, namespace, state)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/checkpoints/journal.py:244: in _restore
+    payload = _read_version(
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/checkpoints/journal.py:53: in _read_version
+    and payload_ref["sha256"] == payload_ref["blob_id"]
+        ^^^^^^^^^^^^^^^^^^^^^
+E   KeyError: 'sha256'
+
+The above exception was the direct cause of the following exception:
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round10.py:321: in test_malformed_latest_snapshot_falls_back_to_valid_ancestor
+    restored = store.load_run_consistently("default", state["run_id"])
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/storage/base.py:39: in load_run_consistently
+    return restore(tx, namespace, state) if state else None
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/checkpoints/journal.py:203: in restore
+    raise InfrastructureError("CHECKPOINT_CORRUPT") from exc
+E   agentloom.errors.InfrastructureError: CHECKPOINT_CORRUPT: CHECKPOINT_CORRUPT
+__ test_malformed_latest_snapshot_falls_back_to_valid_ancestor[file-null_ref] __
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/checkpoints/journal.py:201: in restore
+    return _restore(tx, namespace, state)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/checkpoints/journal.py:243: in _restore
+    _require(checkpoint["engine_state_ref"]["content_scope_ref"]["namespace"] == namespace)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   TypeError: 'NoneType' object is not subscriptable
+
+The above exception was the direct cause of the following exception:
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round10.py:321: in test_malformed_latest_snapshot_falls_back_to_valid_ancestor
+    restored = store.load_run_consistently("default", state["run_id"])
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/storage/base.py:39: in load_run_consistently
+    return restore(tx, namespace, state) if state else None
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/checkpoints/journal.py:203: in restore
+    raise InfrastructureError("CHECKPOINT_CORRUPT") from exc
+E   agentloom.errors.InfrastructureError: CHECKPOINT_CORRUPT: CHECKPOINT_CORRUPT
+- generated xml file: /Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/evidence/review-round10-20261019/junit.xml -
+=========================== short test summary info ============================
+FAILED qa/test_sdk_review_round10.py::test_wait_preserves_resume_payload_and_hash[memory-reference]
+FAILED qa/test_sdk_review_round10.py::test_wait_preserves_resume_payload_and_hash[memory-null]
+FAILED qa/test_sdk_review_round10.py::test_wait_preserves_resume_payload_and_hash[memory-empty_object]
+FAILED qa/test_sdk_review_round10.py::test_wait_preserves_resume_payload_and_hash[memory-empty_array]
+FAILED qa/test_sdk_review_round10.py::test_wait_preserves_resume_payload_and_hash[memory-false]
+FAILED qa/test_sdk_review_round10.py::test_wait_preserves_resume_payload_and_hash[memory-zero]
+FAILED qa/test_sdk_review_round10.py::test_wait_preserves_resume_payload_and_hash[memory-empty_text]
+FAILED qa/test_sdk_review_round10.py::test_wait_preserves_resume_payload_and_hash[file-reference]
+FAILED qa/test_sdk_review_round10.py::test_wait_preserves_resume_payload_and_hash[file-null]
+FAILED qa/test_sdk_review_round10.py::test_wait_preserves_resume_payload_and_hash[file-empty_object]
+FAILED qa/test_sdk_review_round10.py::test_wait_preserves_resume_payload_and_hash[file-empty_array]
+FAILED qa/test_sdk_review_round10.py::test_wait_preserves_resume_payload_and_hash[file-false]
+FAILED qa/test_sdk_review_round10.py::test_wait_preserves_resume_payload_and_hash[file-zero]
+FAILED qa/test_sdk_review_round10.py::test_wait_preserves_resume_payload_and_hash[file-empty_text]
+FAILED qa/test_sdk_review_round10.py::test_builtin_model_wait_delivers_its_saved_reference[memory]
+FAILED qa/test_sdk_review_round10.py::test_builtin_model_wait_delivers_its_saved_reference[file]
+FAILED qa/test_sdk_review_round10.py::test_invalid_progress_is_rejected_before_commit[memory-completed_progress]
+FAILED qa/test_sdk_review_round10.py::test_invalid_progress_is_rejected_before_commit[memory-unknown_phase]
+FAILED qa/test_sdk_review_round10.py::test_invalid_progress_is_rejected_before_commit[memory-unsupported_version]
+FAILED qa/test_sdk_review_round10.py::test_invalid_progress_is_rejected_before_commit[memory-foreign_role]
+FAILED qa/test_sdk_review_round10.py::test_invalid_progress_is_rejected_before_commit[memory-negative_loop]
+FAILED qa/test_sdk_review_round10.py::test_invalid_progress_is_rejected_before_commit[file-completed_progress]
+FAILED qa/test_sdk_review_round10.py::test_invalid_progress_is_rejected_before_commit[file-unknown_phase]
+FAILED qa/test_sdk_review_round10.py::test_invalid_progress_is_rejected_before_commit[file-unsupported_version]
+FAILED qa/test_sdk_review_round10.py::test_invalid_progress_is_rejected_before_commit[file-foreign_role]
+FAILED qa/test_sdk_review_round10.py::test_invalid_progress_is_rejected_before_commit[file-negative_loop]
+FAILED qa/test_sdk_review_round10.py::test_rejected_progress_does_not_leave_unrecoverable_checkpoint[memory]
+FAILED qa/test_sdk_review_round10.py::test_rejected_progress_does_not_leave_unrecoverable_checkpoint[file]
+FAILED qa/test_sdk_review_round10.py::test_generator_cleanup_cannot_erase_committed_complete[memory]
+FAILED qa/test_sdk_review_round10.py::test_generator_cleanup_cannot_erase_committed_complete[file]
+FAILED qa/test_sdk_review_round10.py::test_malformed_latest_snapshot_falls_back_to_valid_ancestor[memory-missing_hash]
+FAILED qa/test_sdk_review_round10.py::test_malformed_latest_snapshot_falls_back_to_valid_ancestor[memory-null_ref]
+FAILED qa/test_sdk_review_round10.py::test_malformed_latest_snapshot_falls_back_to_valid_ancestor[file-missing_hash]
+FAILED qa/test_sdk_review_round10.py::test_malformed_latest_snapshot_falls_back_to_valid_ancestor[file-null_ref]
+34 failed, 12 passed in 12.83s

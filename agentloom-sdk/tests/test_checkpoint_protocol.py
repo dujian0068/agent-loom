@@ -130,3 +130,79 @@ async def test_failed_snapshot_cannot_rollback_node_or_model_commits(
             assert len(tx.list("scope_commits")) > 0 and len(tx.list("node_checkpoints")) > 0
         replay = runtime_store.load_run_consistently("default", result.run_id)
         assert replay["tasks"] == state["tasks"] and replay["output"]["value"] == "durable"
+
+
+@pytest.mark.parametrize(
+    "damage",
+    [
+        "missing_ref",
+        "list_ref",
+        "null_scope",
+        "missing_scope",
+        "null_payload",
+        "bad_refs",
+        "all_bad",
+    ],
+)
+async def test_snapshot_structure_fallback_uses_only_a_complete_valid_candidate(
+    runtime_store, build, damage
+):
+    from agentloom.checkpoints.journal import _payload
+
+    state = await checkpointed_run(runtime_store, build)
+    with runtime_store.transaction("default") as tx:
+        head = tx.get("graph_heads", state["graph_id"])
+        latest = tx.get("graph_checkpoints", head["head_checkpoint_id"])
+        assert latest["previous_checkpoint_id"] is not None
+        snapshots = tx.list("graph_checkpoints") if damage == "all_bad" else [latest]
+        for snapshot in snapshots:
+            if damage == "missing_ref":
+                del snapshot["engine_state_ref"]
+            elif damage == "list_ref":
+                snapshot["engine_state_ref"] = []
+            elif damage == "null_scope":
+                snapshot["engine_state_ref"]["content_scope_ref"] = None
+            elif damage == "missing_scope":
+                del snapshot["engine_state_ref"]["content_scope_ref"]
+            elif damage in {"null_payload", "bad_refs"}:
+                snapshot["engine_state_ref"] = _payload(
+                    tx,
+                    "default",
+                    state["run_id"],
+                    "agent_checkpoint",
+                    None
+                    if damage == "null_payload"
+                    else {"refs": None, "node_refs": {}, "delta_hash": "bad"},
+                )
+            else:
+                snapshot["engine_state_ref"] = None
+            tx.put("graph_checkpoints", snapshot["checkpoint_id"], snapshot)
+    replay = runtime_store.load_run_consistently("default", state["run_id"])
+    assert replay["tasks"] == state["tasks"] and replay["operations"] == state["operations"]
+    assert replay["lease"] == state["lease"]
+
+
+@pytest.mark.parametrize("version", [True, 2])
+async def test_corrupt_candidate_with_unknown_protocol_is_not_skipped(
+    runtime_store, build, version
+):
+    state = await checkpointed_run(runtime_store, build)
+    with runtime_store.transaction("default") as tx:
+        head = tx.get("graph_heads", state["graph_id"])
+        latest = tx.get("graph_checkpoints", head["head_checkpoint_id"])
+        latest.update(engine_state_ref=None, engine_protocol_version=version)
+        tx.put("graph_checkpoints", latest["checkpoint_id"], latest)
+    with pytest.raises(InfrastructureError, match="CHECKPOINT_VERSION_UNSUPPORTED"):
+        runtime_store.load_run_consistently("default", state["run_id"])
+
+
+async def test_snapshot_fallback_cannot_skip_a_missing_delta(runtime_store, build):
+    state = await checkpointed_run(runtime_store, build)
+    with runtime_store.transaction("default") as tx:
+        head = tx.get("graph_heads", state["graph_id"])
+        latest = tx.get("graph_checkpoints", head["head_checkpoint_id"])
+        latest["engine_state_ref"] = None
+        tx.put("graph_checkpoints", latest["checkpoint_id"], latest)
+        tx.delete("scope_commits", f"{state['graph_id']}:{head['scope_commit_seq']}")
+    with pytest.raises(InfrastructureError, match="CHECKPOINT_CORRUPT"):
+        runtime_store.load_run_consistently("default", state["run_id"])
