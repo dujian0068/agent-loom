@@ -3,7 +3,7 @@ from types import SimpleNamespace
 
 import pytest
 from conftest import configured_agent, publish, request, submit
-from langchain_core.messages import ToolMessage
+from langchain_core.messages import AIMessage, ToolMessage
 from sqlalchemy import select
 
 from agentloom_platform.persistence import Operation, Release, Run
@@ -20,7 +20,7 @@ def test_tool_receipts_prevent_replay_and_budget_rejection_has_no_pending_operat
         run = s.get(Run, receipt["run_id"])
         run.status, run.generation = "running", 1
         snapshot = s.get(Release, run.release_id).snapshot
-    snapshot["draft"]["execution"]["tool_calls"] = 1
+    snapshot["draft"]["execution"]["tool_calls"] = 2
     control = Control(db, run.id, 1, snapshot, "planner")
     calls = []
 
@@ -28,19 +28,37 @@ def test_tool_receipts_prevent_replay_and_budget_rejection_has_no_pending_operat
         calls.append(req.tool_call["id"])
         return ToolMessage(content="written", tool_call_id=req.tool_call["id"])
 
+    def tool_request(call_id):
+        call = {"id": call_id, "name": "write_file", "args": {"path": "test", "content": "ok"}}
+        return SimpleNamespace(
+            tool_call=call,
+            state={
+                "messages": [
+                    AIMessage(
+                        id="persisted-message-" + call_id,
+                        content="",
+                        tool_calls=[call],
+                    )
+                ]
+            },
+        )
+
+    async def uncertain_handler(req):
+        raise ConnectionError("connection lost after dispatch")
+
     async def exercise():
-        first = SimpleNamespace(tool_call={"id": "stable-id"})
+        first = tool_request("stable-id")
         result = await control.awrap_tool_call(first, handler)
         assert (await control.awrap_tool_call(first, handler)).content == result.content
+        with pytest.raises(ConnectionError):
+            await control.awrap_tool_call(tool_request("unknown"), uncertain_handler)
+        with pytest.raises(RuntimeBlocked, match="人工核对"):
+            await control.awrap_tool_call(tool_request("unknown"), handler)
         with pytest.raises(RuntimeBlocked, match="预算"):
-            await control.awrap_tool_call(SimpleNamespace(tool_call={"id": "over-budget"}), handler)
+            await control.awrap_tool_call(tool_request("over-budget"), handler)
         with db.session() as s:
             operations = list(s.scalars(select(Operation).where(Operation.run_id == run.id)))
-            assert len(operations) == 1 and operations[0].status == "completed"
-        with db.session(write=True) as s:
-            s.add(Operation(run_id=run.id, call_id="planner:unknown", status="pending"))
-        with pytest.raises(RuntimeBlocked, match="人工核对"):
-            await control.awrap_tool_call(SimpleNamespace(tool_call={"id": "unknown"}), handler)
+            assert sorted(operation.status for operation in operations) == ["completed", "pending"]
 
     asyncio.run(exercise())
     assert calls == ["stable-id"]

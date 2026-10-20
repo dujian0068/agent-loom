@@ -77,10 +77,11 @@ docker compose --env-file deploy/.env -f deploy/compose.yaml up -d
 PYTHONPATH=src .venv/bin/python -m pytest ../tests -q
 
 # 在 web/ 下
+npm test
 npm run build
 ```
 
-测试使用显式开启的确定性模型，并启动本机 MCP HTTP 服务；不需要外部模型密钥。PostgreSQL CI 使用 `PLATFORM_TEST_DATABASE_URL` 和 `PLATFORM_TEST_CHECKPOINT_URL` 指向专用测试库，测试会重建该库的平台表，不能指向业务数据库。
+测试使用显式开启的确定性模型及本机 OpenAI 兼容 HTTP 服务，并启动本机 MCP／SSE 服务；包含真实 Worker 中途强杀恢复，不需要外部模型密钥。前端使用 Vitest 检查保存、导航与请求重试。测试证据见[回归记录](../docs/platform/testing-2026-10-21.md)。PostgreSQL CI 使用 `PLATFORM_TEST_DATABASE_URL` 和 `PLATFORM_TEST_CHECKPOINT_URL` 指向专用测试库，测试会重建该库的平台表，不能指向业务数据库。
 
 API 启动后访问 `/api/v1/docs` 或 `/api/v1/openapi.json`。当前实现路径以实际 OpenAPI 为准，[API 设计](../docs/platform/api.md)保留后续目标协议。CI 独立检查前端、SQLite／PostgreSQL 和容器部署。
 

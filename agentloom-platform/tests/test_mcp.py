@@ -8,11 +8,15 @@ from pathlib import Path
 import httpx
 import pytest
 from conftest import configured_agent, publish, request, submit
+from langchain_core.messages import AIMessage, ToolMessage
+from langchain_core.outputs import ChatGeneration, ChatResult
 from langchain_mcp_adapters.client import MultiServerMCPClient
 from langgraph.checkpoint.memory import InMemorySaver
 
 from agentloom_platform.persistence import Release, Run
 from agentloom_platform.runtime import RuntimeBlocked, assemble
+from agentloom_platform.runtime import TestModel as FixtureChatModel
+from agentloom_platform.worker import run_one
 
 
 @pytest.fixture
@@ -85,8 +89,9 @@ def test_real_http_discovery_explicit_selection_and_schema_drift(platform, mcp_u
     app = configured_agent(platform, bindings=[binding])
     publish(platform, app)
     _, receipt = submit(platform, app)
-    with platform["db"].session() as s:
+    with platform["db"].session(write=True) as s:
         run = s.get(Run, receipt["run_id"])
+        run.status, run.generation = "running", 1
         snapshot = s.get(Release, run.release_id).snapshot
 
     async def exercise():
@@ -101,3 +106,30 @@ def test_real_http_discovery_explicit_selection_and_schema_drift(platform, mcp_u
             await assemble(platform["settings"], platform["db"], run, snapshot, InMemorySaver())
 
     asyncio.run(exercise())
+
+    def generate(self, messages, stop=None, run_manager=None, **kwargs):
+        assert self.tool_names == ["add"]
+        result = next((message for message in reversed(messages) if isinstance(message, ToolMessage)), None)
+        message = (
+            AIMessage(content=str(result.content))
+            if result
+            else AIMessage(
+                content="",
+                tool_calls=[
+                    {
+                        "id": "mcp-call",
+                        "name": "add",
+                        "type": "tool_call",
+                        "args": {"left": 2, "right": 3},
+                    }
+                ],
+            )
+        )
+        return ChatResult(generations=[ChatGeneration(message=message)])
+
+    monkeypatch.setattr(FixtureChatModel, "_generate", generate)
+    asyncio.run(run_one(platform["settings"], platform["db"], run.id))
+    with platform["db"].session() as s:
+        completed = s.get(Run, run.id)
+        assert completed.status == "completed" and "5" in completed.result
+        assert completed.tool_calls == 1 and completed.model_calls == 2

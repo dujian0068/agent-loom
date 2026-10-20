@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, ref, watch } from 'vue'
-import { onBeforeRouteLeave, useRoute } from 'vue-router'
+import { onBeforeRouteLeave, onBeforeRouteUpdate, useRoute } from 'vue-router'
 import { api, ApiError } from '../api'
 import { canEdit, state } from '../state'
 import { definition, type Agent, type Definition, type Resource, type Violation } from '../types'
@@ -9,6 +9,7 @@ const tab = ref('basic'), roleKey = ref('planner'), error = ref(''), notice = re
 const violations = ref<Violation[]>([]), validatedRevision = ref(0), confirmPublish = ref(false)
 const executorKey = ref(''), releases = ref<any[]>([]), jobStatus = ref('')
 let poll: ReturnType<typeof setInterval> | undefined
+let loadGeneration = 0
 const dirty = computed(() => !!agent.value && JSON.stringify(agent.value.draft) !== baseline.value)
 const currentRole = computed<Definition | undefined>(() => roleKey.value === 'planner' ? agent.value?.draft.definition : agent.value?.draft.executors[roleKey.value])
 const groups = [{ key: 'tool', title: 'Tool · 工具' }, { key: 'skill', title: 'Skill · 技能' }, { key: 'mcp', title: 'MCP · 服务' }]
@@ -22,17 +23,24 @@ const modelValue = computed({
   },
 })
 async function load() {
+  const generation = ++loadGeneration, id = String(route.params.id)
+  clearInterval(poll)
+  if (agent.value?.id !== id) agent.value = undefined
+  confirmPublish.value = false; notice.value = ''; jobStatus.value = ''; releases.value = []; violations.value = []
   if (!canEdit.value) { error.value = '当前角色不能编辑应用'; return }
   error.value = ''
   try {
     const [app, catalog] = await Promise.all([
-      api<Agent>(`/agents/${route.params.id}`), api<{items: Resource[]}>(`/spaces/${state.spaceId}/resources`),
+      api<Agent>(`/agents/${id}`), api<{items: Resource[]}>(`/spaces/${state.spaceId}/resources`),
     ])
+    if (generation !== loadGeneration) return
     agent.value = app; resources.value = catalog.items; baseline.value = JSON.stringify(app.draft)
     validatedRevision.value = 0; roleKey.value = 'planner'
-    releases.value = (await api<{items: any[]}>(`/agents/${app.id}/releases`)).items
+    const history = await api<{items: any[]}>(`/agents/${app.id}/releases`)
+    if (generation !== loadGeneration) return
+    releases.value = history.items
     if (app.lifecycle === 'publishing') startPolling()
-  } catch (e) { error.value = (e as Error).message }
+  } catch (e) { if (generation === loadGeneration) error.value = (e as Error).message }
 }
 function binding(resource: Resource) { return currentRole.value?.capabilities.find(b => b.resource_id === resource.id) }
 function currentVersion(resource: Resource) {
@@ -58,54 +66,78 @@ function addExecutor() {
   agent.value.draft.executors[key] = definition(); executorKey.value = ''; error.value = ''
 }
 async function save() {
-  if (!agent.value) return false
+  if (!agent.value || busy.value) return false
+  const current = agent.value, submitted = JSON.stringify(current.draft)
   busy.value = true; error.value = ''; notice.value = ''
   try {
-    agent.value = await api<Agent>(`/agents/${agent.value.id}/draft`, 'PUT', agent.value.draft, agent.value.revision)
-    baseline.value = JSON.stringify(agent.value.draft); validatedRevision.value = 0; violations.value = []; notice.value = '草稿已保存'
+    const saved = await api<Agent>(`/agents/${current.id}/draft`, 'PUT', JSON.parse(submitted), current.revision)
+    if (agent.value !== current) return false
+    const latestDraft = JSON.stringify(current.draft) === submitted ? saved.draft : current.draft
+    agent.value = { ...saved, draft: latestDraft }
+    baseline.value = JSON.stringify(saved.draft); validatedRevision.value = 0; violations.value = []
+    notice.value = dirty.value ? '已保存提交的版本，后续修改尚未保存' : '草稿已保存'
     return true
-  } catch (e) { error.value = (e as Error).message; return false } finally { busy.value = false }
+  } catch (e) { if (agent.value === current) error.value = (e as Error).message; return false } finally { busy.value = false }
 }
 async function validate() {
+  if (busy.value || !agent.value) return
   if (dirty.value && !await save()) return
+  if (dirty.value) { notice.value = '有新的未保存修改，请保存后再校验'; return }
+  const current = agent.value, revision = current.revision
   busy.value = true; error.value = ''
   try {
-    const report = await api<{ valid: boolean; violations: Violation[] }>(`/agents/${agent.value!.id}/validate`, 'POST', { draft_revision: agent.value!.revision })
-    violations.value = report.violations; validatedRevision.value = report.valid ? agent.value!.revision : 0
-    notice.value = report.valid ? '配置校验通过' : ''
-  } catch (e) { error.value = (e as Error).message } finally { busy.value = false }
+    const report = await api<{ valid: boolean; violations: Violation[] }>(`/agents/${current.id}/validate`, 'POST', { draft_revision: revision })
+    if (agent.value !== current) return
+    violations.value = report.violations; validatedRevision.value = report.valid ? revision : 0
+    notice.value = report.valid ? (dirty.value ? '已保存版本校验通过，当前修改尚未校验' : '配置校验通过') : ''
+  } catch (e) { if (agent.value === current) error.value = (e as Error).message } finally { busy.value = false }
 }
 async function publish() {
-  if (!agent.value) return
+  if (!agent.value || busy.value || dirty.value || validatedRevision.value !== agent.value.revision) return
+  const current = agent.value
   busy.value = true; error.value = ''
   try {
     const receipt = await api<{job_id: string; status: string}>(`/agents/${agent.value.id}/releases`, 'POST',
       { draft_revision: agent.value.revision }, agent.value.revision)
+    if (agent.value !== current) return
     confirmPublish.value = false; agent.value.lifecycle = 'publishing'; jobStatus.value = receipt.status
     startPolling(receipt.job_id)
   } catch (e) {
-    error.value = (e as Error).message
-    if (e instanceof ApiError) violations.value = e.violations
+    if (agent.value === current) {
+      error.value = (e as Error).message
+      if (e instanceof ApiError) violations.value = e.violations
+    }
   } finally { busy.value = false }
 }
 function startPolling(jobId?: string) {
   clearInterval(poll)
   poll = setInterval(async () => {
     if (!agent.value) return
+    const current = agent.value
     try {
-      if (jobId) jobStatus.value = (await api<{status: string}>(`/release-jobs/${jobId}`)).status
-      const latest = await api<Agent>(`/agents/${agent.value.id}`)
+      const job = jobId ? await api<{status: string}>(`/release-jobs/${jobId}`) : undefined
+      if (agent.value !== current) return
+      if (job) jobStatus.value = job.status
+      const latest = await api<Agent>(`/agents/${current.id}`)
+      if (agent.value !== current) return
       agent.value.lifecycle = latest.lifecycle; agent.value.release_id = latest.release_id; agent.value.release_version = latest.release_version
       if (latest.lifecycle === 'active') {
         clearInterval(poll); notice.value = '新版本已发布'
-        releases.value = (await api<{items: any[]}>(`/agents/${latest.id}/releases`)).items
+        const history = await api<{items: any[]}>(`/agents/${latest.id}/releases`)
+        if (agent.value === current) releases.value = history.items
       }
-    } catch (e) { error.value = (e as Error).message; clearInterval(poll) }
+    } catch (e) { if (agent.value === current) { error.value = (e as Error).message; clearInterval(poll) } }
   }, 2000)
 }
 watch(() => route.params.id, load, { immediate: true })
-onBeforeRouteLeave(() => !dirty.value || window.confirm('草稿有未保存修改，确定离开？'))
-onBeforeUnmount(() => clearInterval(poll))
+const confirmLeave = () => !dirty.value || window.confirm('草稿有未保存修改，确定离开？')
+onBeforeRouteLeave(confirmLeave)
+onBeforeRouteUpdate((to, from) => to.params.id === from.params.id || confirmLeave())
+function beforeUnload(event: BeforeUnloadEvent) {
+  if (dirty.value) { event.preventDefault(); event.returnValue = '' }
+}
+window.addEventListener('beforeunload', beforeUnload)
+onBeforeUnmount(() => { ++loadGeneration; clearInterval(poll); window.removeEventListener('beforeunload', beforeUnload) })
 </script>
 <template>
   <p v-if="error" class="error" role="alert">{{ error }} <button v-if="error.includes('草稿已被修改')" @click="load">重新加载草稿</button></p>

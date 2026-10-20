@@ -14,6 +14,9 @@ async function load() {
   catch (e) { error.value = (e as Error).message } finally { loading.value = false }
 }
 async function create() {
+  if (busy.value) return
+  if (!name.value.trim()) { error.value = '请填写应用名称'; return }
+  if (!['react', 'plan_executor'].includes(mode.value)) { error.value = '请选择 ReAct 或 Plan 执行模式'; return }
   busy.value = true; error.value = ''
   try {
     const agent = await api<Agent>(`/spaces/${state.spaceId}/agents`, 'POST', { name: name.value, description: description.value, mode: mode.value })
@@ -51,8 +54,8 @@ onMounted(load)
       <h2 id="create-title">新建应用</h2>
       <label>应用名称<input v-model="name" required maxlength="100" autofocus placeholder="例如：研发周报助手"></label>
       <fieldset><legend>执行模式（必选）</legend><div class="mode-grid">
-        <label class="choice"><input v-model="mode" type="radio" value="react" required><span><strong>ReAct</strong><small>主 Agent 自主调用所选工具完成任务。</small></span></label>
-        <label class="choice"><input v-model="mode" type="radio" value="plan_executor" required><span><strong>Plan</strong><small>Planner 拆分任务，专业执行器协作完成。</small></span></label>
+        <label class="choice"><input v-model="mode" type="radio" name="mode" value="react" required><span><strong>ReAct</strong><small>主 Agent 自主调用所选工具完成任务。</small></span></label>
+        <label class="choice"><input v-model="mode" type="radio" name="mode" value="plan_executor" required><span><strong>Plan</strong><small>Planner 拆分任务，专业执行器协作完成。</small></span></label>
       </div><small class="muted">创建后执行模式不可更改。</small></fieldset>
       <label>应用描述（选填）<textarea v-model="description" maxlength="2000" rows="3" placeholder="说明应用的用途与适用场景"></textarea></label>
       <p v-if="error" class="error" role="alert">{{ error }}</p>

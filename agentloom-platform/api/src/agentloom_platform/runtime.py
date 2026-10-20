@@ -1,6 +1,7 @@
 """All LangChain/LangGraph construction is isolated in this module."""
 
 import asyncio
+import hashlib
 import json
 import time
 from contextlib import asynccontextmanager
@@ -20,7 +21,7 @@ from pydantic import BaseModel, Field
 from sqlalchemy import select
 
 from .applications import GRAPH_VERSION, append_event, implementation_hash
-from .persistence import Application, ChatSession, Input, Membership, Operation, Resource, Run, uid
+from .persistence import Application, ChatSession, Input, Membership, Operation, Resource, Run, User, uid
 from .resources import decrypt_secret
 from .tools import Workspace, skill_tool
 
@@ -80,9 +81,10 @@ class Control(AgentMiddleware):
             session = s.get(ChatSession, run.session_id)
             app = s.get(Application, session.app_id)
             membership = s.get(Membership, (session.owner_id, app.space_id))
+            owner = s.get(User, session.owner_id)
             if run.generation != self.generation or run.status != "running" or app.lifecycle != "active":
                 raise RuntimeBlocked("任务执行权已关闭")
-            if not membership or time.time() >= run.deadline_at:
+            if not membership or not owner or not owner.enabled or time.time() >= run.deadline_at:
                 raise RuntimeBlocked("授权已撤销或运行已超时")
             for resource in self.snapshot["resources"].values():
                 current = s.get(Resource, resource["id"])
@@ -101,7 +103,25 @@ class Control(AgentMiddleware):
     async def awrap_tool_call(self, request, handler):
         async with self.tool_lock:
             self.check()
-            call_id = self.role + ":" + request.tool_call["id"]
+            # A provider's tool_call_id is scoped to its assistant message, not
+            # the entire Run. The persisted message id also survives recovery.
+            origin = next(
+                (
+                    message
+                    for message in reversed(request.state["messages"])
+                    if isinstance(message, AIMessage)
+                    and any(call["id"] == request.tool_call["id"] for call in message.tool_calls)
+                ),
+                None,
+            )
+            if origin is None or not origin.id:
+                raise RuntimeBlocked("工具调用缺少持久化的来源消息")
+            identity = json.dumps(
+                [origin.id, request.tool_call["id"], request.tool_call["name"], request.tool_call["args"]],
+                sort_keys=True,
+                ensure_ascii=False,
+            )
+            call_id = self.role + ":" + hashlib.sha256(identity.encode()).hexdigest()
             with self.db.session(write=True) as s:
                 previous = s.get(Operation, (self.run_id, call_id))
                 if previous:
@@ -305,6 +325,7 @@ async def checkpointer(url):
 async def assemble(settings, db, run, snapshot, saver):
     if snapshot["graph_version"] != GRAPH_VERSION or snapshot["implementation_hash"] != implementation_hash():
         raise RuntimeBlocked("运行依赖版本不匹配，拒绝使用新图恢复旧任务")
+    Control(db, run.id, run.generation, snapshot, "planner").check()
     draft, resources = snapshot["draft"], snapshot["resources"]
     model_resource = resources[f"{draft['model']['resource_id']}:{draft['model']['version']}"]
     model_spec = model_resource["spec"]
@@ -361,6 +382,7 @@ async def assemble(settings, db, run, snapshot, saver):
             elif resource["kind"] == "mcp":
                 from langchain_mcp_adapters.client import MultiServerMCPClient
 
+                controls[role_key].check()
                 with db.session() as s:
                     credential = decrypt_secret(s, settings, resource["id"])
                 connection = {"url": resource["spec"]["url"], "transport": "http"}
@@ -368,6 +390,7 @@ async def assemble(settings, db, run, snapshot, saver):
                     connection["headers"] = {"Authorization": f"Bearer {credential}"}
                 client = MultiServerMCPClient({"service": connection})
                 tools = await asyncio.wait_for(client.get_tools(), timeout=20)
+                controls[role_key].check()
                 expected = {t["name"]: t for t in resource["spec"]["members"]}
                 available = {t.name: t for t in tools}
                 for name in binding["members"]:
@@ -377,7 +400,9 @@ async def assemble(settings, db, run, snapshot, saver):
                     schema = schema if isinstance(schema, dict) else schema.model_json_schema()
                     if schema != expected[name]["schema"]:
                         raise RuntimeBlocked("MCP 工具参数已变化，请重新发现并发布")
-                    selected.append(available[name])
+                    selected.append(
+                        available[name].model_copy(update={"description": expected[name]["description"]})
+                    )
         skill_prompt = ""
         if skills:
             reader, skill_prompt = skill_tool(skills)
