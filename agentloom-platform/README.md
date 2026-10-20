@@ -4,6 +4,8 @@
 
 首版面向团队私有部署，支持多人、空间权限和应用发布。工程范围、API／Worker 分工、数据约束和实施顺序见[团队私有部署实施方案](../docs/platform/implementation-plan.md)。
 
+前后端必须分离：`web/` 独立构建和部署静态前端，`api/` 独立提供 HTTP API 与 SSE，Worker 使用后端包单独运行。前端产物不打入 Python 镜像，FastAPI 不托管 SPA；同域入口代理只负责请求分流。
+
 页面、操作流程与状态反馈见[首版交互设计](../docs/platform/interaction-design.md)。
 
 [在线交互原型](https://doc.agentloom.bmilk.cn/prototypes/platform-interaction/)使用示例数据；源码与维护说明位于 [web/prototypes](web/prototypes/README.md)。
@@ -22,8 +24,8 @@
 | 目录 | 用途 |
 | --- | --- |
 | `api/` | 平台 API、管理领域和 SDK 装配 |
-| `web/` | Vue 配置与运行工作台 |
+| `web/` | 独立构建、部署的 Vue 配置与运行工作台 |
 | `tests/` | 平台 API 与 SDK 集成验收 |
-| `deploy/` | 新实现具备可运行闭环后再提供部署入口 |
+| `deploy/` | 新实现具备闭环后，分别提供 Web、API、Worker 与入口代理部署 |
 
 平台只依赖 SDK 公开接口。删除 Platform 目录后，SDK 自身及三个示例仍须能独立运行。详细约定见 [SDK / Platform 边界](../docs/sdk-platform-boundary.md)。

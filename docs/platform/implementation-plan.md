@@ -1,6 +1,6 @@
 # Platform 团队私有部署实施方案
 
-更新：2026-10-19。产品方向已确定为团队私有部署，支持多人、空间权限和应用发布。本方案将现有目标设计收敛为首版工程范围；Platform 当前仍为目录骨架，下面的模块、表扩展和接口补充属于待实现方案。
+更新：2026-10-20。产品方向已确定为团队私有部署，支持多人、空间权限和应用发布；前后端分离是明确的工程要求。本方案将现有目标设计收敛为首版工程范围；Platform 当前仍为目录骨架，下面的模块、表扩展和接口补充属于待实现方案。
 
 首版交付一个团队可共同使用的 Agent 工作台：编辑者配置并发布 ReAct／Plan，成员在自己的会话中运行，管理员管理资源、成员和运行故障。执行、停止、检查点和恢复继续使用 SDK。已有产品规则以[配置与权限](configuration.md)、[生命周期](storage-lifecycle.md)为准。
 
@@ -19,11 +19,29 @@ Workflow 编排、跨机器接管、任意代码上传执行、独立附件内�
 
 ## 部署和技术选型
 
-建议采用 Python + FastAPI、SQLAlchemy + PostgreSQL、Vue + TypeScript。后端保持一个可安装包，提供 API 和 Worker 两个进程入口；首版部署一组同机 API／Worker，通过 PostgreSQL 保存管理数据和派发任务，通过本地持久卷保存 SDK 执行状态及工作文件。具体依赖版本在实现时锁定。
+前后端必须独立开发、构建和部署。`web/` 是 Vue + TypeScript SPA，`api/` 是 Python + FastAPI 后端，管理数据采用 SQLAlchemy + PostgreSQL。后端保持一个可安装包，提供 API 和 Worker 两个进程入口；首版部署一组同机 API／Worker，通过 PostgreSQL 保存管理数据和派发任务，通过本地持久卷保存 SDK 执行状态及工作文件。具体依赖版本在实现时锁定。
+
+### 前后端分离约束
+
+| 层 | 工程与交付边界 |
+| --- | --- |
+| Web | 独立 `package.json`、锁文件、前端测试和构建任务；生成静态产物，由专用 Web 容器或静态服务器托管；不需要 Python、SDK 或数据库即可构建 |
+| API | 独立 Python 包和后端镜像；提供 `/api/v1` JSON、上传／下载及 SSE 接口；不包含 `web/dist`，不通过 FastAPI `StaticFiles` 托管 SPA |
+| Worker | 复用后端包或镜像，以独立进程入口运行；凭据解析、SDK 执行和工作区访问留在服务端 |
+| 接口合同 | OpenAPI 和明确的 SSE 事件 Schema 是前后端协作边界；前端客户端从已固定的合同生成，前端不导入后端内部类型、直接访问数据库或读取 SDK 状态文件 |
+| 发布 | Web 与后端分别生成版本化产物，API 与 Worker 可复用同一后端镜像；三个服务单独启动、重启和回滚，接口变更须检查兼容性，不能依赖它们总在同一瞬间升级 |
+
+默认部署由入口代理把 `/` 转给 Web，把 `/api/v1/*` 转给 API；同一域名只简化登录 Cookie 和运维，不合并前后端构建或进程。前端路由刷新由 Web 返回 SPA 入口，API 未知路径仍返回 JSON 404，不能被 SPA fallback 吞掉。SSE 路径关闭代理缓冲并配置合适的连接超时。
+
+本地开发分别启动前端和 API，Vite 仅代理 API 请求。前端允许通过公开运行配置设置 API 地址，配置中不能含凭据或服务端文件路径；生产默认使用同源 `/api/v1`。若部署为不同源，须显式配置允许的前端 Origin、Cookie／credentials 和 CSRF 策略，并验证 SSE 登录与重连，不能用通配 CORS 代替授权。
+
+已检查 `oracle-a2` 上旧版提交 `25b9fd2`：它按 `apps/web`、`apps/api` 分目录，但 Dockerfile 将前端产物复制进 Python 镜像，FastAPI 挂载静态页面。新版采用上面的独立部署合同；旧版的页面参考见[布局核对](interaction-design.md#旧版布局参考)。
 
 ```mermaid
 flowchart TB
-    UI["Vue 工作台"] --> API["Platform API"]
+    Browser["浏览器"] --> Edge["入口代理"]
+    Edge -->|页面与静态资源| Web["Web<br/>独立 Vue 静态产物"]
+    Edge -->|/api/v1 · JSON / SSE| API["Platform API<br/>独立后端进程"]
     API --> DB["PostgreSQL<br/>管理实体、提交回执、持久任务"]
     Worker["Worker<br/>派发、重投、发布和删除任务"] -->|领取任务并保存回执| DB
     Worker --> Assembly["AssemblyService<br/>按发布快照构造新 Agent"]
@@ -73,14 +91,17 @@ agentloom-platform/
       persistence/     平台 ORM、repository 和迁移
       http/            路由、DTO、错误映射和 SSE
   web/
+    package.json       独立依赖、开发、构建与测试命令
+    package-lock.json
     src/
+      app/             AppShell、路由、登录和空间上下文
       features/        spaces、agents、resources、sessions、administration
       api/             从平台 OpenAPI 生成的客户端
   tests/
     contract/          HTTP 和 SDK 适配合同
     integration/       PostgreSQL、文件后端和真实进程故障
     e2e/               浏览器关键流程
-  deploy/              闭环可运行后加入部署与升级入口
+  deploy/              分别交付 Web、API、Worker，入口代理按路径分流
 ```
 
 http 调用应用服务，应用服务调用 repository 和 SdkGateway。SDK 调用集中在 sdk_adapter；其他平台模块不读取 SDK 私有文件或导入内部恢复类。ReleaseCompiler 生成可持久化的值，AssemblyService 生成本机客户端和 Agent，两者分开以便校验与恢复复用同一配置转换。
@@ -214,8 +235,8 @@ SSE 使用公开 RunEvent 的 seq 作为 id，Last-Event-ID 表示排他的续�
 
 | 阶段 | 实现内容 | 完成条件 |
 | --- | --- | --- |
-| P0 合同 | 平台 DTO、快照格式、错误映射、SDK 适配合同测试、会话清理接口设计 | ReAct／Plan 模式转换、Run 身份与实际查询字段没有猜测接口 |
-| P1 最小纵向流程 | 真实登录与空间授权、模型连接、ReAct 草稿和首次发布、平台事务、Worker、运行查询和 SSE | 两名成员可使用同一应用且会话隔离；通过重复提交和进程故障测试 |
+| P0 合同 | 前后端独立工程与接口合同、平台 DTO、快照格式、错误映射、SDK 适配合同测试、会话清理接口设计 | 前后端可分别构建；ReAct／Plan 模式转换、Run 身份与实际查询字段没有猜测接口 |
+| P1 最小纵向流程 | 真实登录与空间授权、模型连接、ReAct 草稿和首次发布、平台事务、Worker、运行查询和 SSE | 独立 Web／API／Worker 完成部署联调；两名成员可使用同一应用且会话隔离；通过重复提交和进程故障测试 |
 | P2 团队功能 | Plan、补充输入、资源导入、Hook、完整发布屏障、权限撤销控制 | 发布／补充／停止竞态、旧版本接管和资源版本固定通过 |
 | P3 正式交付 | SDK 会话清理及应用删除、部署迁移、升级和备份恢复、诊断页面 | 删除闭环及下表故障场景通过；真实模型与 MCP 单独联调 |
 
@@ -223,6 +244,8 @@ P1 的 UI 以表单和运行工作台为主，P2 再完善配置体验。第一�
 
 | 必测场景 | 断言 |
 | --- | --- |
+| 独立构建与发布 | Web 在无 Python／SDK 环境构建；后端在无 Node／前端产物环境启动；重启 Web 不终止后台 Run，API 重启后页面可重连 |
+| 入口与路由 | 刷新应用、会话和运行详情深层链接成功；未知 API 返回 JSON 404；登录、CSRF、SSE 经部署代理可用 |
 | 两用户共享应用 | 对方 Session／Run／事件不可见；管理员跨用户操作有审计 |
 | 重复 HTTP 键或 client_message_id | 相同正文返回原提交；不同正文冲突；只有一个 SDK 输入 |
 | 两个并发首问 | Session 路由串行，尚未接收的新 Run 也计入预留，输入不丢失 |

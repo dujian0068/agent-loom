@@ -6,6 +6,8 @@
 
 使用 /api/v1 前缀，不保留旧原型路由。JSON 为 snake_case；请求结构拒绝未知字段。列表返回 {items,next_cursor}，limit 默认 50、范围 1..200；请求正文最大 2 MiB，文件另走上传接口。
 
+前端通过本页定义的 HTTP／SSE 合同访问后端，二者独立构建和部署。API 服务不托管前端页面，未知 API 路径返回 JSON 错误；前端深层路由回退由 Web 服务处理。入口分流、开发代理和跨源部署要求见[前后端分离约束](implementation-plan.md#前后端分离约束)。
+
 创建及变更请求要求 Idempotency-Key；草稿修改／发布另要求 If-Match。相同键且正文不同返回 409 IDEMPOTENCY_CONFLICT。幂等摘要排除传输时间，但必须覆盖全部业务字段；凭据字段用服务端专用密钥 HMAC 后参与摘要，不保存或输出明文，也不把可离线猜测的裸密钥 hash 放入日志。相同幂等键提交不同 Key 必须冲突；摘要密钥轮换期间保留原回执所需的 key_id。平台 HTTP 幂等回执与 SDK input／run 幂等是两层机制，不能互相取代。
 
 认证、Space 成员关系和权限在 API 层完成；不可见对象返回 404。公开 ID 不赋予 SDK 操作权，也不允许 HTTP 客户端提交 lease、continuation 或强制 ExecutionRecord 状态。
