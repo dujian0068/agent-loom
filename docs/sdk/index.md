@@ -2,6 +2,8 @@
 
 SDK 是可独立引入的 Python 执行底座。当前 `agentloom-sdk 0.1.0a1` 已实现 PropertiesConfig 统一参数、按 AgentDefinition 构建 ReAct / Plan–Executor 及单机文件恢复链路，Workflow 暂不接入。首次使用先读 [SDK 接入指南](integration.md)，当前能力与验证范围见[实现文档](implementation.md)。其余章节保留 **2026-10-16 起的目标设计**，不能将其中全部接口视为已发布能力。
 
+平台选型已独立调整为 LangChain + LangGraph；本目录只说明 agentloom-sdk，不再作为平台实现前提。参见[交付边界](../sdk-platform-boundary.md)。
+
 ## 1. 职责与依赖
 
 SDK 接收构造参数和运行依赖，自行执行、管理上下文、保存检查点并恢复现场。SDK 不查询平台用户、空间、应用、发布记录，也不需要平台业务库。
@@ -41,15 +43,17 @@ SDK 接收构造参数和运行依赖，自行执行、管理上下文、保存�
 8. [SDK 验收](verification.md)：独立运行及故障注入。
 9. [当前实现与验证记录](implementation.md)：本轮实际交付、分包、运行证据和边界。
 
-## 3. 对平台的保证
+<span id="3-对平台的保证"></span>
 
-调用者负责提供正确配置，SDK 负责执行该配置。平台重新构造 Agent 并交回原 ExecutionRecord 标识即可恢复，不需要知道 Executor 执行到哪一轮。
+## 3. 对调用者的保证
+
+调用者负责提供正确配置，SDK 负责执行该配置。SDK 调用者重新构造 Agent 并交回原 ExecutionRecord 标识即可恢复，不需要知道 Executor 执行到哪一轮。
 
 固定配置、已编译 Workflow 和服务可复用；实际 Agent 对象按任务绑定，由 ReactAgent 持有私有 AgentContext，不能将活动实例交给另一任务。每次执行／接管创建独立的 ExecutionRunner；同一 ExecutionRecord 在有效租约下只有一个执行者。
 
 RuntimeEngine 是这些本机执行的宿主，一个实例可托管多个 ExecutionRecord。共享存储与环境依赖可以复用；单次现场按 ExecutionRecord 装配，Agent 模型、Prompt 和能力集合仍按各自配置固定。范围与资源所有权见[运行时引擎设计](assembly.md#11-runtimeengine-管理的范围)。
 
-SDK 的独立运行与恢复验证不依赖 Platform 源码；当前可运行脚本位于[接入指南](integration.md)，不要求已删除的示例目录存在。平台 API 只能调用 SDK 公共门面，不能通过直接改 SDK 存储文件来“帮助恢复”。
+SDK 的独立运行与恢复验证不依赖 Platform 源码；当前可运行脚本位于[接入指南](integration.md)，不要求已删除的示例目录存在。使用该 SDK 的宿主只能调用其公共门面，不能通过直接改 SDK 存储文件来“帮助恢复”。
 
 ## 4. 尚需实施验证的边界
 

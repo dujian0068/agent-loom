@@ -1,71 +1,70 @@
 # 平台领域对象与归属
 
-本页描述管理实体。SDK 的 AgentDefinition、GraphDefinition、ExecutionRecord 和 NodeTask 是执行领域，见[SDK 对象关系](../sdk/definitions.md)。
+更新：2026-10-20。以下为待实现的平台领域模型。平台运行底座为 LangChain + LangGraph；RunRecord、InputSubmission 等属于平台，不是 agentloom-sdk 的 ExecutionRecord 或 NodeTask。
 
 ## 1. 实体
 
 | 实体 | 所有权和身份 | 生命周期 |
 | --- | --- | --- |
 | User / Membership | 平台账号及空间成员关系 | 平台管理 |
-| Space | 应用和共享资源的管理范围 | 不向 SDK 暴露为必填运行字段 |
-| AgentApplication | space_id、agent_id、不可变 mode、file_root_id | 创建、编辑、发布、删除 |
-| WorkflowApplication | space_id、workflow_id、file_root_id | 用户编排与发布 |
+| Space | 应用和共享资源的管理范围 | 平台授权边界，不等同于文件工作区 |
+| AgentApplication | space_id、app_id、不可变 mode、file_root_id | 创建、编辑、发布、删除 |
 | ApplicationDraft | 属于一个应用，revision 用于编辑 CAS | 可修改，不可直接运行 |
-| ApplicationRelease | 属于一个应用，release_id／业务版本 | 不可变配置快照，引用固定资源版本 |
-| Resource / ResourceVersion | 属于空间或获授权共享目录 | 模型连接、Prompt、Skill、Tool、MCP、Hook 等 |
-| SessionBinding | 应用、可见性、SDK session_id 的关联 | 管理权限与展示，不持有第二套上下文真相 |
-| RunBinding | 应用／发布／会话与 SDK run_id 的关联 | 管理索引、分派和查询，不保存可写 Loop 现场 |
-| DispatchIntent | 一次待交给 SDK 的执行／控制请求 | 持久派发，支持重投 |
-| DeletionJob | 应用及其专属资源的清理进度 | 阻止新输入，等执行收束后删除 |
+| ApplicationRelease | release_id、不可变执行快照及实现清单 | 固定配置、资源、图和状态格式版本 |
+| Resource / ResourceVersion | 属于空间或获授权共享目录 | 模型、Prompt、Tool、Skill、MCP、middleware、环境等 |
+| SessionBinding | app_id、owner_actor_id、稳定 session_id | 私有会话及顺序控制 |
+| RunRecord | run_id、session_id、release_id、graph_thread_id | 排队、执行控制、终态、清理及恢复关联 |
+| InputSubmission / InputDelivery | 正式用户内容、稳定 input_id、目标 Run、采用回执 | 幂等接收、图内采用和待下轮交接 |
+| DispatchIntent / StopCommand | 执行任务及独立停止意图 | 持久投递，重试不换逻辑身份 |
+| OperationLedger | Tool／MCP 操作身份、参数摘要、外部回执 | 副作用对账与受控重试 |
+| RunEvent / RunView | 可公开进度和查询结果 | 平台单调序号，不透传原始图状态 |
+| ReleaseJob / DeletionJob / CleanupJob | 发布、删除及执行域清理进度 | 分阶段、可重试 |
+
+WorkflowApplication 是后续独立产品类型，首版不创建。以后可引用完整 Agent 发布；不把某个应用私有的 Executor 当作可跨应用引用的独立实体。
 
 ## 2. UML：归属和引用
 
 ```mermaid
 classDiagram
     class Space
-    class Application
     class AgentApplication
-    class WorkflowApplication
     class ApplicationDraft
     class ApplicationRelease
-    class Resource
     class ResourceVersion
     class SessionBinding
-    class RunBinding
-    Space "1" *-- "0..*" Application : 应用管理归属
-    Space "1" *-- "0..*" Resource : 资源管理归属
-    Application <|-- AgentApplication
-    Application <|-- WorkflowApplication
-    Application "1" *-- "1" ApplicationDraft
-    Application "1" *-- "0..*" ApplicationRelease
-    Resource "1" *-- "0..*" ResourceVersion
-    ApplicationRelease --> ResourceVersion : 固定引用
-    Application "1" *-- "0..*" SessionBinding
-    RunBinding --> ApplicationRelease : 固定使用的配置
-    RunBinding --> SessionBinding : 所属会话
-    ApplicationRelease --> ApplicationRelease : Workflow固定引用Agent发布
+    class RunRecord
+    class InputSubmission
+    class GraphCheckpoint
+    Space "1" *-- "0..*" AgentApplication
+    Space "1" --> "0..*" ResourceVersion
+    AgentApplication "1" *-- "1" ApplicationDraft
+    AgentApplication "1" *-- "0..*" ApplicationRelease
+    ApplicationRelease --> ResourceVersion : 固定版本
+    AgentApplication "1" *-- "0..*" SessionBinding
+    SessionBinding "1" *-- "0..*" RunRecord
+    SessionBinding "1" *-- "0..*" InputSubmission
+    RunRecord --> ApplicationRelease : 原执行快照
+    RunRecord --> GraphCheckpoint : 内部thread关联
 ```
 
-发布包引用资源，不拥有共享资源；删除 Agent 不能连带删除模型连接或别的应用使用的 Skill。Workflow 发布包可以引用完整 Agent 发布包，不能引用另一个 Agent 的私有 Executor 任务。
+图中的 GraphCheckpoint 表示上游 Saver 管理的状态，不是平台 ORM 级联实体。资源为共享目录对象，删除应用只解除引用。
 
-## 3. 发布与 SDK 定义的关系
+## 3. 发布与执行图的关系
 
-发布包保存可以重新装配的行为、结构、资源版本和环境配置。AssemblyService 将它转换为 SDK AgentDefinition／GraphDefinition、NodeBinding、策略及依赖。SDK 构造对象没有发布记录依赖。
+ReleaseCompiler 生成可序列化 ExecutionSnapshot；AssemblyService 将其转换为 LangChain Agent 或 LangGraph 图，以及模型、工具、中间件、checkpointer 和受限环境依赖。图结构及状态格式版本属于发布实现清单，不能只固定 Prompt 而允许恢复时换一套图。
 
-SDK 定义是行为／结构的值描述，平台可以用版本库保存这些值，但不是要求 SDK 内置一个 DefinitionVersion 仓库。发布校验结果、平台配置 hash 和编辑 revision 留在平台，不作为 SDK 恢复兼容指纹。
-
-RunBinding 固定 execution_snapshot_ref、release_id、sdk_run_id、sdk_session_id 和 runtime_namespace_ref。凭据值不进入快照或日志；恢复时重新解析连接依赖，模型参数、Prompt、能力和策略保持原值。
+RunRecord 固定 execution_snapshot_ref、release_id、graph_thread_id、runtime_binding_ref 和 deadline_at。一个 Session 有多次 Run，首版每次 Run 使用独立 thread；恢复沿用同一个 thread。跨轮上下文来源和私有角色状态边界见[身份与检查点](runtime-integration.md#2-sessionrun-与检查点)。凭据明文不进入快照或日志。
 
 ## 4. 管理状态与执行状态
 
 - 应用 lifecycle：active / publishing / deleting / deleted。
-- 草稿 revision 和发布版本属于平台。
-- DispatchIntent 状态表示待派发、已被 SDK 接收或派发错误，不代表业务执行成功。
-- RunView 中的运行状态从 SDK 查询或事件投影；事件重复／延迟不能反向改写 SDK 状态。
-- SDK 对象和平台实体可以存于同一物理数据库，但分开 schema／repository，禁止跨层写入。
+- Run 状态：queued / running / stopping / completed / failed / cancelled。恢复情况用独立 recovery_state 表示，不根据心跳超时伪造业务失败。
+- DispatchIntent 状态只表示任务传递；InputSubmission.status 只表示输入接入；两者都不代表回答成功。
+- 图状态、计划、角色消息和采用标记由 checkpointer 保存；平台从持久图结果确认终态，禁止直接改 Saver 私有表来“完成任务”。
+- cleanup_state 独立于业务终态；有结果但清理失败仍能读取答案。
 
 ## 5. 删除与保留
 
-应用存续期间记录暂不过期；无持久沙箱的 ExecutionRecord 工作文件仍在整次 ExecutionRecord 收束后删除。删除应用先关闭接入、停止关联执行，再通过 SDK 清理已收束的执行／会话记录，最后删除专属文件与平台配置。
+应用存续期间正式输入、公开答案和恢复记录暂不过期。工作文件按 run／session 保留策略清理，与沙箱启停无关。删除先关闭准入并停止活动执行，再清理图 thread、会话、待交接输入、专属文件与配置；共享模型、Tool、Skill、MCP 不被级联删除。
 
-清理需根据 RunBinding、资源依赖和文件根清单确定范围。引用该应用的 Workflow 不得绕过删除屏障新建执行；现有依赖的处置见[生命周期](storage-lifecycle.md)。SDK 不根据某个 agent_id 自行推断要删除哪些数据。
+删除按持久清单及任务回执恢复，保留防迟到启动的最小墓碑。具体顺序见[生命周期](storage-lifecycle.md)。

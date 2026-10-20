@@ -110,7 +110,7 @@ async with runtime:
     result = await agent.ainvoke("检查这份 SQL，并说明问题")
 ```
 
-调用方不需要手工创建 ExecutionRunner、EventBus 或检查点。上层 Platform 做的事情也是准备这些参数，再构造 Agent；SDK 不需要反查平台的用户或应用。
+调用方不需要手工创建 ExecutionRunner、EventBus 或检查点。使用 SDK 的宿主准备这些参数，再构造 Agent；SDK 不需要反查业务用户或应用。新版 Platform 改用 LangChain + LangGraph，不使用此装配链路。
 
 </details>
 

@@ -4,7 +4,7 @@
 
 文件后端以 namespace 文件锁、不可变 JSON 记录和原子替换的清单实现关联状态一致提交，使用同机宿主时钟；不用模拟 SQL 表和数据库连接。详细目录和提交规则见 [SDK 文件持久化](../../agentloom-sdk/README.md#文件持久化)。后文 PostgreSQL 的实现细节不能推导为所有后端必须引入数据库。
 
-平台记录用户、应用、发布和资源版本，见[平台存储](../platform/storage-lifecycle.md)。本文事务全部属于 SDK 执行存储；即使两层共用一个 PostgreSQL，也不能依赖跨层表事务。
+本文事务全部属于独立 SDK 执行存储，不要求宿主业务库参与提交。新版平台采用 LangChain + LangGraph，使用不同的[存储方案](../platform/storage-lifecycle.md)，不能将本文表结构当作平台实现。
 
 ## 1. 持久化包与公开端口
 
@@ -97,7 +97,7 @@ class CleanupService(Protocol):
 
 ### 3.1 会话与正式输入
 
-以下记录由 SDK 保存；平台 SessionBinding 只保存归属和 SDK Session ID，不复制输入消费状态。
+以下记录由 SDK 保存；使用 SDK 的宿主可保存业务归属和 SDK Session ID，不复制输入消费状态。
 
 | 表 | 必须保存的列 | 约束 |
 | --- | --- | --- |
@@ -107,7 +107,7 @@ class CleanupService(Protocol):
 | user_input_deliveries | delivery_id,input_id,target_run_id?,operation_id?,previous_delivery_id?,state,context_seq?,first_output_receipt_ref?,delivered_at? | 当前投递唯一；state=pending/claimed/delivered/carried；旧投递不可覆盖 |
 | first_output_receipts | attempt_id,operation_id,kind,has_display_content,received_at | PK(attempt_id)；heartbeat 不算首输出 |
 
-SDK 保证同一 Session 的顺序与活动 ExecutionRecord 约束。平台保证同一 Session 绑定同一应用；独立 SDK 调用者负责为同一 Session 提供正确的可执行配置。
+SDK 保证同一 Session 的顺序与活动 ExecutionRecord 约束。SDK 调用者负责为同一 Session 提供正确的可执行配置和业务归属。
 
 ### 3.2 根执行、图与任务
 

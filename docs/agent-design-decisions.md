@@ -1,6 +1,6 @@
 # Agent 设计约定
 
-更新：2026-10-17。已确认需求按 SDK 和 Platform 分开维护；本页负责导航和跨层约束，不再重复多份相互漂移的字段定义。当前为目标设计，新实现尚未完成。
+更新：2026-10-20。SDK 与 Platform 分别维护。Platform 现改为 LangChain + LangGraph，见[运行接入](platform/runtime-integration.md)与[能力类型](platform/capabilities.md)。下文 RuntimeEngine、AgentDefinition、HookSet 及双引擎等约定仍描述独立 SDK，不是新版平台类型；实际 SDK 能力见[实现记录](sdk/implementation.md)，平台仍为设计与原型。
 
 ## 一、产品目标与基本概念
 
@@ -8,7 +8,7 @@ AgentLoom 交付高代码 SDK 与低代码 Platform。
 
 - SDK 提供 ReactAgent、PlanAgent 和 Workflow API；ReactAgent、PlanAgent 实现公共 Agent 接口。SDK 拥有执行、上下文、Hook、能力及恢复。
 - SDK 的执行宿主统一命名为 RuntimeEngine（运行时引擎），管理运行服务及活动执行；同一引擎可托管多个 Agent／Workflow 的多次执行。
-- Platform 管理用户、空间、资源与应用，以配置构建并发布 SDK 程序，通过网页及 HTTP 使用。
+- Platform 管理用户、空间、资源与应用，以固定配置构建 LangChain Agent／LangGraph 图，通过独立前端及 HTTP API 使用。
 - Workflow 允许编排多个完整 Agent、Tool／MCP 和业务逻辑，支持映射、条件、循环、并行、汇合与状态更新。
 - 内层 AgentGraphEngine 负责有限角色调度；外层 WorkflowEngine 迁入并适配 LangGraph 的设计与源码；两者都属于 SDK，共用执行基础设施。
 
@@ -49,14 +49,15 @@ Skill 的运行时入口按同一事件模型设计：SkillHandler 处理目录�
 | Skill、MCP、文件工具、共享工作区与沙箱 | [能力与环境](sdk/capabilities.md) |
 | 默认工具清单、工具 SPI、存储与脚本环境扩展 | [默认工具与 SPI](sdk/builtin-tools-spi.md) |
 | 原子检查点、故障接管、执行权与结果去重 | [检查点](sdk/checkpoints.md) |
+| 平台 LangChain／LangGraph、Tool／Skill／MCP | [运行接入](platform/runtime-integration.md)、[能力类型](platform/capabilities.md) |
 | 模型Key、文件夹／Git导入、应用创建与发布 | [平台配置](platform/configuration.md) |
-| 发布停止旧ExecutionRecord、删除应用及文件、暂不过期 | [平台存储与生命周期](platform/storage-lifecycle.md) |
+| 平台发布停止旧 Run、删除应用及文件、暂不过期 | [平台存储与生命周期](platform/storage-lifecycle.md) |
 
-历史最近轮数和执行参数都可按单个 Agent 配置。第 100 次 Loop 正常，第 101 次禁止。补充是正式用户输入，不因历史裁剪而消失。Hook 失败不阻断，合法拒绝可阻止执行；修改由权威上下文保存。模型流内部接收，完整模型响应后发事件，最终结果随 ExecutionRecord 终态交付。
+以下默认值与 Hook／Loop 规则仅属于 SDK；平台策略按发布单独解析固定。历史最近轮数和执行参数都可按单个 Agent 配置。第 100 次 Loop 正常，第 101 次禁止。补充是正式用户输入，不因历史裁剪而消失。Hook 失败不阻断，合法拒绝可阻止执行；修改由权威上下文保存。模型流内部接收，完整模型响应后发事件，最终结果随 ExecutionRecord 终态交付。
 
 ## 三、层间不可破坏的约束
 
-Platform → SDK 单向依赖。SDK 不要求平台数据库、应用和发布记录；平台装配好参数后构造 Agent。SDK 负责恢复，平台不会理解每个 Executor 的 continuation，也不直接写 SDK 状态表。
+Platform → LangChain + LangGraph，平台不再依赖 agentloom-sdk。平台负责输入、派发、控制与环境，上游图负责内部状态及检查点；具体边界见[运行接入](platform/runtime-integration.md)。独立 SDK 仍不查询平台业务表，其公开接口和恢复设计只约束 SDK 调用者。
 
 两层对照、版本责任与调用数据见[职责边界](sdk-platform-boundary.md)。
 

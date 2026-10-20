@@ -1,5 +1,7 @@
 # SDK／Platform 文档整理复核
 
+> 历史复核记录：本文记录 2026-10-16／17 的设计整理及当时实现状态。2026-10-20 起 Platform 改用 LangChain + LangGraph，旧 Platform → SDK 依赖与装配描述不再是当前平台方案；以[交付边界](sdk-platform-boundary.md)及[运行接入](platform/runtime-integration.md)为准。SDK 当前能力见[实现记录](sdk/implementation.md)。
+
 复核日期：2026-10-16。范围：重组版本 `9b98c23`，对照重组前 `16a4bd9` 的有效约定及两层现有正文、UML、接口、恢复协议。本次修改仅涉及文档，不是 SDK 或平台功能实现。
 
 ## 1. 结论

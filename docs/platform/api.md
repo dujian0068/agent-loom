@@ -1,85 +1,87 @@
 # Platform HTTP API 与接入协议
 
-状态：目标接口，尚未实现。平台管理、认证、调度和投影由本层负责；执行、上下文、停止收束和恢复调用 [SDK 公共接口](../sdk/public-api.md)。
+更新：2026-10-20。以下是目标接口，尚未实现。API 负责管理、认证、输入、控制和公开投影；Worker 通过[LangChain / LangGraph 运行适配](runtime-integration.md)执行，不向前端提供 SDK 或图内部接口。
 
 ## 1. 通用协议
 
-使用 /api/v1 前缀，不保留旧原型路由。JSON 为 snake_case；请求结构拒绝未知字段。列表返回 {items,next_cursor}，limit 默认 50、范围 1..200；请求正文最大 2 MiB，文件另走上传接口。
+使用 `/api/v1` 前缀，JSON 为 snake_case，拒绝未知字段。列表返回 `{items,next_cursor}`，limit 默认 50、范围 1..200；正文最大 2 MiB，未来文件上传使用独立接口。
 
-前端通过本页定义的 HTTP／SSE 合同访问后端，二者独立构建和部署。API 服务不托管前端页面，未知 API 路径返回 JSON 错误；前端深层路由回退由 Web 服务处理。入口分流、开发代理和跨源部署要求见[前后端分离约束](implementation-plan.md#前后端分离约束)。
+前后端独立构建部署；API 不托管 SPA，未知 API 返回 JSON 404，前端深层路由由 Web 回退。OpenAPI 和 SSE Schema 是协作边界，见[前后端分离约束](implementation-plan.md#前后端分离约束)。
 
-创建及变更请求要求 Idempotency-Key；草稿修改／发布另要求 If-Match。相同键且正文不同返回 409 IDEMPOTENCY_CONFLICT。幂等摘要排除传输时间，但必须覆盖全部业务字段；凭据字段用服务端专用密钥 HMAC 后参与摘要，不保存或输出明文，也不把可离线猜测的裸密钥 hash 放入日志。相同幂等键提交不同 Key 必须冲突；摘要密钥轮换期间保留原回执所需的 key_id。平台 HTTP 幂等回执与 SDK input／run 幂等是两层机制，不能互相取代。
+创建和变更请求要求 Idempotency-Key，草稿修改／发布另要求 If-Match。同键不同正文返回 409 IDEMPOTENCY_CONFLICT；摘要覆盖方法、目标和业务字段。凭据用专用密钥 HMAC 参与摘要，保留 key_id，不保存明文或可离线猜测的裸密钥 hash。HTTP 幂等与运行输入去重分别验证。
 
-认证、Space 成员关系和权限在 API 层完成；不可见对象返回 404。公开 ID 不赋予 SDK 操作权，也不允许 HTTP 客户端提交 lease、continuation 或强制 ExecutionRecord 状态。
+身份和空间权限在服务端检查，不可见对象返回 404。客户端不得提交 graph_thread_id、checkpoint_id、owner、generation 或强制运行状态。公开 run_id 本身不赋予访问权。
 
 ## 2. 管理接口
 
 | 方法与路径 | 输入／条件 | 结果与责任 |
 | --- | --- | --- |
-| POST /spaces/{s}/agents | name、description、mode | 201 Agent；分配文件根及空草稿 |
-| GET /agents/{a} | 查看权限 | AgentView 与 draft ETag |
+| POST /spaces/{s}/agents | name、description?、必选 mode | 201；模式无默认值，分配文件根与初始草稿 |
+| GET /agents/{a} | 查看权限 | AgentView、draft ETag |
 | PUT /agents/{a}/draft | 全量可编辑字段、If-Match | 保存新 revision，mode 不可改 |
-| POST /agents/{a}/validate | draft_revision | ValidationReport，不启动执行 |
-| POST /agents/{a}/releases | revision、If-Match | 202 ReleaseReceipt，异步收束并切换 |
-| GET /release-jobs/{j} | 发布权限 | 当前阶段、失败与重试信息 |
-| POST /spaces/{s}/workflows | name、description | Workflow 草稿 |
-| PUT /workflows/{w}/draft | 节点、边、Schema、绑定、If-Match | 保存图编辑配置 |
-| POST /workflows/{w}/validate | revision | 编译及依赖诊断 |
-| POST /workflows/{w}/releases | revision、If-Match | 固定图与完整 Agent 依赖 |
-| POST /resources/imports | upload_id 或 Git source | 202 ImportReceipt |
-| GET /resource-imports/{j} | 资源权限 | 进度、校验、产物版本 |
-| GET /resources | kind、cursor | 元信息与可选版本 |
-| POST /model-connections | provider profile、endpoint override? | 连接元信息 |
-| PUT /model-connections/{m}/credential | secret | 仅返回保存状态，不回传明文 |
-| POST /model-connections/{m}/discover | 连接及授权 | 已发现模型／元信息，未知项明确标记 |
-| DELETE /agents/{a} | If-Match、管理权限 | 202 DeletionReceipt |
-| DELETE /workflows/{w} | If-Match、管理权限 | 202 DeletionReceipt |
-| GET /deletion-jobs/{j} | 管理权限 | 收束、SDK记录清理、文件清理阶段 |
+| POST /agents/{a}/validate | draft_revision | ValidationReport，不启动模型／工具 |
+| POST /agents/{a}/releases | revision、If-Match | 202 ReleaseReceipt，固定候选版本 |
+| GET /release-jobs/{j} | 发布权限 | 阶段、失败与重试信息 |
+| GET /resources | kind、cursor | 元信息和固定版本 |
+| POST /spaces/{s}/tools | 注册标识、版本、Schema、配置 | 受信 Tool 目录项 |
+| POST /resources/imports | Skill 包来源或 Git source | 202 ImportReceipt，完成校验后才就绪 |
+| GET /resource-imports/{j} | 资源权限 | 进度、诊断、产物版本 |
+| POST /spaces/{s}/mcp-connections | transport、服务／模板、凭据引用 | 待发现连接版本 |
+| POST /mcp-connections/{m}/discover | 管理权限、目标版本 | 显式发现结果，不自动授予 Agent |
+| POST /mcp-connections/{m}/versions | 发现结果引用、选定成员及 Schema | 固定就绪资源版本 |
+| POST /resources/{r}/versions | Tool／Skill 的配置、来源或实现引用 | 新版本；MCP 使用专用发现及版本接口，不覆盖旧发布引用 |
+| GET /resources/{r}/references | 资源权限、版本 | 按角色区分草稿与发布引用 |
+| POST /model-connections | provider、endpoint、能力元信息 | 连接资源 |
+| PUT /model-connections/{m}/credential | secret、管理权限 | 只返回保存状态 |
+| POST /model-connections/{m}/discover | 连接与授权 | 明确的模型／元信息发现结果 |
+| DELETE /agents/{a} | If-Match、管理权限 | 202 DeletionReceipt；能力未就绪时明确拒绝 |
+| GET /deletion-jobs/{j} | 管理权限 | 停止、图清理、输入与文件清理阶段 |
 
-缺少 If-Match 返回 428，旧 revision 返回 409 REVISION_CONFLICT；类型或配置错误返回 422；未认证 401、无操作权 403、基础设施暂不可用 503。错误体固定 {error:{code,message,request_id,details?,violations[]}}，不泄露 Key、SQL 或宿主路径。
+“绑定到应用”通过保存指定角色的 draft 完成，后续仍需校验和发布；不提供绕过草稿的即时授权接口。MCP discovery 不等于启用所有工具。Workflow 管理和执行接口为后续范围，首版不注册对应路由。
+
+缺少 If-Match 返回 428，旧 revision 返回 409 REVISION_CONFLICT；配置错误 422、未认证 401、无操作权 403、基础设施暂不可用 503。错误体为 `{error:{code,message,request_id,details?,violations[]}}`，不泄露 Key、SQL 或宿主路径。
 
 ## 3. 执行接口
 
-| 方法与路径 | 平台处理 | SDK 调用 |
-| --- | --- | --- |
-| POST /agents/{a}/sessions | 建 SessionBinding，固定 Agent 和用户 | 延迟创建 SDK Session |
-| POST /workflows/{w}/sessions | 固定 Workflow 及状态输入类型 | 延迟创建 SDK Session |
-| POST /sessions/{s}/inputs | 保存提交意图并返回 202；Agent 判定新提问或补充；Workflow 当前仅定义新 ExecutionRecord 输入 | Worker 调用 start；直接 Agent 的活动补充调用 inputs.append |
-| GET /sessions/{s}/history | 验证会话可见性、分页投影 | 公共历史查询 |
-| GET /sessions/{s}/inputs | 返回正式输入及投递状态 | 公共输入查询 |
-| GET /runs/{r} | 合并 RunBinding 的应用和 Release 标识 | runs.get |
-| POST /runs/{r}/stop | 验证操作者，生成稳定 command_id | runs.stop |
-| GET /runs/{r}/events | 授权公开事件投影，支持 Last-Event-ID | events.read／订阅 |
-| GET /runs/{r}/tasks | 按授权展示进度 | 公共 task 查询 |
-| GET /operations/{o} | 验证所属 ExecutionRecord／资源访问范围 | 公共 operation 查询 |
+| 方法与路径 | 平台合同 |
+| --- | --- |
+| POST /agents/{a}/sessions | 建私有 SessionBinding，固定应用和用户；此时不创建图 thread |
+| POST /sessions/{s}/inputs | 保存正式提交并返回 202；串行决定新提问、活动补充或待下轮归属 |
+| GET /sessions/{s}/history | 正式用户输入和公开答案的分页投影，不返回内部图 messages |
+| GET /sessions/{s}/inputs | 输入接入、采用和交接状态 |
+| GET /runs/{r} | 平台 RunView、版本、恢复和清理诊断 |
+| POST /runs/{r}/stop | 保存稳定 command_id 和准入关闭事实；返回持久回执 |
+| GET /runs/{r}/events | 公开 RunEvent，支持 Last-Event-ID |
+| GET /runs/{r}/tasks | 授权的 Plan 任务进度，隐藏私有上下文 |
+| GET /operations/{o} | 经授权和过滤的操作状态，未知结果明确显示 |
 
-SDK 查询门面是唯一运行事实来源。平台不得为了这些 HTTP 接口查询 SDK 私有表或自己修改执行状态。
+UserInputCommand 为 client_message_id、content、variables?。同 client_message_id 重投返回原归属；初始问题验证 Schema 和变量，活动补充只支持非空文本，拒绝变量覆盖及未支持附件。Plan 补充只进入 Planner。
 
-UserInputCommand 为 client_message_id、content、variables?。同 client_message_id 重投返回原归属；首次用户问题需要验证输入 Schema／变量。运行中补充不修改原 Definition 或 Prompt 变量快照。
+InputReceipt 至少包含 submission_id、input_id、session_id、run_id?、disposition、status、delivery_state。disposition 为 new_run／supplement／pending_next_run；status 为 submitting／accepted／rejected。submitting 表示平台已保存但运行侧尚未确认；accepted 依据图中持久接入标记，不能解释为模型已执行。delivery_state 使用 pending／delivered／pending_next_run，原消息的后续采用结果可查询。
 
-以下补充、carried 和结束竞态针对直接 Agent 会话。Workflow 活动输入的接收点和回执未定稿，发布前必须明确不支持此入口并返回可识别诊断，不能保存为 accepted 后丢失，也不能转发到任意内层 Planner。Workflow 初始状态输入和 Agent 会话输入的具体序列化仍需在接口 Schema 中分别定义。
+转入 pending_next_run 时，旧图可能尚未接入该输入，status 可以仍为 submitting；页面优先显示“待下轮生效”，不能一直显示“正在发送”。下一 Run 持久接入后沿原 input_id 更新回执，保留此前交接记录。
 
-InputReceipt 至少包含 submission_id、input_id、session_id、run_id?、disposition、status。平台可靠保存但 SDK 尚未确认时，status=submitting；收到 SDK InputReceipt 后才标 accepted。disposition 为 new_run/supplement/pending_next_run。不能在 SDK 尚未接收时显示“模型已收到”。
+StopReceipt 包含 command_id、run_id、status=requested／confirmed、observed_at；requested 不等于已停止。RunView 的 stopping 直到执行域及未决调用得到核实后才转终态。
 
 ## 4. 跨存储提交和输入竞态
 
-1. 平台事务验证当前发布与权限，分配稳定 run_id、input_id，保存 RunBinding／DispatchIntent／HTTP receipt；状态 submitting。
-2. Worker 装配 SDK，携稳定 ID 调用。若返回不明，先查询该 ID 或重投同一请求，不创建第二个 ExecutionRecord。
-3. SDK 自己原子登记 Session、初始输入、ExecutionRecord 或补充；平台保存确认回执，运行投影从 SDK 拉取。
-4. 两次并发新提问先由平台按 Session 串行决定，SDK 的活动 ExecutionRecord 约束再次保护跨 Worker 竞态；失败重试不会分配新身份。
-5. 已知 SDK 未接收且返回 RUN_ENDED，平台把同一次用户提交路由到下一 ExecutionRecord；若接收结果未知，必须先确认原 input_id，不能猜测未接收而跨 ExecutionRecord 重投。
-6. SDK 已接受但未消费的补充在终态转 carried。平台展示“下轮生效”，下一次主动提问才启动；不自己操作投递表。
+1. 平台短事务保存输入、Run、DispatchIntent 与幂等回执；新 Run 固定当前发布及内部 thread。
+2. 同一 Session 仅有一个活动或预留 Run，同一 Run 只允许一个图写者；Worker 不以队列重复投递创建新身份。
+3. 初始输入和补充以稳定消息 ID 进入图检查点；检查点先写、平台回执后写，通过对账处理崩溃窗口。
+4. 活动补充由唯一写者在模型决策边界消费，不并发调用同一 thread。结束事务确定尚未采用的内容归属，标为待下轮，不自动启动任务。
+5. 图已完成但平台终态未写时，从原结果完成对账；已发生但结果不明的外部副作用不能盲目重试。
+6. stopping 期间暂不接受新的提问，返回明确冲突并保留客户端文本；终态后由用户主动发送。此前已保存的补充继续按交接合同处理。
 
-显式停止后进入 stopping，新的文字登记为下一提问待投递意图；不让旧 ExecutionRecord 开始新的模型请求。无 Worker 时 stop 仍通过 SDK 控制门面保存有效意图。流程细则见[SDK 装配](sdk-integration.md)。
+补充、单写者和停止是平台合同，不是 LangChain 的 inputs.append／runs.stop 方法。完整实现约束见[运行接入](runtime-integration.md)。
 
 ## 5. 结果、SSE 与页面
 
-目标 RunView 包含 platform application/release 标识，以及 SDK status、loops、deadline、result、error、cleanup_state、last_event_seq。当前首版按[实际查询映射](implementation-plan.md#查询-dto-和-sse)输出公开字段：SDK output 转为结果，usage 保留已暴露用量，revision、terminal_seq 和 cleanup_state 直接投影；精确 deadline、已用 Loop 明细及其他缺失字段需先补公共接口。平台投影必须注明 SDK 已确认的 revision；不能把投递成功等同于执行成功。
+RunView 至少包含 run_id、application_id、release_id、session_id、status、dispatch_status、recovery_state、result?、error?、usage?、deadline_at、cleanup_state、revision、last_event_seq、observed_at。缺失的供应商用量保持 null，不伪造精确值。图未接入时显示 queued／提交中，记录异常缺失时给出诊断，不退回新任务状态。
 
-SSE id 使用 SDK 根 ExecutionRecord 的公开单调 seq；断线续读已有事件，传输心跳没有业务 seq。SDK 模型流在内部聚合，页面接收明确进度和完整调用结果；最终答案只能由已提交终态返回。
+SSE id 使用平台持久 RunEvent 的单调 seq，Last-Event-ID 为排他游标；心跳不占业务序号。重复来源事件去重，终态后读取完整 RunView。上游流式回调不是可断线续读的事件存储，必须先持久化再推送。首版展示公开阶段与完整答案，不承诺 token 流式输出。
 
-关闭网页或 SSE 不停止执行。网络断开后按原 run_id 查询；用户点击结束才调用 stop。错误终态可能没有任何模型文本；已有材料标记未完成，不能伪装成功结果。
+关闭网页或 SSE 不停止执行，断网后查询原 run_id；只有明确停止请求写入控制命令。清理失败不覆盖业务结果；失败的中间材料不能显示为完整成功答案。每次读取批次重新核验权限，凭据与模型内部推理不进入公开 DTO。
 
 ## 6. 不属于平台 API 的接口
 
-不暴露“设置 Loop 次数已用值”“修改 Task 状态”“更新检查点”“插入工具成功结果”“重启已结束 ExecutionRecord”等运行写接口。用户重新提问属于新 ExecutionRecord；故障接管由 SDK 判断原 ExecutionRecord 状态，调用方不强制某个 Executor 从头执行。
+不开放修改检查点、设置内部任务成功、插入工具结果、重置已用预算、抢占 owner 或重启终态 Run 的接口。用户重新提问产生新 Run，基础设施恢复继续原 Run；这些状态只能由经过验证的执行／控制服务推进。

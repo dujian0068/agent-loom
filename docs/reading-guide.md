@@ -1,8 +1,8 @@
 # 阅读指南
 
-先读[SDK／Platform 边界](sdk-platform-boundary.md)，确定要了解的是执行底座还是管理平台。
+先读[SDK／Platform 边界](sdk-platform-boundary.md)，确定要了解的是独立 SDK 还是采用 LangChain + LangGraph 的平台。
 
-需要确认这次整理是否完整，先看[复核结论](reorganization-review.md)：它区分已修正的错误、仍需补齐的合同和尚未执行的实现测试。
+早期设计的整理历史见[复核记录](reorganization-review.md)；其中旧 Platform → SDK 方案已由 2026-10-20 的平台设计取代。
 
 ## 阅读 SDK
 
@@ -20,8 +20,9 @@
 
 1. [总览](platform/index.md)、[领域模型](platform/domain-model.md)：应用、发布、资源及会话归属。
 2. [配置与发布](platform/configuration.md)：用户可以设置哪些内容、怎样验证和固定配置。
-3. [SDK 装配](platform/sdk-integration.md)：发布定义如何变成可执行对象，如何重新构造以恢复。
-4. [HTTP API](platform/api.md)、[存储生命周期](platform/storage-lifecycle.md)：接入、管理事务及清理。
-5. [验收](platform/verification.md)：使用 API 验证平台与 SDK 衔接。
+3. [能力类型](platform/capabilities.md)：Tool、Skill、MCP 等如何注册、加载和授权。
+4. [LangChain / LangGraph 接入](platform/runtime-integration.md)：ReAct／Plan 图、停止、输入与恢复。
+5. [HTTP API](platform/api.md)、[存储生命周期](platform/storage-lifecycle.md)：接入、管理事务及清理。
+6. [验收](platform/verification.md)：使用真实 API、数据库和进程验证运行集成。
 
 页面侧栏按两份交付物组织，页面内目录定位具体字段和算法。图可以展开查看；继承、归属和调用图分开解释。SDK 核心链路已有实现，Platform 仍为设计；文档构建通过不能代替运行验证或完整目标验收。

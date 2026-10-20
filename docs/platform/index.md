@@ -1,48 +1,46 @@
 # agentloom-platform
 
-Platform 是基于 SDK 的低代码产品。首版面向团队私有部署，支持多人、空间权限和应用发布，并要求前后端独立构建与部署。当前只有目录骨架，HTTP 路径及数据结构尚未实现；[团队私有部署实施方案](implementation-plan.md)收敛首版工程范围，其余章节继续描述完整目标设计。
+更新：2026-10-20。Platform 是基于 **LangChain + LangGraph** 的低代码产品，独立于 agentloom-sdk。首版面向团队私有部署，支持多人、空间权限和应用发布，前后端独立开发、构建与部署。当前交付是设计文档和可点击原型，正式前后端、运行服务及部署脚本尚未实现。
 
 ## 1. 平台的工作
 
 ```text
-用户配置
-  → 管理领域保存草稿与资源引用
-  → 校验并发布
-  → 为请求解析完整配置和执行依赖
-  → 构造 SDK Agent / Workflow
-  → 调用 SDK
-  → 通过 SDK 公共查询与事件展示结果
+空间管理员维护模型、Tool、Skill、MCP 和环境
+  → 编辑者创建应用，填写名称、选择 ReAct / Plan、填写描述
+  → 绑定各角色资源，配置工作空间，校验并发布
+  → API 保存用户输入与运行任务
+  → Worker 按固定发布装配 LangChain Agent / LangGraph 图
+  → 图保存检查点，平台保存运行回执和公开事件
+  → 成员在自己的会话中查看结果
 ```
 
-| 平台模块 | 负责 | 委托给 SDK |
-| --- | --- | --- |
-| Identity / Space | 用户、成员、访问与操作权限 | 只传已授权的执行范围 |
-| Application / Release | Agent／Workflow 身份、草稿、发布和版本选择 | 构造与执行校验 |
-| ResourceCatalog | 模型凭据、Skill、Tool、MCP、Hook、Prompt 资源 | 资源的实际运行 |
-| AssemblyService | 解析并准备构造参数、存储和环境 | 不再回查目录的执行 |
-| ExecutionHost | 请求幂等、工作分派、机器故障后重投 | ExecutionRecord 执行权、现场恢复和具体 Loop |
-| RunView / SSE | 展示 SDK 状态与事件，平台关联信息 | 唯一执行终态和调用结果 |
-| DeletionService | 决定应用与专属数据删除范围 | 停止、收束与执行数据清理接口 |
+| 层 | 责任 |
+| --- | --- |
+| Web | 独立 Vue + TypeScript SPA；资源管理、配置、发布和会话页面 |
+| Platform API | 身份、空间、应用、资源、发布、幂等输入、运行控制、HTTP 与 SSE |
+| ExecutionHost / Worker | 任务派发、单写者、输入收件箱、停止、恢复与清理 |
+| LangChain | 模型集成、工具、ReAct Agent、中间件扩展 |
+| LangGraph | Plan 执行图、子图状态、检查点和按原图接续 |
+| PostgreSQL / 环境服务 | 管理与运行记录、图检查点，以及独立的资源包、工作文件和沙箱 |
 
-平台不得直接写 SDK 的任务状态、循环序号、调用结果、租约、快照或有效上下文。使用同一数据库部署不改变这条边界。
+平台管理运行的队列和控制事实，图检查点保存内部执行现场。LangGraph 的 checkpointer 不替代任务队列、空间权限、外部操作幂等或沙箱服务。详细责任见[运行接入](runtime-integration.md)。
 
 ## 2. 阅读顺序
 
-准备实施时先读[团队私有部署实施方案](implementation-plan.md)，了解部署结构、模块、事务、SDK 缺口及阶段验收。
-
-页面和操作流程见[首版交互设计](interaction-design.md)，覆盖应用配置、发布确认、私有会话、权限及异常状态。
-
-1. [领域对象](domain-model.md)：应用与资源属于谁、版本及删除规则。
-2. [配置与发布](configuration.md)：用户配置如何变成固定运行输入。
-3. [SDK 装配与接入](sdk-integration.md)：请求、补充、停止、故障调度和父子调用。
-4. [HTTP API](api.md)：管理接口与执行门面。
-5. [存储与生命周期](storage-lifecycle.md)：平台库、SDK 执行存储、发布／删除屏障。
-6. [平台验收](verification.md)：页面之外的 API 集成和故障测试。
+1. [团队私有部署实施方案](implementation-plan.md)：前后端分离、服务分工及阶段验收。
+2. [首版交互设计](interaction-design.md)：页面、资源添加与绑定、配置、会话及异常反馈。
+3. [能力类型与资源接入](capabilities.md)：Tool、Skill、MCP、Toolkit、子 Agent、沙箱和中间件。
+4. [领域对象](domain-model.md)、[配置与发布](configuration.md)：所有权、版本、授权及固定快照。
+5. [LangChain / LangGraph 运行接入](runtime-integration.md)：ReAct、Plan、输入、停止、检查点与恢复。
+6. [HTTP API](api.md)、[存储与生命周期](storage-lifecycle.md)：公开协议、持久事实、发布与删除。
+7. [平台验收](verification.md)：真实接口、进程故障和权限验证。
 
 ## 3. 默认产品约束
 
-Agent 属于空间；同一 Session 绑定一个 Agent 应用；模式创建后不变；草稿不能运行。ReAct 没有 Executor 配置；Plan 可配置专业 Executor，通用默认执行器当前关闭。
+应用属于空间，会话属于创建者并固定绑定一个应用。创建表单同时填写名称、必选 ReAct／Plan 和可选描述；模式不预选，创建后不能改变。草稿不能运行。ReAct 没有 Executor 配置；Plan 按 Planner 和专业 Executor 分别配置 Prompt 与能力，通用默认执行器关闭。
 
-发布会停止使用旧配置的相关活动 ExecutionRecord；下次新 ExecutionRecord 使用新发布配置。运行中和故障接管不悄悄切换版本。用户无暂停／恢复按钮，机器故障由平台调度、SDK 恢复。
+Tool、Skill、MCP 各有独立左侧管理页，先添加资源再绑定。文件工作空间、执行沙箱和文件保留策略独立配置；Skill 含脚本不自动获得执行权。
 
-能力执行和默认预算统一引用 [SDK 行为约定](../sdk/requirements.md)，不在平台复制另一套默认值。
+发布停止使用旧配置的相关活动 Run；同一会话下一次新提问使用新发布，旧 Run 的恢复始终使用原图、原资源和原快照。用户没有暂停／恢复按钮，故障接续由平台调度和 LangGraph 检查点共同完成。
+
+执行策略由平台解析并随发布固定，不再引用 SDK 默认值。SDK 的独立代码和设计仍保留，职责关系见[交付物边界](../sdk-platform-boundary.md)。

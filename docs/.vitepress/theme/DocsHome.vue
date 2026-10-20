@@ -15,7 +15,7 @@ const modules = [
     number: "02",
     name: "Platform 设计",
     label: "THE APPLICATION LAYER",
-    description: "从资源与配置到应用发布，理解平台如何通过公共接口装配 SDK。",
+    description: "从资源与配置到应用发布，理解基于 LangChain + LangGraph 的团队平台。",
     tags: ["领域与资源", "配置与发布", "API 与生命周期"],
     link: "/platform/",
     className: "platform",
@@ -37,20 +37,20 @@ const shared = [
         <p class="loom-home-description">沿着职责、对象与交互，理解 AgentLoom。<br class="loom-desktop-break" />两组独立的设计文档，一套清晰的架构边界。</p>
         <a class="loom-reading-link" :href="withBase('/reading-guide.html')">第一次阅读？从阅读指南开始 <span aria-hidden="true">↗</span></a>
       </div>
-      <div class="loom-architecture" aria-label="Platform 通过公共接口装配 SDK，SDK 负责执行与恢复">
+      <div class="loom-architecture" aria-label="Platform 通过独立 API 和 Worker 接入 LangChain 与 LangGraph">
         <div class="loom-map-topline"><span>架构一览</span><span class="loom-map-dot" /></div>
         <div class="loom-map-layer loom-map-platform">
           <span class="loom-map-index">应用层 / 01</span>
           <strong>Platform</strong>
           <span>配置 · 资源 · 发布 · API</span>
         </div>
-        <div class="loom-map-connector"><span />通过公共接口装配<span aria-hidden="true">↓</span></div>
+        <div class="loom-map-connector"><span />按发布快照装配<span aria-hidden="true">↓</span></div>
         <div class="loom-map-layer loom-map-sdk">
           <span class="loom-map-index">执行层 / 02</span>
-          <strong>SDK</strong>
-          <span>Agent · Workflow · Runtime</span>
+          <strong>LangChain + LangGraph</strong>
+          <span>Agent · 工具 · 图与检查点</span>
         </div>
-        <div class="loom-map-footnote"><span />执行与恢复由 SDK 负责</div>
+        <div class="loom-map-footnote"><span />平台直接使用上游运行框架</div>
       </div>
     </section>
 

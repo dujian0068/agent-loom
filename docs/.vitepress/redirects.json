@@ -23,5 +23,6 @@
   "task-execution.html": "sdk/runtime.html",
   "runtime-design.html": "sdk/runtime.html",
   "plan-graph-design.html": "sdk/workflow.html",
-  "architecture.html": "sdk-platform-boundary.html"
+  "architecture.html": "sdk-platform-boundary.html",
+  "platform/sdk-integration.html": "platform/runtime-integration.html"
 }

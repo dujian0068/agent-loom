@@ -1,6 +1,6 @@
 # SDK 行为约定与默认值
 
-状态：已确认行为与工程设计分列；当前实现与核对结果见[实现记录](implementation.md)。每个完整 Agent 可独立配置行为与执行策略；一次 ExecutionRecord 使用构造时固定的配置。AgentDefinition 统一描述单个 Agent 的行为，策略由构造参数注入；Plan 的 Planner／Executor 各有定义，共用所属完整 Agent 的模型和策略。平台如何编辑、发布和选择配置见[平台配置](../platform/configuration.md)。
+状态：已确认行为与工程设计分列；当前实现与核对结果见[实现记录](implementation.md)。每个完整 Agent 可独立配置行为与执行策略；一次 ExecutionRecord 使用构造时固定的配置。AgentDefinition 统一描述单个 Agent 的行为，策略由构造参数注入；Plan 的 Planner／Executor 各有定义，共用所属完整 Agent 的模型和策略。本文规则仅约束独立 SDK；新版平台采用 LangChain + LangGraph，策略见[平台配置](../platform/configuration.md)。
 
 ## 1. 产品能力与运行模式
 
@@ -12,7 +12,7 @@ LLM 计划内容不直接变成任务依赖图。LLM 通过完整响应明确调
 
 ## 2. 单 Agent 配置
 
-默认值在 [平台配置](../platform/configuration.md)中显示为用户可编辑字段，SDK 的默认策略为唯一执行依据。
+以下是 SDK 调用者的默认策略，不再作为新版 Platform 的默认值来源。
 
 | 字段 | 默认值 | 规则 |
 | --- | --- | --- |

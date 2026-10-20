@@ -1,133 +1,113 @@
 # Platform 配置、资源与发布
 
-状态：详细设计，尚未实现。平台保存管理实体和可重建的配置，SDK 只接收解析后的值与运行依赖。执行默认值的唯一规范见 [SDK 行为约定](../sdk/requirements.md)。
+更新：2026-10-20。状态：待实现设计。平台将已授权配置装配为 LangChain Agent／LangGraph 图，不再使用 agentloom-sdk 定义、策略或运行接口。类型及集成边界见[能力接入](capabilities.md)。
 
 ## 1. 访问与应用
 
-Space 包含应用和共享资源；应用对有权限的成员可见。Session 固定绑定一个应用及发起人，不因应用共享自动开放个人聊天历史。API Token 固定 actor、space 和授权范围，不隐含管理员权限。
+Space 包含应用和共享资源；Session 固定绑定一个应用及发起人，应用共享不开放个人聊天历史。API Token 固定 actor、space 和作用域，不隐含管理员权限。
 
 | 操作 | viewer | editor | admin |
 | --- | --- | --- | --- |
-| 查看已发布应用、资源元信息 | 是 | 是 | 是 |
-| 使用应用、管理自己的会话 | 是 | 是 | 是 |
-| 编辑草稿、导入资源、发布 | 否 | 是 | 是 |
-| 查看他人私有会话、停止他人执行 | 否 | 否 | 是，并记录审计 |
+| 查看与使用已发布应用、管理自己的会话 | 是 | 是 | 是 |
+| 查看已授权资源目录、绑定资源、编辑及发布应用 | 否 | 是 | 是 |
+| 注册 Tool、导入 Skill、添加及发现 MCP | 否 | 否 | 是 |
+| 查看或停止他人私有会话 | 否 | 否 | 显式管理入口并记录审计 |
 | 删除应用、成员和凭据管理 | 否 | 否 | 是 |
 
-创建 Agent 时选择 react 或 plan_executor，后续不能改变 mode；需要另一模式则创建另一个应用。创建 Workflow 使用独立应用类型，进入节点编排界面，不把它冒充 Agent 的第三种内部角色。
+创建时在同一表单填写 name、description、mode；名称必填，description 可选，mode 必选且不预选。API mode 为 react 或 plan_executor，页面显示 ReAct／Plan，创建后不能改变。Workflow 是后续独立应用类型，首版不开放。
 
 ## 2. 配置 DTO
 
-HTTP 使用 snake_case；结构拒绝未知字段，明确声明的任意业务 JSON 除外。客户端不能指定管理实体 ID、物理文件根、SDK lease。草稿 revision 用 CAS，资源版本和 Release 不可变；Secret 单独保存。
+HTTP 使用 snake_case，拒绝未知字段，明确声明的业务 JSON 除外。客户端不能指定管理 ID、物理文件根、graph_thread_id、执行 owner 或检查点。草稿 revision 用 CAS，ResourceVersion 和 Release 不可变；Secret 单独保存。
 
 ```text
 AgentDraft
   model: ModelBindingDraft | null
   definition: AgentDefinitionDraft
   executors: Mapping[string, AgentDefinitionDraft]  # ReAct 必须为空
-  execution: ExecutionPolicy
-  context: ContextPolicy
+  execution: ExecutionPolicyDraft
+  context: ContextPolicyDraft
   environment: EnvironmentBindingDraft
-  hooks: HookBindingDraft[]
+  middleware: MiddlewareBindingDraft[]
 
 AgentDefinitionDraft
   name, description, prompt, variables
   input_schema?, output_schema?
   capabilities: CapabilityBindingDraft[]
+
+EnvironmentBindingDraft
+  sandbox_enabled, sandbox_template_ref?
+  storage_ref, workspace_access             # read_only | read_write
+  retention                                # run | session
 ```
 
-创建事务分配 application_id、稳定 file_root_id 及 revision=1 草稿。文件目录延迟准备；不因一次文件系统失败留下半个管理实体。name 去首尾空白后 1..100，description 0..2000；名称不作身份。mode 和 file_root_id 不出现在可编辑草稿体中。
+这些都是平台 DTO，不是上游类名。创建事务分配 app_id、稳定 file_root_id 及 revision=1 草稿。文件目录延迟准备；name 去首尾空白后 1..100，description 0..2000；名称不作身份。mode 和 file_root_id 不出现在可编辑草稿体中。
 
-PUT draft 整体替换可编辑字段，If-Match 指定旧 revision。草稿允许尚未完整，但类型、范围及 Executor key 引用必须合法；缺模型等必需项在 validate 阶段报告。
+PUT draft 整体替换可编辑字段，If-Match 指定旧 revision。草稿允许尚未完整，但类型、范围及引用必须合法；缺模型等项在 validate 报告。ReAct 使用 definition；Plan 的 definition 供 Planner 使用，executors 按稳定 key 保存专业 Executor。Executor 共享应用模型与执行策略，Prompt、职责和能力分别配置，通用默认执行器关闭。
 
-AgentDefinitionDraft 是表单数据，解析 Prompt 和资源版本后得到 SDK 的 AgentDefinition；它没有独立应用或发布生命周期。ReAct 使用 definition，executors 为空；Plan 的 definition 供 Planner 使用，executors 按 key 保存专业 Executor 的定义。Executor 的职责说明供模型选择，Prompt 独立，不开放模型选择或独立执行策略。节点职责由固定应用模式和装配位置确定，不再在每份定义内保存 kind／role_key。
+Executor key 使用 `[A-Za-z_][A-Za-z0-9_-]{0,63}`，保留 planner、main 和 system 前缀供系统使用；显示名不作 key。重命名须同步更新引用，原始 JSON 重复映射键必须拒绝。角色能力名不能覆盖系统工具名，不能把各角色资源取并集后统一传入。
 
-Executor key 的格式与保留值遵循[SDK 最小配置](../sdk/definitions.md#2-最小配置结构)；定义的显示名不作 key。已有 Hook matcher 等引用必须随草稿一起通过校验，不能改名后留下悬空绑定。原始请求中的重复映射键必须拒绝，不能由 JSON 解析器静默保留最后一项。
+Prompt 使用 inline 或固定资源版本；变量声明 name/type/required/default/source，source 为 input 或 fixed。仅进行文本占位替换，不执行 Jinja/Python，不递归展开变量值。JSON Schema 使用自包含定义，禁止远程引用。
 
-Prompt 支持 inline 或已固定资源版本；变量声明 name/type/required/default/source，支持 input 或 fixed。仅进行纯文本占位替换，不执行 Jinja/Python，不递归展开变量值。JSON Schema 采用自包含定义，禁止远程引用。
+模型字段保留 connection_ref、credential_slot_id、model_id、think、context_window_tokens、max_output_tokens、metadata_source；provider adapter 只接收该模型支持的参数，不把不支持的 think 静默传给所有供应商。地址及协议由连接配置提供；元信息无法核验时要求显式填写。UI 的 K 为 1024 tokens，API 保存整数。
 
-模型字段为 connection_ref、credential_slot_id、model_id、think、context_window_tokens、max_output_tokens、metadata_source。供应商地址及 API／Coding Plan profile 由连接管理提供，用户选模型后带入已核验元信息；获取不到则显式填写。UI 使用 K（1K=1024），API 存整数 tokens，不用猜测窗口伪装自动识别。
+凭据只由 CredentialsService 解析，快照保存引用；客户端和认证头在 Worker 构造。密钥不进入图 state、messages、checkpoints、公开事件或 Tool 参数。Key 轮换不改变模型与 endpoint，不能在一次进行中的远端请求中更换认证。
 
-凭据只由 CredentialsService 读写；模型 SDK 收到 client／credential resolver。更新 Key 不改变模型身份或 endpoint；新物理 Attempt 可解析已授权的新密钥，旧请求不换 Key。明文不进入定义、ExecutionRecord、检查点或公开事件。
+### 2.1 执行与上下文策略
 
-### 2.1 Workflow 草稿与节点绑定
+平台自有 ExecutionPolicy 包含模型调用额度、工具调用额度、总期限、并行开关、Executor 并发、委派上限、单次调用超时及分类重试；ContextPolicy 包含历史选取、模型窗口和压缩策略。部署方提供版本化默认 profile，发布时解析成完整数值并显示给编辑者，不依赖上游隐式默认值。
 
-Workflow 使用独立草稿，不复用 AgentDraft 的定义表或把 Workflow 放进 Agent 的 mode。下面是逻辑配置结构；机器可验证的完整 Schema 仍需补齐。
+具体默认数值、范围及计费单位须在 P0 Schema 中固定；缺失有效上限阻止发布。LangGraph recursion_limit 是图步数保护，不能等同于模型调用次数。根 Run 共享预算，子图不能各自重置；恢复沿用原 deadline 和已记录消耗。副作用未知的工具不适用通用自动重试。
 
-```text
-WorkflowDraft
-  graph_definition: WorkflowGraphDefinition
-  node_bindings: WorkflowNodeBindingDraft[]
-  execution: WorkflowExecutionPolicy
-  environment: EnvironmentBindingDraft
-  hooks: HookBindingDraft[]
+### 2.2 后续 Workflow 配置
 
-WorkflowGraphDefinition                 # GraphDefinition 的 workflow 分支
-  input_schema, output_schema
-  state_schema, reducers
-  nodes, edges, entry, finish
-  conditions, dispatch_rules, error_routes
-
-WorkflowNodeBindingDraft
-  node_key
-  target: AgentReleaseRef | CapabilityBindingDraft | RegisteredFunctionRef
-  input_mapping, output_mapping
-  file_grants
-```
-
-GraphDefinition 拥有业务状态 schema、reducer 与流转关系；node_bindings 只绑定执行位置、依赖和映射，不再保存另一份图。编译后的程序保存它们的已解析表示。平台用受控表达式／注册函数描述条件、reducer 与映射；不接收任意 Python 代码执行，不用 LLM 计划文本替代这些配置。表达式语法与 JSON Schema 属于后续实施细化，不应由前后端各自猜测。
-
-节点选择完整已发布 Agent、Tool／MCP 或已注册业务函数；Executor 是 Agent 内部角色，不能直接拖入外层当作独立应用。AgentReleaseRef 在发布时固定，输入来自显式状态映射，输出只写声明字段，文件通过 file_grants 授权。
-
-WorkflowExecutionPolicy 控制根 ExecutionRecord 额度、总截止及外层分派策略；各 Agent 保留自身模型、上下文及局部约束，并受根控制限制。外层同时运行两个 AgentNode，不会自动将这两个 Agent 内部的 parallel_enabled 改为 true。
-
-WorkflowSession 对应 WorkflowApplication 的 SessionBinding；它不是所有子 Agent 的共享聊天会话。AgentNode 按 input_only 方式启动独立上下文，只读取映射输入、显式材料和本次 Invocation 的过程；故障恢复接回原 Invocation。Workflow 运行中补充输入的接收点见[接入边界](sdk-integration.md#4-执行中补充)，不能套用 Planner 的输入领取协议。
+Workflow 将采用独立的 graph_definition、node_bindings、输入输出／状态 Schema、受控条件及映射。节点可引用完整 Agent 发布、Tool／MCP 或受信函数；不直接引用另一个 Agent 的私有 Executor。它需要独立的发布依赖闭包、输入与恢复合同，首版不提供画布或可调用 API；不能因为使用 LangGraph 就宣称该产品已经实现。
 
 ## 3. 资源目录与导入
 
-应用编辑器分别配置 Tool、Skill 与 MCP。Plan 的入口定义和每个 Executor 各有独立的 capabilities，不能在装配时把所有角色的资源合并授权。MCP 绑定固定连接版本、member_key 与 Schema；启用连接但未选择成员不能通过发布校验。Skill 绑定只授权包及资源读取，exec 须独立授权。
-
-EnvironmentBindingDraft 在交互上分离三个概念：执行沙箱是否启用、工作区访问范围、工作文件是否保留。平台解析管理员登记的存储与环境模板，分配应用文件根；草稿不接受客户端提供的物理根目录。只读工作区与写文件能力冲突、exec 缺少可用沙箱等情况可保存在未完成草稿中，但 validate 必须报告，发布时再次检查资源可用性。
-
-当前 SDK 的 WorkspaceBinding.persistent_sandbox 只对应「在同一会话内保留工作文件」，不能用来实现「开启执行沙箱」。执行沙箱依赖配套的 EnvironmentProvider 与 SandboxGateway，当前默认 LocalEnvironment 不提供宿主进程隔离。工作区访问权限由实际能力绑定和受限文件视图共同实施，不能仅靠前端禁用写入控件。完整环境服务未接入时，平台不开放 exec；原型中的服务可用状态仅是交互模拟。
+Tool、Skill、MCP 分别管理，按固定版本加入应用角色。MCP 固定 connection version、member_key、名称及 Schema，开启连接但未选成员不能发布。资源类型及上游支持详见[能力类型](capabilities.md)。
 
 ```text
 ResourceVersion
   resource_id, version, kind, content_ref, manifest_ref, content_hash
-  source, resolved_commit?, created_at
+  source, resolved_commit?, status, created_at
 CapabilityBindingDraft
   binding_key, kind, resource_ref, member_key?, visible_name, config, authorization
+MiddlewareBindingDraft
+  registry_key, implementation_version, order, config, failure_policy
 ```
 
-共享资源有自己的生命周期，不归某一个 Agent 所有；Agent 删除不级联删除共享模型连接、Skill、MCP。撤销资源后平台拦截新的装配，并通过公共 SDK 控制接口停止受影响 ExecutionRecord。
+共享资源不归应用独占；撤销资源后平台阻止新装配，并保存受影响活动 Run 的停止命令。允许保留恢复和必要清理依赖，不继续执行已撤销的业务操作。
 
-上传文件夹或 Git 导入先产生 ImportJob，实际获取和校验完成后才提交 ResourceVersion。Git 固定 commit SHA，不用运行中的分支名指代资源；失败暂存包不进入可选目录。
+- **Tool：**保存受信 registry_key、实现摘要、Schema、超时和副作用策略；通过 LangChain 工具接口调用，不接受用户指定任意服务器 import。
+- **Skill：**导入校验 SKILL.md、元信息、资源清单及基础 profile，拒绝越界链接、设备文件和绝对路径；Git 解析到 commit SHA，包固定摘要。不在导入时运行脚本。未支持的权限／执行扩展返回 SKILL_PROFILE_UNSUPPORTED，不能删字段后假装兼容。
+- **MCP：**管理员保存连接及凭据引用，再显式 discovery 并选择成员，生成就绪版本；运行不自动扩展到新发现工具。远端 Schema 漂移需明确失败或发布新版本。
+- **Middleware／Hook：**选择后端受信注册项；系统授权、控制和预算逻辑不可由用户关闭，失败时阻止新动作。仅非关键观测允许降级。不能把旧 SDK HookSet 直接序列化到 LangChain。
+- **模型与环境：**连接、凭据、能力上限、存储和沙箱模板由管理员管理；执行实现由对应 provider／环境适配器负责。
+- **知识内容：**后续上传、解析、索引及检索需独立生命周期；上传文件不等于拥有完整知识库。
 
-- Skill：查找 SKILL.md，校验元数据及目录清单，拒绝越界软链接、设备文件、绝对路径；保存 scripts/references/assets，不在导入时运行脚本。SDK 再验证其支持的 profile；首版 allowed-tools／disallowed-tools 没有使用范围协议，必须报告 SKILL_PROFILE_UNSUPPORTED，不能在导入时删字段后发布为“已兼容”。
-- Tool：保存输入输出 Schema 和受信执行配置；不允许 HTTP 用户随意指定服务器 Python import。平台托管函数和外部标准接口最终都装配为 CapabilityAdapter。
-- MCP：连接、认证、transport、发现的工具 Schema 独立保存；discovery 是管理操作，普通 ExecutionRecord 不自动查询最新工具再改变已发布目录。
-- Hook：保存时机、matcher、顺序、配置及处理器定位；可信函数／隔离脚本绑定到 SDK HookAdapter，不获得管理数据库写入权。
-- 模型：连接和元信息是管理资源，SDK ModelAdapter 负责协议请求、完整响应和错误归一。
-- 知识文件：上传、格式与读取范围由目录管理；文本解析、检索或文件读取作为已绑定能力提供，不能把上传等同于自动具备完整 RAG。
+资源导入先建立 ImportJob，获取、校验和内容落盘后才提交就绪 ResourceVersion。失败暂存包不出现在 Agent 可选目录。新增版本不修改已有草稿绑定或发布，编辑者须显式切换。
 
-资源名不能覆盖系统委派前缀；同角色可见能力名冲突在 validate 阶段拒绝。
+### 3.1 沙箱与工作空间
+
+sandbox_enabled、workspace_access 和 retention 三者独立。平台分配应用／会话／Run 工作区；文件工具和脚本通过同一授权视图读写。Skill 按角色只读挂载，不能将所有角色包挂给每个 Executor。检查点、平台凭据与管理文件不在工作目录内。
+
+只读工作区与写工具冲突、exec 缺少沙箱、环境模板不可用等可保留在未完成草稿，但 validate 和 publish 必须报错。普通文件路径限制不构成进程隔离；环境服务未接入时不开放 exec。保留文件不保留容器进程或内存。
 
 ## 4. 验证与发布步骤
 
-validate 按 DTO → Prompt／Schema → 资源与授权 → SDK 纯构造／图编译 → 环境配置顺序返回所有诊断，字段包含 code/path/message；按 path/code 排序。不得为验证调用模型、执行脚本、启沙箱或修改草稿。
+validate 按 DTO → Prompt／Schema → 资源与授权 → 无外部调用的图装配／编译 → 环境依赖返回诊断，字段为 code/path/message，按 path/code 排序。使用无副作用模型／工具桩及内存 checkpointer 做构造检查；不得调用模型、MCP discovery、脚本或启动沙箱。连接测试和资源导入是明确的管理操作。
 
-发布流程的权威规则见[存储与生命周期](storage-lifecycle.md)：
+1. 固定草稿、资源、策略、图及实现版本，生成候选不可变 ExecutionSnapshot。
+2. 短事务 CAS 校验 revision、权限和资源状态，建立 publishing gate、ReleaseJob 和幂等回执。
+3. 关闭旧版本 Run 的准入，取消未启动任务并保存活动 Run 的停止命令；不持锁等待执行或网络。
+4. 确认终态与必要清理后，切换当前 Release 并清除 gate；失败保留原任务和固定候选版本。
+5. 下一次用户提问使用新 Release；旧 Run 恢复继续使用原图和快照，不将旧检查点直接装入新图。
 
-1. 解析草稿、固定资源版本、SDK 定义及工作流依赖；保存候选不可变 Release 数据。
-2. 平台事务 CAS 校验 revision、权限与资源状态，建立 publishing gate、ReleaseJob 和幂等回执。
-3. 通过 RunBinding／DependencyBinding 找到依赖旧配置的根 ExecutionRecord，调用 SDK stop；不持管理数据库锁等待。
-4. SDK 收束并报告终态后，平台事务切换当前 Release 并清除 gate；失败保留诊断与可重入 Job。
-5. 同一 Session 的下一提问采用新 Release；已有 ExecutionRecord 的恢复仍用原配置。SDK 不负责查版本或比较发布指纹。
+候选版本不受发布过程中后续草稿编辑影响。详细顺序见[生命周期](storage-lifecycle.md)。
 
-WorkflowRelease 固定节点绑定及被调用 Agent 的 Release。被调用 Agent 的发布不会自动改写 Workflow。装配一个 Workflow 时解析完整依赖闭包，在 SDK 执行前提供所有可执行 Agent，外层运行中不回查目录。
+## 5. 配置如何进入运行层
 
-## 5. 配置如何进入 SDK
+ReleaseCompiler 保存可重建的值，AssemblyService 生成本机对象；模型、Tool／MCP 客户端、SkillLoader、中间件、checkpointer 和环境服务不直接序列化进草稿。ReAct 编译为 LangChain Agent；Plan 编译为固定拓扑的 LangGraph 图和按角色装配的子图。
 
-管理配置可以包含用户、空间、发布和资源版本；AssemblyService 必须先解析它们。转换结果是入口 AgentDefinition、Plan 的 Executor 定义表或 Workflow GraphDefinition，以及 model client、模型／执行／上下文策略、CapabilityRegistry、HookBinding、WorkspaceBinding 与 EnvironmentProvider、存储适配器和 RuntimeEngine。SDK 根据具体构造类型生成内层图和节点绑定。
-
-SDK 不接收一个 application_id 后自行查数据库，也不导入平台 ORM。具体映射、跨存储接入及故障恢复见[SDK 装配](sdk-integration.md)。
+前端只消费平台 DTO 和 HTTP／SSE，不能导入后端执行对象。运行映射、单写者、补充、停止及故障对账见[LangChain / LangGraph 接入](runtime-integration.md)。
