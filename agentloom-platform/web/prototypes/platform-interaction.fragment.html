@@ -15,21 +15,21 @@
 #lp-preview-settings .lp-preview-check { flex-direction: row; align-items: center; padding-bottom: 7px; }
 #lp-preview-settings p { margin: 10px 0 0; font-size: 12px; color: light-dark(#596b70, #a7b9bd); }
 #loom-platform-preview {
-  --lp-bg: light-dark(#ffffff, #191d20);
-  --lp-soft: light-dark(#f5f7f7, #22282b);
-  --lp-ink: light-dark(#202c30, #e6ecec);
-  --lp-muted: light-dark(#596b70, #a7b9bd);
-  --lp-line: light-dark(#dce4e5, #39474b);
-  --lp-accent: light-dark(#126b64, #9bd6c9);
-  --lp-on-accent: light-dark(#ffffff, #103932);
-  --lp-tint: light-dark(#e9f4f0, #233e37);
+  --lp-bg: light-dark(#ffffff, #1b2330);
+  --lp-soft: light-dark(#f5f7fb, #141b26);
+  --lp-ink: light-dark(#17253b, #e7edf8);
+  --lp-muted: light-dark(#64728a, #acb9cd);
+  --lp-line: light-dark(#e2e7f0, #344155);
+  --lp-accent: light-dark(#2563eb, #8ab4ff);
+  --lp-on-accent: light-dark(#ffffff, #132e5e);
+  --lp-tint: light-dark(#eaf1ff, #273955);
   --lp-warn: light-dark(#7b521b, #f0c489);
   --lp-warn-bg: light-dark(#fff5e6, #3e3223);
   --lp-danger: light-dark(#a63536, #f2a4a3);
   --lp-danger-bg: light-dark(#fff0f0, #422729);
   color: var(--lp-ink);
   font: 14px/1.55 -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", sans-serif;
-  background: var(--lp-bg);
+  background: var(--lp-soft);
   border: 1px solid var(--lp-line);
   border-radius: 12px;
   position: relative;
@@ -39,26 +39,32 @@
 #loom-platform-preview * { box-sizing: border-box; }
 #loom-platform-preview [hidden] { display: none !important; }
 #loom-platform-preview .lp-top {
-  display: flex; flex-wrap: wrap; gap: 20px; align-items: center;
-  border-bottom: 1px solid var(--lp-line); padding: 17px 110px 17px 20px;
+  grid-column: 2; grid-row: 1; display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: space-between;
+  min-height: 68px; background: var(--lp-bg); border-bottom: 1px solid var(--lp-line); border-top-right-radius: 12px; padding: 16px 32px;
 }
-#loom-platform-preview .lp-brand { display: flex; align-items: center; gap: 10px; font-weight: 650; letter-spacing: -.3px; }
-#loom-platform-preview .lp-mark { width: 29px; height: 29px; display: grid; place-items: center; background: var(--lp-accent); color: var(--lp-on-accent); border-radius: 8px; font-size: 16px; }
-#loom-platform-preview .lp-space { font-size: 12px; color: var(--lp-muted); }
-#loom-platform-preview .lp-shell { display: grid; grid-template-columns: 154px minmax(0, 1fr); min-height: 650px; }
-#loom-platform-preview .lp-sidebar { padding: 22px 12px; background: var(--lp-soft); border-right: 1px solid var(--lp-line); display: flex; flex-direction: column; gap: 6px; border-bottom-left-radius: 12px; }
-#loom-platform-preview .lp-sidebar small { padding: 0 9px 10px; color: var(--lp-muted); }
+#loom-platform-preview .lp-brand { display: flex; align-items: center; gap: 10px; font-size: 22px; font-weight: 650; letter-spacing: -.6px; }
+#loom-platform-preview .lp-brand small { display: block; color: var(--lp-muted); font-size: 11px; font-weight: 400; letter-spacing: 2px; margin-top: 2px; }
+#loom-platform-preview .lp-mark { flex-shrink: 0; width: 38px; height: 38px; display: grid; place-items: center; background: var(--lp-accent); color: var(--lp-on-accent); border-radius: 10px; font-size: 21px; }
+#loom-platform-preview .lp-space { display: flex; align-items: center; gap: 9px; margin: 26px 0 20px; padding: 10px 12px; border: 1px solid var(--lp-line); border-radius: 8px; background: var(--lp-soft); font-size: 13px; }
+#loom-platform-preview .lp-shell { display: grid; grid-template-columns: 224px minmax(0, 1fr); grid-template-rows: auto 1fr auto; min-height: 780px; }
+#loom-platform-preview .lp-sidebar { grid-column: 1; grid-row: 1 / span 3; padding: 26px 18px 20px; background: var(--lp-bg); border-right: 1px solid var(--lp-line); display: flex; flex-direction: column; border-radius: 12px 0 0 12px; }
+#loom-platform-preview .lp-nav-label { margin: 12px 12px 8px; color: var(--lp-muted); font-size: 12px; }
+#loom-platform-preview .lp-nav-group + .lp-nav-group { margin-top: 24px; }
+#loom-platform-preview .lp-breadcrumb { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; color: var(--lp-muted); font-size: 13px; min-width: 0; }
+#loom-platform-preview .lp-breadcrumb strong { color: var(--lp-ink); font-weight: 500; overflow-wrap: anywhere; }
+#loom-platform-preview .lp-button.lp-menu { display: none; }
 #loom-platform-preview button, #loom-platform-preview input, #loom-platform-preview select, #loom-platform-preview textarea { font: inherit; }
 #loom-platform-preview button { color: var(--lp-ink); }
-#loom-platform-preview .lp-nav { display: flex; align-items: center; gap: 9px; padding: 10px; border: 0; border-radius: 7px; background: transparent; text-align: left; }
-#loom-platform-preview .lp-nav[aria-current="page"] { background: var(--lp-bg); color: var(--lp-accent); font-weight: 600; box-shadow: 0 1px 3px light-dark(#152e3610, #00000030); }
+#loom-platform-preview .lp-nav { display: flex; align-items: center; gap: 12px; width: 100%; padding: 12px; margin: 4px 0; border: 0; border-radius: 7px; background: transparent; text-align: left; color: var(--lp-muted); }
+#loom-platform-preview .lp-nav[aria-current="page"] { background: var(--lp-tint); color: var(--lp-accent); font-weight: 600; }
 #loom-platform-preview .lp-nav:hover, #loom-platform-preview .lp-button:hover { filter: brightness(.97); }
 #loom-platform-preview .lp-nav svg { width: 16px; height: 16px; }
-#loom-platform-preview .lp-person { margin-top: auto; padding: 28px 9px 2px; font-size: 12px; color: var(--lp-muted); }
+#loom-platform-preview .lp-person { display: flex; align-items: center; gap: 10px; margin-top: auto; padding: 22px 5px 2px; font-size: 12px; color: var(--lp-muted); }
+#loom-platform-preview .lp-avatar { display: grid; place-items: center; width: 34px; height: 34px; border-radius: 50%; color: var(--lp-accent); background: var(--lp-tint); }
 #loom-platform-preview .lp-person strong { display: block; font-size: 13px; color: var(--lp-ink); font-weight: 500; }
-#loom-platform-preview .lp-main { min-width: 0; padding: 24px; }
+#loom-platform-preview .lp-main { grid-column: 2; grid-row: 2; min-width: 0; padding: 28px 32px 32px; }
 #loom-platform-preview .lp-eyebrow { font-size: 12px; color: var(--lp-muted); margin: 0 0 8px; }
-#loom-platform-preview h1 { font-size: 23px; letter-spacing: -.6px; line-height: 1.3; font-weight: 600; margin: 0 0 8px; }
+#loom-platform-preview h1 { font-size: 26px; letter-spacing: -.6px; line-height: 1.35; font-weight: 600; margin: 0 0 8px; overflow-wrap: anywhere; }
 #loom-platform-preview h2 { font-size: 16px; font-weight: 600; margin: 0 0 8px; }
 #loom-platform-preview h3 { font-size: 14px; font-weight: 600; margin: 0 0 6px; }
 #loom-platform-preview p { margin: 0 0 12px; }
@@ -66,23 +72,41 @@
 #loom-platform-preview .lp-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
 #loom-platform-preview .lp-spread { justify-content: space-between; }
 #loom-platform-preview .lp-header { margin-bottom: 24px; }
-#loom-platform-preview .lp-button { display: inline-flex; justify-content: center; align-items: center; gap: 6px; min-height: 34px; padding: 6px 12px; border: 1px solid var(--lp-line); border-radius: 7px; background: var(--lp-bg); font-size: 13px; white-space: normal; }
+#loom-platform-preview .lp-button { display: inline-flex; justify-content: center; align-items: center; gap: 7px; min-height: 38px; padding: 8px 13px; border: 1px solid var(--lp-line); border-radius: 7px; background: var(--lp-bg); font-size: 13px; white-space: normal; }
 #loom-platform-preview .lp-button.lp-primary { background: var(--lp-accent); border-color: var(--lp-accent); color: var(--lp-on-accent); }
 #loom-platform-preview .lp-button.lp-danger { color: var(--lp-danger); }
 #loom-platform-preview .lp-button.lp-quiet { border-color: transparent; background: transparent; padding-left: 4px; padding-right: 4px; color: var(--lp-accent); }
 #loom-platform-preview button:disabled { opacity: .5; cursor: not-allowed; }
-#loom-platform-preview .lp-badge { display: inline-flex; align-items: center; gap: 5px; padding: 2px 7px; font-size: 11px; border-radius: 5px; background: var(--lp-soft); color: var(--lp-muted); white-space: nowrap; }
+#loom-platform-preview .lp-badge { display: inline-flex; align-items: center; gap: 5px; padding: 3px 8px; font-size: 12px; border-radius: 5px; background: var(--lp-soft); color: var(--lp-muted); white-space: normal; overflow-wrap: anywhere; }
 #loom-platform-preview .lp-badge.lp-good { background: var(--lp-tint); color: var(--lp-accent); }
 #loom-platform-preview .lp-badge.lp-warning { background: var(--lp-warn-bg); color: var(--lp-warn); }
 #loom-platform-preview .lp-badge.lp-error { background: var(--lp-danger-bg); color: var(--lp-danger); }
-#loom-platform-preview .lp-app { padding: 20px 0; border-top: 1px solid var(--lp-line); }
-#loom-platform-preview .lp-app-head { display: flex; align-items: start; gap: 13px; margin-bottom: 16px; }
-#loom-platform-preview .lp-app-icon { flex: 0 0 38px; width: 38px; height: 38px; display: grid; place-items: center; background: var(--lp-tint); color: var(--lp-accent); border-radius: 9px; }
+#loom-platform-preview .lp-app-grid { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 20px; }
+#loom-platform-preview .lp-app { display: flex; flex-direction: column; min-width: 0; padding: 22px; background: var(--lp-bg); border: 1px solid var(--lp-line); border-radius: 12px; }
+#loom-platform-preview .lp-app-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 18px; }
+#loom-platform-preview .lp-app-icon { flex: 0 0 44px; width: 44px; height: 44px; display: grid; place-items: center; background: var(--lp-tint); color: var(--lp-accent); border-radius: 12px; }
 #loom-platform-preview .lp-app-icon svg { width: 20px; height: 20px; }
 #loom-platform-preview .lp-app-body { flex: 1; min-width: 0; }
-#loom-platform-preview .lp-app p { color: var(--lp-muted); margin: 7px 0 0; font-size: 13px; }
+#loom-platform-preview .lp-app h2 { font-size: 17px; overflow-wrap: anywhere; }
+#loom-platform-preview .lp-app p { color: var(--lp-muted); margin: 8px 0 16px; font-size: 13px; }
+#loom-platform-preview .lp-app .lp-description { min-height: 42px; }
 #loom-platform-preview .lp-description { white-space: pre-wrap; overflow-wrap: anywhere; }
-#loom-platform-preview .lp-app-actions { padding-left: 51px; display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 12px; }
+#loom-platform-preview .lp-app-actions { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 12px; margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--lp-line); }
+#loom-platform-preview .lp-card-meta { color: var(--lp-muted); font-size: 12px; margin-top: 16px; }
+#loom-platform-preview .lp-toolbar { display: flex; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 22px; }
+#loom-platform-preview .lp-search { display: flex; align-items: center; gap: 9px; width: min(320px,100%); background: var(--lp-bg); border: 1px solid var(--lp-line); border-radius: 7px; padding: 9px 12px; }
+#loom-platform-preview .lp-search input { width: 100%; min-width: 0; border: 0; color: var(--lp-ink); background: transparent; }
+#loom-platform-preview .lp-empty { grid-column: 1 / -1; text-align: center; padding: 36px 20px; border: 1px dashed var(--lp-line); border-radius: 12px; }
+#loom-platform-preview .lp-panel { min-width: 0; padding: 24px; background: var(--lp-bg); border: 1px solid var(--lp-line); border-radius: 12px; }
+#loom-platform-preview .lp-editor-layout { display: grid; grid-template-columns: minmax(0,1.7fr) minmax(260px,1fr); gap: 22px; align-items: start; }
+#loom-platform-preview .lp-publish-panel { position: sticky; top: 18px; }
+#loom-platform-preview .lp-publish-panel .lp-app-icon { margin-bottom: 18px; }
+#loom-platform-preview .lp-publish-panel .lp-actions { display: flex; flex-direction: column; align-items: stretch; }
+#loom-platform-preview .lp-publish-panel .lp-action-buttons { display: grid; gap: 8px; }
+#loom-platform-preview .lp-publish-link { margin-top: 22px; padding-top: 18px; border-top: 1px solid var(--lp-line); }
+#loom-platform-preview .lp-app-title { min-width: 0; }
+#loom-platform-preview .lp-app-title h1 { margin-bottom: 6px; }
+#loom-platform-preview .lp-resource-groups { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 20px; }
 #loom-platform-preview .lp-callout { padding: 12px 14px; background: var(--lp-soft); border-radius: 8px; color: var(--lp-muted); font-size: 13px; margin: 15px 0; }
 #loom-platform-preview .lp-callout.lp-warning { background: var(--lp-warn-bg); color: var(--lp-warn); }
 #loom-platform-preview .lp-callout.lp-error { background: var(--lp-danger-bg); color: var(--lp-danger); }
@@ -103,7 +127,7 @@
 #loom-platform-preview .lp-config-nav button[aria-current="page"] { background: var(--lp-bg); color: var(--lp-accent); border-color: var(--lp-line); }
 #loom-platform-preview .lp-config-nav button { background: transparent; border-color: transparent; }
 #loom-platform-preview .lp-capability-group { margin: 22px 0; padding-top: 18px; border-top: 1px solid var(--lp-line); }
-#loom-platform-preview .lp-capabilities-grid { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 22px; align-items: start; }
+#loom-platform-preview .lp-capabilities-grid { display: grid; grid-template-columns: minmax(0,1fr); gap: 0; align-items: start; }
 #loom-platform-preview .lp-capabilities-grid .lp-grid { grid-template-columns: minmax(0,1fr); gap: 0; }
 #loom-platform-preview .lp-capability-group h3 { margin: 0; }
 #loom-platform-preview .lp-choice { display: grid; grid-template-columns: 18px minmax(0,1fr); gap: 9px; align-items: start; padding: 10px 0; font-size: 13px; }
@@ -120,7 +144,7 @@
 #loom-platform-preview .lp-diagnostics li { margin: 8px 0; }
 #loom-platform-preview .lp-actions { display: flex; align-items: center; flex-wrap: wrap; justify-content: space-between; gap: 12px; border-top: 1px solid var(--lp-line); padding-top: 16px; margin-top: 22px; }
 #loom-platform-preview .lp-check { display: flex; gap: 9px; align-items: start; padding: 8px 0; font-size: 13px; }
-#loom-platform-preview input[type="checkbox"] { accent-color: var(--lp-accent); margin-top: 4px; }
+#loom-platform-preview input[type="checkbox"], #loom-platform-preview input[type="radio"] { accent-color: var(--lp-accent); margin-top: 4px; }
 #loom-platform-preview .lp-facts { display: grid; grid-template-columns: 92px minmax(0, 1fr); gap: 10px 16px; font-size: 13px; margin: 18px 0; }
 #loom-platform-preview .lp-facts dt { color: var(--lp-muted); }
 #loom-platform-preview .lp-facts dd { margin: 0; overflow-wrap: anywhere; }
@@ -130,16 +154,19 @@
 #loom-platform-preview .lp-phases .lp-done .lp-step, #loom-platform-preview .lp-phases .lp-active .lp-step { background: var(--lp-tint); color: var(--lp-accent); }
 #loom-platform-preview .lp-phases .lp-active { color: var(--lp-ink); font-weight: 600; }
 #loom-platform-preview .lp-chat-layout { display: grid; grid-template-columns: minmax(0,1fr); gap: 18px; }
-#loom-platform-preview .lp-chat-layout.lp-with-progress { grid-template-columns: minmax(0,1fr) 190px; }
+#loom-platform-preview .lp-chat-layout.lp-with-progress { grid-template-columns: minmax(0,1.5fr) minmax(260px,1fr); align-items: start; gap: 22px; }
+#loom-platform-preview .lp-chat-panel { min-height: 520px; display: flex; flex-direction: column; }
+#loom-platform-preview .lp-chat-panel .lp-messages { flex: 1; }
 #loom-platform-preview .lp-messages { min-width: 0; }
 #loom-platform-preview .lp-message { padding: 13px 15px; margin-bottom: 14px; border-radius: 9px; font-size: 13px; overflow-wrap: anywhere; }
 #loom-platform-preview .lp-message.lp-user { background: var(--lp-soft); }
-#loom-platform-preview .lp-message.lp-answer { padding-left: 0; }
+#loom-platform-preview .lp-message.lp-answer { padding-left: 0; padding-right: 0; }
 #loom-platform-preview .lp-message .lp-who { display: block; color: var(--lp-muted); margin-bottom: 6px; font-size: 11px; }
 #loom-platform-preview .lp-message p { margin: 0; white-space: pre-wrap; }
 #loom-platform-preview .lp-message ul { margin: 9px 0 0; padding-left: 18px; }
 #loom-platform-preview .lp-message .lp-delivery { display: block; margin-top: 8px; color: var(--lp-accent); font-size: 11px; }
-#loom-platform-preview .lp-process { border-left: 1px solid var(--lp-line); padding-left: 16px; font-size: 12px; }
+#loom-platform-preview .lp-process { font-size: 13px; }
+#loom-platform-preview .lp-process .lp-facts { grid-template-columns: 76px minmax(0,1fr); }
 #loom-platform-preview .lp-process .lp-phases { margin: 5px 0; }
 #loom-platform-preview .lp-process .lp-phases li { font-size: 12px; gap: 8px; }
 #loom-platform-preview .lp-composer { border: 1px solid var(--lp-line); border-radius: 9px; padding: 12px; margin-top: 20px; }
@@ -148,40 +175,66 @@
 #loom-platform-preview .lp-composer .lp-row { margin-top: 6px; }
 #loom-platform-preview .lp-record { padding: 16px 0; border-top: 1px solid var(--lp-line); }
 #loom-platform-preview .lp-record p { font-size: 13px; margin: 5px 0 0; color: var(--lp-muted); }
-#loom-platform-preview .lp-feedback { padding: 0 24px 14px 178px; font-size: 12px; color: var(--lp-accent); margin: 0; }
+#loom-platform-preview .lp-feedback { grid-column: 2; grid-row: 3; padding: 0 32px 18px; font-size: 12px; color: var(--lp-accent); margin: 0; }
 #loom-platform-preview .lp-feedback:empty { display: none; }
 #loom-platform-preview dialog { width: min(500px, calc(100% - 32px)); border: 1px solid var(--lp-line); border-radius: 12px; padding: 24px; background: var(--lp-bg); color: var(--lp-ink); position: absolute; inset: 50px 0 auto; margin: 0 auto; box-shadow: 0 18px 80px light-dark(#17343d30, #00000060); }
 #loom-platform-preview dialog::backdrop { background: light-dark(#152b3840, #02090c90); }
 #loom-platform-preview dialog h2 { font-size: 19px; }
 #loom-platform-preview dialog .lp-dialog-actions { display: flex; justify-content: end; flex-wrap: wrap; gap: 8px; margin-top: 24px; }
+#loom-platform-preview .lp-mode-field { margin: 18px 0; padding: 0; border: 0; min-width: 0; }
+#loom-platform-preview .lp-mode-field legend { margin-bottom: 10px; font-size: 13px; font-weight: 500; }
+#loom-platform-preview .lp-mode-choices { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 10px; }
+#loom-platform-preview .lp-mode-choice { display: flex; gap: 9px; align-items: start; padding: 14px 12px; border: 1px solid var(--lp-line); border-radius: 8px; }
+#loom-platform-preview .lp-mode-choice:has(input:checked) { border-color: var(--lp-accent); background: var(--lp-tint); }
+#loom-platform-preview .lp-mode-choice input { flex: 0 0 16px; }
+#loom-platform-preview .lp-mode-choice strong { display: block; font-size: 14px; font-weight: 600; }
+#loom-platform-preview .lp-mode-choice small { display: block; color: var(--lp-muted); font-size: 12px; margin-top: 4px; }
+#loom-platform-preview .lp-form-error { color: var(--lp-danger); font-size: 13px; margin-top: 12px; }
 #loom-platform-preview .lp-caption { font-size: 11px; color: var(--lp-muted); }
-@media (max-width: 820px) {
-  #loom-platform-preview .lp-capabilities-grid { grid-template-columns: minmax(0,1fr); gap: 0; }
-  #loom-platform-preview .lp-shell { grid-template-columns: 126px minmax(0, 1fr); }
-  #loom-platform-preview .lp-main { padding: 20px; }
-  #loom-platform-preview .lp-chat-layout.lp-with-progress { grid-template-columns: minmax(0,1fr); }
-  #loom-platform-preview .lp-process { border-left: 0; border-top: 1px solid var(--lp-line); padding: 14px 0 0; }
-  #loom-platform-preview .lp-feedback { padding-left: 146px; }
+@media (max-width: 1200px) {
+  #loom-platform-preview .lp-app-grid { grid-template-columns: repeat(2,minmax(0,1fr)); }
 }
-@media (max-width: 600px) {
-  #loom-platform-preview .lp-top { padding: 15px 104px 15px 14px; gap: 5px 15px; }
-  #loom-platform-preview .lp-shell { display: block; min-height: 0; }
-  #loom-platform-preview .lp-sidebar { flex-direction: row; flex-wrap: wrap; padding: 8px; border-right: 0; border-bottom: 1px solid var(--lp-line); border-radius: 0; gap: 3px; }
-  #loom-platform-preview .lp-sidebar small, #loom-platform-preview .lp-person { display: none; }
-  #loom-platform-preview .lp-nav { padding: 9px 8px; font-size: 12px; gap: 5px; }
-  #loom-platform-preview .lp-main { padding: 18px 14px; }
+@media (max-width: 1040px) {
+  #loom-platform-preview .lp-shell { grid-template-columns: 194px minmax(0,1fr); }
+  #loom-platform-preview .lp-brand { font-size: 19px; }
+  #loom-platform-preview .lp-sidebar { padding: 22px 14px; }
+  #loom-platform-preview .lp-editor-layout { grid-template-columns: minmax(0,1fr); }
+  #loom-platform-preview .lp-publish-panel { position: static; }
+  #loom-platform-preview .lp-publish-panel .lp-action-buttons { display: flex; flex-wrap: wrap; }
+  #loom-platform-preview .lp-main { padding: 24px; }
+  #loom-platform-preview .lp-top { padding: 16px 24px; }
+}
+@media (max-width: 900px) {
+  #loom-platform-preview .lp-main { padding: 20px; }
+  #loom-platform-preview .lp-app-grid, #loom-platform-preview .lp-resource-groups { grid-template-columns: minmax(0,1fr); }
+  #loom-platform-preview .lp-chat-layout.lp-with-progress { grid-template-columns: minmax(0,1fr); }
+}
+@media (max-width: 720px) {
+  #loom-platform-preview .lp-shell { grid-template-columns: minmax(0,1fr); grid-template-rows: auto auto 1fr auto; min-height: 620px; }
+  #loom-platform-preview .lp-top { grid-column: 1; grid-row: 1; padding: 14px; border-radius: 12px 12px 0 0; }
+  #loom-platform-preview .lp-top > .lp-badge { display: none; }
+  #loom-platform-preview .lp-button.lp-menu { display: inline-flex; }
+  #loom-platform-preview .lp-sidebar { display: none; grid-column: 1; grid-row: 2; padding: 16px; border-right: 0; border-bottom: 1px solid var(--lp-line); border-radius: 0; }
+  #loom-platform-preview.lp-nav-open .lp-sidebar { display: flex; }
+  #loom-platform-preview .lp-sidebar .lp-brand, #loom-platform-preview .lp-sidebar .lp-space { display: none; }
+  #loom-platform-preview .lp-person { padding-top: 16px; }
+  #loom-platform-preview .lp-main { grid-column: 1; grid-row: 3; padding: 20px 14px; }
+  #loom-platform-preview h1 { font-size: 23px; }
+  #loom-platform-preview .lp-panel { padding: 18px; }
+  #loom-platform-preview .lp-app { padding: 18px; }
   #loom-platform-preview .lp-grid { grid-template-columns: minmax(0,1fr); gap: 12px; }
-  #loom-platform-preview .lp-app-actions { padding-left: 0; }
   #loom-platform-preview .lp-appnav { gap: 24px; }
-  #loom-platform-preview .lp-feedback { padding-left: 14px; }
+  #loom-platform-preview .lp-feedback { grid-column: 1; grid-row: 4; padding: 0 14px 16px; }
   #loom-platform-preview .lp-facts { grid-template-columns: 74px minmax(0,1fr); gap: 10px; }
+  #loom-platform-preview dialog { padding: 20px; }
+  #loom-platform-preview .lp-mode-choices { grid-template-columns: minmax(0,1fr); }
 }
 @media (pointer: coarse) {
   #loom-platform-preview .lp-button, #loom-platform-preview .lp-nav, #loom-platform-preview .lp-appnav button { min-height: 44px; }
   #loom-platform-preview .lp-field input, #loom-platform-preview .lp-field select, #loom-platform-preview .lp-field textarea, #loom-platform-preview .lp-composer textarea { font-size: 16px; }
 }
 </style>
-<details id="lp-preview-settings" hidden open>
+<details id="lp-preview-settings" hidden>
   <summary>原型预览设置</summary>
   <div class="lp-preview-fields">
     <label>使用者视角<select data-preview="role"><option value="editor">编辑者</option><option value="viewer">使用者</option><option value="admin">管理员</option></select></label>
@@ -193,22 +246,29 @@
   <p>全部操作使用浏览器内的示例数据，不调用真实模型。刷新会重置模拟应用与运行，仅保留预览设置。</p>
 </details>
 <div id="loom-platform-preview" aria-label="AgentLoom 平台交互设计">
-  <header class="lp-top">
-    <div class="lp-brand"><span class="lp-mark" aria-hidden="true">L</span>AgentLoom</div>
-    <div class="lp-space">产品研发空间 <span aria-hidden="true"> / </span> 交互预览 · 示例数据</div>
-  </header>
   <div class="lp-shell">
-    <nav class="lp-sidebar" aria-label="空间导航">
-      <small>团队空间</small>
-      <button class="lp-nav cursor-interaction" data-nav="apps" type="button"><i data-lucide="layers" aria-hidden="true"></i>应用</button>
-      <button class="lp-nav cursor-interaction" data-nav="sessions" type="button"><i data-lucide="messages-square" aria-hidden="true"></i>我的会话</button>
-      <button class="lp-nav cursor-interaction" data-nav="resources" type="button"><i data-lucide="blocks" aria-hidden="true"></i>资源</button>
-      <button class="lp-nav cursor-interaction" data-nav="members" type="button"><i data-lucide="users" aria-hidden="true"></i>空间管理</button>
-      <div class="lp-person"><strong>林晓 · 当前用户</strong><span id="lp-role-label">编辑者</span></div>
-    </nav>
+    <aside id="lp-sidebar" class="lp-sidebar">
+      <div class="lp-brand"><span class="lp-mark" aria-hidden="true">织</span><div>AgentLoom<small>团队工作台</small></div></div>
+      <div class="lp-space"><i data-lucide="layers" aria-hidden="true"></i>产品研发空间</div>
+      <nav aria-label="空间导航">
+        <div class="lp-nav-group"><p class="lp-nav-label">工作台</p>
+          <button class="lp-nav cursor-interaction" data-nav="apps" type="button"><i data-lucide="bot" aria-hidden="true"></i>应用</button>
+          <button class="lp-nav cursor-interaction" data-nav="sessions" type="button"><i data-lucide="messages-square" aria-hidden="true"></i>我的会话</button>
+        </div>
+        <div id="lp-management-nav" class="lp-nav-group"><p class="lp-nav-label">资源与管理</p>
+          <button class="lp-nav cursor-interaction" data-nav="resources" type="button"><i data-lucide="blocks" aria-hidden="true"></i>资源</button>
+          <button class="lp-nav cursor-interaction" data-nav="members" type="button"><i data-lucide="users" aria-hidden="true"></i>空间管理</button>
+        </div>
+      </nav>
+      <div class="lp-person"><span class="lp-avatar" aria-hidden="true">林</span><div><strong>林晓 · 当前用户</strong><span id="lp-role-label">编辑者</span></div></div>
+    </aside>
+    <header class="lp-top">
+      <div class="lp-row"><button type="button" class="lp-button lp-menu cursor-interaction" data-action="toggle-nav" aria-controls="lp-sidebar" aria-expanded="false"><i data-lucide="menu" aria-hidden="true"></i>导航</button><div class="lp-breadcrumb"><span>产品研发空间</span><span aria-hidden="true">/</span><strong id="lp-page-label">应用</strong></div></div>
+      <span class="lp-badge">交互预览 · 示例数据</span>
+    </header>
     <main id="lp-main" class="lp-main"></main>
+    <p id="lp-feedback" class="lp-feedback" role="status" aria-live="polite"></p>
   </div>
-  <p id="lp-feedback" class="lp-feedback" role="status" aria-live="polite"></p>
   <dialog id="lp-dialog" aria-labelledby="lp-dialog-title">
     <h2 id="lp-dialog-title"></h2>
     <div id="lp-dialog-body"></div>
@@ -231,6 +291,8 @@
   let editorSection = 'basics';
   let capabilityRole = 'main';
   let fileToolsExpanded = false;
+  let appFilter = '';
+  let navOpen = false;
   const applications = [
     { name: '研发周报助手', mode: 'ReAct', description: '整理研发进展，生成面向团队的周报。', version: 3, revision: 8, publishedRevision: 7, prompt: '根据用户提供的研发进展，整理本周完成事项、待解决问题与下周计划。缺少依据时明确标注，不补写未知事实。', model: '团队通用模型', tools: true, dirty: false, valid: false, conflict: false, conflictHandled: false, otherRuns: 1, job: null, run: { status: 'running', version: 3, input: '请把本周的 SDK 接入进展整理成研发周报。', supplements: [], typed: '', timer: null } },
     { name: '专题调研助手', mode: 'Plan', description: '拆分调研任务，由资料分析与报告执行器协作完成。', version: 1, revision: 3, publishedRevision: 2, prompt: '先拆分调研问题，再分派给专业执行器。汇总时核对证据，并给出可追溯的结论。', model: '团队通用模型', tools: true, dirty: false, valid: false, conflict: false, conflictHandled: false, otherRuns: 0, job: null, executors: '资料分析：整理来源与事实\n报告编写：合并结论与待验证事项', run: { status: 'idle', version: 1, input: '', supplements: [], typed: '', timer: null } }
@@ -307,26 +369,31 @@
     }
   }
   function appHeader(app) {
-    return '<div class="lp-row lp-spread"><div><p class="lp-eyebrow">应用 / ' + esc(app.name) + '</p><h1>' + esc(app.name) + '</h1></div>' + badge(app.mode) + '</div><nav class="lp-appnav" aria-label="应用导航">' +
-      '<button type="button" class="cursor-interaction" data-action="chat" aria-current="' + (view === 'chat' ? 'page' : 'false') + '">使用</button>' +
+    return '<div class="lp-row lp-spread"><div class="lp-app-title"><h1>' + esc(app.name) + '</h1><div class="lp-row">' + badge(app.mode) + '<span class="lp-muted">' + (view === 'editor' ? '应用配置 · 编辑草稿' : view === 'chat' ? '已发布应用 · 私有会话' : '应用发布与版本') + '</span></div></div>' + button(icon('arrow-left') + '返回应用','back-apps') + '</div><nav class="lp-appnav" aria-label="应用导航">' +
+      '<button type="button" class="cursor-interaction" data-action="chat"' + (!app.version ? ' disabled' : '') + ' aria-current="' + (view === 'chat' ? 'page' : 'false') + '">使用' + (!app.version ? '（发布后）' : '') + '</button>' +
       (canEdit() ? '<button type="button" class="cursor-interaction" data-action="editor" aria-current="' + (view === 'editor' ? 'page' : 'false') + '">配置</button><button type="button" class="cursor-interaction" data-action="releases" aria-current="' + (view === 'releases' ? 'page' : 'false') + '">发布记录</button>' : '') + '</nav>';
   }
   function appsPage() {
-    return '<div class="lp-header"><p class="lp-eyebrow">产品研发空间</p><div class="lp-row lp-spread"><h1>团队应用</h1>' + (canEdit() ? button('新建应用', 'create', 'lp-primary') : '') + '</div><p class="lp-muted">应用在空间内共享，每位成员的会话独立保存。</p></div>' +
-      applications.filter(function(a) { return canEdit() || a.version > 0; }).map(function(a) {
+    const available = applications.filter(function(a) { return canEdit() || a.version > 0; });
+    const visible = available.filter(function(a) { return a.name.toLocaleLowerCase().includes(appFilter.trim().toLocaleLowerCase()); });
+    return '<div class="lp-header"><div class="lp-row lp-spread"><h1>团队应用</h1>' + (canEdit() ? button(icon('plus') + '新建应用', 'create', 'lp-primary') : '') + '</div><p class="lp-muted">配置、发布并使用团队的 Agent，每位成员的会话独立保存。</p></div>' +
+      '<div class="lp-toolbar"><label class="lp-search">' + icon('search') + '<input type="search" aria-label="搜索应用名称" data-field="app-search" placeholder="搜索应用名称" value="' + esc(appFilter) + '"></label><span class="lp-muted">' + available.length + ' 个应用</span>' + badge('空间共享') + '</div><div class="lp-app-grid">' +
+      visible.map(function(a) {
         const index = applications.indexOf(a);
-        const description = (canEdit() ? a.savedDraft : a.publishedDraft).description;
-        return '<article class="lp-app"><div class="lp-app-head"><div class="lp-app-icon">' + icon(a.mode === 'Plan' ? 'workflow' : 'sparkles') + '</div><div class="lp-app-body"><div class="lp-row"><h2 style="margin:0">' + esc(a.name) + '</h2>' + badge(a.mode) + badge(gated(a) ? (a.job.failed ? '发布待处理' : '发布中') : a.version ? '可用' : '未发布', gated(a) ? 'lp-warning' : a.version ? 'lp-good' : '') + '</div><p class="lp-description">' + esc(description || '未填写应用描述') + '</p></div></div><div class="lp-app-actions"><span class="lp-muted">' + (a.version ? '当前发布 v' + a.version : '保存并发布后，成员才可使用') + (canEdit() && (a.dirty || a.revision > a.publishedRevision) ? ' · 有未发布修改' : '') + '</span><div class="lp-row">' + (canEdit() ? button('编辑草稿', 'select-editor', '', false, ' data-index="' + index + '"') : '') + button(gated(a) && canEdit() ? '查看发布进度' : '使用应用', gated(a) && canEdit() ? 'select-releases' : 'select-chat', 'lp-primary', !a.version && !gated(a), ' data-index="' + index + '"') + '</div></div></article>';
-      }).join('') + '<div class="lp-callout">共享的是应用能力。普通成员只能查看和继续自己的会话。</div>';
+        const snapshot = canEdit() ? a.savedDraft : a.publishedDraft;
+        return '<article class="lp-app" aria-label="' + esc(a.name) + '"><div class="lp-app-head"><div class="lp-app-icon">' + icon(a.mode === 'Plan' ? 'workflow' : 'bot') + '</div>' + badge(gated(a) ? (a.job.failed ? '发布待处理' : '发布中') : a.version ? '已发布 v' + a.version : '未发布', gated(a) ? 'lp-warning' : a.version ? 'lp-good' : '') + '</div><div class="lp-app-body"><h2>' + esc(a.name) + '</h2><p class="lp-description">' + esc(snapshot.description || '未填写应用描述') + '</p><div class="lp-row">' + badge(a.mode) + badge(snapshot.model || '未选模型') + '</div><div class="lp-card-meta">' + capabilitySummary(snapshot.capabilities) + (a.mode === 'Plan' ? '<br>' + snapshot.executors.length + ' 位专业执行器' : '') + '</div></div><div class="lp-app-actions"><span class="lp-muted">' + (canEdit() && (a.dirty || a.revision > a.publishedRevision) ? '有未发布修改' : '团队共享') + '</span><div class="lp-row">' + (canEdit() ? button('配置', 'select-editor', '', false, ' data-index="' + index + '"') : '') + button(gated(a) && canEdit() ? '发布进度' : '使用', gated(a) && canEdit() ? 'select-releases' : 'select-chat', 'lp-primary', !a.version && !gated(a), ' data-index="' + index + '"') + '</div></div></article>';
+      }).join('') + (!visible.length ? '<div class="lp-empty"><h2>没有匹配的应用</h2><p class="lp-muted">试试其他名称，或清空搜索查看全部应用。</p>' + button('清空搜索','clear-search') + '</div>' : '') + '</div>';
   }
   function editorPage(app) {
-    return appHeader(app) + '<div class="lp-row lp-spread"><div class="lp-row">' + badge('草稿 r' + app.revision) + '<span class="lp-muted">' + (app.version ? '当前发布 v' + app.version : '尚未发布') + '</span></div><span id="lp-save-state" class="lp-muted">' + (app.dirty ? '有未保存修改' : '草稿已保存') + '</span></div>' +
+    return appHeader(app) +
       (gated(app) ? '<div class="lp-callout lp-warning">v' + app.job.target + ' 正在发布。此处后续修改不会进入本次候选版本。</div>' : '') +
       (app.conflict ? '<div class="lp-callout lp-error" role="alert">草稿已被另一位成员更新，你的编辑仍保留。<div class="lp-row" style="margin-top:8px">' + button('比较差异', 'compare') + '</div></div>' : '') +
+      '<div class="lp-editor-layout"><section class="lp-panel" aria-label="应用草稿配置"><div class="lp-row lp-spread">' + badge('草稿 r' + app.revision) + '<span id="lp-save-state" class="lp-muted">' + (app.dirty ? '有未保存修改' : '草稿已保存') + '</span></div>' +
       '<nav class="lp-config-nav" aria-label="配置分组">' + [['basics','基础配置'],['capabilities','能力配置'],['environment','运行环境']].map(function(item) { return button(item[1], 'config-' + item[0], '', false, ' aria-current="' + (editorSection === item[0] ? 'page' : 'false') + '"'); }).join('') + '</nav>' +
-      (editorSection === 'basics' ? basicsEditor(app) : editorSection === 'capabilities' ? capabilitiesEditor(app) : environmentEditor(app)) +
+      (editorSection === 'basics' ? basicsEditor(app) : editorSection === 'capabilities' ? capabilitiesEditor(app) : environmentEditor(app)) + '</section>' +
+      '<aside class="lp-panel lp-publish-panel" aria-label="发布与配置检查"><div class="lp-app-icon">' + icon('package-check') + '</div><h2>发布与使用</h2><p class="lp-muted">保存草稿，通过校验后发布给空间成员。</p><dl class="lp-facts"><dt>执行模式</dt><dd>' + esc(app.mode) + ' · 创建后固定</dd><dt>当前发布</dt><dd>' + (app.version ? 'v' + app.version : '尚未发布') + '</dd></dl>' +
       '<div id="lp-validation">' + validationFeedback(app) + '</div>' +
-      '<div class="lp-actions"><span id="lp-action-hint" class="lp-muted">' + (app.dirty ? '先保存，再校验' : app.valid ? '可以发布当前草稿' : '请先校验已保存草稿') + '</span><div class="lp-row">' + button('保存草稿', 'save', app.dirty ? 'lp-primary' : '', !app.dirty) + button('校验配置', 'validate', !app.dirty && !app.valid ? 'lp-primary' : '', app.dirty) + button('发布…', 'publish', app.valid ? 'lp-primary' : '', app.dirty || !app.valid || gated(app)) + '</div></div>';
+      '<div class="lp-actions"><span id="lp-action-hint" class="lp-muted">' + (app.dirty ? '先保存，再校验' : app.valid ? '可以发布当前草稿' : '请先校验已保存草稿') + '</span><div class="lp-action-buttons">' + button('保存草稿', 'save', app.dirty ? 'lp-primary' : '', !app.dirty) + button('校验配置', 'validate', !app.dirty && !app.valid ? 'lp-primary' : '', app.dirty) + button('发布…', 'publish', app.valid ? 'lp-primary' : '', app.dirty || !app.valid || gated(app)) + '</div></div><div class="lp-publish-link"><h3>使用已发布应用</h3><p class="lp-muted">草稿修改在发布后生效，会话使用已发布版本。</p>' + button(app.version ? '使用当前版本 v' + app.version : '发布后可使用','chat','',!app.version) + '</div></aside></div>';
   }
   function basicsEditor(app) {
     return '<div class="lp-formsection"><h2>基本信息</h2><div class="lp-field"><label for="lp-description">应用描述（选填）</label><textarea id="lp-description" data-field="description" maxlength="2000" aria-describedby="lp-description-hint" placeholder="说明应用的用途、适用场景和预期结果">' + esc(app.description) + '</textarea><small id="lp-description-hint">最多 2000 字。用于应用列表展示，发布后对使用者生效。</small></div></div>' +
@@ -411,7 +478,7 @@
     if (options.connection === 'reconnecting') content += '<div class="lp-callout lp-warning" role="status">连接已断开，任务可能仍在继续。正在重新连接…</div>';
     if (gated(app)) content += '<div class="lp-callout lp-warning">应用正在更新，新输入暂不可用。你仍可查看历史和请求停止。</div>';
     if (run.version !== app.version && app.version) content += '<div class="lp-callout">本轮使用 v' + run.version + '，下一次提问将使用 v' + app.version + '。</div>';
-    content += '<div class="lp-chat-layout' + (options.progress ? ' lp-with-progress' : '') + '"><div class="lp-messages">';
+    content += '<div class="lp-chat-layout' + (options.progress ? ' lp-with-progress' : '') + '"><section class="lp-panel lp-chat-panel" aria-label="会话与输入"><div class="lp-messages">';
     content += (run.history || []).map(function(h) { return '<div class="lp-message lp-user"><span class="lp-who">林晓 · 我 · v' + h.version + '</span><p>' + esc(h.input) + '</p></div><div class="lp-message lp-answer"><span class="lp-who">上一轮 · ' + labels[h.status] + ' · v' + h.version + '</span><p>' + (h.status === 'completed' ? '已完成 SDK 接入梳理，下一步验证发布、补充消息与停止流程。（示例结果）' : '本轮已停止，没有完整答案。') + '</p></div>' + h.supplements.map(supplementMessage).join(''); }).join('');
     if (run.input) content += '<div class="lp-message lp-user"><span class="lp-who">林晓 · 我</span><p>' + esc(run.input) + '</p></div>';
     else content += '<div class="lp-callout">发起第一个问题。当前使用已发布的 v' + app.version + '。</div>';
@@ -421,10 +488,10 @@
     else if (run.status === 'stopping') content += '<p class="lp-muted" role="status">已请求停止，正在等待任务结束。</p>';
     else if (run.status === 'stopped') content += '<p class="lp-muted">本轮已停止，没有完整答案。</p>';
     content += run.supplements.map(supplementMessage).join('') + '</div>';
+    content += (pending ? '<div class="lp-callout lp-warning">' + pending + ' 条补充待下轮生效。直接提出新问题即可，无需重复发送。</div>' : '') + '<div class="lp-composer"><label for="lp-input">' + inputLabel + '</label><textarea id="lp-input" data-field="message" placeholder="' + (running ? '例如：请单列下周待验证的问题。' : '例如：请把重点整理成三条。') + '">' + esc(run.typed) + '</textarea><div class="lp-row lp-spread"><span class="lp-caption">Enter 发送 · Shift + Enter 换行</span><div class="lp-row">' + (running ? button(run.status === 'stopping' ? '正在停止…' : '停止', 'stop', 'lp-danger', run.status === 'stopping' || options.connection !== 'online') : '') + button(running ? '发送补充' : '发送', 'send', 'lp-primary', locked || !run.typed.trim()) + '</div></div></div></section>';
     const received = ['accepted','running','stopping','stopped','completed'].includes(run.status);
-    if (options.progress) content += '<aside class="lp-process" aria-label="公开运行过程"><h3>运行过程</h3><p class="lp-muted">仅展示公开进度</p><ol class="lp-phases"><li class="' + (received ? 'lp-done' : '') + '"><span class="lp-step">' + (received ? '✓' : '1') + '</span><span>接收任务</span></li><li class="' + (run.status === 'running' ? 'lp-active' : run.status === 'completed' ? 'lp-done' : '') + '"><span class="lp-step">' + (run.status === 'completed' ? '✓' : '2') + '</span><span>' + (app.mode === 'Plan' ? '组织计划与专业任务' : '整理项目变更') + '</span></li><li class="' + (run.status === 'completed' ? 'lp-done' : '') + '"><span class="lp-step">' + (run.status === 'completed' ? '✓' : '3') + '</span><span>生成最终结果</span></li></ol><p class="lp-caption">关闭页面不会停止任务。</p></aside>';
-    content += '</div>' + (pending ? '<div class="lp-callout lp-warning">' + pending + ' 条补充待下轮生效。直接提出新问题即可，无需重复发送。</div>' : '') + '<div class="lp-composer"><label for="lp-input">' + inputLabel + '</label><textarea id="lp-input" data-field="message" placeholder="' + (running ? '例如：请单列下周待验证的问题。' : '例如：请把重点整理成三条。') + '">' + esc(run.typed) + '</textarea><div class="lp-row lp-spread"><span class="lp-caption">Enter 发送 · Shift + Enter 换行</span><div class="lp-row">' + (running ? button(run.status === 'stopping' ? '正在停止…' : '停止', 'stop', 'lp-danger', run.status === 'stopping' || options.connection !== 'online') : '') + button(running ? '发送补充' : '发送', 'send', 'lp-primary', locked || !run.typed.trim()) + '</div></div></div>';
-    return content;
+    if (options.progress) content += '<aside class="lp-panel lp-process" aria-label="公开运行过程"><h2>运行过程</h2><p class="lp-muted">仅展示公开进度</p><ol class="lp-phases"><li class="' + (received ? 'lp-done' : '') + '"><span class="lp-step">' + (received ? '✓' : '1') + '</span><span>接收任务</span></li><li class="' + (run.status === 'running' ? 'lp-active' : run.status === 'completed' ? 'lp-done' : '') + '"><span class="lp-step">' + (run.status === 'completed' ? '✓' : '2') + '</span><span>' + (app.mode === 'Plan' ? '组织计划与专业任务' : '整理项目变更') + '</span></li><li class="' + (run.status === 'completed' ? 'lp-done' : '') + '"><span class="lp-step">' + (run.status === 'completed' ? '✓' : '3') + '</span><span>生成最终结果</span></li></ol><div class="lp-publish-link"><h3>本轮信息</h3><dl class="lp-facts"><dt>执行模式</dt><dd>' + esc(app.mode) + '</dd><dt>应用版本</dt><dd>v' + run.version + '</dd><dt>会话权限</dt><dd>仅自己可见</dd></dl><p class="lp-muted">离开页面不会停止任务，可从「我的会话」继续查看。</p></div></aside>';
+    return content + '</div>';
   }
   function sessionsPage() {
     return '<div class="lp-header"><p class="lp-eyebrow">产品研发空间</p><h1>我的会话</h1><p class="lp-muted">仅显示你自己的会话，按最近使用排序。</p></div>' +
@@ -440,7 +507,7 @@
       ['运行环境与文件存储',[['执行沙箱服务',options.sandboxReady ? '示例可用' : '未接入',options.sandboxReady ? '团队 Python 环境 v1 · 禁止外网 · 仅模拟已接入状态' : '由管理员接入隔离执行服务后开放；本地文件卷不提供进程沙箱'],['应用专属本地卷','可配置','平台分配文件根，应用配置逻辑工作区权限与文件保留策略']]]
     ];
     return '<div class="lp-header"><p class="lp-eyebrow">产品研发空间</p><h1>资源</h1><p class="lp-muted">' + (options.role === 'admin' ? '管理固定版本与引用；保存凭据后不回显明文。' : '选择已授权的固定资源版本；导入和凭据由管理员维护。') + '</p></div>' +
-      resources.map(function(group) { return '<section class="lp-capability-group"><h2>' + group[0] + '</h2>' + group[1].map(function(resource) { return '<div class="lp-record"><div class="lp-row lp-spread"><h3>' + resource[0] + '</h3>' + badge(resource[1]) + '</div><p>' + resource[2] + '</p></div>'; }).join('') + '</section>'; }).join('') + '<div class="lp-callout">本页演示资源信息布局；不执行真实导入、连接测试或凭据操作。</div>';
+      '<div class="lp-resource-groups">' + resources.map(function(group) { return '<section class="lp-panel"><h2>' + group[0] + '</h2>' + group[1].map(function(resource) { return '<div class="lp-record"><div class="lp-row lp-spread"><h3>' + resource[0] + '</h3>' + badge(resource[1]) + '</div><p>' + resource[2] + '</p></div>'; }).join('') + '</section>'; }).join('') + '</div><div class="lp-callout">本页演示资源信息布局；不执行真实导入、连接测试或凭据操作。</div>';
   }
   function membersPage() {
     return '<div class="lp-header"><p class="lp-eyebrow">产品研发空间</p><h1>空间管理</h1><p class="lp-muted">角色决定操作范围，共享应用不共享聊天历史。</p></div>' +
@@ -455,6 +522,10 @@
     const focusAction = focused && main.contains(focused) && focused.getAttribute('data-action');
     const range = (field || focusKey) && typeof focused.selectionStart === 'number' ? [focused.selectionStart, focused.selectionEnd] : null;
     root.querySelector('#lp-role-label').textContent = {viewer:'使用者',editor:'编辑者',admin:'管理员'}[options.role];
+    root.querySelector('#lp-page-label').textContent = {apps:'应用',sessions:'我的会话',editor:'应用配置',chat:'使用应用',releases:'发布记录',resources:'资源',members:'空间管理'}[view];
+    root.querySelector('#lp-management-nav').hidden = !canEdit();
+    root.classList.toggle('lp-nav-open',navOpen);
+    root.querySelector('[data-action="toggle-nav"]').setAttribute('aria-expanded',String(navOpen));
     root.querySelectorAll('[data-nav]').forEach(function(b) {
       const name = b.dataset.nav;
       b.hidden = (name === 'resources' && !canEdit()) || (name === 'members' && options.role !== 'admin');
@@ -514,7 +585,7 @@
       return;
     }
     if (selected !== nextIndex) { editorSection = 'basics'; capabilityRole = 'main'; }
-    selected = nextIndex; view = destination; feedback(''); render(); saveState();
+    selected = nextIndex; view = destination; navOpen = false; feedback(''); render(); saveState();
   }
   function persistDraft(app) {
     if (app.description.length > 2000) { editorSection = 'basics'; render(); feedback('应用描述最多 2000 字，请缩短后保存。'); main.querySelector('#lp-description').focus(); return false; }
@@ -556,6 +627,12 @@
   root.addEventListener('input', function(event) {
     const field = event.target.dataset.field;
     const app = applications[selected];
+    if (field === 'app-search') { appFilter = event.target.value; render(); return; }
+    if (event.target.closest('#lp-create-form')) {
+      root.querySelector('#lp-create-error').textContent = '';
+      root.querySelectorAll('#lp-create-form [aria-invalid]').forEach(function(control) { control.removeAttribute('aria-invalid'); });
+      return;
+    }
     if (['description','prompt','model'].includes(field) || event.target.dataset.executor || event.target.dataset.capability || event.target.dataset.env) feedback('');
     if (field === 'message') {
       app.run.typed = event.target.value;
@@ -585,11 +662,36 @@
   });
   root.addEventListener('toggle', function(event) { if (event.target.dataset.disclosure === 'file-tools' && event.target.isConnected) fileToolsExpanded = event.target.open; }, true);
   root.addEventListener('keydown', function(event) {
+    if (event.key === 'Enter' && !event.isComposing && event.target.matches('#lp-new-name, input[name="lp-new-mode"]')) {
+      event.preventDefault(); createApplication(); return;
+    }
     if (event.target.dataset.field === 'message' && event.key === 'Enter' && !event.shiftKey && !event.isComposing) {
       event.preventDefault();
       const send = main.querySelector('[data-action="send"]');
       if (send && !send.disabled) send.click();
     }
+  });
+  function createApplication() {
+    const nameInput = root.querySelector('#lp-new-name');
+    const name = nameInput.value.trim();
+    const error = root.querySelector('#lp-create-error');
+    if (!name || name.length > 100) { error.textContent = '请填写 1–100 字的应用名称。'; nameInput.setAttribute('aria-invalid','true'); nameInput.focus(); return; }
+    const modeInput = root.querySelector('input[name="lp-new-mode"]:checked');
+    if (!modeInput || !['ReAct','Plan'].includes(modeInput.value)) {
+      error.textContent = '请选择 ReAct 或 Plan 执行模式后再创建。';
+      root.querySelector('#lp-new-mode-group').setAttribute('aria-invalid','true');
+      root.querySelector('#lp-new-react').focus();
+      return;
+    }
+    const descriptionInput = root.querySelector('#lp-new-description');
+    const description = descriptionInput.value.trim();
+    if (description.length > 2000) { error.textContent = '应用描述最多 2000 字，请缩短后创建。'; descriptionInput.setAttribute('aria-invalid','true'); descriptionInput.focus(); return; }
+    const created = {name:name,mode:modeInput.value,description:description,version:0,revision:1,publishedRevision:0,prompt:'',model:'',capabilities:emptyCapabilities(),environment:defaultEnvironment(),executors:[],dirty:false,valid:false,conflict:false,otherRuns:0,job:null,run:{status:'idle',version:0,input:'',supplements:[],typed:'',timer:null}};
+    created.savedDraft = configurationSnapshot(created); created.publishedDraft = null; applications.push(created);
+    closeDialog(); selected = applications.length - 1; editorSection = 'basics'; capabilityRole = 'main'; appFilter = ''; navOpen = false; view = 'editor'; render(); feedback('应用已创建，执行模式为 ' + created.mode + '。请配置模型、能力与运行环境。'); saveState();
+  }
+  root.addEventListener('submit', function(event) {
+    if (event.target.id === 'lp-create-form') { event.preventDefault(); createApplication(); }
   });
   root.addEventListener('click', function(event) {
     const target = event.target.closest('button');
@@ -599,6 +701,9 @@
     const app = applications[selected];
     const run = app.run;
     if (!action) return;
+    if (action === 'toggle-nav') { navOpen = !navOpen; render(); return; }
+    if (action === 'back-apps') { navigate('apps'); return; }
+    if (action === 'clear-search') { appFilter = ''; render(); main.querySelector('[data-field="app-search"]').focus(); return; }
     if (['publish','confirm-publish'].includes(action) && (app.dirty || !app.valid || configurationErrors(app).length)) {
       closeDialog(); app.valid = false; view = 'editor'; render(); feedback('配置或环境状态已变化，请保存并重新校验。'); return;
     }
@@ -610,17 +715,9 @@
     if (['editor','chat','releases'].includes(action)) { navigate(action); return; }
     if (action.startsWith('select-')) { navigate(action.slice(7), Number(target.dataset.index)); return; }
     if (action === 'close') { closeDialog(); return; }
+    if (action === 'confirm-create') { createApplication(); return; }
     if (action === 'create') {
-      openDialog('新建应用', '<div class="lp-field"><label for="lp-new-name">应用名称</label><input id="lp-new-name" maxlength="100" placeholder="例如：文档整理助手"></div><div class="lp-field" style="margin-top:16px"><label for="lp-new-description">应用描述（选填）</label><textarea id="lp-new-description" maxlength="2000" aria-describedby="lp-new-description-hint" placeholder="例如：整理团队文档，提取关键结论并生成摘要。"></textarea><small id="lp-new-description-hint">说明应用的用途、适用场景和预期结果，最多 2000 字。创建后可继续修改。</small></div><div class="lp-field" style="margin-top:16px"><label for="lp-new-mode">执行模式</label><select id="lp-new-mode"><option value="ReAct">ReAct · 一个 Agent 连续完成任务</option><option value="Plan">Plan · 计划与专业执行器分工</option></select><small>创建后不可更改</small></div><p id="lp-create-error" role="alert" class="lp-muted"></p><div class="lp-dialog-actions">' + button('取消','close') + button('创建并配置','confirm-create','lp-primary') + '</div>', 'create');
-    } else if (action === 'confirm-create') {
-      const name = root.querySelector('#lp-new-name').value.trim();
-      if (!name || name.length > 100) { root.querySelector('#lp-create-error').textContent = '请填写 1–100 字的应用名称。'; root.querySelector('#lp-new-name').focus(); return; }
-      const description = root.querySelector('#lp-new-description').value.trim();
-      if (description.length > 2000) { root.querySelector('#lp-create-error').textContent = '应用描述最多 2000 字，请缩短后创建。'; root.querySelector('#lp-new-description').focus(); return; }
-      const mode = root.querySelector('#lp-new-mode').value;
-      const created = {name:name,mode:mode,description:description,version:0,revision:1,publishedRevision:0,prompt:'',model:'',capabilities:emptyCapabilities(),environment:defaultEnvironment(),executors:[],dirty:false,valid:false,conflict:false,otherRuns:0,job:null,run:{status:'idle',version:0,input:'',supplements:[],typed:'',timer:null}};
-      created.savedDraft = configurationSnapshot(created); created.publishedDraft = null; applications.push(created);
-      closeDialog(); selected = applications.length - 1; editorSection = 'basics'; capabilityRole = 'main'; view = 'editor'; render(); feedback('应用已创建，请配置模型、能力与运行环境。');
+      openDialog('新建应用', '<form id="lp-create-form" novalidate><div class="lp-field"><label for="lp-new-name">应用名称（必填）</label><input id="lp-new-name" maxlength="100" required aria-describedby="lp-create-error" placeholder="例如：文档整理助手"></div><fieldset id="lp-new-mode-group" class="lp-mode-field" aria-describedby="lp-new-mode-hint lp-create-error"><legend>执行模式（必选）</legend><div class="lp-mode-choices"><label class="lp-mode-choice cursor-interaction"><input id="lp-new-react" type="radio" name="lp-new-mode" value="ReAct" required><span><strong>ReAct</strong><small>一个 Agent 连续推理并调用工具，完成任务。</small></span></label><label class="lp-mode-choice cursor-interaction"><input id="lp-new-plan" type="radio" name="lp-new-mode" value="Plan" required><span><strong>Plan</strong><small>先组织计划，再交给专业执行器分工完成。</small></span></label></div><p id="lp-new-mode-hint" class="lp-muted" style="margin:10px 0 0">请选择一种模式。创建后不可更改。</p></fieldset><div class="lp-field"><label for="lp-new-description">应用描述（选填）</label><textarea id="lp-new-description" maxlength="2000" aria-describedby="lp-new-description-hint" placeholder="例如：整理团队文档，提取关键结论并生成摘要。"></textarea><small id="lp-new-description-hint">说明应用的用途、适用场景和预期结果，最多 2000 字。创建后可继续修改。</small></div><p id="lp-create-error" role="alert" class="lp-form-error"></p><div class="lp-dialog-actions">' + button('取消','close') + '<button type="button" data-action="confirm-create" class="lp-button lp-primary cursor-interaction">创建并配置</button></div></form>', 'create');
     } else if (action === 'add-executor') {
       openDialog('添加专业执行器','<div class="lp-field"><label for="lp-executor-key">执行器标识</label><input id="lp-executor-key" maxlength="64" placeholder="例如：research"><small>字母或下划线开头，可包含数字、下划线和短横线。</small></div><div class="lp-field" style="margin-top:16px"><label for="lp-executor-name">显示名称</label><input id="lp-executor-name" maxlength="100" placeholder="例如：资料分析"></div><p id="lp-executor-error" role="alert" class="lp-muted"></p><div class="lp-dialog-actions">' + button('取消','close') + button('添加并配置','confirm-executor','lp-primary') + '</div>','executor');
     } else if (action === 'confirm-executor') {
