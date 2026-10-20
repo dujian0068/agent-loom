@@ -1,0 +1,57 @@
+name: agentloom-platform
+x-backend: &backend
+  build:
+    context: ..
+    dockerfile: deploy/api.Dockerfile
+  environment: &backend-env
+    PLATFORM_DATABASE_URL: postgresql+psycopg://agentloom:${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD}@postgres/agentloom
+    PLATFORM_CHECKPOINT_URL: postgresql://agentloom:${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD}@postgres/agentloom?options=-csearch_path%3Dgraph
+    PLATFORM_SECRET_KEY: ${PLATFORM_SECRET_KEY:?set PLATFORM_SECRET_KEY}
+    PLATFORM_ALLOWED_ORIGINS: ${PLATFORM_ALLOWED_ORIGINS:-["http://localhost:8080"]}
+    PLATFORM_COOKIE_SECURE: ${PLATFORM_COOKIE_SECURE:-false}
+    PLATFORM_ALLOW_TEST_MODEL: ${PLATFORM_ALLOW_TEST_MODEL:-false}
+    PLATFORM_WORKER_HOST_ID: ${PLATFORM_WORKER_HOST_ID:-private-node-1}
+    PLATFORM_DATA_DIR: /var/lib/agentloom
+  volumes:
+    - runtime:/var/lib/agentloom
+  depends_on:
+    postgres:
+      condition: service_healthy
+  restart: unless-stopped
+services:
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: agentloom
+      POSTGRES_USER: agentloom
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD}
+    volumes:
+      - postgres:/var/lib/postgresql/data
+      - ./postgres-init.sql:/docker-entrypoint-initdb.d/graph.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U agentloom -d agentloom"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+    restart: unless-stopped
+  api:
+    <<: *backend
+    command: ["sh", "-c", "agentloom-platform migrate && exec agentloom-platform api --host 0.0.0.0"]
+  worker:
+    <<: *backend
+    command: ["sh", "-c", "agentloom-platform migrate && exec python -m agentloom_platform.worker"]
+  control:
+    <<: *backend
+    command: ["sh", "-c", "agentloom-platform migrate && exec python -m agentloom_platform.worker --control-only"]
+  web:
+    build:
+      context: ..
+      dockerfile: deploy/web.Dockerfile
+    ports:
+      - "127.0.0.1:8080:80"
+    depends_on:
+      - api
+    restart: unless-stopped
+volumes:
+  postgres:
+  runtime:

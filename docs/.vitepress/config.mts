@@ -83,6 +83,7 @@ export default defineConfig({
           text: "Platform 设计",
           items: [
             { text: "Platform 总览", link: "/platform/" },
+            { text: "当前实现与启动", link: "/platform/implementation" },
             { text: "团队私有部署实施方案", link: "/platform/implementation-plan" },
             { text: "首版交互设计", link: "/platform/interaction-design" },
             { text: "可点击交互原型", link: "/prototypes/platform-interaction/index.html", target: "_blank", rel: "noopener noreferrer" },

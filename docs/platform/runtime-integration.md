@@ -1,6 +1,6 @@
 # LangChain / LangGraph 运行接入
 
-更新：2026-10-20。平台采用开源 Python LangChain + LangGraph，直接依赖上游包，不再依赖 agentloom-sdk。本文是待实现的运行合同；当前仅有设计和交互原型，没有已经接通的运行服务。框架能力与平台能力分别验收。
+更新：2026-10-20。平台采用开源 Python LangChain + LangGraph，直接依赖上游包，不再依赖 agentloom-sdk。本文保留目标运行合同；首个开发版本已经接通 ReAct、顺序 Plan、独立 Worker 及持久检查点，实际覆盖范围与剩余验收见[当前实现](implementation.md)。框架能力与平台能力分别验收。
 
 ## 1. 装配与执行边界
 

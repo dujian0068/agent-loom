@@ -1,6 +1,6 @@
 # Platform HTTP API 与接入协议
 
-更新：2026-10-20。以下是目标接口，尚未实现。API 负责管理、认证、输入、控制和公开投影；Worker 通过[LangChain / LangGraph 运行适配](runtime-integration.md)执行，不向前端提供 SDK 或图内部接口。
+更新：2026-10-20。以下保留目标协议。首个开发版本已实现管理、认证、输入、控制和公开投影，实际路径及字段以运行中的 `/api/v1/openapi.json` 为准；异步导入、活动补充、分页和删除等目标接口尚未全部实现，见[当前实现](implementation.md)。Worker 通过[LangChain / LangGraph 运行适配](runtime-integration.md)执行，不向前端提供 SDK 或图内部接口。
 
 ## 1. 通用协议
 

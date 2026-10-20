@@ -1,6 +1,6 @@
 # agentloom-platform
 
-更新：2026-10-20。Platform 是基于 **LangChain + LangGraph** 的低代码产品，独立于 agentloom-sdk。首版面向团队私有部署，支持多人、空间权限和应用发布，前后端独立开发、构建与部署。当前交付是设计文档和可点击原型，正式前后端、运行服务及部署脚本尚未实现。
+更新：2026-10-20。Platform 是基于 **LangChain + LangGraph** 的低代码产品，独立于 agentloom-sdk。首版面向团队私有部署，支持多人、空间权限和应用发布，前后端独立开发、构建与部署。已提供首个可运行开发版本，包括正式 Vue 页面、FastAPI、独立 Worker 和部署配置；实现范围与未完成项目见[当前实现](implementation.md)，启动方式见[工程说明](../../agentloom-platform/README.md)。
 
 ## 1. 平台的工作
 
@@ -27,7 +27,7 @@
 
 ## 2. 阅读顺序
 
-1. [团队私有部署实施方案](implementation-plan.md)：前后端分离、服务分工及阶段验收。
+1. [当前实现](implementation.md)与[团队私有部署实施方案](implementation-plan.md)：区分已经接通的功能、目标设计及阶段验收。
 2. [首版交互设计](interaction-design.md)：页面、资源添加与绑定、配置、会话及异常反馈。
 3. [能力类型与资源接入](capabilities.md)：Tool、Skill、MCP、Toolkit、子 Agent、沙箱和中间件。
 4. [领域对象](domain-model.md)、[配置与发布](configuration.md)：所有权、版本、授权及固定快照。
