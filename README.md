@@ -13,7 +13,7 @@ AgentLoom 重新划分为两个独立交付物，暂时保留在同一个 Git �
 
 2026-10-15 已移除旧前后端、Runtime、图模块、工具 SDK、业务测试、部署脚本及对应旧使用说明。
 
-SDK 已提供可安装的 `agentloom-sdk` 包，实现独立 ReAct / Plan–Executor、能力调用、Hook、上下文、工作空间与单机文件恢复。通过 `PropertiesConfig → AgentLoom → build(agent_def)` 接入，具体步骤和可运行脚本见[接入指南](docs/sdk/integration.md)，接口状态、模块职责及验证见[实现文档](docs/sdk/implementation.md)。SDK 的 Workflow 暂不接入。Platform 仍为设计、目录骨架与交互原型，正式前后端尚未实现；前后端必须独立构建和部署。
+SDK 已提供可安装的 `agentloom-sdk` 包，实现独立 ReAct / Plan–Executor、能力调用、Hook、上下文、工作空间与单机文件恢复。通过 `PropertiesConfig → AgentLoom → build(agent_def)` 接入，具体步骤和可运行脚本见[接入指南](docs/sdk/integration.md)，接口状态、模块职责及验证见[实现文档](docs/sdk/implementation.md)。SDK 的 Workflow 暂不接入。Platform 已提供独立 Vue 前端、FastAPI、Worker、资源配置与会话运行的首个开发版本；启动方式见[平台工程说明](agentloom-platform/README.md)，交付范围与剩余验收见[当前实现](docs/platform/implementation.md)。
 
 在仓库根目录执行 `./scripts/test_all.py`，默认最多使用 4 个独立进程并发运行全部 SDK／QA 测试并保存日志与摘要；可用 `--workers 8` 指定并发数，`--workers 1` 串行运行。需安装 SDK 的 `test` 依赖。最近一次结果入口为 `.agentloom/test-results/latest.json`；使用 `./scripts/test_all.py --check` 核对已有结果是否仍匹配当前源码和环境，无需重新执行测试。
 

@@ -43,7 +43,7 @@ flowchart TB
 ## 4. 当前交付状态与阅读入口
 
 - SDK：已有独立可安装实现，范围见[SDK 实现记录](sdk/implementation.md)；其 Workflow 源码适配计划仅属于 SDK。
-- Platform：目前为设计和原型，尚无正式业务前后端；见[实施方案](platform/implementation-plan.md)。
+- Platform：已提供前后端分离的首个可运行开发版本；实际能力与剩余验收见[当前实现](platform/implementation.md)，完整目标见[实施方案](platform/implementation-plan.md)。
 - 上游接入：[LangChain / LangGraph 运行合同](platform/runtime-integration.md)。
 - 能力分类：[Tool、Skill、MCP 及其他扩展](platform/capabilities.md)。
 

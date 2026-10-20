@@ -8,7 +8,7 @@ import shutil
 import subprocess
 import sys
 import time
-from contextlib import contextmanager
+from contextlib import contextmanager, nullcontext
 
 from sqlalchemy import select
 
@@ -52,8 +52,8 @@ def finish(db, run_id, generation, status, result=None, error=None):
         append_event(s, run_id, "status", {"status": status, "error": error})
 
 
-async def run_one(settings, db, run_id):
-    with run_lock(settings, run_id) as acquired:
+async def run_one(settings, db, run_id, *, lock_held=False):
+    with (nullcontext(True) if lock_held else run_lock(settings, run_id)) as acquired:
         if not acquired:
             return
         with db.session(write=True) as s:
@@ -74,6 +74,13 @@ async def run_one(settings, db, run_id):
             snapshot = release.snapshot
         from .runtime import RuntimeBlocked, execute
 
+        async def settle(status, result=None, error=None):
+            # Each Run owns its process/event loop. A cancelled asyncio future can
+            # leave a synchronous tool's thread running, so drain it before making
+            # this session eligible for another Run or workspace cleanup.
+            await asyncio.get_running_loop().shutdown_default_executor()
+            finish(db, run.id, run.generation, status, result, error)
+
         task = asyncio.create_task(execute(settings, db, run, snapshot))
         try:
             while not task.done():
@@ -90,22 +97,19 @@ async def run_one(settings, db, run_id):
                         print(f"Run {run_id}: local execution cancelled", file=sys.stderr)
                     except Exception as exc:  # noqa: BLE001 -- cancellation can reveal a pending transport error
                         print(f"Run {run_id}: cancellation ({type(exc).__name__})", file=sys.stderr)
-                    finish(
-                        db,
-                        run.id,
-                        run.generation,
+                    await settle(
                         "cancelled" if should_stop else "failed",
                         error=None if should_stop else "运行超过期限",
                     )
                     return
             result = await task
-            finish(db, run.id, run.generation, "completed", result)
+            await settle("completed", result)
         except RuntimeBlocked as exc:
-            finish(db, run.id, run.generation, "failed", error=str(exc))
+            await settle("failed", error=str(exc))
         except Exception as exc:  # noqa: BLE001 -- execution boundary converts third-party failures to diagnostics
             # Never leak provider request bodies or credentials into public diagnostics.
             print(f"Run {run_id} failed: {type(exc).__name__}", file=sys.stderr)
-            finish(db, run.id, run.generation, "failed", error="模型或工具调用失败，请检查连接与运行日志")
+            await settle("failed", error="模型或工具调用失败，请检查连接与运行日志")
 
 
 def maintenance(settings, db):
@@ -214,7 +218,11 @@ def main():
     settings.prepare()
     db = Database(settings.database_url)
     if args.run:
-        asyncio.run(run_one(settings, db, args.run))
+        # Keep ownership through asyncio.run's default-executor shutdown.
+        # Cancelling a tool await does not terminate an in-flight file I/O thread.
+        with run_lock(settings, args.run) as acquired:
+            if acquired:
+                asyncio.run(run_one(settings, db, args.run, lock_held=True))
     else:
         serve(settings, db, args.control_only, args.once)
 

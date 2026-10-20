@@ -47,6 +47,9 @@ def test_tool_receipts_prevent_replay_and_budget_rejection_has_no_pending_operat
 
 
 def test_stop_cancels_inflight_model_and_next_input_does_not_revive_it(platform, monkeypatch):
+    import threading
+    import time
+
     from agentloom_platform import runtime
 
     app = configured_agent(platform)
@@ -54,14 +57,24 @@ def test_stop_cancels_inflight_model_and_next_input_does_not_revive_it(platform,
     session, receipt = submit(platform, app)
     entered = asyncio.Event()
     cancelled = []
+    thread_status = []
+    io_may_finish = threading.Event()
+
+    def inflight_sync_io():
+        assert io_may_finish.wait(timeout=5)
+        time.sleep(0.05)
+        with platform["db"].session() as s:
+            thread_status.append(s.get(Run, receipt["run_id"]).status)
 
     async def slow_model(self, req, handler):
         self.check("model_calls")
+        asyncio.get_running_loop().run_in_executor(None, inflight_sync_io)
         entered.set()
         try:
             await asyncio.sleep(30)
         except asyncio.CancelledError:
             cancelled.append(True)
+            io_may_finish.set()
             raise
 
     monkeypatch.setattr(runtime.Control, "awrap_model_call", slow_model)
@@ -77,6 +90,7 @@ def test_stop_cancels_inflight_model_and_next_input_does_not_revive_it(platform,
 
     asyncio.run(exercise())
     assert cancelled == [True]
+    assert thread_status == ["stopping"]
     with platform["db"].session() as s:
         run = s.get(Run, receipt["run_id"])
         assert run.status == "cancelled" and run.result is None
@@ -105,3 +119,29 @@ def test_password_whitespace_is_preserved(platform):
     assert (
         admin.post("/api/v1/auth/login", json={"username": "spaces", "password": password}).status_code == 200
     )
+
+
+def test_process_ownership_outlives_cancelled_awaits_and_file_threads(platform, monkeypatch):
+    import sys
+    import time
+
+    from agentloom_platform import worker
+
+    observations = []
+
+    def delayed_file_operation():
+        time.sleep(0.05)
+        with worker.run_lock(platform["settings"], "shutdown-test") as acquired:
+            observations.append(acquired)
+
+    async def finish_with_io_still_inflight(*args, **kwargs):
+        asyncio.get_running_loop().run_in_executor(None, delayed_file_operation)
+
+    monkeypatch.setattr(sys, "argv", ["worker", "--run", "shutdown-test"])
+    monkeypatch.setattr(worker, "Settings", lambda: platform["settings"])
+    monkeypatch.setattr(worker, "Database", lambda _: platform["db"])
+    monkeypatch.setattr(worker, "run_one", finish_with_io_still_inflight)
+    worker.main()
+    assert observations == [False]
+    with worker.run_lock(platform["settings"], "shutdown-test") as acquired:
+        assert acquired
