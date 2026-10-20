@@ -59,7 +59,7 @@ class SkillPackage:
         try:
             entry, manifest = import_files(root)
             text = entry.decode("utf-8")
-            match = re.match(r"\A---\s*\n(.*?)\n---(?:\n|$)", text, re.S)
+            match = re.match(r"\A---[ \t]*\r?\n(.*?)\r?\n---(?:\r?\n|$)", text, re.S)
             if not match:
                 raise ConfigurationError("SKILL_METADATA_INVALID")
             metadata = yaml.safe_load(match[1])

@@ -2,6 +2,8 @@
 
 from collections.abc import Mapping
 
+from ..configuration.json_documents import canonical_document
+from ..context.records import materialize
 from ..errors import RequestError
 from ..runtime.batches import stable_id
 
@@ -85,6 +87,13 @@ def validate_model_intent(state, task, op):
         and len(request["messages"]) == len(request["record_ids"])
     )
     require_effect(all(isinstance(ref, str) for ref in request["record_ids"]))
+    selected = materialize(task["context"])
+    require_effect(
+        request["record_ids"] == [r["record_id"] for r in selected]
+        and len(set(request["record_ids"])) == len(request["record_ids"])
+        and canonical_document(request["messages"])
+        == canonical_document([r["message"] for r in selected])
+    )
     require_effect(
         all(
             isinstance(message, Mapping) and isinstance(message.get("role"), str)
@@ -113,3 +122,41 @@ def validate_model_intent(state, task, op):
             )
         )
     )
+
+
+def validate_effect_set(effects):
+    """A proposal may not apply the same state transition twice in one commit."""
+    seen = set()
+    for effect in effects:
+        validate_effect(effect)
+        kind, body = effect["kind"], effect["body"]
+        identity = (
+            body["operation"]["operation_id"]
+            if kind == "begin_model"
+            else body.get("operation_id", body.get("batch_id", body.get("message")))
+        )
+        require_effect((kind, identity) not in seen)
+        seen.add((kind, identity))
+
+
+def validate_accept(state, task, body):
+    op = state["operations"].get(body["operation_id"])
+    continuation = task.get("continuation", {})
+    require_effect(
+        op is not None
+        and op["task_id"] == task["task_id"]
+        and op["role_key"] == task["role_key"]
+        and op["event_type"] == "model.generate"
+        and op["purpose"] == "business"
+        and op["status"] == "succeeded"
+        and (
+            op["ticket"] == "reserved"
+            or op["ticket"] == "consumed"
+            and op.get("consumption_kind") == "decision"
+        )
+        and not op.get("accepted_record_id")
+        and continuation.get("phase") == "interpret_response"
+        and continuation.get("model_operation_id") == op["operation_id"]
+        and continuation.get("accepted_decision_ref") is None
+    )
+    return op

@@ -5,7 +5,12 @@ from ..context import append
 from ..context.results import project_result
 from ..errors import InfrastructureError, RequestError
 from ..runtime.batches import freeze_batch
-from .effect_validation import require_effect, validate_effect, validate_model_intent
+from .effect_validation import (
+    require_effect,
+    validate_accept,
+    validate_effect,
+    validate_model_intent,
+)
 
 
 def assistant_message(response):
@@ -32,6 +37,8 @@ def assistant_message(response):
 def apply_effect(state, task, effect):
     validate_effect(effect)
     kind, body = effect["kind"], effect["body"]
+    if kind == "accept_model":
+        op = validate_accept(state, task, body)
     expected = body.get("expected_context_revision")
     if expected is not None and expected != task["context"]["revision"]:
         raise RequestError("COMMIT_CONFLICT")
@@ -54,20 +61,14 @@ def apply_effect(state, task, effect):
             raise RequestError("IDEMPOTENCY_CONFLICT")
         state["operations"][op["operation_id"]] = op
     elif kind == "accept_model":
-        op = state["operations"].get(body["operation_id"])
-        require_effect(
-            op is not None
-            and op["task_id"] == task["task_id"]
-            and op["event_type"] == "model.generate"
-            and op["status"] == "succeeded"
-        )
         consume_ticket(state, op, "decision")
         candidate = op["response"]["result"]
-        append(
+        entry = append(
             task["context"],
             assistant_message(candidate),
             raw=assistant_message(op["raw"]["result"]),
         )
+        op["accepted_record_id"] = entry["record_id"]
         task.update(
             stage="batch" if candidate["tool_calls"] else "validate",
             calls=copy_document(candidate["tool_calls"]),
@@ -123,3 +124,21 @@ def consume_ticket(state, op, kind):
     op.update(ticket="consumed", consumption_kind=kind)
     state["usage"]["loops_reserved"] -= 1
     state["usage"]["loops_consumed"] += 1
+
+
+def settle_failed_task_model(state, task):
+    """Settle completed model reservations in the same commit as task failure.
+
+    A failed Executor model produces formal error feedback. A successful model
+    response rejected by its node was never an accepted decision; release its
+    reservation while retaining response/attempt facts for audit and recovery.
+    Pending operations are left to the normal cancellation/finalization path.
+    """
+    op = state["operations"].get(task["continuation"].get("model_operation_id"))
+    if not op or op["ticket"] != "reserved" or op["status"] == "pending":
+        return
+    if task["parent_operation"] and op["status"] in {"failed", "blocked"}:
+        consume_ticket(state, op, "error_feedback")
+    else:
+        op["ticket"] = "released"
+        state["usage"]["loops_reserved"] -= 1

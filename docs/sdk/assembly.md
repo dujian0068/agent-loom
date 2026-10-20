@@ -7,7 +7,7 @@
 | 层次 | 对象 | 谁创建 | 可以跨 ExecutionRecord 复用吗 | 是否进入检查点 |
 | --- | --- | --- | --- | --- |
 | 配置 | AgentDefinition、ExecutionPolicy、ContextPolicy、ModelOptions、WorkspaceBinding、HookBinding | 调用者 | 可以，构造后不可变 | 保存执行所需的值或引用；不保存平台发布关系 |
-| 参数入口 | PropertiesConfig：RuntimeProperties、AgentProperties、ServiceProperties | 调用者在启动时注入 | 固定配置可复用；服务引用遵守并发和所有权合同 | 只持久化原有恢复合同中的固定值，不序列化整个参数入口 |
+| 参数入口 | PropertiesConfig：带前缀的参数映射 | 调用者在启动时注入 | 固定配置可复用；服务引用遵守并发和所有权合同 | 只持久化原有恢复合同中的固定值，不序列化整个参数入口 |
 | 装配入口 | AgentBuilder | 调用者注入共享依赖 | 可以，每次 build 创建新 Agent | 不保存 Builder；Agent 使用与直接构造相同的恢复清单 |
 | Agent 对象 | ReactAgent、PlanAgent | SDK 构造；图中按绑定创建 | 活动实例不跨任务复用，固定配置与依赖可以复用 | 保存上下文与进度的持久投影，不序列化对象或服务引用 |
 | 工作流程序 | Workflow | SDK 编译 | 编译结构可以复用，节点执行实例按任务创建 | 保存绑定 key 与各次执行现场，不序列化编译对象 |
@@ -146,7 +146,7 @@ execution_policy／context_policy／model_options 省略时，构造阶段按[�
 
 | 参数 | 包含什么 | 不能包含什么 |
 | --- | --- | --- |
-| definition | 当前 Agent 的名称、职责、Prompt、变量、能力选择与格式；Plan 时供 Planner 使用 | 角色列表、执行模式、模型连接、活动消息、平台资源查询回调 |
+| definition | 当前 Agent 的可选显示名、职责、Prompt、变量、能力选择与格式；Plan 时供 Planner 使用 | 角色列表、执行模式、模型连接、活动消息、平台资源查询回调 |
 | executors | 仅 PlanAgent 接收：Executor key → AgentDefinition 的固定映射 | 活动 Agent／上下文、子 Plan、另一个模型或预算 |
 | execution_policy | 本完整调用的 Loop、截止、并行与自动重试策略；Executor 共用 | 每个子任务重新分配的独立总额度 |
 | context_policy | 本完整调用的历史、压缩及上下文预算策略；Executor 共用策略、私有消息 | 跨任务共享的可写 messages |
@@ -216,58 +216,51 @@ Builder 只是装配入口。同一份定义和依赖通过 Builder 或直接构
 
 ### 2.4 统一参数配置 PropertiesConfig
 
-统一入口命名为 **PropertiesConfig**，已实现且从 `agentloom` 导出。`configuration.properties` 提供纯值参数组，`public.properties` 聚合服务引用与参数，`public.application.AgentLoom` 负责启动和关闭；执行仍由 RuntimeEngine 和现有 Agent 图完成。
+统一入口为 **PropertiesConfig**，已从 `agentloom` 导出。`configuration.settings` 是参数目录和集中编译入口，复用 `configuration` 内的值约束、服务合同与模型预算校验；`public.properties` 提供构造、只读访问和派生入口。业务使用一个带前缀的映射，模块读取编译后的不可变配置，不自行读取环境变量、解析散落参数或重复执行启动校验。
 
 ```python
-properties = PropertiesConfig(
-    runtime=RuntimeProperties(
-        namespace="my-app",
-        state_directory=".agentloom/state",
-        store_lock_timeout_seconds=10,
-        lease_seconds=30,
-        cleanup_retry_seconds=30,
-    ),
-    defaults=AgentProperties(
-        workspace=workspace,
-        execution_policy=execution_policy,
-        context_policy=context_policy,
-        model_options=model_options,
-    ),
-    services=ServiceProperties(
-        model=model, capabilities=registry, hooks=hooks,
-        store=store, environment=environment,
-    ),
-)
+properties = PropertiesConfig({
+    "runtime.namespace": "my-app",
+    "workspace.root": ".agentloom/work",
+    "model.protocol": "chat_completions",
+    "model.base_url": "https://your-compatible-service.example/v1",
+    "model.name": "your-model",
+    "model.context_window_tokens": 32768,
+    "services.capabilities": registry,
+    "services.hooks": hooks,
+    "execution.loop_max": 100,
+})
 async with AgentLoom(properties) as app:
     agent = app.build(agent_def)
     plan = app.build(planner_def, executors={"research": research_def})
-    limited = app.builder.with_options(execution_policy=ExecutionPolicy(loop_max=10))
-    result = await limited.build(agent_def).ainvoke("分析需求")
+    result = await agent.ainvoke("分析需求")
 ```
 
-`runtime` 和 `files` 可省略；defaults／services 必须显式提供，分别要求 WorkspaceBinding 和 ModelAdapter。参数组复用已有 ExecutionPolicy／ContextPolicy／ModelOptions，默认值和校验只有一个来源。配置构造时验证类型、数值、路径及模型窗口／选项组合并冻结；只检查本地元信息，不读取远端目录或执行 Hook。ServiceProperties 的 store／environment 可省略，默认 local 配置启动时使用文件状态存储／本地环境；显式注入仍遵守原有所有权合同。checkpoint_callback 可注入同步检查点回调，异步回调在参数校验阶段拒绝。
+参数前缀为 `runtime`、`workspace`、`model`、`execution`、`execution.retry`、`context`、`files` 和 `services`，字段与默认值见[接入指南](integration.md#2-参数配置与生命周期)。`model.adapter` 可注入已有模型，不能同时提供协议连接设置。协议适配器统一命名 `ChatCompletionsAdapter`／`ResponsesAdapter`，支持显式服务地址；不以名称推断模型厂商。name、base_url 和 context_window_tokens 为连接必需项，api_key 可省略。
+
+启动前集中校验未知键、类型、数值、来源冲突和模型预算；非法配置返回 ConfigurationError 与具体 field_path，不忽略参数或回退到默认。校验无文件／网络副作用，配置此时冻结，相对路径固定为绝对路径。进入宿主时加载所选提供者并打开资源。build 继续校验 Definition、角色能力和 Hook 匹配关系，但不再重复验证启动参数；模型请求、输入及 Hook 补丁等运行材料仍按各自合同校验。
 
 | 读取范围 | 唯一来源 |
 | --- | --- |
-| 当前实例的全部启动参数 | `app.properties`，无全局注册或单例 |
-| 宿主 namespace、租约、清理重试、默认文件参数 | `app.runtime.properties`，与启动参数的 runtime 是同一对象 |
-| Agent／Planner／Executor 的固定参数 | `agent.properties`；未覆盖时与 defaults 是同一对象 |
-| 当前角色的能力与 Hook | 通过 Builder 装配的绑定目录与 HookSet；注册不自动授权 |
+| 当前宿主的启动参数 | `app.properties["runtime.namespace"]` 等，只读、无全局单例 |
+| Runtime 的固定参数 | 已编译 runtime 投影，与 properties.runtime 为同一对象 |
+| Agent／Planner／Executor 的固定参数和模型预算 | 同一配置的只读投影；角色构建复用已校验预算 |
+| 当前角色的能力与 Hook | 绑定目录与 HookSet；读取配置不扩大角色权限 |
 | 用户输入、变量、身份、消息、截止与租约现场 | 原 AgentInput／Run／Task／Context，独立于启动参数 |
 
-RuntimeEngine 与 Agent 的旧参数属性变为只读转发，不保存独立副本。各模块依赖对应参数组和受限服务，不能用整个启动容器绕过角色授权。服务实例与 PropertiesConfig 对象不进入检查点，同配置可在统一入口、Builder、直接构造之间接续。
+兼容入口继续接受 RuntimeProperties、AgentProperties、ServiceProperties、FileProperties，默认值和语义与新入口共用；业务不必构造这些组。旧组与新映射混传报 PARAMETERS_CONFLICT。服务实例与配置对象不进入检查点，同配置可在统一入口、Builder、直接构造之间接续。
 
 当前恢复清单使用 `binding_version=2`，保留原定义／策略字段，另存各角色的变量声明合同。`VariableSpec` 与普通字典默认值分别标记；普通默认值的推导类型也独立保存，避免规范 JSON 把 `1.0` 写成 `1` 后改变变量校验。恢复以规范 JSON 比较完整清单，布尔与数字不同，字典键顺序不影响匹配。检查发生在领取执行权和准备环境之前；已终态 Run 仍只读取原结果。
 
 旧清单缺少声明类型时，仅接续能无歧义核对的配置；含 `schema/default/required` 三字段的变量对象，以及整数值的数字默认值，都无法证明原声明类型，返回 `RECOVERY_BINDING_MISMATCH` 并给出变量路径。不会用新传入的 Definition 推断旧声明，也不改写历史清单。此类旧活动任务可以用原版本续完，或通过控制接口停止后以新 run_id 发起执行；旧终态仍可观察。
 
-覆盖规则：`app.build(..., properties=custom)` 整体替换该 Agent 的参数组；`app.builder.with_options(...)` 派生单项覆盖，其余值继承。`properties.with_options(...)` 则整组替换启动参数，组内修改使用 `dataclasses.replace()`。覆盖重新校验并冻结，不影响先前实例；可选策略显式 None 使用 SDK 默认。根参数组与必需依赖不能置空。直接构造同时提供 properties 和旧形式的对应参数时返回 `PARAMETERS_CONFLICT`，不会静默选择优先级。
+覆盖规则：`app.build(..., properties=custom)` 整体替换该 Agent 的参数组；`app.builder.with_options(...)` 派生单项覆盖，其余值继承。`properties.with_options({"execution.loop_max": 10})` 按键派生启动配置；model.parameters 和 files.options 整值替换。旧参数组整组替换和 dataclasses.replace 继续兼容。覆盖重新校验并冻结，不影响先前实例；可选策略显式 None 使用 SDK 默认。根参数组与必需依赖不能置空。直接构造同时提供 properties 和旧形式的对应参数时返回 `PARAMETERS_CONFLICT`，不会静默选择优先级。
 
 `AgentLoom(properties)` 构造只保存配置，不创建文件目录或后台任务。进入 async with 创建并开启一个 RuntimeEngine；启动失败关闭本次已创建的宿主资源，保留原异常，附带清理失败类型，可再次调用 aclose 重试清理。退出或 aclose 暂停本机推进而不发用户停止命令，只关闭宿主创建的文件存储；注入的存储、模型、Hook、能力和环境继续归调用方所有。build／builder 在宿主未打开或关闭后返回 `RUNTIME_CLOSED`；一个门面只开启一次，重开需新建门面。查询控制通过 `app.runtime` 的现有服务完成。
 
 默认文件目录与锁等待参数只作用于宿主创建的 FileRuntimeStore；注入的 store 使用自身参数。相对路径在参数构造时固定为绝对路径，不受稍后 chdir 影响。Workflow 不在本入口本轮实现范围。
 
-`files: FileProperties` 为文件提供者参数组，默认 `provider="local", options={}`。SDK 从安装包登记元数据选择唯一实现类，以 `类(**options)` 创建；所有 11 个方法为普通方法。第三方内置地址时无需业务传 root；默认本地仍校验 WorkspaceBinding.root。详见[注册与装配](builtin-tools-spi.md#8-python-包注册与配置加载)。
+文件提供者参数为 `files.provider="local"` 和 `files.options={}`，兼容旧 FileProperties 参数组。SDK 从安装包登记元数据选择唯一实现类，以 `类(**options)` 创建；所有 11 个方法为普通方法。第三方内置地址时无需业务传 root；默认本地仍校验 WorkspaceBinding.root。详见[注册与装配](builtin-tools-spi.md#8-python-包注册与配置加载)。
 
 ### 2.5 SDK 模式指令与业务 Prompt
 
@@ -310,7 +303,7 @@ Prompt 变量值属于本次输入的一部分，随请求固定并参与幂等�
 
 开发者提供资源目录，每份 AgentDefinition 通过 capabilities 从目录中选择。**注册可用资源不等于授权所有 Agent 使用。** 同一 Plan 的 Planner 与 Executor 分别解析自己的选择，目录构造为纯本地操作，执行期间不可增删。
 
-内置与用户扩展工具使用相同的 CapabilityRegistration／CapabilityAdapter；默认工具与三个扩展点见[工具 SPI](builtin-tools-spi.md)。文件提供者现通过 `PropertiesConfig.files: FileProperties` 选择，SDK 使用 `agentloom.workspace_backends` entry points 登记元数据定位选中类，启动时加载并校验完整普通方法接口；不联网发现或执行未选中的提供者。`files.provider` 默认 local，`files.options` 为可选构造参数，实例由 SDK 管理。默认本地继续支持借用的 environment；第三方文件提供者与未经验证的自定义脚本环境组合拒绝。完整 EnvironmentProvider／SandboxGateway 与多后端挂载合同仍是后续目标，不能静默换成宿主目录或 shell。
+内置与用户扩展工具使用相同的 CapabilityRegistration／CapabilityAdapter；默认工具与三个扩展点见[工具 SPI](builtin-tools-spi.md)。文件提供者通过 `PropertiesConfig` 的 `files.provider`／`files.options` 选择，SDK 使用 `agentloom.workspace_backends` entry points 登记元数据定位选中类，启动时加载并校验完整普通方法接口；不联网发现或执行未选中的提供者。`files.provider` 默认 local，`files.options` 为可选构造参数，实例由 SDK 管理。默认本地继续支持借用的 environment；第三方文件提供者与未经验证的自定义脚本环境组合拒绝。完整 EnvironmentProvider／SandboxGateway 与多后端挂载合同仍是后续目标，不能静默换成宿主目录或 shell。
 
 ```python
 class CapabilityRegistry:

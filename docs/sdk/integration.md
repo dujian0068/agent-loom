@@ -21,24 +21,20 @@ from uuid import uuid4
 from agentloom import (
     AgentDefinition,
     AgentLoom,
-    AgentProperties,
     ModelResponse,
     PropertiesConfig,
-    RuntimeProperties,
     ScriptedModel,
-    ServiceProperties,
-    WorkspaceBinding,
 )
 
 
 async def main():
     model = ScriptedModel(lambda request: ModelResponse("接入成功"))
-    definition = AgentDefinition("assistant", "准确回答用户的问题。")
-    properties = PropertiesConfig(
-        runtime=RuntimeProperties(namespace="integration-demo"),
-        defaults=AgentProperties(workspace=WorkspaceBinding(".agentloom/work")),
-        services=ServiceProperties(model=model),
-    )
+    definition = AgentDefinition(prompt="准确回答用户的问题。")
+    properties = PropertiesConfig({
+        "runtime.namespace": "integration-demo",
+        "workspace.root": ".agentloom/work",
+        "model.adapter": model,
+    })
     run_id, input_id, session_id = (str(uuid4()) for _ in range(3))
 
     async with AgentLoom(properties) as app:
@@ -62,64 +58,68 @@ asyncio.run(main())
 
 ## 2. 参数配置与生命周期
 
-启动时传入一份 `PropertiesConfig`，由各模块读取各自的只读参数组。`defaults` 和 `services` 必填，`runtime` 和 `files` 可省略。
+启动时只构造一份 `PropertiesConfig({...})`，用带前缀的键传入参数。`configuration.settings` 统一登记可用键，复用唯一的类型、默认值和约束定义，集中校验并生成不可变配置。Runtime、Builder、Planner 和 Executor 读取已校验的值；build 和执行阶段不会重新解析参数或重复调用模型选项校验。
 
-| 参数组 | 字段与默认值 | 归属 |
-| --- | --- | --- |
-| `runtime: RuntimeProperties` | `namespace="default"`、`state_directory=".agentloom/state"`、`store_lock_timeout_seconds=10`、`lease_seconds=30`、`cleanup_retry_seconds=30` | 宿主、默认文件存储和后台维护 |
-| `defaults: AgentProperties` | 必填 `workspace: WorkspaceBinding`；可选 `execution_policy`、`context_policy`、`model_options`，省略时使用对应 Policy 默认值 | 每个 Agent 的固定参数 |
-| `services: ServiceProperties` | 必填 `model`；可选 `capabilities`、`hooks`、`store`、`environment`、`checkpoint_callback` | 调用方注入的服务实例 |
-| `files: FileProperties` | `provider="local"`、`options={}` | 文件实现选择；SDK 负责加载及生命周期 |
+| 前缀 | 参数与默认值 |
+| --- | --- |
+| `runtime.*` | `namespace="default"`、`state_directory=".agentloom/state"`、`store_lock_timeout_seconds=10`、`lease_seconds=30`、`cleanup_retry_seconds=30` |
+| `workspace.*` | 本地提供者要求 `root`；`persistent_sandbox=False`。第三方提供者管理工作区时 root 可为 None |
+| `model.*` | `protocol="chat_completions"`；协议连接要求 `name`、`base_url`、`context_window_tokens`。`api_key=None`、`output_token_limit=None`、`client=None`；也可通过 `adapter` 注入自定义模型，两种连接来源不能同时提供 |
+| `model.*` 请求参数 | `max_output_tokens=None`、`parameters={}`，适用于内置协议和注入模型；与窗口／预留预算联合校验 |
+| `execution.*` | `loop_max=100`、`run_timeout_seconds=3600`、`parallel_enabled=False`、`executor_max_parallel=2`、`model_first_output_timeout_seconds=60`、`model_stream_idle_timeout_seconds=None`、`tool_timeout_seconds=10` |
+| `execution.retry.*` | `enabled=False`、`max_attempts=2`、`delay_seconds=2` |
+| `context.*` | `recent_runs=2`、`trigger_ratio=0.8`、`output_reserve_tokens=None`、`safety_margin_tokens=None`、`summary_target_tokens=None`、`compaction_prompt_addendum=""`；None 按模型元信息计算预算 |
+| `files.*` | `provider="local"`、`options={}`，选择已安装的文件实现及其构造参数 |
+| `services.*` | `capabilities`、`hooks`、`store`、`environment`、`checkpoint_callback`；默认空能力／Hook、本地文件存储和环境、无回调 |
 
-配置构造只校验并冻结参数；相对路径在构造时固定为绝对路径。进入 `async with AgentLoom(properties)` 才打开宿主并创建默认状态目录。`app.build()` 只装配 Agent，`start()` 才接收一次执行。
+未知键报 `PROPERTY_UNKNOWN`，缺少连接必需项报 `PROPERTY_REQUIRED`，混用参数来源报 `PARAMETERS_CONFLICT`。类型、数值和组合错误通过 ConfigurationError 返回具体 `field_path`，不会忽略拼错的键或在错误配置后回退。数字参数不接受布尔值，也不把字符串自动转换成数字。`model.parameters` 和 `files.options` 是完整映射值，内部字段遵守协议／提供者合同。
 
-在 Web 服务中，应让 AgentLoom 的生命周期覆盖整个应用或 Worker，接收请求时为每个新 Run 调用一次 `app.build()`。不要在 `start()` 返回后立即退出宿主作用域，否则本机后台推进会暂停。一个 Agent 实例绑定一个 Run；同会话的新问题需要新的 Agent 实例。
-
-退出宿主会暂停本机推进并保留检查点，不等于用户停止。每个 AgentLoom 实例只开启一次；重启创建新实例。SDK 关闭自己创建的文件提供者和默认文件存储，注入的 store、模型客户端、环境和其他共享服务仍由调用方管理。共享适配器须支持调用方启用的并发。
-
-下面及后续装配片段中的 `properties` 指已构造的参数配置，`app` 指处于 `async with` 内的宿主，`definition` 指已有 AgentDefinition。
+配置构造是启动前的集中校验阶段，不打开资源。相对路径此时固定为绝对路径，外部可变字典被复制和冻结。进入 `async with AgentLoom(properties)` 才创建并打开宿主、加载所选文件提供者；提供者是否安装及接口是否完整也在业务运行前检查。`app.build()` 校验 Definition、角色和能力绑定，`start()` 才接收执行。SDK 不自动读取环境变量或 `.env`。
 
 ```python
-from dataclasses import replace
-from agentloom import ExecutionPolicy
-
-# 派生单个 Agent 的策略；启动默认值不变。
-limited = app.builder.with_options(execution_policy=ExecutionPolicy(loop_max=10))
-agent = limited.build(definition)
-
-# 修改参数组中的字段，再整组替换；新宿主使用这份配置。
-other_properties = properties.with_options(
-    runtime=replace(properties.runtime, namespace="another-app"),
-)
+# 派生新配置，在下一次启动时使用；原配置和已经启动的宿主保持固定。
+other_properties = properties.with_options({
+    "runtime.namespace": "another-app",
+    "execution.loop_max": 10,
+    "execution.retry.enabled": True,
+})
+assert properties["runtime.namespace"] == "integration-demo"
 ```
 
-`PropertiesConfig.with_options()` 整组替换；`dataclasses.replace()` 修改组内字段。Builder 的 `with_options()` 支持单项覆盖。参数组与旧形式的同组关键字混传会报 `PARAMETERS_CONFLICT`。run_id、输入、变量值、消息和租约现场属于每次执行，不放入启动参数配置。
+`with_options({...})` 仅替换给定的键；`model.parameters`、`files.options` 整个值替换。显式设置 `model.adapter` 会替换原协议连接配置；从注入模型切换到连接参数时，应提供完整连接信息。派生配置重新通过统一校验。读取未知键也会报错；注入模型没有协议连接配置，读取它的 `model.base_url` 等键返回 `PROPERTY_UNAVAILABLE`。`properties["model.adapter"]` 始终返回实际装配的模型。
 
-显式注入 `services.store` 后，`runtime.state_directory/store_lock_timeout_seconds` 不再配置该存储；使用注入对象自己的配置和关闭方式。文件锁等待接受有限非负数，`0` 表示不等待，非法值返回 `STORE_LOCK_TIMEOUT_INVALID`。
+旧版参数组构造和 Builder 的按 Agent 覆盖方式继续兼容，但新接入无需创建 RuntimeProperties／AgentProperties／ServiceProperties／FileProperties。旧参数组与新映射不能混传。run_id、输入、变量值、消息和租约属于每次执行，不进入启动参数。配置对象、凭据及服务实例不进入检查点，恢复继续校验已保存的定义、策略和资源合同。
+
+在 Web 服务中，让 AgentLoom 的生命周期覆盖整个应用或 Worker，为每个新 Run 调用一次 `app.build()`。一个 Agent 实例绑定一个 Run；同会话的新问题需要新的实例。退出宿主暂停本机推进并保留检查点，不代表用户停止；重启创建新宿主实例。
+
+SDK 关闭自己创建的文件提供者和默认文件存储。注入的 store、HTTP client、模型适配器及环境由调用方管理，须维持其声明合同并支持调用方启用的并发。协议适配器未注入 client 时自行管理每次 HTTP 连接。显式提供 `services.store` 时，`runtime.state_directory/store_lock_timeout_seconds` 不配置该存储。文件锁等待允许有限非负数，`0` 表示不等待。
 
 ## 3. 接入真实模型
 
-当前提供 `OpenAIResponsesAdapter` 和 `OpenAIChatAdapter`。调用者明确提供模型名、凭据和上下文窗口，不根据名称自动推断，也没有统一的 `ModelAdapter.discover()`。以下片段在创建 AgentLoom **之前**执行；环境变量由应用准备，SDK 不会自动读取 `.env`。
+SDK 按请求协议选择适配器，不按模型厂商选择。`chat_completions` 对应 `ChatCompletionsAdapter`，`responses` 对应 `ResponsesAdapter`，两者都要求显式填写兼容服务的 `base_url`。模型名和上下文窗口由业务提供，不自动推断或远程发现。下面由业务读取环境变量；服务无需鉴权时可省略 api_key。
 
 ```python
 import os
-from dataclasses import replace
-from agentloom import OpenAIResponsesAdapter
+from agentloom import PropertiesConfig
 
-model = OpenAIResponsesAdapter(
-    model=os.environ["AGENTLOOM_MODEL"],
-    api_key=os.environ["OPENAI_API_KEY"],
-    context_window_tokens=int(os.environ["AGENTLOOM_CONTEXT_WINDOW"]),
-    base_url=os.environ.get("AGENTLOOM_BASE_URL", "https://api.openai.com/v1"),
-)
-properties = properties.with_options(
-    services=replace(properties.services, model=model),
-)
+properties = PropertiesConfig({
+    "runtime.namespace": "my-app",
+    "workspace.root": ".agentloom/work",
+    "model.protocol": "chat_completions",
+    "model.base_url": os.environ["AGENTLOOM_BASE_URL"],
+    "model.name": os.environ["AGENTLOOM_MODEL"],
+    "model.api_key": os.environ.get("AGENTLOOM_API_KEY"),
+    "model.context_window_tokens": int(os.environ["AGENTLOOM_CONTEXT_WINDOW"]),
+})
 ```
 
-Chat Completions 服务改用 `OpenAIChatAdapter`。`ModelOptions.max_output_tokens` 和 `parameters` 放在 `AgentProperties` 中；当前适配器会在构造时拒绝不支持的选项。注入 `httpx.AsyncClient` 时由调用方关闭；未注入时适配器自行管理每次连接。
+服务使用 Responses 协议时设置 `model.protocol="responses"`。`model.output_token_limit` 是模型声明的输出上限；`model.max_output_tokens` 是单次请求上限，须满足模型上限和 `context.output_reserve_tokens` 对应的预留预算。可用 `model.parameters` 设置 temperature 等协议支持的选项，不支持的选项在启动配置阶段拒绝。
+
+直接装配时仍可显式构造 `ChatCompletionsAdapter(model=..., base_url=..., context_window_tokens=...)` 或 `ResponsesAdapter(...)`，再通过 `model.adapter` 注入。`OpenAIChatAdapter`／`OpenAIResponsesAdapter` 仅作为兼容名称保留原默认地址，新入口没有隐式厂商地址。已有 Responses 恢复材料的协议标记保持兼容。
 
 自定义模型实现 `descriptor: ModelDescriptor` 和 `stream_once(request, context)`，产出 `ProviderEvent`。完整结果使用 `ProviderEvent("completed", ModelResponse(...).to_dict())`；仅有文本增量不算完成。`usage` 事件中的 `input_tokens/output_tokens` 是累计计数，逐字段合并到 completed，null／缺字段不清除已知值，0 合法。计数须为 `0..2**53-1` 的整数，布尔值不合法；未知统计不会被估算值替代。
+
+自定义模型可提供同步的 `validate_options(options)`，由集中配置入口调用一次；该方法只检查本地选项，不发起模型调用或远程发现。异步校验器、返回 awaitable 的校验器在启动前报 `MODEL_ADAPTER_INVALID`。未实现校验器的适配器只接受空 `model.parameters`。
 
 ## 4. 从定义构建 ReAct 和 Plan
 
@@ -134,11 +134,13 @@ Chat Completions 服务改用 `OpenAIChatAdapter`。`ModelOptions.max_output_tok
 ```python
 from agentloom import AgentDefinition
 
-planner = AgentDefinition("advisor", "分析方案的成本和风险，给出有事实依据的建议。")
-reviewer = AgentDefinition("reviewer", "检查论据是否支持结论，指出缺失事实。", description="审查事实与结论")
+planner = AgentDefinition(prompt="分析方案的成本和风险，给出有事实依据的建议。")
+reviewer = AgentDefinition(prompt="检查论据是否支持结论，指出缺失事实。", description="审查事实与结论")
 plan = app.build(planner, executors={"review": reviewer})
 result = await plan.ainvoke("检查方案中的风险")
 ```
+
+`AgentDefinition.name` 可省略，默认 None；提供时只作为显示信息。Executor 路由使用映射的 key；职责说明 description 仍须非空。旧 `(name, prompt, ...)` 位置参数兼容，推荐 `AgentDefinition(prompt=...)`。
 
 省略 `mode/executors` 为 ReAct；提供 `executors`（包括 `{}`）或显式 `mode="plan"` 为 Plan。`mode="react"` 与 Executor 表冲突。空 Executor 表不会生成默认执行者，也不暴露 `delegate_task`。
 
@@ -176,7 +178,7 @@ registry = CapabilityRegistry(tools=(
     ),
 ))
 tool_definition = AgentDefinition(
-    "assistant", "使用已授权工具处理请求。",
+    prompt="使用已授权工具处理请求。",
     capabilities=(CapabilityBinding(
         binding_key="echo", kind="tool", visible_name="echo",
         adapter_key="local", member_key="echo",
@@ -204,7 +206,7 @@ JSON 边界材料最多 128 层容器，标量深度为 0；工具结果计算�
 | Skill | `SkillPackage.from_directory`、`DirectorySkillLoader`、`SkillRegistration` 注册只读包，角色显式绑定；读取文本不执行脚本，也不授予额外工具权限 |
 | 脚本 | ScriptToolAdapter 需要调用方提供配套隔离环境与网关；默认 LocalEnvironment 不提供宿主 shell 执行。设计中的独立环境／沙箱 Protocol 尚未完整交付 |
 
-本地 Skill 包须使用无符号链接的实际目录，祖先目录也不能是符号链接；每个文件（含 SKILL.md）最多 20 MiB。导入和运行时读取使用同一校验，包文件发生变化会拒绝读取。遇到 `SKILL_PATH_FORBIDDEN` 检查路径和权限，`SKILL_CONTENT_TOO_LARGE` 调整包内材料，`SKILL_CONTENT_CHANGED` 重新导入确定的包版本；不要绕过 manifest 校验。
+SKILL.md 元信息支持 LF 和 CRLF 换行，清单 hash、资源 size 和返回正文保留原始字节语义。本地 Skill 包须使用无符号链接的实际目录，祖先目录也不能是符号链接；每个文件（含 SKILL.md）最多 20 MiB。导入和运行时读取使用同一校验，包文件发生变化会拒绝读取。遇到 `SKILL_PATH_FORBIDDEN` 检查路径和权限，`SKILL_CONTENT_TOO_LARGE` 调整包内材料，`SKILL_CONTENT_CHANGED` 重新导入确定的包版本；不要绕过 manifest 校验。
 
 大结果保留完整有效值，模型默认收到最多 64 KiB 的预览，并通过自动提供的 `result_read` 按授权分片读取。Planner 不能使用 Executor 的私有结果引用。
 
@@ -249,7 +251,7 @@ request／response Hook 按 ordinal 执行，返回 `HookDecision` 的 allow／d
 | 无 Agent 停止 | `await app.runtime.runs.stop(run_id, command_id=...)`；也可提前关闭尚未初始化的 run_id 准入 |
 | 只观察 | `await app.runtime.runs.attach(run_id)` 返回新 RunHandle，不主动接管业务 |
 
-默认总 Loop 为 100，总截止 3600 秒，模型首输出超时 60 秒，流空闲超时关闭，工具超时 10 秒，自动重试关闭。并行默认关闭；开启后 Executor 默认最多并行 2 个。需要重试时显式设置 `ExecutionPolicy(retry=RetryPolicy(enabled=True, ...))`；重试属于同一 Operation 的新 Attempt，停止、总截止和失权不可重试。
+默认总 Loop 为 100，总截止 3600 秒，模型首输出超时 60 秒，流空闲超时关闭，工具超时 10 秒，自动重试关闭。并行默认关闭；开启后 Executor 默认最多并行 2 个。需要重试时显式设置 `"execution.retry.enabled": True`；重试属于同一 Operation 的新 Attempt，停止、总截止和失权不可重试。
 
 HTTP／MCP 的合法 Retry-After 与配置间隔取较大值，等待时间持久化，重启不重新计算整段等待。仅资源关闭超时不重新执行已完成调用；外部服务侧的副作用幂等仍需由该服务和调用协议保证，SDK 的完成回执不构成跨服务事务。
 
@@ -281,18 +283,16 @@ acme = "acme_files:AcmeWorkspaceBackend"
 安装该包后，业务在原配置中加入 files；不创建 AcmeWorkspaceBackend 对象：
 
 ```python
-from dataclasses import replace
-from agentloom import FileProperties, WorkspaceBinding
-
-properties = properties.with_options(
-    files=FileProperties(provider="acme", options={}),
-    defaults=replace(properties.defaults, workspace=WorkspaceBinding()),
-)
+properties = properties.with_options({
+    "files.provider": "acme",
+    "files.options": {},
+    "workspace.root": None,
+})
 ```
 
 SDK 使用 `AcmeWorkspaceBackend(**options)` 构造实例。地址可内置，options 可以为空；其余模型、能力注册和 AgentDefinition 保持原样。仍需用 `file_tools()` 注册目录，并用 `CapabilityBinding(kind="builtin_tool", adapter_key="files", member_key="read", ...)` 等逐项授权，选择后端不会自动扩大 Agent 权限。
 
-未配置 files 时使用 local，WorkspaceBinding.root 继续必填。提供者名不存在、重复登记、缺方法或签名不兼容会明确报错，构造失败不会回退到本地。SDK 仅导入选中类；同一宿主复用实例，并在运行和维护任务收束后关闭。close 失败可以重试 aclose，借用的其他服务不受影响。
+未配置 `files.provider` 时使用 local，`workspace.root` 继续必填。提供者名不存在、重复登记、缺方法或签名不兼容会明确报错，构造失败不会回退到本地。SDK 仅导入选中类；同一宿主复用实例，并在运行和维护任务收束后关闭。close 失败可以重试 aclose，借用的其他服务不受影响。
 
 恢复时必须保留提供者名、发行包版本和 options。检查点保存这些绑定及 options 的类型敏感摘要，不保存原始参数；更换配置会拒绝非终态恢复。第三方内部地址或行为变化应发布新版本。长同步调用的超时、提交前执行权核验及存储 fencing 由提供者实现，SDK 不替实现包建立异步或线程执行机制。完整注册、返回值、生命周期与错误合同见[文件 SPI](builtin-tools-spi.md#8-python-包注册与配置加载)。
 
@@ -339,6 +339,8 @@ Plan 恢复还须传回原 Executor 表。已终态返回保存结果；有效 o
 
 接入验证至少覆盖：启动参数构造、角色权限绑定、一次真实业务调用、同 run_id 重开、停止／等待超时区别、维护状态查询。确定性脚本用于检查本地装配；真实模型端点和 MCP 服务需按部署环境另行联调。
 
-2026-10-19 代码审计修复后的完整回归为 **2020 passed，0 failed，0 skipped**，执行全部 SDK、QA 和独立白盒用例；源码与测试在运行前后保持一致。新增 125 项故障回归在独立安装的 wheel 下也全部通过，见[验证记录](implementation.md#代码审计边界修复)。文件提供者此前另通过 10 个进程验证场景，见[文件 SPI 安装包验证](../../agentloom-sdk/qa/evidence/round8-fixes-20261018/wheel-summary.json)。这些验证使用本地模型及协议替身，未执行真实远端模型调用。
+2026-10-20 统一参数与第十一轮修复后的完整回归为 **2128 passed，0 failed，0 skipped**，通过 `./scripts/test_all.py --workers 1` 执行全部 SDK 和 QA；运行前后源码与测试保持一致，`./scripts/test_all.py --check` 核对通过。统一配置、两种协议的指定端点、匿名角色委派和恢复都已覆盖，详情及完整日志见[本轮验证记录](implementation.md#统一参数入口与第十一轮修复)。
 
-本页 7 个 Python 代码块已通过本地验证，另验证停止、补充、等待超时和查询入口，共 8 个场景；真实模型片段仅验证构造，其余执行使用确定性模型，没有远端服务调用。[文档代码与验证结果](../../agentloom-sdk/qa/evidence/docs-integration-20261017/summary.json)独立保存，不计入上述 SDK 回归数量。
+此前代码审计的 125 项故障回归曾在独立安装的 wheel 下全部通过，见[历史验证记录](implementation.md#代码审计边界修复)。文件提供者另通过 10 个进程验证场景，见[文件 SPI 安装包验证](../../agentloom-sdk/qa/evidence/round8-fixes-20261018/wheel-summary.json)。这些验证使用本地模型及协议替身，未执行真实远端模型调用。
+
+2026-10-17 版接入指南的 7 个 Python 代码块曾通过本地验证，另验证停止、补充、等待超时和查询入口，共 8 个场景；真实模型片段仅验证构造，其余执行使用确定性模型，没有远端服务调用。[文档代码与验证结果](../../agentloom-sdk/qa/evidence/docs-integration-20261017/summary.json)独立保存，不计入上述 SDK 回归数量。

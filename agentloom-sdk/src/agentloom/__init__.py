@@ -60,7 +60,13 @@ from .events import (
     HookRecordView,
     HookSet,
 )
-from .models import OpenAIChatAdapter, OpenAIResponsesAdapter, ScriptedModel
+from .models import (
+    ChatCompletionsAdapter,
+    OpenAIChatAdapter,
+    OpenAIResponsesAdapter,
+    ResponsesAdapter,
+    ScriptedModel,
+)
 from .public import (
     AgentBuilder,
     AgentLoom,

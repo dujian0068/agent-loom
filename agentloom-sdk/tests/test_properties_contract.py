@@ -356,18 +356,16 @@ async def test_multiple_facades_share_injected_services_without_sharing_paramete
     assert runtime_store.load("two", "same")["status"] == "succeeded"
 
 
-async def test_startup_failure_closes_created_store_and_retains_primary_error(tmp_path):
-    class Model(ScriptedModel):
-        validations = 0
+async def test_startup_failure_closes_created_store_and_retains_primary_error(
+    tmp_path, monkeypatch
+):
+    async def fail_open(runtime):
+        raise InfrastructureError("STARTUP_FAILED")
 
-        def validate_options(self, options):
-            self.validations += 1
-            if self.validations > 1:
-                raise ConfigurationError("MODEL_FEATURE_UNSUPPORTED")
-
-    parameters = config(tmp_path, model=Model(lambda r: pytest.fail("model called")))
+    monkeypatch.setattr(RuntimeEngine, "__aenter__", fail_open)
+    parameters = config(tmp_path, model=ScriptedModel(lambda r: pytest.fail("model called")))
     app = AgentLoom(parameters)
-    with pytest.raises(ConfigurationError, match="MODEL_FEATURE_UNSUPPORTED"):
+    with pytest.raises(InfrastructureError, match="STARTUP_FAILED"):
         await app.__aenter__()
     assert app.runtime.store._closed
     assert not parameters.services.model.requests
@@ -400,14 +398,10 @@ async def test_shutdown_failure_preserves_body_error_and_can_be_retried(tmp_path
 
 
 async def test_startup_cleanup_failure_retains_primary_and_can_be_retried(tmp_path, monkeypatch):
-    class Model(ScriptedModel):
-        validations = 0
+    async def fail_open(runtime):
+        raise InfrastructureError("STARTUP_FAILED")
 
-        def validate_options(self, options):
-            self.validations += 1
-            if self.validations > 1:
-                raise ConfigurationError("MODEL_FEATURE_UNSUPPORTED")
-
+    monkeypatch.setattr(RuntimeEngine, "__aenter__", fail_open)
     close = RuntimeEngine.aclose
     calls = 0
 
@@ -419,8 +413,8 @@ async def test_startup_cleanup_failure_retains_primary_and_can_be_retried(tmp_pa
         await close(runtime)
 
     monkeypatch.setattr(RuntimeEngine, "aclose", fail_once)
-    app = AgentLoom(config(tmp_path, model=Model(lambda r: ModelResponse())))
-    with pytest.raises(ConfigurationError, match="MODEL_FEATURE_UNSUPPORTED") as caught:
+    app = AgentLoom(config(tmp_path))
+    with pytest.raises(InfrastructureError, match="STARTUP_FAILED") as caught:
         await app.__aenter__()
     assert caught.value.__notes__ == ["Startup cleanup also failed: OSError"]
     assert not app.runtime.store._closed

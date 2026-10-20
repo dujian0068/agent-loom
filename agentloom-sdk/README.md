@@ -16,76 +16,52 @@ python -m pip install -e './agentloom-sdk[test,mcp]'
 
 ## 直接运行
 
-模型窗口由调用者显式提供，不根据模型名称猜测。以下代码使用 Responses 流式协议；`OpenAIChatAdapter` 则使用 Chat Completions 协议。兼容服务可显式指定 `base_url`。
+模型通过兼容协议接入。配置显式指定服务地址、模型名和上下文窗口，不限制模型厂商，也不根据模型名猜测窗口。下面使用 Chat Completions；兼容 Responses 的服务将 protocol 改为 responses。
 
 ```python
 import asyncio
 import os
-from agentloom import (
-    AgentDefinition, AgentLoom, AgentProperties, OpenAIResponsesAdapter,
-    PropertiesConfig, RuntimeProperties, ServiceProperties, WorkspaceBinding,
-)
+from agentloom import AgentDefinition, AgentLoom, PropertiesConfig
 
 async def main():
-    properties = PropertiesConfig(
-        runtime=RuntimeProperties(namespace="my-app"),
-        defaults=AgentProperties(workspace=WorkspaceBinding(".agentloom/work")),
-        services=ServiceProperties(
-            model=OpenAIResponsesAdapter(
-                model=os.environ["AGENTLOOM_MODEL"],
-                api_key=os.environ["OPENAI_API_KEY"],
-                context_window_tokens=int(os.environ["AGENTLOOM_CONTEXT_WINDOW"]),
-            ),
-        ),
-    )
+    properties = PropertiesConfig({
+        "runtime.namespace": "my-app",
+        "workspace.root": ".agentloom/work",
+        "model.protocol": "chat_completions",
+        "model.base_url": os.environ["AGENTLOOM_BASE_URL"],
+        "model.name": os.environ["AGENTLOOM_MODEL"],
+        "model.api_key": os.environ.get("AGENTLOOM_API_KEY"),
+        "model.context_window_tokens": int(os.environ["AGENTLOOM_CONTEXT_WINDOW"]),
+    })
     async with AgentLoom(properties) as app:
-        agent = app.build(AgentDefinition("assistant", "准确回答用户的问题。"))
+        agent = app.build(AgentDefinition(prompt="准确回答用户的问题。"))
         handle = await agent.start("说明你的任务", session_id="conversation-1")
-        print(handle.run_id)  # 保存此 ID；重启后以原配置 start(run_id=...) 接续
+        print(handle.run_id)  # 保存此 ID，重启后使用原配置接续
         result = await handle.wait()
         print(result.status, result.output.value if result.output else result.error)
 
 asyncio.run(main())
 ```
 
-`ScriptedModel` 可用于无凭据的确定性开发；它与真实适配器走相同的运行、Hook 和持久化路径。没有调用方提供的凭据时，测试不会发起付费模型请求。
+直接适配器名称为 `ChatCompletionsAdapter`／`ResponsesAdapter`，均要求显式 base_url；旧 OpenAI 名称仅保留兼容。`model.adapter` 可注入自定义实现或用于确定性测试的 ScriptedModel，与协议连接参数互斥。无鉴权服务可省略 api_key。真实模型手动接入示例为 [my_create_agent.py](tests/my_create_agent.py)，自动回归不执行它。
 
 ## 统一参数配置
 
-启动参数统一由 `PropertiesConfig` 注入，并按职责分为四组：
-
-| 分组 | 类型与内容 |
-| --- | --- |
-| `runtime` | `RuntimeProperties`：namespace、默认文件状态目录、文件锁等待、租约、清理重试 |
-| `defaults` | `AgentProperties`：WorkspaceBinding、ExecutionPolicy、ContextPolicy、ModelOptions |
-| `services` | `ServiceProperties`：模型、能力目录、Hook、显式存储、环境、检查点回调 |
-| `files` | `FileProperties`：文件提供者名称，默认 `local`；可选构造参数 `options` |
-
-`defaults` 和 `services` 必须提供，工作区与模型各有唯一归属；`runtime` 和 `files` 可省略，保持默认文件存储及本地文件工具实现。所有配置在构造时校验并冻结；相对路径按构造时的工作目录固定。模型选项与窗口预算也在启动前校验。`AgentLoom(properties)` 构造没有文件／网络副作用，进入 `async with` 才创建并开启 Runtime，之后用 `app.build(agent_def)` 构建 Agent，用 `app.runtime.runs/inputs/...` 查询和控制。
-
-`runtime.state_directory` 默认 `.agentloom/state`，`store_lock_timeout_seconds` 默认 10；这两项只用于宿主创建的 FileRuntimeStore。显式传 `services.store` 时使用该存储自身配置，并由调用方负责关闭。模型、Hook、能力适配器与环境也是借用的实例，不复制或自动关闭。退出 AgentLoom 只暂停本机推进并保留恢复现场；不会发送用户停止命令。每个 AgentLoom 实例只开启一次，重启使用同参数的新实例。
-
-每个 Runtime／Agent 都读取自己的只读参数组，不依赖全局配置。Agent 的显式覆盖优先于启动默认值，并在构造时冻结：
+业务只构造一个 `PropertiesConfig({...})`。`runtime.*`、`workspace.*`、`model.*`、`execution.*`、`execution.retry.*`、`context.*`、`files.*`、`services.*` 区分参数含义，完整字段和默认值见[接入指南](../docs/sdk/integration.md#2-参数配置与生命周期)。配置构造时集中校验未知键、类型、约束和模型预算并冻结，模块读取已校验的值；构建多个 Agent 或 Executor 不重复校验启动参数。
 
 ```python
-from dataclasses import replace
-from agentloom import ExecutionPolicy
-
-# app 处于 async with 中；只替换这个 Agent 的运行策略。
-limited = app.builder.with_options(execution_policy=ExecutionPolicy(loop_max=10))
-agent = limited.build(agent_def)
-
-# 也可以传入完整的参数组；未改字段沿用原对象。
-custom = replace(properties.defaults, execution_policy=ExecutionPolicy(loop_max=20))
-another = app.build(agent_def, properties=custom)
-
-# 派生另一份启动参数，不修改已启动的宿主。
-other_properties = properties.with_options(
-    runtime=replace(properties.runtime, namespace="another-app"),
-)
+other_properties = properties.with_options({
+    "runtime.namespace": "another-app",
+    "execution.loop_max": 10,
+    "execution.retry.enabled": True,
+})
 ```
 
-`PropertiesConfig.with_options()` 整组替换 runtime／defaults／services／files；使用 `dataclasses.replace()` 修改组内字段。Builder 的 `with_options()` 支持逐项覆盖，参数组和旧形式的单项参数不能混传，冲突返回 `PARAMETERS_CONFLICT`。配置不包含 `run_id`、用户输入、消息、租约现场或活动上下文；检查点继续只保存原恢复合同要求的固定值，不序列化服务对象。
+派生配置仅替换给定键，映射值整体替换，并重新校验。未知键报 PROPERTY_UNKNOWN，冲突报 PARAMETERS_CONFLICT；错误带具体 field_path，不会默默回退。旧参数组和直接构造继续兼容，新接入不需要创建多种参数类。输入、变量、run_id 和活动上下文仍属于每次执行。
+
+默认文件状态目录为 `.agentloom/state`，文件提供者为 local，本地 `workspace.root` 必填。相对路径在构造配置时固定；进入 `async with AgentLoom(properties)` 才打开资源。显式注入服务由调用方管理；SDK 关闭自己创建的文件提供者和默认存储。退出宿主暂停本机推进并保留恢复现场；重启使用同配置的新宿主。
+
+`AgentDefinition.name` 默认 None，只是可选显示信息。推荐 `AgentDefinition(prompt=...)`；Executor 使用绑定 key 路由并保留非空 description 要求。旧 `(name, prompt, ...)` 构造兼容。
 
 ## 从已有定义构建
 
@@ -160,10 +136,10 @@ HTTP 限流重试取配置间隔与合法 `Retry-After` 剩余时间的较大值
 from agentloom import AgentDefinition, ExecutionPolicy, PlanAgent
 
 agent = PlanAgent(
-    definition=AgentDefinition("advisor", "分析方案的成本和风险，给出有事实依据的建议。"),
+    definition=AgentDefinition(prompt="分析方案的成本和风险，给出有事实依据的建议。"),
     executors={
-        "research": AgentDefinition("research", "收集与方案有关的事实，标注来源。", "收集和分析材料"),
-        "review": AgentDefinition("review", "检查交付材料中的问题。", "审查事实与结论"),
+        "research": AgentDefinition(prompt="收集与方案有关的事实，标注来源。", description="收集和分析材料"),
+        "review": AgentDefinition(prompt="检查交付材料中的问题。", description="审查事实与结论"),
     },
     model=model, workspace=workspace, runtime_engine=runtime,
     execution_policy=ExecutionPolicy(parallel_enabled=True, executor_max_parallel=2),
@@ -202,12 +178,14 @@ definition = AgentDefinition(
 文件后端已支持 [WorkspaceBackend SPI](../docs/sdk/builtin-tools-spi.md#8-python-包注册与配置加载)：第三方包继承抽象基类，实现全部 11 个普通方法，并登记 `agentloom.workspace_backends` entry point。业务安装包后只配置名称，无需手动导入或实例化：
 
 ```python
-from agentloom import FileProperties
-
-properties = properties.with_options(files=FileProperties(provider="acme", options={}))
+properties = properties.with_options({
+    "files.provider": "acme",
+    "files.options": {},
+    "workspace.root": None,
+})
 ```
 
-地址由第三方包决定；可内置，也可通过 options 传入。SDK 加载选中类并复用实例，保留工具 Schema、逐项授权、Hook、重试、恢复和清理流程。默认 local 也实现同一接口。提供者自带根地址时使用 `WorkspaceBinding()`，本地仍须指定 root。SDK 创建的文件提供者由 SDK 关闭；普通方法的超时、内部异步机制和真实存储 fencing 由提供者实现。
+地址由第三方包决定；可内置，也可通过 options 传入。SDK 加载选中类并复用实例，保留工具 Schema、逐项授权、Hook、重试、恢复和清理流程。默认 local 也实现同一接口。提供者自带根地址时设置 `"workspace.root": None`，本地仍须指定 root。SDK 创建的文件提供者由 SDK 关闭；普通方法的超时、内部异步机制和真实存储 fencing 由提供者实现。
 
 完整 EnvironmentProvider／SandboxGateway 协议及真实共享文件／对象存储驱动仍待实现。第三方文件后端与未验证脚本环境的组合会明确拒绝，避免访问不一致的文件视图。
 
@@ -315,10 +293,9 @@ Runtime 关闭会停止本机推进并保留检查点，不等同于用户停止
 
 该检查比对当前源码、测试、配置和运行环境；源码在测试期间变化、记录不完整或当前版本已变化时返回非零。检查通过表示结果仍适用，不表示测试全部通过，应同时看摘要中的失败／跳过数量。审核者可以复用匹配的全量结果，仅补测未覆盖场景；测试结果不替代代码和设计审查。
 
-需要手动执行时：
+测试统一使用上述测试脚本。静态检查与打包命令：
 
 ```sh
-python -m pytest -q agentloom-sdk/tests agentloom-sdk/qa
 ruff check agentloom-sdk/src agentloom-sdk/tests agentloom-sdk/qa
 ruff format --check agentloom-sdk/src agentloom-sdk/tests agentloom-sdk/qa
 python -m pip wheel ./agentloom-sdk --no-deps -w /tmp/agentloom-wheels
@@ -326,4 +303,4 @@ python -m pip wheel ./agentloom-sdk --no-deps -w /tmp/agentloom-wheels
 
 测试不依赖 Platform 或真实模型凭据。覆盖持久化提交边界的独立进程退出、双宿主租约、并发与额度、Hook、补充及历史、压缩、文件 fence、真实 MCP stdio 子进程和 HTTP SSE 协议分片。
 
-恢复绑定与公开事件修复后的完整回归为 **1483 passed，0 failed，0 skipped**，覆盖 SDK 1021 项和七轮 QA 462 项，包含独立白盒探针；本轮新增 124 项测试。范围、命令与结果见[实现记录](../docs/sdk/implementation.md#恢复绑定与公开事件边界修复)。测试使用本地确定性模型、协议替身和真实本地子进程，真实模型行为及远端服务仍需按部署环境联调。
+恢复绑定与公开事件修复阶段的历史回归为 **1483 passed，0 failed，0 skipped**，覆盖 SDK 1021 项和七轮 QA 462 项，包含独立白盒探针；本轮新增 124 项测试。范围、命令与结果见[实现记录](../docs/sdk/implementation.md#恢复绑定与公开事件边界修复)。测试使用本地确定性模型、协议替身和真实本地子进程，真实模型行为及远端服务仍需按部署环境联调。

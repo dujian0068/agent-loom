@@ -1,63 +1,23 @@
-"""One startup parameter entry, with fixed values and explicitly borrowed services."""
+"""One immutable startup parameter entry; all validation lives in configuration."""
 
 from __future__ import annotations
 
-import inspect
-from dataclasses import dataclass, field, replace
-from typing import TYPE_CHECKING, Callable, TypedDict, Unpack
+from collections.abc import Mapping
+from dataclasses import dataclass, field
+from typing import TypedDict, Unpack
 
-from ..capabilities import CapabilityRegistry
 from ..configuration import AgentProperties, RuntimeProperties
+from ..configuration.properties import UNSET
+from ..configuration.services import ServiceProperties
+from ..configuration.settings import (
+    CONNECTION_KEYS,
+    PARAMETER_KEYS,
+    checked_values,
+    resolve_configuration,
+    resolve_groups,
+)
 from ..errors import ConfigurationError
-from ..events import HookSet
 from ..workspace.properties import FileProperties
-from .assembly import resolve_model_budget, validate_model_adapter
-
-if TYPE_CHECKING:
-    from ..storage import RuntimeStore
-    from ..types import ModelAdapter
-
-
-@dataclass(frozen=True, kw_only=True, eq=False, repr=False)
-class ServiceProperties:
-    """Borrowed model, resource catalog and host services supplied at startup.
-
-    model is required. None selects an empty capabilities/HookSet, the default
-    file store or local environment. Only the host-created store is owned by the
-    host. Adapter instances are shared references, not copied or closed here;
-    they must support the caller's concurrency. Validation never invokes them.
-    checkpoint_callback is the existing synchronous durable-boundary observer.
-    """
-
-    model: ModelAdapter
-    capabilities: CapabilityRegistry | None = None
-    hooks: HookSet | None = None
-    store: RuntimeStore | None = None
-    environment: object | None = None
-    checkpoint_callback: Callable | None = field(default=None, repr=False)
-
-    def __post_init__(self):
-        validate_model_adapter(self.model)
-        for name, expected in (("capabilities", CapabilityRegistry), ("hooks", HookSet)):
-            value = getattr(self, name)
-            if value is not None and not isinstance(value, expected):
-                raise ConfigurationError("INVALID_CONFIGURATION", field_path=expected.__name__)
-            object.__setattr__(self, name, expected() if value is None else value)
-        object.__setattr__(self, "hooks", HookSet(self.hooks.bindings, self.hooks.handlers))
-        for value, methods, code in (
-            (self.store, ("transaction", "load", "read_path"), "RUNTIME_STORE_INVALID"),
-            (self.environment, ("prepare", "revoke", "cleanup"), "ENVIRONMENT_INVALID"),
-        ):
-            if value is not None and not all(
-                callable(getattr(value, method, None)) for method in methods
-            ):
-                raise ConfigurationError(code)
-        if self.checkpoint_callback is not None and (
-            not callable(self.checkpoint_callback)
-            or inspect.iscoroutinefunction(self.checkpoint_callback)
-            or inspect.iscoroutinefunction(getattr(self.checkpoint_callback, "__call__", None))
-        ):
-            raise ConfigurationError("CHECKPOINT_CALLBACK_INVALID")
 
 
 class _PropertiesOverrides(TypedDict, total=False):
@@ -67,50 +27,113 @@ class _PropertiesOverrides(TypedDict, total=False):
     files: FileProperties
 
 
-@dataclass(frozen=True, kw_only=True, eq=False, repr=False)
+@dataclass(frozen=True, init=False, kw_only=True, eq=False, repr=False)
 class PropertiesConfig:
-    """Complete, immutable startup parameters for one AgentLoom instance.
+    """Compile one mapping of prefixed startup parameters before opening resources.
 
-    Args:
-        runtime: Host parameters; defaults to local file persistence.
-        defaults: Agent parameter defaults, including the required workspace.
-        services: Borrowed adapters, including the required model.
-        files: Installed file provider name and optional constructor parameters.
+    Use PropertiesConfig({"model.protocol": "chat_completions", ...}) or inject a
+    ModelAdapter under "model.adapter". Protocol connections require an explicit
+    URL, model name and context window. Auth is optional. A local file provider
+    requires "workspace.root". All other parameters use the catalog defaults.
 
-    Raises:
-        ConfigurationError: Invalid group, unsupported model options or an
-            incompatible model window/budget. No directories or clients open.
+    Unknown keys, invalid types and conflicting settings raise ConfigurationError
+    with a field_path. No clients, directories or network requests open here.
+    Parameters are frozen and paths fixed now; each host/Agent reads this compiled
+    configuration. Borrowed adapters/clients remain caller-owned and must retain
+    their declared contracts. Credentials and service objects never enter recovery
+    manifests. Run input, IDs, variables and leases are execution state.
 
-    Run input, variables, IDs, leases and messages remain execution-scoped. This
-    object is not a global locator or a serialization format: live service refs
-    never enter checkpoints. Built Agents retain their own fixed parameters.
+    The old runtime/defaults/services/files keyword groups remain compatible;
+    mixing them with a prefixed mapping is rejected. New code only needs this
+    class. Group attributes are immutable internal/compatibility projections.
     """
 
     defaults: AgentProperties
     services: ServiceProperties
-    runtime: RuntimeProperties = field(default_factory=RuntimeProperties)
-    files: FileProperties = field(default_factory=FileProperties)
+    runtime: RuntimeProperties
+    files: FileProperties
+    _budget: object = field(init=False, repr=False)
+    _values: Mapping = field(init=False, repr=False)
 
-    def __post_init__(self):
-        for name, expected in (
-            ("runtime", RuntimeProperties),
-            ("defaults", AgentProperties),
-            ("services", ServiceProperties),
-            ("files", FileProperties),
-        ):
-            if not isinstance(getattr(self, name), expected):
-                raise ConfigurationError("INVALID_CONFIGURATION", field_path=name)
-        resolve_model_budget(self.services.model, self.defaults)
+    def __init__(
+        self,
+        values=UNSET,
+        *,
+        runtime=UNSET,
+        defaults=UNSET,
+        services=UNSET,
+        files=UNSET,
+    ):
+        if values is UNSET and all(v is UNSET for v in (runtime, defaults, services, files)):
+            values = {}
+        if values is not UNSET:
+            if any(v is not UNSET for v in (runtime, defaults, services, files)):
+                raise ConfigurationError("PARAMETERS_CONFLICT", field_path="properties")
+            resolved = resolve_configuration(values)
+        else:
+            resolved = resolve_groups(
+                runtime=RuntimeProperties() if runtime is UNSET else runtime,
+                defaults=defaults,
+                services=services,
+                files=FileProperties() if files is UNSET else files,
+            )
+        self._assign(resolved)
 
-    def with_options(self, **overrides: Unpack[_PropertiesOverrides]) -> PropertiesConfig:
-        """Return a validated copy with whole groups replaced, leaving this one fixed.
+    def _assign(self, resolved):
+        for key in ("runtime", "defaults", "services", "files"):
+            object.__setattr__(self, key, getattr(resolved, key))
+        object.__setattr__(self, "_budget", resolved.budget)
+        object.__setattr__(self, "_values", resolved.values)
 
-        Unspecified groups are inherited; None is invalid for a required group.
-        Use dataclasses.replace on a group for selected fields, or a bound
-        AgentBuilder.with_options for one Agent's overrides. Unknown keys raise
-        TypeError; invalid combined parameters raise ConfigurationError.
+    def __getitem__(self, key):
+        """Read a resolved parameter; unknown/unavailable keys never silently default."""
+        if not isinstance(key, str) or key not in PARAMETER_KEYS:
+            raise ConfigurationError("PROPERTY_UNKNOWN", field_path=str(key))
+        if key == "model.adapter":
+            return self.services.model
+        if key not in self._values:
+            raise ConfigurationError("PROPERTY_UNAVAILABLE", field_path=key)
+        return self._values[key]
+
+    def with_options(
+        self,
+        values=UNSET,
+        **overrides: Unpack[_PropertiesOverrides],
+    ) -> PropertiesConfig:
+        """Return a centrally validated copy with selected prefixed values replaced.
+
+        Unspecified values are inherited; mappings such as files.options and
+        model.parameters are replaced whole. Selecting model.adapter replaces
+        protocol connection settings; supplying connection settings replaces an
+        injected adapter. No active host or previously built Agent is modified.
+
+        Legacy keyword group replacement is supported independently. Mixed forms
+        raise PARAMETERS_CONFLICT. Invalid flat keys raise PROPERTY_UNKNOWN;
+        unknown legacy keyword arguments raise TypeError.
         """
+        if values is not UNSET:
+            if overrides:
+                raise ConfigurationError("PARAMETERS_CONFLICT", field_path="properties")
+            changes = checked_values(values)
+            if not changes:
+                return self
+            base = dict(self._values)
+            if "model.adapter" in changes:
+                for key in CONNECTION_KEYS:
+                    base.pop(key, None)
+            elif CONNECTION_KEYS & changes.keys():
+                base.pop("model.adapter", None)
+            return PropertiesConfig(base | changes)
         unknown = overrides.keys() - {"runtime", "defaults", "services", "files"}
         if unknown:
             raise TypeError(f"Unknown PropertiesConfig options: {', '.join(sorted(unknown))}")
-        return replace(self, **overrides)
+        if not overrides:
+            return self
+        groups = {key: getattr(self, key) for key in ("runtime", "defaults", "services", "files")}
+        groups.update(overrides)
+        connection = None
+        if groups["services"] is self.services and "model.adapter" not in self._values:
+            connection = {key: self._values[key] for key in CONNECTION_KEYS}
+        derived = object.__new__(PropertiesConfig)
+        derived._assign(resolve_groups(**groups, connection=connection))
+        return derived

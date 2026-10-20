@@ -71,13 +71,7 @@ class AgentLoom:
                 checkpoint_callback=services.checkpoint_callback,
             )
             self._runtime = runtime
-            self._builder = AgentBuilder(
-                properties=self.properties.defaults,
-                model=services.model,
-                capabilities=services.capabilities,
-                hooks=services.hooks,
-                runtime_engine=runtime,
-            )
+            self._builder = AgentBuilder._from_configuration(self.properties, runtime)
             await runtime.__aenter__()
         except BaseException as primary:
             try:

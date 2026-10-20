@@ -4,7 +4,7 @@
 
 ## 1. 调用者看到的最小流程
 
-当前实现提供 `PropertiesConfig` 统一参数配置和 `AgentLoom` 启动入口：`async with AgentLoom(properties) as app` 后，直接 `app.build(agent_def)`，查询与控制通过 `app.runtime`。参数分组、单个 Agent 的覆盖和所有权规则见[统一参数配置](assembly.md#24-统一参数配置-propertiesconfig)。原 RuntimeEngine／AgentBuilder／具体 Agent 构造方式继续兼容，以下仍描述含尚未实现扩展点的目标接口。
+当前实现提供 `PropertiesConfig` 统一参数配置和 `AgentLoom` 启动入口：`async with AgentLoom(properties) as app` 后，直接 `app.build(agent_def)`，查询与控制通过 `app.runtime`。参数使用带前缀的映射，启动时集中校验并冻结；字段、派生和所有权规则见[统一参数配置](assembly.md#24-统一参数配置-propertiesconfig)。原 RuntimeEngine／AgentBuilder／具体 Agent 构造方式继续兼容，以下仍描述含尚未实现扩展点的目标接口。
 
 ```python
 # store、content_store、environment、model 等均由宿主预先准备。

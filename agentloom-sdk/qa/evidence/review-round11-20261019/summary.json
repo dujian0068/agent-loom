@@ -1,0 +1,30 @@
+{
+  "started_at": "2026-10-19T15:13:08.937384+00:00",
+  "finished_at": "2026-10-19T15:13:20.732326+00:00",
+  "duration_seconds": 11.795,
+  "command": [
+    "/Users/bmilk/code/project/agent-loom/.venv/bin/python",
+    "-m",
+    "pytest",
+    "-c",
+    "agentloom-sdk/pyproject.toml",
+    "/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round11.py",
+    "-q",
+    "-ra",
+    "--tb=short",
+    "--capture=tee-sys",
+    "--junitxml=/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/evidence/review-round11-20261019/junit.xml"
+  ],
+  "exit_code": 1,
+  "counts": {
+    "tests": 27,
+    "failed": 11,
+    "errors": 0,
+    "skipped": 0,
+    "passed": 16
+  },
+  "test_sha256": "56ed274c072f6908706fcab8a29a869200a2f2b88d83e7e7e899b3894fe96bef",
+  "baseline_reused": ".agentloom/test-results/20261019-145110-713072Z",
+  "full_suite_rerun": false,
+  "llm_calls": "ScriptedModel and local httpx.MockTransport only"
+}

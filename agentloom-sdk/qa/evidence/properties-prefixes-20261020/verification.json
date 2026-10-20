@@ -1,0 +1,35 @@
+{
+  "counts": {
+    "tests": 2128,
+    "failed": 0,
+    "errors": 0,
+    "skipped": 0,
+    "passed": 2128
+  },
+  "sources_unchanged": true,
+  "duration_seconds": 765.485,
+  "coverage": {
+    "configuration": 73,
+    "node_effects": 45,
+    "round11": 27,
+    "process_recovery": 15
+  },
+  "round11_qa_unchanged": true,
+  "round11_sha256": "56ed274c072f6908706fcab8a29a869200a2f2b88d83e7e7e899b3894fe96bef",
+  "source_snapshot_files": 227,
+  "checks": {
+    "test_all_check": "passed: current source, tests and environment match",
+    "ruff_check": "passed",
+    "ruff_format_python_files": 236,
+    "git_diff_check": "passed",
+    "docs_build": "passed",
+    "docs_links": {
+      "pages": 60,
+      "links": 1478,
+      "anchors": 549,
+      "assets": 260,
+      "failed": 0
+    },
+    "live_remote_model_calls": false
+  }
+}

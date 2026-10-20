@@ -1,0 +1,10 @@
+{
+  "708bdaf": {
+    "accepted": true,
+    "hash_matches_original_bytes": true
+  },
+  "HEAD": {
+    "accepted": false,
+    "error": "SKILL_METADATA_INVALID"
+  }
+}

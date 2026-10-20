@@ -5,7 +5,7 @@ from __future__ import annotations
 import copy
 import math
 import re
-from dataclasses import dataclass, field
+from dataclasses import MISSING, dataclass, field
 from pathlib import Path, PurePosixPath
 from typing import Any, Mapping
 
@@ -63,8 +63,10 @@ class ExecutionPolicy:
             value = getattr(self, name)
             if value is not None or name != "model_stream_idle_timeout_seconds":
                 number(value, name, 1, maximum)
-        if type(self.parallel_enabled) is not bool or not isinstance(self.retry, RetryPolicy):
-            raise ConfigurationError("INVALID_CONFIGURATION")
+        if type(self.parallel_enabled) is not bool:
+            raise ConfigurationError("INVALID_CONFIGURATION", field_path="parallel_enabled")
+        if not isinstance(self.retry, RetryPolicy):
+            raise ConfigurationError("INVALID_CONFIGURATION", field_path="retry")
 
 
 @dataclass(frozen=True)
@@ -86,7 +88,9 @@ class ContextPolicy:
             if value is not None:
                 number(value, name, 0 if name == "safety_margin_tokens" else 1, 10**9, integer=True)
         if not isinstance(self.compaction_prompt_addendum, str):
-            raise ConfigurationError("INVALID_CONFIGURATION")
+            raise ConfigurationError(
+                "INVALID_CONFIGURATION", field_path="compaction_prompt_addendum"
+            )
 
 
 @dataclass(frozen=True)
@@ -168,9 +172,15 @@ class VariableSpec:
         object.__setattr__(self, "default", freeze(self.default))
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, init=False)
 class AgentDefinition:
-    name: str
+    """Reusable behavior; name is optional display metadata, never a role ID.
+
+    Prefer AgentDefinition(prompt=...). The positional (name, prompt, ...)
+    constructor remains compatible. Executor routing uses its binding key.
+    """
+
+    name: str | None = None
     prompt: str
     description: str = ""
     variables: Mapping = field(default_factory=dict)
@@ -178,10 +188,34 @@ class AgentDefinition:
     input_schema: dict | None = None
     output_schema: dict | None = None
 
+    def __init__(
+        self,
+        name=None,
+        prompt=MISSING,
+        description="",
+        variables=MISSING,
+        capabilities=(),
+        input_schema=None,
+        output_schema=None,
+    ):
+        if prompt is MISSING:
+            raise TypeError("AgentDefinition requires prompt; use AgentDefinition(prompt=...)")
+        for key, value in (
+            ("name", name),
+            ("prompt", prompt),
+            ("description", description),
+            ("variables", {} if variables is MISSING else variables),
+            ("capabilities", capabilities),
+            ("input_schema", input_schema),
+            ("output_schema", output_schema),
+        ):
+            object.__setattr__(self, key, value)
+        self.__post_init__()
+
     def __post_init__(self):
         if (
-            not isinstance(self.name, str)
-            or not self.name.strip()
+            self.name is not None
+            and (not isinstance(self.name, str) or not self.name.strip())
             or not isinstance(self.prompt, str)
             or not isinstance(self.description, str)
         ):

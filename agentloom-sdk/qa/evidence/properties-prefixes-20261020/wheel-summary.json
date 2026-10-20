@@ -1,0 +1,7 @@
+{
+  "wheel": "/private/tmp/agentloom-properties-20261020/wheels/agentloom_sdk-0.1.0a1-py3-none-any.whl",
+  "sha256": "5eb61ae3df5790896aba11728b6eb0b8d0ccf931be49ea14479519ae0e18610f",
+  "source_files": 136,
+  "mismatched": [],
+  "entry_points": "[agentloom.workspace_backends]\nlocal = agentloom.workspace.local:LocalWorkspaceBackend\n"
+}

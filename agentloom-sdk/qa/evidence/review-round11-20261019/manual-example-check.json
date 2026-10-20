@@ -1,0 +1,8 @@
+{
+  "path": "agentloom-sdk/tests/my_create_agent.py",
+  "syntax_valid": true,
+  "matches_pytest_default_filename": false,
+  "test_function_count": 0,
+  "assert_statement_count": 0,
+  "executed": false
+}

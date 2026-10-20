@@ -1,17 +1,17 @@
 # SDK 当前实现与验证
 
-日期：2026-10-19。实现版本：`agentloom-sdk 0.1.0a1`。当前推荐入口是 `PropertiesConfig → AgentLoom → build(AgentDefinition)`，默认使用文件系统保存执行状态。安装、可运行代码和接续步骤见 [SDK 接入指南](integration.md)。Workflow 按当前开发范围暂不接入。
+日期：2026-10-20。实现版本：`agentloom-sdk 0.1.0a1`。当前推荐入口是 `PropertiesConfig → AgentLoom → build(AgentDefinition)`，默认使用文件系统保存执行状态。安装、可运行代码和接续步骤见 [SDK 接入指南](integration.md)。Workflow 按当前开发范围暂不接入。
 
-本页先说明当前状态与实现职责，再保留各阶段修复及验证记录。最新修复见[代码审计边界](#代码审计边界修复)，上一轮见[第十轮节点边界](#第十轮节点边界修复)，结构调整见[节点协议与检查点](#节点协议与检查点设计对齐)，文件接入机制见[文件提供者 SPI](#文件提供者-spi)。SDK 已按 LangChain 模板适配 ReAct／Planner／Executor，业务方只填写业务 Prompt，见[LangChain 模板适配](#langchain-模板适配与回归)。首次自动注入与第五轮修复分别保留在[模式提示词实现](#sdk-自动模式提示词)和[第五轮记录](#第五轮持久化-json-深度与异常记录修复)。其他 SDK 章节仍含完整目标设计，不能据此推定全部接口已发布。
+本页先说明当前状态与实现职责，再保留各阶段修复及验证记录。最新调整见[统一参数与第十一轮修复](#统一参数入口与第十一轮修复)，此前修复见[代码审计边界](#代码审计边界修复)及[第十轮节点边界](#第十轮节点边界修复)，结构调整见[节点协议与检查点](#节点协议与检查点设计对齐)，文件接入机制见[文件提供者 SPI](#文件提供者-spi)。SDK 已按 LangChain 模板适配 ReAct／Planner／Executor，业务方只填写业务 Prompt，见[LangChain 模板适配](#langchain-模板适配与回归)。首次自动注入与第五轮修复分别保留在[模式提示词实现](#sdk-自动模式提示词)和[第五轮记录](#第五轮持久化-json-深度与异常记录修复)。其他 SDK 章节仍含完整目标设计，不能据此推定全部接口已发布。
 
 ## 当前接口与交付状态
 
 | 范围 | 当前可用内容 | 边界或待实现内容 |
 | --- | --- | --- |
-| 参数与装配 | PropertiesConfig、RuntimeProperties、AgentProperties、ServiceProperties、FileProperties；AgentLoom、AgentBuilder、直接构造共用校验 | 配置不可变，服务实例借用；不提供全局可变参数容器或热更新 |
+| 参数与装配 | PropertiesConfig 前缀映射、集中参数校验、只读投影；AgentLoom、AgentBuilder；旧参数组兼容 | 配置不可变，服务实例借用；不提供全局可变参数容器或热更新 |
 | Agent 执行 | ReAct／Plan–Executor、RunHandle、停止、补充、同配置重开、独立角色上下文 | 一个实例绑定一个 Run；AgentNode 实现生成器协议，NodeDriver 提交并回送回执；Workflow／StateGraph 未接入 |
 | 模式提示词 | SDK 自动生成 ReAct／Planner／Executor 指令、输入输出合同，Run 保存固定版本正文 | 业务 Prompt 独立；模式指令受保护并计入预算；Prompt 引导行为，运行时约束实际动作 |
-| 模型 | Chat Completions／Responses、ScriptedModel；ModelAdapter.stream_once、ProviderEvent、ModelDescriptor | 窗口显式提供，未实现统一 ModelAdapter.discover；公开事件不是 token 流 |
+| 模型 | ChatCompletionsAdapter／ResponsesAdapter、ScriptedModel；ModelAdapter.stream_once、ProviderEvent、ModelDescriptor | 窗口显式提供，未实现统一 ModelAdapter.discover；公开事件不是 token 流 |
 | 能力扩展 | CapabilityAdapter.invoke_once、CapabilityRequest、ToolInvocationContext、ToolResult；目录 for_role／for_node_binding／resolve | 先注册再按角色绑定；旧 invoke 仅作兼容；独立内容引用和 Artifact 授权未实现 |
 | Hook | HookInput、HookContext、HookRecordView／Page、FunctionHookHandler、有序 request／response 链 | 读端口固定版本且可过期；尚无 ScriptHookHandler 和生命周期修改 Hook |
 | 查询与删除 | runs／tasks／operations／events／sessions、补充和停止回执、records.delete | 当前多为 JSON dict／列表，尚无完整 RunSnapshot／分页／回执 DTO；sessions.inputs 无分页 |
@@ -19,6 +19,26 @@
 | 上下文与内容 | 原始／有效记录、历史、压缩、结果预览、按角色分片读取 | 完整值保存在执行快照；独立 ContentStore／BlobStore、ArtifactRef 输入和来源授权待实现 |
 | 存储与恢复 | FileRuntimeStore 默认、MemoryRuntimeStore 可选；不可变节点／图检查点、ScopeCommit 增量、提交回执、租约、单机进程恢复 | 无 SQLite／PostgreSQL 实现；跨机存储与任意历史版本迁移未实现 |
 | 事件总线 | 按类型＋版本分发、局部注册、业务 Handler、Hook 调用阶段持久化、已提交 RunEvent 观察 | 不等于完整可靠总线；独立 outbox、订阅 ACK 和全部持久等待合同待实现 |
+
+## 统一参数入口与第十一轮修复
+
+业务启动改用一份 `PropertiesConfig({...})`：runtime、workspace、model、execution、execution.retry、context、files、services 前缀统一登记。未知键、错误类型、冲突和模型预算在打开资源前集中校验；配置固定后 Runtime／Agent／Executor 读取共享投影，build 不再重复调用模型选项校验。派生配置重新走统一入口，能力绑定和运行材料校验保留原职责。旧参数组、直接构造与历史恢复合同继续兼容。
+
+模型入口按协议命名为 ChatCompletionsAdapter 和 ResponsesAdapter，协议连接要求显式地址、模型名和窗口；无鉴权服务可省略 API Key。OpenAI 旧名称保留历史默认地址，新的配置入口不隐含厂商。AgentDefinition.name 为可选显示信息，省略为 None；Executor 按绑定 key 选择，description 仍须非空。手动模型文件 tests/my_create_agent.py、接入指南和装配设计已改用统一配置。
+
+| 第十一轮问题 | 修复边界 |
+| --- | --- |
+| R11-01：begin_model 接纳失效上下文引用 | 提交前重新物化当前任务上下文，核对完整 ID 顺序、唯一性及有效消息内容；非法意图不写入 Operation、不派发模型。后续合法 Hook 修订继续遵守既有合同 |
+| R11-02：重复 accept_model 无限重排队或重复追加 | 同一提案不允许重复状态转换；组合内部的版本矛盾作为 NODE_EFFECT_INVALID 处理。决策接受独立记录 accepted_record_id，重放不得再次追加；兼容旧票据在响应阶段已消费、决策尚未接受的状态。拒绝成功模型的决策时，在任务失败事务内释放尚未消费的 Loop 预留，保留响应和尝试事实；Executor 模型本身失败仍按正式错误反馈消费 |
+| R11-03：Skill 的 CRLF frontmatter 回归 | 分隔符解析接受 LF／CRLF；包清单 hash、size 和返回正文继续使用原始字节，读取权限和文件变化检查保留 |
+
+分包：`configuration.settings` 负责参数目录与集中编译，`model_validation/services/files` 负责共享合同；`public.properties` 是业务入口，`public.assembly` 复用已编译参数；`models.transport/chat_completions/responses_adapter` 分开承载 HTTP 连接与协议，`models.openai` 仅保留兼容入口。节点修复仍位于 nodes 的提案／提交校验和 runtime 的恢复校验，Skill 换行修复位于能力包解析。
+
+本轮通过 `./scripts/test_all.py --workers 1` 完整回归：**2128 passed，0 failed，0 skipped**，耗时 765.04 秒。227 个源码／测试／配置文件在运行前后保持一致，`./scripts/test_all.py --check` 确认结果与当前工作区及环境匹配。包含统一配置 73 项、节点 effect 合同 45 项、第十一轮原 QA 27 项和跨进程恢复 15 项；这些都是全量套件的子集。原第十一轮报告和失败证据保留，原 QA 文件 hash 未变化。
+
+新增测试覆盖未知键与具体错误字段、集中校验且不重复调用、冻结与派生、两种协议的任意端点与可选鉴权、匿名角色委派／恢复、决策接受事实、任务失败时的 Loop 预留结算和提案内部版本冲突。Ruff lint／format 通过。离线 wheel 包含的 136 个源文件与工作区逐字节一致；验证使用本地确定性模型和协议替身，未调用真实远端模型。
+
+首次完整运行是 2101 passed、10 failed：4 项错误字段映射、1 项新增测试夹具、4 项重复决策拒绝后的票据收尾均已修复；另 1 项进程恢复测试遇到 400 ms 租约到期，本轮完整重跑未复现，原租约参数与恢复断言保留。两次结果独立保存：[首次日志](../../agentloom-sdk/qa/evidence/properties-prefixes-20261020/first-pytest.log)、[最终日志](../../agentloom-sdk/qa/evidence/properties-prefixes-20261020/pytest.log)、[运行摘要](../../agentloom-sdk/qa/evidence/properties-prefixes-20261020/summary.json)、[来源及覆盖核对](../../agentloom-sdk/qa/evidence/properties-prefixes-20261020/verification.json)、[wheel 文件核对](../../agentloom-sdk/qa/evidence/properties-prefixes-20261020/wheel-summary.json)。
 
 ## 代码审计边界修复
 
@@ -90,7 +110,7 @@
 | --- | --- |
 | `public.application/properties/builder/assembly` | 启动参数组合、宿主生命周期、从定义 build、统一装配与资源所有权 |
 | `public.agents/handles/projections` | 执行门面、实例绑定、观察／控制和公开结果过滤 |
-| `configuration.properties/models/schemas/actions` | 参数冻结、默认值、数值与 Schema 校验、角色动作权限及恢复清单 |
+| `configuration.settings/properties/models/services/files/model_validation/schemas/actions` | 统一参数目录与集中校验、冻结默认值、服务／模型预算合同、Schema 与角色动作权限 |
 | `configuration.definitions/assembly/recovery` | 变量声明类型快照、版本化绑定清单、类型语义比较及旧清单兼容边界 |
 | `configuration.json_values/json_documents`、`operation_errors` | 边界 JSON 与内部文档的统一深度、迭代复制／冻结／RFC 8785；共享 OperationError 校验 |
 | `prompts.roles/protocol/templates/assembly/recovery` | LangChain 三角色适配、原生协议、版本目录、输入输出合同组装、Run 指令快照与恢复校验 |
@@ -104,7 +124,7 @@
 | `events.hooks/hook_views/hook_reads/patches/control` | 有序 Hook、受限输入视图、读取授权、双补丁提交与无 Agent 控制收束 |
 | `context` | 消息物化、历史与补充顺序、受保护输入、预算、可恢复摘要、大结果读取 |
 | `capabilities`、`models` | 资源目录及结果合同、工具／MCP／Skill 适配；skill_files 统一包文件边界，response_protocol 验证 Responses 形状；完整材料与 usage 校验 |
-| `workspace.contracts/properties/loader/local/service/results/runtime` | 文件接口与 DTO、参数组、选中提供者加载、本地适配、授权／结果检查和生命周期 |
+| `workspace.contracts/loader/local/service/results/runtime` | 文件接口与 DTO、提供者加载、本地适配、授权／结果检查和生命周期；workspace.properties 兼容导入中央文件参数 |
 | `filesystem.posix` | 不依赖工作区的逐段 no-follow、普通文件有界读取、版本核验与遍历 |
 | `environment.local/mutations/fencing/moves/staging` | POSIX 工作区文件操作、epoch 授权、移动补偿和暂存清理 |
 | `storage` | JSON 文件事务、内存事务、提交回执和租约校验 |

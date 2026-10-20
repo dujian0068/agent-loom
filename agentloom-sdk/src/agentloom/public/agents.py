@@ -8,6 +8,7 @@ from types import MappingProxyType
 from ..configuration import AgentDefinition
 from ..configuration.properties import UNSET
 from ..errors import ConfigurationError, RequestError
+from ..events import HookSet
 from .assembly import AgentAssembly, AgentParameterView
 
 
@@ -48,6 +49,18 @@ class ReactAgent(AgentParameterView):
             context_policy=context_policy,
             model_options=model_options,
         )
+        self._initialize(definition, assembly)
+
+    @classmethod
+    def _from_assembly(cls, definition, assembly):
+        agent = cls.__new__(cls)
+        agent._initialize(definition, assembly)
+        return agent
+
+    def _initialize(self, definition, assembly):
+        if not isinstance(definition, AgentDefinition):
+            raise ConfigurationError("DEFINITION_REQUIRED")
+        self._assembly = assembly
         self.definition = definition
         for name, value in assembly._constructor_kwargs().items():
             setattr(self, name, value)
@@ -165,12 +178,9 @@ class ReactAgent(AgentParameterView):
         definition = self.definitions.get(role)
         if definition is None:
             raise ConfigurationError("RECOVERY_BINDING_MISSING", field_path=role)
-        agent = ReactAgent(
-            definition=definition,
-            model=self.model,
-            properties=self.properties,
-            runtime_engine=self.runtime_engine,
-            capabilities=self.capabilities,
+        agent = ReactAgent._from_assembly(
+            definition,
+            self._assembly._bind_services(self.capabilities, HookSet()),
         )
         # Plan matchers are validated against the entire role catalog once.
         object.__setattr__(agent, "hooks", self.hooks)
@@ -212,6 +222,15 @@ class PlanAgent(ReactAgent):
 
     def __init__(self, *, executors=None, **kwargs):
         super().__init__(**kwargs)
+        self._initialize_executors(executors)
+
+    @classmethod
+    def _from_assembly(cls, definition, assembly, *, executors=None):
+        agent = super()._from_assembly(definition, assembly)
+        agent._initialize_executors(executors)
+        return agent
+
+    def _initialize_executors(self, executors):
         if executors is not None and not isinstance(executors, Mapping):
             raise ConfigurationError("EXECUTORS_INVALID", field_path="executors")
         executors = dict(executors) if executors is not None else {}

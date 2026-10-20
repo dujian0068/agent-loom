@@ -6,6 +6,7 @@ from ..configuration.json_documents import copy_document, document_digest, freez
 from ..errors import InfrastructureError, RequestError
 from ..runtime.batches import ready, satisfied, wake_waiters
 from .contracts import CommitReceipt, PayloadRef
+from .effect_validation import require_effect, validate_effect_set
 from .validation import validate_continuation
 
 
@@ -99,6 +100,7 @@ def apply_node_command(state, command, apply_effect):
             for effect in effects
         ):
             raise RequestError("NODE_OUTCOME_INVALID")
+        validate_effect_set(effects)
         if kind != "FailTask":
             advance = sum(e["kind"] in {"consume_batch", "format_feedback"} for e in effects)
             validate_continuation(
@@ -111,7 +113,13 @@ def apply_node_command(state, command, apply_effect):
             raise RequestError("NODE_OUTCOME_INVALID")
         if kind == "WaitNode":
             PayloadRef.from_dict(body.get("resume_input_ref"), owner_id=command.task_id)
+        initial_revision = task["context"]["revision"]
         for effect in effects:
+            expected = effect["body"].get("expected_context_revision")
+            if task["context"]["revision"] != initial_revision and expected is not None:
+                # A prior effect in this transaction changed the context. A stale
+                # later expectation is an invalid proposal, not external contention.
+                require_effect(expected == task["context"]["revision"])
             apply_effect(state, task, effect)
         if kind != "FailTask":
             validate_continuation(
@@ -151,12 +159,10 @@ def apply_node_command(state, command, apply_effect):
                     or not task["parent_operation"]
                 ):
                     raise RequestError("NODE_OUTCOME_INVALID")
-            if kind == "FailTask" and task["parent_operation"]:
-                from .effects import consume_ticket
+            if kind == "FailTask":
+                from .effects import settle_failed_task_model
 
-                model = state["operations"].get(task["continuation"].get("model_operation_id"))
-                if model and model["ticket"] == "reserved" and model["status"] != "pending":
-                    consume_ticket(state, model, "error_feedback")
+                settle_failed_task_model(state, task)
             task.update(
                 status="succeeded" if kind == "CompleteTask" else "failed",
                 stage="completed",

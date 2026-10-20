@@ -62,7 +62,7 @@ SDK 不维护应用发布版本或配置兼容指纹。Definition 可以使用�
 
 ```text
 AgentDefinition
-  name: string
+  name?: string                    # 可选显示名，省略为 None
   description: string              # 职责说明；作为 Executor 时供 Planner 选择
   prompt: PromptTemplate
   variables: VariableSpec[]
@@ -96,7 +96,7 @@ CapabilityBinding
 
 执行、上下文和模型策略是完整 Agent 构造参数，默认值见[行为约定](requirements.md)。同一 Plan 中 Planner 与各 Executor 使用这套固定策略和模型连接；Executor 的定义没有独立模型、额度或策略覆盖字段。预算仍按同一 ExecutionRecord 共同计数，不为每个 ReactAgent 复制额度；压缩继承模型且不占业务 Loop。Executor 的 Prompt 不拼接 Planner Prompt，其能力集合独立，文件授权可以共享。
 
-`name` 是显示名，`description` 是职责说明，二者不作身份。用于 Plan 的 Executor 必须有非空职责说明。一个定义可以独立构造 ReactAgent，也可以作为某个 Plan 的 Executor；两种用法采用同一配置结构。每次委派创建任务专属 ReactAgent 和 AgentContext，复用定义不等于复用活动实例。
+`name` 是可选显示名，省略为 None；`description` 是职责说明，二者不作身份。推荐 `AgentDefinition(prompt=...)`；旧 `(name, prompt, ...)` 构造兼容，Executor 路由始终使用 executors 映射的 key。用于 Plan 的 Executor 必须有非空职责说明。一个定义可以独立构造 ReactAgent，也可以作为某个 Plan 的 Executor；两种用法采用同一配置结构。每次委派创建任务专属 ReactAgent 和 AgentContext，复用定义不等于复用活动实例。
 
 运行 DTO 中的 `role_key` 仅表示装配位置：直接 ReAct 为 `react`，Planner 为 `planner`，Executor 为 executors 映射的 key。Executor key 采用 `[A-Za-z_][A-Za-z0-9_-]{0,63}`，保留 `react`、`planner`，在所属 Plan 内唯一；它由 NodeBinding 提供，不是 AgentDefinition 的字段，也没有独立实体或 CRUD。一个定义绑定到不同位置时拥有不同 key，修改显示名不改变恢复定位。Hook matcher 和能力目录按这些固定位置筛选。
 

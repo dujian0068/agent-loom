@@ -101,8 +101,8 @@ class AgentBuilder(AgentAssembly):
         if resolved_mode == "react":
             if executors is not None:
                 raise ConfigurationError("EXECUTORS_UNSUPPORTED", field_path="executors")
-            return ReactAgent(definition=definition, **self._constructor_kwargs())
-        return PlanAgent(definition=definition, executors=executors, **self._constructor_kwargs())
+            return ReactAgent._from_assembly(definition, self)
+        return PlanAgent._from_assembly(definition, self, executors=executors)
 
     def with_options(self, **overrides: Unpack[_AssemblyOverrides]) -> AgentBuilder:
         """Return an independently validated builder with selected replacements.

@@ -1,0 +1,650 @@
+........................................................................ [  3%]
+........................................................................ [  6%]
+........................................................................ [ 10%]
+........................................................................ [ 13%]
+........................................................................ [ 17%]
+................................FFF.....F.........................F..... [ 20%]
+........................................................................ [ 23%]
+........................................................................ [ 27%]
+........................................................................ [ 30%]
+........................................................................ [ 34%]
+........................................................................ [ 37%]
+........................................................................ [ 40%]
+...............................F........................................ [ 44%]
+........................................................................ [ 47%]
+........................................................................ [ 51%]
+........................................................................ [ 54%]
+........................................................................ [ 57%]
+........................................................................ [ 61%]
+........................................................................ [ 64%]
+........................................................................ [ 68%]
+........................................................................ [ 71%]
+........................................................................ [ 75%]
+.................................................................FF.FF.. [ 78%]
+........................................................................ [ 81%]
+........................................................................ [ 85%]
+........................................................................ [ 88%]
+........................................................................ [ 92%]
+........................................................................ [ 95%]
+........................................................................ [ 98%]
+.......................                                                  [100%]
+=================================== FAILURES ===================================
+_ test_parameter_types_and_constraints_report_public_key[execution.retry.enabled-1] _
+
+tmp_path = PosixPath('/private/var/folders/g6/378nmc5541n9wkbyb0nj9x9r0000gn/T/pytest-of-bmilk/pytest-590/test_parameter_types_and_const8')
+key = 'execution.retry.enabled', value = 1
+
+    @pytest.mark.parametrize(
+        "key,value",
+        [
+            ("runtime.namespace", " "),
+            ("runtime.lease_seconds", True),
+            ("runtime.state_directory", ""),
+            ("runtime.store_lock_timeout_seconds", -1),
+            ("workspace.root", "bad\0path"),
+            ("workspace.persistent_sandbox", 1),
+            ("execution.loop_max", False),
+            ("execution.tool_timeout_seconds", "10"),
+            ("execution.retry.enabled", 1),
+            ("execution.retry.max_attempts", 0),
+            ("execution.retry.delay_seconds", float("inf")),
+            ("context.recent_runs", True),
+            ("context.trigger_ratio", 1.0),
+            ("model.parameters", []),
+            ("model.max_output_tokens", 0),
+            ("files.provider", "invalid name"),
+            ("files.options", {"secret": "SECRET_SENTINEL"}),
+            ("services.capabilities", {}),
+            ("services.hooks", []),
+            ("services.store", object()),
+            ("services.environment", object()),
+            ("services.checkpoint_callback", False),
+            ("model.adapter", object()),
+        ],
+    )
+    def test_parameter_types_and_constraints_report_public_key(tmp_path, key, value):
+        with pytest.raises(ConfigurationError) as caught:
+            PropertiesConfig(values(tmp_path, **{key: value}))
+>       assert caught.value.field_path == key
+E       AssertionError: assert 'execution.re...retry.enabled' == 'execution.retry.enabled'
+E         
+E         - execution.retry.enabled
+E         + execution.retry.retry.enabled
+E         ?                 ++++++
+
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/tests/test_flat_properties.py:81: AssertionError
+_ test_parameter_types_and_constraints_report_public_key[execution.retry.max_attempts-0] _
+
+tmp_path = PosixPath('/private/var/folders/g6/378nmc5541n9wkbyb0nj9x9r0000gn/T/pytest-of-bmilk/pytest-590/test_parameter_types_and_const9')
+key = 'execution.retry.max_attempts', value = 0
+
+    @pytest.mark.parametrize(
+        "key,value",
+        [
+            ("runtime.namespace", " "),
+            ("runtime.lease_seconds", True),
+            ("runtime.state_directory", ""),
+            ("runtime.store_lock_timeout_seconds", -1),
+            ("workspace.root", "bad\0path"),
+            ("workspace.persistent_sandbox", 1),
+            ("execution.loop_max", False),
+            ("execution.tool_timeout_seconds", "10"),
+            ("execution.retry.enabled", 1),
+            ("execution.retry.max_attempts", 0),
+            ("execution.retry.delay_seconds", float("inf")),
+            ("context.recent_runs", True),
+            ("context.trigger_ratio", 1.0),
+            ("model.parameters", []),
+            ("model.max_output_tokens", 0),
+            ("files.provider", "invalid name"),
+            ("files.options", {"secret": "SECRET_SENTINEL"}),
+            ("services.capabilities", {}),
+            ("services.hooks", []),
+            ("services.store", object()),
+            ("services.environment", object()),
+            ("services.checkpoint_callback", False),
+            ("model.adapter", object()),
+        ],
+    )
+    def test_parameter_types_and_constraints_report_public_key(tmp_path, key, value):
+        with pytest.raises(ConfigurationError) as caught:
+            PropertiesConfig(values(tmp_path, **{key: value}))
+>       assert caught.value.field_path == key
+E       AssertionError: assert 'execution.re....max_attempts' == 'execution.retry.max_attempts'
+E         
+E         - execution.retry.max_attempts
+E         + execution.retry.retry.max_attempts
+E         ?          ++++++
+
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/tests/test_flat_properties.py:81: AssertionError
+_ test_parameter_types_and_constraints_report_public_key[execution.retry.delay_seconds-inf] _
+
+tmp_path = PosixPath('/private/var/folders/g6/378nmc5541n9wkbyb0nj9x9r0000gn/T/pytest-of-bmilk/pytest-590/test_parameter_types_and_const10')
+key = 'execution.retry.delay_seconds', value = inf
+
+    @pytest.mark.parametrize(
+        "key,value",
+        [
+            ("runtime.namespace", " "),
+            ("runtime.lease_seconds", True),
+            ("runtime.state_directory", ""),
+            ("runtime.store_lock_timeout_seconds", -1),
+            ("workspace.root", "bad\0path"),
+            ("workspace.persistent_sandbox", 1),
+            ("execution.loop_max", False),
+            ("execution.tool_timeout_seconds", "10"),
+            ("execution.retry.enabled", 1),
+            ("execution.retry.max_attempts", 0),
+            ("execution.retry.delay_seconds", float("inf")),
+            ("context.recent_runs", True),
+            ("context.trigger_ratio", 1.0),
+            ("model.parameters", []),
+            ("model.max_output_tokens", 0),
+            ("files.provider", "invalid name"),
+            ("files.options", {"secret": "SECRET_SENTINEL"}),
+            ("services.capabilities", {}),
+            ("services.hooks", []),
+            ("services.store", object()),
+            ("services.environment", object()),
+            ("services.checkpoint_callback", False),
+            ("model.adapter", object()),
+        ],
+    )
+    def test_parameter_types_and_constraints_report_public_key(tmp_path, key, value):
+        with pytest.raises(ConfigurationError) as caught:
+            PropertiesConfig(values(tmp_path, **{key: value}))
+>       assert caught.value.field_path == key
+E       AssertionError: assert 'execution.re...delay_seconds' == 'execution.re...delay_seconds'
+E         
+E         - execution.retry.delay_seconds
+E         + execution.retry.retry.delay_seconds
+E         ?          ++++++
+
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/tests/test_flat_properties.py:81: AssertionError
+_ test_parameter_types_and_constraints_report_public_key[files.options-value16] _
+
+tmp_path = PosixPath('/private/var/folders/g6/378nmc5541n9wkbyb0nj9x9r0000gn/T/pytest-of-bmilk/pytest-590/test_parameter_types_and_const16')
+key = 'files.options', value = {'secret': 'SECRET_SENTINEL'}
+
+    @pytest.mark.parametrize(
+        "key,value",
+        [
+            ("runtime.namespace", " "),
+            ("runtime.lease_seconds", True),
+            ("runtime.state_directory", ""),
+            ("runtime.store_lock_timeout_seconds", -1),
+            ("workspace.root", "bad\0path"),
+            ("workspace.persistent_sandbox", 1),
+            ("execution.loop_max", False),
+            ("execution.tool_timeout_seconds", "10"),
+            ("execution.retry.enabled", 1),
+            ("execution.retry.max_attempts", 0),
+            ("execution.retry.delay_seconds", float("inf")),
+            ("context.recent_runs", True),
+            ("context.trigger_ratio", 1.0),
+            ("model.parameters", []),
+            ("model.max_output_tokens", 0),
+            ("files.provider", "invalid name"),
+            ("files.options", {"secret": "SECRET_SENTINEL"}),
+            ("services.capabilities", {}),
+            ("services.hooks", []),
+            ("services.store", object()),
+            ("services.environment", object()),
+            ("services.checkpoint_callback", False),
+            ("model.adapter", object()),
+        ],
+    )
+    def test_parameter_types_and_constraints_report_public_key(tmp_path, key, value):
+        with pytest.raises(ConfigurationError) as caught:
+            PropertiesConfig(values(tmp_path, **{key: value}))
+>       assert caught.value.field_path == key
+E       AssertionError: assert 'files' == 'files.options'
+E         
+E         - files.options
+E         + files
+
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/tests/test_flat_properties.py:81: AssertionError
+_____ test_startup_and_multiple_role_builds_validate_parameters_only_once ______
+
+tmp_path = PosixPath('/private/var/folders/g6/378nmc5541n9wkbyb0nj9x9r0000gn/T/pytest-of-bmilk/pytest-590/test_startup_and_multiple_role0')
+
+    async def test_startup_and_multiple_role_builds_validate_parameters_only_once(tmp_path):
+        class Model(ScriptedModel):
+            validations = 0
+    
+            def validate_options(self, options):
+                self.validations += 1
+                assert self.validations == 1, "An execution module revalidated startup parameters"
+                super().validate_options(options)
+    
+        model = Model(lambda r: ModelResponse("done"))
+>       p = PropertiesConfig(values(tmp_path, **{"model.adapter": model}))
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/tests/test_flat_properties.py:220: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/public/properties.py:70: in __init__
+    resolved = resolve_configuration(values)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/configuration/settings.py:173: in resolve_configuration
+    return resolve_groups(
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/configuration/settings.py:137: in resolve_groups
+    budget = resolve_model_budget(services.model, defaults)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/configuration/model_validation.py:25: in resolve_model_budget
+    model.validate_options(properties.model_options)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <test_flat_properties.test_startup_and_multiple_role_builds_validate_parameters_only_once.<locals>.Model object at 0x109dc6fc0>
+options = ModelOptions(max_output_tokens=None, parameters={})
+
+    def validate_options(self, options):
+        self.validations += 1
+        assert self.validations == 1, "An execution module revalidated startup parameters"
+>       super().validate_options(options)
+        ^^^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: 'super' object has no attribute 'validate_options'. Did you mean: 'validations'?
+
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/tests/test_flat_properties.py:217: AttributeError
+_ test_process_death_resumes_committed_work_exactly_once[batch-direct-direct] __
+
+tmp_path = PosixPath('/private/var/folders/g6/378nmc5541n9wkbyb0nj9x9r0000gn/T/pytest-of-bmilk/pytest-590/test_process_death_resumes_com6')
+cut = 'batch', first_assembly = 'direct', second_assembly = 'direct'
+durable_store_factory = <function durable_store_factory.<locals>.factory at 0x1097ef2e0>
+
+    @pytest.mark.parametrize(
+        "cut,first_assembly,second_assembly",
+        [
+            (cut, "direct", "direct")
+            for cut in [
+                "raw",
+                "tool_permit",
+                "tool_raw",
+                "hook_result",
+                "hook_apply",
+                "child",
+                "batch",
+                "terminal",
+            ]
+        ]
+        + [
+            ("tool_raw", "builder", "direct"),
+            ("hook_apply", "direct", "builder"),
+            ("terminal", "builder", "builder"),
+            ("tool_permit", "properties", "direct"),
+            ("tool_raw", "direct", "properties"),
+            ("hook_apply", "builder", "properties"),
+            ("child", "properties", "properties"),
+        ],
+    )
+    def test_process_death_resumes_committed_work_exactly_once(
+        tmp_path, cut, first_assembly, second_assembly, durable_store_factory
+    ):
+        env = {**os.environ, "PYTHONPATH": str(Path(__file__).parents[1] / "src")}
+        worker = Path(__file__).parent / "support" / "crash_process.py"
+        first = subprocess.run(
+            [sys.executable, str(worker), str(tmp_path), cut, first_assembly],
+            env=env,
+            capture_output=True,
+            text=True,
+            timeout=15,
+        )
+        assert first.returncode == 73, first.stderr
+        time.sleep(0.45)
+        second = subprocess.run(
+            [sys.executable, str(worker), str(tmp_path), "none", second_assembly],
+            env=env,
+            capture_output=True,
+            text=True,
+            timeout=15,
+        )
+>       assert second.returncode == 0, second.stderr
+E       AssertionError: Traceback (most recent call last):
+E           File "/Users/bmilk/code/project/agent-loom/agentloom-sdk/tests/support/crash_process.py", line 188, in <module>
+E             asyncio.run(main())
+E           File "/Users/bmilk/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/asyncio/runners.py", line 195, in run
+E             return runner.run(main)
+E                    ^^^^^^^^^^^^^^^^
+E           File "/Users/bmilk/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/asyncio/runners.py", line 118, in run
+E             return self._loop.run_until_complete(task)
+E                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E           File "/Users/bmilk/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/asyncio/base_events.py", line 691, in run_until_complete
+E             return future.result()
+E                    ^^^^^^^^^^^^^^^
+E           File "/Users/bmilk/code/project/agent-loom/agentloom-sdk/tests/support/crash_process.py", line 169, in main
+E             result = await handle.wait(timeout_s=10)
+E                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E           File "/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/public/handles.py", line 57, in wait
+E             return await observe()
+E                    ^^^^^^^^^^^^^^^
+E           File "/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/public/handles.py", line 52, in observe
+E             self._runtime.raise_local_failure(self.run_id)
+E           File "/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/runtime/host.py", line 158, in raise_local_failure
+E             raise failure
+E           File "/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/runtime/host.py", line 335, in _drive
+E             await runner.run()
+E           File "/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/runtime/runner.py", line 225, in run
+E             await self._run()
+E           File "/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/runtime/runner.py", line 295, in _run
+E             await monitor
+E           File "/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/runtime/runner.py", line 212, in _monitor
+E             self.check_active()
+E           File "/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/runtime/runner.py", line 167, in check_active
+E             verify_lease(state, self.lease, tx.now)
+E           File "/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/storage/commit.py", line 16, in verify_lease
+E             raise LeaseLost()
+E         agentloom.errors.LeaseLost: LEASE_LOST: Execution ownership has expired or was revoked
+E         
+E       assert 1 == 0
+E        +  where 1 = CompletedProcess(args=['/Users/bmilk/code/project/agent-loom/.venv/bin/python', '/Users/bmilk/code/project/agent-loom/...ease\n    raise LeaseLost()\nagentloom.errors.LeaseLost: LEASE_LOST: Execution ownership has expired or was revoked\n').returncode
+
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/tests/test_persistence_contract.py:60: AssertionError
+_ test_accept_effect_is_bounded_and_never_appends_twice[memory-duplicate_with_revision] _
+
+store = <agentloom.storage.memory.MemoryRuntimeStore object at 0x109b7c170>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x109b7d430>
+proposal = 'duplicate_with_revision'
+
+    @pytest.mark.parametrize(
+        "proposal", ["single", "duplicate_with_revision", "duplicate_without_revision"]
+    )
+    async def test_accept_effect_is_bounded_and_never_appends_twice(store, monkeypatch, proposal):
+        changed, calls = [], []
+    
+        def transform(outcome):
+            effects = [e for e in outcome.effects if e.kind == "accept_model"]
+            if effects:
+                changed.append(True)
+                if proposal != "single":
+                    effect = effects[0]
+                    if proposal == "duplicate_without_revision":
+                        body = copy_document(effect.body)
+                        body.pop("expected_context_revision", None)
+                        effect = PreparedEffect("accept_model", body)
+                    return replace(outcome, effects=(effect, effect))
+            return outcome
+    
+        intercept_progress(monkeypatch, transform)
+        async with RuntimeEngine(store=store) as runtime:
+            handle = await build(runtime, lambda r: (calls.append(r), ModelResponse("done"))[1]).start(
+                "go"
+            )
+            timeout = None
+            try:
+>               await handle.wait(timeout_s=5)
+
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round11.py:118: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/public/handles.py:57: in wait
+    return await observe()
+           ^^^^^^^^^^^^^^^
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/public/handles.py:52: in observe
+    self._runtime.raise_local_failure(self.run_id)
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/runtime/host.py:158: in raise_local_failure
+    raise failure
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/runtime/host.py:335: in _drive
+    await runner.run()
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/runtime/runner.py:225: in run
+    await self._run()
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/runtime/runner.py:310: in _run
+    self.finalize("failed", error=result["error"])
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/runtime/runner.py:341: in finalize
+    return finalize_run(self.runtime, self.lease, status, output=output, error=error)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/runtime/control.py:66: in finalize_run
+    validate_recovery(state)
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/runtime/recovery.py:30: in validate_recovery
+    _validate(state)
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/runtime/recovery.py:146: in _validate
+    _require(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+condition = False, field = 'operation.ticket_state'
+
+    def _require(condition, field):
+        if not condition:
+>           raise InfrastructureError(
+                "PERSISTENCE_INVARIANT_BROKEN",
+                "Committed execution facts disagree: " + field,
+                category="infrastructure",
+                phase="recover",
+                field_path=field,
+            )
+E           agentloom.errors.InfrastructureError: PERSISTENCE_INVARIANT_BROKEN: Committed execution facts disagree: operation.ticket_state
+
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/runtime/recovery.py:14: InfrastructureError
+_ test_accept_effect_is_bounded_and_never_appends_twice[memory-duplicate_without_revision] _
+
+store = <agentloom.storage.memory.MemoryRuntimeStore object at 0x108e5f0b0>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x108e5c380>
+proposal = 'duplicate_without_revision'
+
+    @pytest.mark.parametrize(
+        "proposal", ["single", "duplicate_with_revision", "duplicate_without_revision"]
+    )
+    async def test_accept_effect_is_bounded_and_never_appends_twice(store, monkeypatch, proposal):
+        changed, calls = [], []
+    
+        def transform(outcome):
+            effects = [e for e in outcome.effects if e.kind == "accept_model"]
+            if effects:
+                changed.append(True)
+                if proposal != "single":
+                    effect = effects[0]
+                    if proposal == "duplicate_without_revision":
+                        body = copy_document(effect.body)
+                        body.pop("expected_context_revision", None)
+                        effect = PreparedEffect("accept_model", body)
+                    return replace(outcome, effects=(effect, effect))
+            return outcome
+    
+        intercept_progress(monkeypatch, transform)
+        async with RuntimeEngine(store=store) as runtime:
+            handle = await build(runtime, lambda r: (calls.append(r), ModelResponse("done"))[1]).start(
+                "go"
+            )
+            timeout = None
+            try:
+>               await handle.wait(timeout_s=5)
+
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round11.py:118: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/public/handles.py:57: in wait
+    return await observe()
+           ^^^^^^^^^^^^^^^
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/public/handles.py:52: in observe
+    self._runtime.raise_local_failure(self.run_id)
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/runtime/host.py:158: in raise_local_failure
+    raise failure
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/runtime/host.py:335: in _drive
+    await runner.run()
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/runtime/runner.py:225: in run
+    await self._run()
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/runtime/runner.py:310: in _run
+    self.finalize("failed", error=result["error"])
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/runtime/runner.py:341: in finalize
+    return finalize_run(self.runtime, self.lease, status, output=output, error=error)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/runtime/control.py:66: in finalize_run
+    validate_recovery(state)
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/runtime/recovery.py:30: in validate_recovery
+    _validate(state)
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/runtime/recovery.py:146: in _validate
+    _require(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+condition = False, field = 'operation.ticket_state'
+
+    def _require(condition, field):
+        if not condition:
+>           raise InfrastructureError(
+                "PERSISTENCE_INVARIANT_BROKEN",
+                "Committed execution facts disagree: " + field,
+                category="infrastructure",
+                phase="recover",
+                field_path=field,
+            )
+E           agentloom.errors.InfrastructureError: PERSISTENCE_INVARIANT_BROKEN: Committed execution facts disagree: operation.ticket_state
+
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/runtime/recovery.py:14: InfrastructureError
+_ test_accept_effect_is_bounded_and_never_appends_twice[file-duplicate_with_revision] _
+
+store = <agentloom.storage.filesystem.FileRuntimeStore object at 0x10a7304d0>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x10a7308f0>
+proposal = 'duplicate_with_revision'
+
+    @pytest.mark.parametrize(
+        "proposal", ["single", "duplicate_with_revision", "duplicate_without_revision"]
+    )
+    async def test_accept_effect_is_bounded_and_never_appends_twice(store, monkeypatch, proposal):
+        changed, calls = [], []
+    
+        def transform(outcome):
+            effects = [e for e in outcome.effects if e.kind == "accept_model"]
+            if effects:
+                changed.append(True)
+                if proposal != "single":
+                    effect = effects[0]
+                    if proposal == "duplicate_without_revision":
+                        body = copy_document(effect.body)
+                        body.pop("expected_context_revision", None)
+                        effect = PreparedEffect("accept_model", body)
+                    return replace(outcome, effects=(effect, effect))
+            return outcome
+    
+        intercept_progress(monkeypatch, transform)
+        async with RuntimeEngine(store=store) as runtime:
+            handle = await build(runtime, lambda r: (calls.append(r), ModelResponse("done"))[1]).start(
+                "go"
+            )
+            timeout = None
+            try:
+>               await handle.wait(timeout_s=5)
+
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round11.py:118: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/public/handles.py:57: in wait
+    return await observe()
+           ^^^^^^^^^^^^^^^
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/public/handles.py:52: in observe
+    self._runtime.raise_local_failure(self.run_id)
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/runtime/host.py:158: in raise_local_failure
+    raise failure
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/runtime/host.py:335: in _drive
+    await runner.run()
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/runtime/runner.py:225: in run
+    await self._run()
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/runtime/runner.py:310: in _run
+    self.finalize("failed", error=result["error"])
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/runtime/runner.py:341: in finalize
+    return finalize_run(self.runtime, self.lease, status, output=output, error=error)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/runtime/control.py:66: in finalize_run
+    validate_recovery(state)
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/runtime/recovery.py:30: in validate_recovery
+    _validate(state)
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/runtime/recovery.py:146: in _validate
+    _require(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+condition = False, field = 'operation.ticket_state'
+
+    def _require(condition, field):
+        if not condition:
+>           raise InfrastructureError(
+                "PERSISTENCE_INVARIANT_BROKEN",
+                "Committed execution facts disagree: " + field,
+                category="infrastructure",
+                phase="recover",
+                field_path=field,
+            )
+E           agentloom.errors.InfrastructureError: PERSISTENCE_INVARIANT_BROKEN: Committed execution facts disagree: operation.ticket_state
+
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/runtime/recovery.py:14: InfrastructureError
+_ test_accept_effect_is_bounded_and_never_appends_twice[file-duplicate_without_revision] _
+
+store = <agentloom.storage.filesystem.FileRuntimeStore object at 0x10920a6f0>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x109209580>
+proposal = 'duplicate_without_revision'
+
+    @pytest.mark.parametrize(
+        "proposal", ["single", "duplicate_with_revision", "duplicate_without_revision"]
+    )
+    async def test_accept_effect_is_bounded_and_never_appends_twice(store, monkeypatch, proposal):
+        changed, calls = [], []
+    
+        def transform(outcome):
+            effects = [e for e in outcome.effects if e.kind == "accept_model"]
+            if effects:
+                changed.append(True)
+                if proposal != "single":
+                    effect = effects[0]
+                    if proposal == "duplicate_without_revision":
+                        body = copy_document(effect.body)
+                        body.pop("expected_context_revision", None)
+                        effect = PreparedEffect("accept_model", body)
+                    return replace(outcome, effects=(effect, effect))
+            return outcome
+    
+        intercept_progress(monkeypatch, transform)
+        async with RuntimeEngine(store=store) as runtime:
+            handle = await build(runtime, lambda r: (calls.append(r), ModelResponse("done"))[1]).start(
+                "go"
+            )
+            timeout = None
+            try:
+>               await handle.wait(timeout_s=5)
+
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round11.py:118: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/public/handles.py:57: in wait
+    return await observe()
+           ^^^^^^^^^^^^^^^
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/public/handles.py:52: in observe
+    self._runtime.raise_local_failure(self.run_id)
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/runtime/host.py:158: in raise_local_failure
+    raise failure
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/runtime/host.py:335: in _drive
+    await runner.run()
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/runtime/runner.py:225: in run
+    await self._run()
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/runtime/runner.py:310: in _run
+    self.finalize("failed", error=result["error"])
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/runtime/runner.py:341: in finalize
+    return finalize_run(self.runtime, self.lease, status, output=output, error=error)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/runtime/control.py:66: in finalize_run
+    validate_recovery(state)
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/runtime/recovery.py:30: in validate_recovery
+    _validate(state)
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/runtime/recovery.py:146: in _validate
+    _require(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+condition = False, field = 'operation.ticket_state'
+
+    def _require(condition, field):
+        if not condition:
+>           raise InfrastructureError(
+                "PERSISTENCE_INVARIANT_BROKEN",
+                "Committed execution facts disagree: " + field,
+                category="infrastructure",
+                phase="recover",
+                field_path=field,
+            )
+E           agentloom.errors.InfrastructureError: PERSISTENCE_INVARIANT_BROKEN: Committed execution facts disagree: operation.ticket_state
+
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/runtime/recovery.py:14: InfrastructureError
+- generated xml file: /Users/bmilk/code/project/agent-loom/.agentloom/test-results/20261019-153134-427540Z/junit.xml -
+=========================== short test summary info ============================
+FAILED agentloom-sdk/tests/test_flat_properties.py::test_parameter_types_and_constraints_report_public_key[execution.retry.enabled-1]
+FAILED agentloom-sdk/tests/test_flat_properties.py::test_parameter_types_and_constraints_report_public_key[execution.retry.max_attempts-0]
+FAILED agentloom-sdk/tests/test_flat_properties.py::test_parameter_types_and_constraints_report_public_key[execution.retry.delay_seconds-inf]
+FAILED agentloom-sdk/tests/test_flat_properties.py::test_parameter_types_and_constraints_report_public_key[files.options-value16]
+FAILED agentloom-sdk/tests/test_flat_properties.py::test_startup_and_multiple_role_builds_validate_parameters_only_once
+FAILED agentloom-sdk/tests/test_persistence_contract.py::test_process_death_resumes_committed_work_exactly_once[batch-direct-direct]
+FAILED agentloom-sdk/qa/test_sdk_review_round11.py::test_accept_effect_is_bounded_and_never_appends_twice[memory-duplicate_with_revision]
+FAILED agentloom-sdk/qa/test_sdk_review_round11.py::test_accept_effect_is_bounded_and_never_appends_twice[memory-duplicate_without_revision]
+FAILED agentloom-sdk/qa/test_sdk_review_round11.py::test_accept_effect_is_bounded_and_never_appends_twice[file-duplicate_with_revision]
+FAILED agentloom-sdk/qa/test_sdk_review_round11.py::test_accept_effect_is_bounded_and_never_appends_twice[file-duplicate_without_revision]
+10 failed, 2101 passed in 765.03s (0:12:45)

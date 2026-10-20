@@ -55,6 +55,7 @@ def _validate(state):
         0,
     )
     tokens, known, model_attempts, identities, sources = {}, 0, 0, set(), set()
+    accepted_records = set()
     for task_id, task in tasks.items():
         _require(task_id == task["task_id"], "task.task_id")
         _require(task["role_key"] in state["bindings"]["definitions"], "task.role_key")
@@ -152,6 +153,23 @@ def _validate(state):
             kind = "decision" if op["status"] == "succeeded" else "error_feedback"
             _require(op.get("consumption_kind") == kind, "operation.consumption_kind")
             _require(kind == "decision" or op["task_id"] != root, "operation.feedback_scope")
+        if "accepted_record_id" in op:
+            identity = (op["task_id"], op["accepted_record_id"])
+            accepted = [
+                r
+                for r in tasks[op["task_id"]]["context"]["records"]
+                if r["record_id"] == op["accepted_record_id"]
+            ]
+            _require(
+                business
+                and op["status"] == "succeeded"
+                and ticket == "consumed"
+                and identity not in accepted_records
+                and len(accepted) == 1
+                and accepted[0]["message"].get("role") == "assistant",
+                "operation.accepted_record_id",
+            )
+            accepted_records.add(identity)
         if op["permit"]:
             _require(not business or ticket is not None, "operation.ticket_missing")
             _require(op["request_hash"] == digest(op["request"]), "operation.request_hash")

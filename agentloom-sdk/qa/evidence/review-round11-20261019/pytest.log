@@ -1,0 +1,109 @@
+.F{"case": "accept_effect", "proposal": "single", "backend": "MemoryRuntimeStore", "run_status": "succeeded", "activations": 2, "assistant_records": 1, "model_calls": 1, "loops_consumed": 1}
+.{"case": "accept_effect", "proposal": "duplicate_with_revision", "backend": "MemoryRuntimeStore", "run_status": "running", "activations": 596, "assistant_records": 0, "model_calls": 1, "loops_consumed": 0}
+F{"case": "accept_effect", "proposal": "duplicate_without_revision", "backend": "MemoryRuntimeStore", "run_status": "succeeded", "activations": 2, "assistant_records": 2, "model_calls": 1, "loops_consumed": 1}
+F{"case": "accept_effect", "proposal": "single", "backend": "FileRuntimeStore", "run_status": "succeeded", "activations": 2, "assistant_records": 1, "model_calls": 1, "loops_consumed": 1}
+.{"case": "accept_effect", "proposal": "duplicate_with_revision", "backend": "FileRuntimeStore", "run_status": "running", "activations": 155, "assistant_records": 0, "model_calls": 1, "loops_consumed": 0}
+F{"case": "accept_effect", "proposal": "duplicate_without_revision", "backend": "FileRuntimeStore", "run_status": "succeeded", "activations": 2, "assistant_records": 2, "model_calls": 1, "loops_consumed": 1}
+F{"case": "model_intent", "damage": "none", "backend": "MemoryRuntimeStore", "run_status": "succeeded", "model_calls": 1, "operation_count": 1, "wait_error": null, "recovery_error": null, "resume_error": null, "resume_model_calls": 0}
+.{"case": "model_intent", "damage": "missing_record_ids", "backend": "MemoryRuntimeStore", "run_status": "running", "model_calls": 1, "operation_count": 1, "wait_error": "PERSISTENCE_INVARIANT_BROKEN", "recovery_error": {"code": "PERSISTENCE_INVARIANT_BROKEN", "field_path": "prompt_contract.request_records"}, "resume_error": {"code": "PERSISTENCE_INVARIANT_BROKEN", "field_path": "prompt_contract.request_records"}, "resume_model_calls": 0}
+F{"case": "model_intent", "damage": "duplicate_record_ids", "backend": "MemoryRuntimeStore", "run_status": "running", "model_calls": 1, "operation_count": 1, "wait_error": "PERSISTENCE_INVARIANT_BROKEN", "recovery_error": {"code": "PERSISTENCE_INVARIANT_BROKEN", "field_path": "prompt_contract.request_records"}, "resume_error": {"code": "PERSISTENCE_INVARIANT_BROKEN", "field_path": "prompt_contract.request_records"}, "resume_model_calls": 0}
+F{"case": "model_intent", "damage": "changed_sdk_text", "backend": "MemoryRuntimeStore", "run_status": "running", "model_calls": 1, "operation_count": 1, "wait_error": "PERSISTENCE_INVARIANT_BROKEN", "recovery_error": {"code": "PERSISTENCE_INVARIANT_BROKEN", "field_path": "prompt_contract.request_content"}, "resume_error": {"code": "PERSISTENCE_INVARIANT_BROKEN", "field_path": "prompt_contract.request_content"}, "resume_model_calls": 0}
+F{"case": "model_intent", "damage": "none", "backend": "FileRuntimeStore", "run_status": "succeeded", "model_calls": 1, "operation_count": 1, "wait_error": null, "recovery_error": null, "resume_error": null, "resume_model_calls": 0}
+.{"case": "model_intent", "damage": "missing_record_ids", "backend": "FileRuntimeStore", "run_status": "running", "model_calls": 1, "operation_count": 1, "wait_error": "PERSISTENCE_INVARIANT_BROKEN", "recovery_error": {"code": "PERSISTENCE_INVARIANT_BROKEN", "field_path": "prompt_contract.request_records"}, "resume_error": {"code": "PERSISTENCE_INVARIANT_BROKEN", "field_path": "prompt_contract.request_records"}, "resume_model_calls": 0}
+F{"case": "model_intent", "damage": "duplicate_record_ids", "backend": "FileRuntimeStore", "run_status": "running", "model_calls": 1, "operation_count": 1, "wait_error": "PERSISTENCE_INVARIANT_BROKEN", "recovery_error": {"code": "PERSISTENCE_INVARIANT_BROKEN", "field_path": "prompt_contract.request_records"}, "resume_error": {"code": "PERSISTENCE_INVARIANT_BROKEN", "field_path": "prompt_contract.request_records"}, "resume_model_calls": 0}
+F{"case": "model_intent", "damage": "changed_sdk_text", "backend": "FileRuntimeStore", "run_status": "running", "model_calls": 1, "operation_count": 1, "wait_error": "PERSISTENCE_INVARIANT_BROKEN", "recovery_error": {"code": "PERSISTENCE_INVARIANT_BROKEN", "field_path": "prompt_contract.request_content"}, "resume_error": {"code": "PERSISTENCE_INVARIANT_BROKEN", "field_path": "prompt_contract.request_content"}, "resume_model_calls": 0}
+F...........                                              [100%]
+=================================== FAILURES ===================================
+_ test_skill_frontmatter_accepts_standard_line_endings_without_changing_hash[crlf] _
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round11.py:85: in test_skill_frontmatter_accepts_standard_line_endings_without_changing_hash
+    package = SkillPackage.from_directory(tmp_path)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/src/agentloom/capabilities/skills.py:64: in from_directory
+    raise ConfigurationError("SKILL_METADATA_INVALID")
+E   agentloom.errors.ConfigurationError: SKILL_METADATA_INVALID: SKILL_METADATA_INVALID
+_ test_accept_effect_is_bounded_and_never_appends_twice[memory-duplicate_with_revision] _
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round11.py:141: in test_accept_effect_is_bounded_and_never_appends_twice
+    assert timeout is None, (
+E   AssertionError: Duplicate proposal was requeued instead of rejected or deduplicated
+E   assert WaitTimeout('This wait expired; the run continues') is None
+----------------------------- Captured stdout call -----------------------------
+{"case": "accept_effect", "proposal": "duplicate_with_revision", "backend": "MemoryRuntimeStore", "run_status": "running", "activations": 596, "assistant_records": 0, "model_calls": 1, "loops_consumed": 0}
+_ test_accept_effect_is_bounded_and_never_appends_twice[memory-duplicate_without_revision] _
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round11.py:144: in test_accept_effect_is_bounded_and_never_appends_twice
+    assert len(messages) <= 1, f"Duplicate accept committed {len(messages)} assistant records"
+E   AssertionError: Duplicate accept committed 2 assistant records
+E   assert 2 <= 1
+E    +  where 2 = len([{'content': 'done', 'role': 'assistant'}, {'content': 'done', 'role': 'assistant'}])
+----------------------------- Captured stdout call -----------------------------
+{"case": "accept_effect", "proposal": "duplicate_without_revision", "backend": "MemoryRuntimeStore", "run_status": "succeeded", "activations": 2, "assistant_records": 2, "model_calls": 1, "loops_consumed": 1}
+_ test_accept_effect_is_bounded_and_never_appends_twice[file-duplicate_with_revision] _
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round11.py:141: in test_accept_effect_is_bounded_and_never_appends_twice
+    assert timeout is None, (
+E   AssertionError: Duplicate proposal was requeued instead of rejected or deduplicated
+E   assert WaitTimeout('This wait expired; the run continues') is None
+----------------------------- Captured stdout call -----------------------------
+{"case": "accept_effect", "proposal": "duplicate_with_revision", "backend": "FileRuntimeStore", "run_status": "running", "activations": 155, "assistant_records": 0, "model_calls": 1, "loops_consumed": 0}
+_ test_accept_effect_is_bounded_and_never_appends_twice[file-duplicate_without_revision] _
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round11.py:144: in test_accept_effect_is_bounded_and_never_appends_twice
+    assert len(messages) <= 1, f"Duplicate accept committed {len(messages)} assistant records"
+E   AssertionError: Duplicate accept committed 2 assistant records
+E   assert 2 <= 1
+E    +  where 2 = len([{'content': 'done', 'role': 'assistant'}, {'content': 'done', 'role': 'assistant'}])
+----------------------------- Captured stdout call -----------------------------
+{"case": "accept_effect", "proposal": "duplicate_without_revision", "backend": "FileRuntimeStore", "run_status": "succeeded", "activations": 2, "assistant_records": 2, "model_calls": 1, "loops_consumed": 1}
+_ test_model_intent_must_match_its_owned_context_before_commit[memory-missing_record_ids] _
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round11.py:219: in test_model_intent_must_match_its_owned_context_before_commit
+    assert failure is None, "Invalid proposal escaped as a persistence/infrastructure failure"
+E   AssertionError: Invalid proposal escaped as a persistence/infrastructure failure
+E   assert InfrastructureError('PERSISTENCE_INVARIANT_BROKEN: Committed prompt contract disagrees: request_records') is None
+----------------------------- Captured stdout call -----------------------------
+{"case": "model_intent", "damage": "missing_record_ids", "backend": "MemoryRuntimeStore", "run_status": "running", "model_calls": 1, "operation_count": 1, "wait_error": "PERSISTENCE_INVARIANT_BROKEN", "recovery_error": {"code": "PERSISTENCE_INVARIANT_BROKEN", "field_path": "prompt_contract.request_records"}, "resume_error": {"code": "PERSISTENCE_INVARIANT_BROKEN", "field_path": "prompt_contract.request_records"}, "resume_model_calls": 0}
+_ test_model_intent_must_match_its_owned_context_before_commit[memory-duplicate_record_ids] _
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round11.py:219: in test_model_intent_must_match_its_owned_context_before_commit
+    assert failure is None, "Invalid proposal escaped as a persistence/infrastructure failure"
+E   AssertionError: Invalid proposal escaped as a persistence/infrastructure failure
+E   assert InfrastructureError('PERSISTENCE_INVARIANT_BROKEN: Committed prompt contract disagrees: request_records') is None
+----------------------------- Captured stdout call -----------------------------
+{"case": "model_intent", "damage": "duplicate_record_ids", "backend": "MemoryRuntimeStore", "run_status": "running", "model_calls": 1, "operation_count": 1, "wait_error": "PERSISTENCE_INVARIANT_BROKEN", "recovery_error": {"code": "PERSISTENCE_INVARIANT_BROKEN", "field_path": "prompt_contract.request_records"}, "resume_error": {"code": "PERSISTENCE_INVARIANT_BROKEN", "field_path": "prompt_contract.request_records"}, "resume_model_calls": 0}
+_ test_model_intent_must_match_its_owned_context_before_commit[memory-changed_sdk_text] _
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round11.py:219: in test_model_intent_must_match_its_owned_context_before_commit
+    assert failure is None, "Invalid proposal escaped as a persistence/infrastructure failure"
+E   AssertionError: Invalid proposal escaped as a persistence/infrastructure failure
+E   assert InfrastructureError('PERSISTENCE_INVARIANT_BROKEN: Committed prompt contract disagrees: request_content') is None
+----------------------------- Captured stdout call -----------------------------
+{"case": "model_intent", "damage": "changed_sdk_text", "backend": "MemoryRuntimeStore", "run_status": "running", "model_calls": 1, "operation_count": 1, "wait_error": "PERSISTENCE_INVARIANT_BROKEN", "recovery_error": {"code": "PERSISTENCE_INVARIANT_BROKEN", "field_path": "prompt_contract.request_content"}, "resume_error": {"code": "PERSISTENCE_INVARIANT_BROKEN", "field_path": "prompt_contract.request_content"}, "resume_model_calls": 0}
+_ test_model_intent_must_match_its_owned_context_before_commit[file-missing_record_ids] _
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round11.py:219: in test_model_intent_must_match_its_owned_context_before_commit
+    assert failure is None, "Invalid proposal escaped as a persistence/infrastructure failure"
+E   AssertionError: Invalid proposal escaped as a persistence/infrastructure failure
+E   assert InfrastructureError('PERSISTENCE_INVARIANT_BROKEN: Committed prompt contract disagrees: request_records') is None
+----------------------------- Captured stdout call -----------------------------
+{"case": "model_intent", "damage": "missing_record_ids", "backend": "FileRuntimeStore", "run_status": "running", "model_calls": 1, "operation_count": 1, "wait_error": "PERSISTENCE_INVARIANT_BROKEN", "recovery_error": {"code": "PERSISTENCE_INVARIANT_BROKEN", "field_path": "prompt_contract.request_records"}, "resume_error": {"code": "PERSISTENCE_INVARIANT_BROKEN", "field_path": "prompt_contract.request_records"}, "resume_model_calls": 0}
+_ test_model_intent_must_match_its_owned_context_before_commit[file-duplicate_record_ids] _
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round11.py:219: in test_model_intent_must_match_its_owned_context_before_commit
+    assert failure is None, "Invalid proposal escaped as a persistence/infrastructure failure"
+E   AssertionError: Invalid proposal escaped as a persistence/infrastructure failure
+E   assert InfrastructureError('PERSISTENCE_INVARIANT_BROKEN: Committed prompt contract disagrees: request_records') is None
+----------------------------- Captured stdout call -----------------------------
+{"case": "model_intent", "damage": "duplicate_record_ids", "backend": "FileRuntimeStore", "run_status": "running", "model_calls": 1, "operation_count": 1, "wait_error": "PERSISTENCE_INVARIANT_BROKEN", "recovery_error": {"code": "PERSISTENCE_INVARIANT_BROKEN", "field_path": "prompt_contract.request_records"}, "resume_error": {"code": "PERSISTENCE_INVARIANT_BROKEN", "field_path": "prompt_contract.request_records"}, "resume_model_calls": 0}
+_ test_model_intent_must_match_its_owned_context_before_commit[file-changed_sdk_text] _
+/Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/test_sdk_review_round11.py:219: in test_model_intent_must_match_its_owned_context_before_commit
+    assert failure is None, "Invalid proposal escaped as a persistence/infrastructure failure"
+E   AssertionError: Invalid proposal escaped as a persistence/infrastructure failure
+E   assert InfrastructureError('PERSISTENCE_INVARIANT_BROKEN: Committed prompt contract disagrees: request_content') is None
+----------------------------- Captured stdout call -----------------------------
+{"case": "model_intent", "damage": "changed_sdk_text", "backend": "FileRuntimeStore", "run_status": "running", "model_calls": 1, "operation_count": 1, "wait_error": "PERSISTENCE_INVARIANT_BROKEN", "recovery_error": {"code": "PERSISTENCE_INVARIANT_BROKEN", "field_path": "prompt_contract.request_content"}, "resume_error": {"code": "PERSISTENCE_INVARIANT_BROKEN", "field_path": "prompt_contract.request_content"}, "resume_model_calls": 0}
+- generated xml file: /Users/bmilk/code/project/agent-loom/agentloom-sdk/qa/evidence/review-round11-20261019/junit.xml -
+=========================== short test summary info ============================
+FAILED agentloom-sdk/qa/test_sdk_review_round11.py::test_skill_frontmatter_accepts_standard_line_endings_without_changing_hash[crlf]
+FAILED agentloom-sdk/qa/test_sdk_review_round11.py::test_accept_effect_is_bounded_and_never_appends_twice[memory-duplicate_with_revision]
+FAILED agentloom-sdk/qa/test_sdk_review_round11.py::test_accept_effect_is_bounded_and_never_appends_twice[memory-duplicate_without_revision]
+FAILED agentloom-sdk/qa/test_sdk_review_round11.py::test_accept_effect_is_bounded_and_never_appends_twice[file-duplicate_with_revision]
+FAILED agentloom-sdk/qa/test_sdk_review_round11.py::test_accept_effect_is_bounded_and_never_appends_twice[file-duplicate_without_revision]
+FAILED agentloom-sdk/qa/test_sdk_review_round11.py::test_model_intent_must_match_its_owned_context_before_commit[memory-missing_record_ids]
+FAILED agentloom-sdk/qa/test_sdk_review_round11.py::test_model_intent_must_match_its_owned_context_before_commit[memory-duplicate_record_ids]
+FAILED agentloom-sdk/qa/test_sdk_review_round11.py::test_model_intent_must_match_its_owned_context_before_commit[memory-changed_sdk_text]
+FAILED agentloom-sdk/qa/test_sdk_review_round11.py::test_model_intent_must_match_its_owned_context_before_commit[file-missing_record_ids]
+FAILED agentloom-sdk/qa/test_sdk_review_round11.py::test_model_intent_must_match_its_owned_context_before_commit[file-duplicate_record_ids]
+FAILED agentloom-sdk/qa/test_sdk_review_round11.py::test_model_intent_must_match_its_owned_context_before_commit[file-changed_sdk_text]
+11 failed, 16 passed in 11.60s

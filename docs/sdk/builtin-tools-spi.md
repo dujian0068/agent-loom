@@ -2,7 +2,7 @@
 
 更新：2026-10-18。文件后端 SPI 已实现：普通抽象方法、entry points 注册、按配置发现与实例化，覆盖全部 11 个文件操作。EnvironmentProvider／SandboxGateway 的完整目标协议及真实共享存储、对象存储驱动仍待实现，具体边界见[第 9 节](#9-当前代码与待调整部分)。Workflow 不在本轮范围。
 
-SDK 自带一套基础工具，内置工具与用户扩展使用相同的调用机制。增加业务工具通过工具执行 SPI；给文件工具更换存储介质通过文件后端 SPI；更换脚本运行环境通过沙箱执行 SPI。文件 SPI 使用 `WorkspaceBackend` 抽象基类、Python 包 entry points 和标准库 `importlib.metadata`；业务安装实现包，在 `PropertiesConfig.files` 选择名称，无需手动创建后端对象。
+SDK 自带一套基础工具，内置工具与用户扩展使用相同的调用机制。增加业务工具通过工具执行 SPI；给文件工具更换存储介质通过文件后端 SPI；更换脚本运行环境通过沙箱执行 SPI。文件 SPI 使用 `WorkspaceBackend` 抽象基类、Python 包 entry points 和标准库 `importlib.metadata`；业务安装实现包，通过 `PropertiesConfig` 的 `files.provider` 选择名称，无需手动创建后端对象。
 
 ## 1. 默认工具清单
 
@@ -222,17 +222,17 @@ acme = "acme_files:AcmeWorkspaceBackend"
 业务只配置提供者名称和可选构造参数：
 
 ```python
-from agentloom import FileProperties
-
 # properties 是原有 PropertiesConfig；安装实现包后按名称选择。
-properties = properties.with_options(
-    files=FileProperties(provider="acme", options={}),
-)
+properties = properties.with_options({
+    "files.provider": "acme",
+    "files.options": {},
+    "workspace.root": None,
+})
 ```
 
-`options` 是冻结的 JSON 参数，SDK 使用 `实现类(**options)` 创建对象；可以为空，地址可完全内置在第三方包里。模型、能力目录和业务 AgentDefinition 不因更换文件后端改变。第三方持有根地址时，AgentProperties 中可使用 `WorkspaceBinding()`；默认 `local` 必须指定本地 root，配置错误在 build 阶段拒绝。
+`options` 是冻结的 JSON 参数，SDK 使用 `实现类(**options)` 创建对象；可以为空，地址可完全内置在第三方包里。模型、能力目录和业务 AgentDefinition 不因更换文件后端改变。第三方持有根地址时可设置 `"workspace.root": None`；默认 local 必须指定本地 root，统一配置会在打开资源前拒绝缺少 root 的情况。旧直接构造仍在 build 阶段验证。
 
-`FileProperties()` 默认选择内置 local，使用同一 WorkspaceBackend 调用合同；已有直接 RuntimeEngine／WorkspaceService 用法保持兼容。高级入口可使用 `RuntimeEngine(files=FileProperties(...))`。Runtime 构造只解析本地登记元数据，async entry 才导入选中模块并实例化；`AgentLoom(properties)` 本身不加载提供者。
+`files.provider` 默认选择内置 local，使用同一 WorkspaceBackend 调用合同；已有直接 RuntimeEngine／WorkspaceService 用法保持兼容。高级入口可使用 `RuntimeEngine(files=FileProperties(...))`。Runtime 构造只解析本地登记元数据，async entry 才导入选中模块并实例化；`AgentLoom(properties)` 本身不加载提供者。
 
 一个 RuntimeEngine 只创建一个提供者实例，不同 Run 共用客户端，通过各自 context 隔离身份与权限。宿主退出先等待运行及维护任务收束，再调用 close，成功后释放引用；关闭失败可再次 aclose 重试。原先注入的模型、store、environment 等服务仍由调用方拥有。
 

@@ -7,11 +7,12 @@ from typing import TYPE_CHECKING
 
 from ..capabilities import CapabilityRegistry
 from ..configuration import AgentProperties
+from ..configuration.model_validation import resolve_model_budget
 from ..configuration.properties import UNSET, resolve_properties
+from ..configuration.services import ServiceProperties
 from ..context import ContextBudget
 from ..errors import ConfigurationError
 from ..events import HookSet
-from ..types import ModelDescriptor
 
 if TYPE_CHECKING:
     from ..runtime import RuntimeEngine
@@ -40,29 +41,6 @@ class AgentParameterView:
         return self.properties.model_options
 
 
-def validate_model_adapter(model):
-    if (
-        not callable(getattr(model, "stream_once", None))
-        or not isinstance(getattr(model, "descriptor", None), ModelDescriptor)
-        or hasattr(model, "validate_options")
-        and not callable(model.validate_options)
-    ):
-        raise ConfigurationError("MODEL_ADAPTER_INVALID")
-
-
-def resolve_model_budget(model, properties):
-    """Validate only supplied metadata/options; never discover or invoke a model."""
-    validate_model_adapter(model)
-    budget = ContextBudget.resolve(
-        model.descriptor, properties.context_policy, properties.model_options
-    )
-    if hasattr(model, "validate_options"):
-        model.validate_options(properties.model_options)
-    elif properties.model_options.parameters:
-        raise ConfigurationError("MODEL_FEATURE_UNSUPPORTED")
-    return budget
-
-
 @dataclass(frozen=True, init=False, kw_only=True, eq=False, repr=False)
 class AgentAssembly(AgentParameterView):
     """Internal borrowed dependencies; no Agent, run state or resource ownership."""
@@ -87,7 +65,7 @@ class AgentAssembly(AgentParameterView):
         context_policy=UNSET,
         model_options=UNSET,
     ):
-        validate_model_adapter(model)
+        services = ServiceProperties(model=model, capabilities=capabilities, hooks=hooks)
         properties = resolve_properties(
             properties,
             AgentProperties,
@@ -98,18 +76,41 @@ class AgentAssembly(AgentParameterView):
         )
         if not callable(getattr(runtime_engine, "open_run", None)):
             raise ConfigurationError("RUNTIME_ENGINE_REQUIRED")
-        for name, value, expected in (
-            ("capabilities", capabilities, CapabilityRegistry),
-            ("hooks", hooks, HookSet),
-        ):
-            if value is not None and not isinstance(value, expected):
-                raise ConfigurationError("INVALID_CONFIGURATION", field_path=expected.__name__)
-            object.__setattr__(self, name, expected() if value is None else value)
+        for name in ("capabilities", "hooks"):
+            object.__setattr__(self, name, getattr(services, name))
         object.__setattr__(self, "model", model)
         object.__setattr__(self, "runtime_engine", runtime_engine)
         object.__setattr__(self, "properties", properties)
-        object.__setattr__(self, "hooks", HookSet(self.hooks.bindings, self.hooks.handlers))
         object.__setattr__(self, "budget", resolve_model_budget(model, properties))
+
+    @classmethod
+    def _from_configuration(cls, configuration, runtime_engine):
+        """Bind a validated startup snapshot without rerunning parameter validators."""
+        assembly = object.__new__(cls)
+        for key, value in (
+            ("properties", configuration.defaults),
+            ("model", configuration.services.model),
+            ("capabilities", configuration.services.capabilities),
+            ("hooks", configuration.services.hooks),
+            ("budget", configuration._budget),
+            ("runtime_engine", runtime_engine),
+        ):
+            object.__setattr__(assembly, key, value)
+        return assembly
+
+    def _bind_services(self, capabilities, hooks):
+        """Project already-bound role services; fixed parameters/budget stay shared."""
+        bound = object.__new__(AgentAssembly)
+        for key, value in (
+            self._constructor_kwargs()
+            | {
+                "capabilities": capabilities,
+                "hooks": hooks,
+                "budget": self.budget,
+            }
+        ).items():
+            object.__setattr__(bound, key, value)
+        return bound
 
     def _agent_kwargs(self):
         """Legacy keyword projection; parameters are never separately stored."""

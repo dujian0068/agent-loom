@@ -1,8 +1,11 @@
 """Invalid proposals fail their task atomically, without poisoning recovery."""
 
+from dataclasses import replace
+
 import pytest
 
-from agentloom import AgentDefinition, ModelResponse, PlanAgent, RuntimeEngine, ToolCall
+from agentloom import AgentDefinition, AgentNode, ModelResponse, PlanAgent, RuntimeEngine, ToolCall
+from agentloom.configuration.json_documents import copy_document
 from agentloom.errors import InfrastructureError, RequestError
 from agentloom.nodes import ContinuationRef, PreparedEffect, Progress
 from agentloom.nodes.effects import apply_effect
@@ -62,6 +65,78 @@ async def test_bad_effect_rolls_back_and_reopens(runtime_store, build, monkeypat
             await build(runtime, lambda r: ModelResponse("unused")).start(run_id=result.run_id)
         ).wait(timeout_s=3)
         assert recovered.error["code"] == "NODE_EFFECT_INVALID" and len(activations) == 1
+
+
+@pytest.mark.parametrize("child", [False, True], ids=["root", "executor"])
+async def test_rejected_decision_releases_reservation_before_task_failure(
+    runtime_store, build, monkeypatch, child
+):
+    original = AgentNode.activate
+    rejected = []
+
+    async def activate(self, input, continuation, context):
+        stream = original(self, input, continuation, context)
+        try:
+            outcome = await anext(stream)
+            while True:
+                if isinstance(outcome, Progress):
+                    decision = [e for e in outcome.effects if e.kind == "accept_model"]
+                    if decision and (not child or input.task_id in child_ids):
+                        rejected.append(input.task_id)
+                        outcome = replace(outcome, effects=(decision[0], decision[0]))
+                receipt = yield outcome
+                outcome = await stream.asend(receipt)
+        except StopAsyncIteration:
+            return
+        finally:
+            await stream.aclose()
+
+    child_ids = set()
+
+    def checkpoint(command, state):
+        child_ids.update(t["task_id"] for t in state["tasks"].values() if t["parent_operation"])
+
+    def respond(request):
+        if (
+            child
+            and request.role_key == "planner"
+            and not any(m["role"] == "tool" for m in request.messages)
+        ):
+            return ModelResponse(
+                tool_calls=(ToolCall("delegate_task", {"executor": "worker", "task": "go"}),)
+            )
+        return ModelResponse("done")
+
+    monkeypatch.setattr(AgentNode, "activate", activate)
+    options = (
+        {
+            "cls": PlanAgent,
+            "executors": {"worker": AgentDefinition(prompt="SYS", description="work")},
+        }
+        if child
+        else {}
+    )
+    async with RuntimeEngine(store=runtime_store, checkpoint_callback=checkpoint) as runtime:
+        result = await build(runtime, respond, **options).ainvoke("go")
+        assert result.status == ("succeeded" if child else "failed")
+        state = runtime._load(result.run_id)
+        assert len(rejected) == 1
+        failed = state["tasks"][rejected[0]]
+        assert failed["error"]["code"] == "NODE_EFFECT_INVALID"
+        model = state["operations"][failed["continuation"]["model_operation_id"]]
+        assert model["status"] == "succeeded" and model["ticket"] == "released"
+        assert model["raw"]["result"]["text"] == "done"
+        assert "accepted_record_id" not in model
+        assert not any(r["message"]["role"] == "assistant" for r in failed["context"]["records"])
+        assert state["usage"]["loops_reserved"] == 0
+        assert state["usage"]["loops_consumed"] == (2 if child else 0)
+        assert state["usage"]["business_model_attempts"] == (3 if child else 1)
+        validate_recovery(state)
+    async with RuntimeEngine(store=runtime_store) as runtime:
+        reopened = await build(
+            runtime, lambda r: pytest.fail("A rejected decision must never be rerun"), **options
+        ).ainvoke(run_id=result.run_id)
+        assert reopened.status == result.status
 
 
 @pytest.mark.parametrize("damage", ["request", "role", "ticket", "identity", "attempts"])
@@ -154,3 +229,77 @@ def test_legacy_batch_without_decision_has_explicit_recovery_error():
             {"run_id": "r", "operations": {}},
             {"task_id": "t", "stage": "batch", "round": 0, "parent_operation": None},
         )
+
+
+async def test_decision_acceptance_is_persisted_separately_from_legacy_ticket(
+    runtime_store,
+    build,
+):
+    async with RuntimeEngine(store=runtime_store) as runtime:
+        result = await build(runtime, lambda r: ModelResponse("done")).ainvoke("go")
+        state = runtime._load(result.run_id)
+    task = state["tasks"][state["root_task_id"]]
+    op = next(o for o in state["operations"].values() if o["purpose"] == "business")
+    assert op["accepted_record_id"] in {r["record_id"] for r in task["context"]["records"]}
+    validate_recovery(state)
+    effect = {"kind": "accept_model", "body": {"operation_id": op["operation_id"]}}
+    task["continuation"].update(
+        phase="interpret_response",
+        model_operation_id=op["operation_id"],
+        accepted_decision_ref=None,
+    )
+    before = copy_document(state)
+    with pytest.raises(RequestError, match="NODE_EFFECT_INVALID"):
+        apply_effect(state, task, effect)
+    assert state == before
+    # A supported old response commit consumed the ticket before acceptance.
+    # It still needs exactly one decision/context commit after upgrading.
+    accepted = op.pop("accepted_record_id")
+    task["context"]["records"] = [
+        r for r in task["context"]["records"] if r["record_id"] != accepted
+    ]
+    consumed = state["usage"]["loops_consumed"]
+    apply_effect(state, task, effect)
+    assert state["usage"]["loops_consumed"] == consumed
+    assert op["accepted_record_id"] != accepted
+    with pytest.raises(RequestError, match="NODE_EFFECT_INVALID"):
+        apply_effect(state, task, effect)
+
+
+async def test_conflicting_revisions_within_a_proposal_fail_without_requeue(
+    runtime_store,
+    build,
+    monkeypatch,
+):
+    activations = []
+
+    class Node:
+        async def activate(self, input, continuation, context):
+            activations.append(input.task_id)
+            revision = context.context_port.snapshot()["context"]["revision"]
+            yield Progress(
+                ContinuationRef(
+                    input.task_id,
+                    {
+                        **continuation.value,
+                        "role_loop_index": 1,
+                    },
+                    continuation.revision,
+                ),
+                (
+                    PreparedEffect(
+                        "format_feedback",
+                        {"message": "ROLLBACK", "expected_context_revision": revision},
+                    ),
+                    PreparedEffect("prepare_context", {"expected_context_revision": revision}),
+                ),
+            )
+
+    monkeypatch.setattr(AgentGraphEngine, "_node", lambda self, task_id: Node())
+    async with RuntimeEngine(store=runtime_store) as runtime:
+        result = await build(runtime, lambda r: pytest.fail("No model call")).ainvoke("go")
+        assert result.error["code"] == "NODE_EFFECT_INVALID"
+        assert len(activations) == 1
+        state = runtime._load(result.run_id)
+        assert "ROLLBACK" not in str(state["tasks"][state["root_task_id"]]["context"])
+        validate_recovery(state)

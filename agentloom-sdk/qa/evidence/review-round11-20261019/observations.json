@@ -1,0 +1,194 @@
+[
+  {
+    "case": "accept_effect",
+    "proposal": "single",
+    "backend": "MemoryRuntimeStore",
+    "run_status": "succeeded",
+    "activations": 2,
+    "assistant_records": 1,
+    "model_calls": 1,
+    "loops_consumed": 1
+  },
+  {
+    "case": "accept_effect",
+    "proposal": "duplicate_with_revision",
+    "backend": "MemoryRuntimeStore",
+    "run_status": "running",
+    "activations": 596,
+    "assistant_records": 0,
+    "model_calls": 1,
+    "loops_consumed": 0
+  },
+  {
+    "case": "accept_effect",
+    "proposal": "duplicate_without_revision",
+    "backend": "MemoryRuntimeStore",
+    "run_status": "succeeded",
+    "activations": 2,
+    "assistant_records": 2,
+    "model_calls": 1,
+    "loops_consumed": 1
+  },
+  {
+    "case": "accept_effect",
+    "proposal": "single",
+    "backend": "FileRuntimeStore",
+    "run_status": "succeeded",
+    "activations": 2,
+    "assistant_records": 1,
+    "model_calls": 1,
+    "loops_consumed": 1
+  },
+  {
+    "case": "accept_effect",
+    "proposal": "duplicate_with_revision",
+    "backend": "FileRuntimeStore",
+    "run_status": "running",
+    "activations": 155,
+    "assistant_records": 0,
+    "model_calls": 1,
+    "loops_consumed": 0
+  },
+  {
+    "case": "accept_effect",
+    "proposal": "duplicate_without_revision",
+    "backend": "FileRuntimeStore",
+    "run_status": "succeeded",
+    "activations": 2,
+    "assistant_records": 2,
+    "model_calls": 1,
+    "loops_consumed": 1
+  },
+  {
+    "case": "model_intent",
+    "damage": "none",
+    "backend": "MemoryRuntimeStore",
+    "run_status": "succeeded",
+    "model_calls": 1,
+    "operation_count": 1,
+    "wait_error": null,
+    "recovery_error": null,
+    "resume_error": null,
+    "resume_model_calls": 0
+  },
+  {
+    "case": "model_intent",
+    "damage": "missing_record_ids",
+    "backend": "MemoryRuntimeStore",
+    "run_status": "running",
+    "model_calls": 1,
+    "operation_count": 1,
+    "wait_error": "PERSISTENCE_INVARIANT_BROKEN",
+    "recovery_error": {
+      "code": "PERSISTENCE_INVARIANT_BROKEN",
+      "field_path": "prompt_contract.request_records"
+    },
+    "resume_error": {
+      "code": "PERSISTENCE_INVARIANT_BROKEN",
+      "field_path": "prompt_contract.request_records"
+    },
+    "resume_model_calls": 0
+  },
+  {
+    "case": "model_intent",
+    "damage": "duplicate_record_ids",
+    "backend": "MemoryRuntimeStore",
+    "run_status": "running",
+    "model_calls": 1,
+    "operation_count": 1,
+    "wait_error": "PERSISTENCE_INVARIANT_BROKEN",
+    "recovery_error": {
+      "code": "PERSISTENCE_INVARIANT_BROKEN",
+      "field_path": "prompt_contract.request_records"
+    },
+    "resume_error": {
+      "code": "PERSISTENCE_INVARIANT_BROKEN",
+      "field_path": "prompt_contract.request_records"
+    },
+    "resume_model_calls": 0
+  },
+  {
+    "case": "model_intent",
+    "damage": "changed_sdk_text",
+    "backend": "MemoryRuntimeStore",
+    "run_status": "running",
+    "model_calls": 1,
+    "operation_count": 1,
+    "wait_error": "PERSISTENCE_INVARIANT_BROKEN",
+    "recovery_error": {
+      "code": "PERSISTENCE_INVARIANT_BROKEN",
+      "field_path": "prompt_contract.request_content"
+    },
+    "resume_error": {
+      "code": "PERSISTENCE_INVARIANT_BROKEN",
+      "field_path": "prompt_contract.request_content"
+    },
+    "resume_model_calls": 0
+  },
+  {
+    "case": "model_intent",
+    "damage": "none",
+    "backend": "FileRuntimeStore",
+    "run_status": "succeeded",
+    "model_calls": 1,
+    "operation_count": 1,
+    "wait_error": null,
+    "recovery_error": null,
+    "resume_error": null,
+    "resume_model_calls": 0
+  },
+  {
+    "case": "model_intent",
+    "damage": "missing_record_ids",
+    "backend": "FileRuntimeStore",
+    "run_status": "running",
+    "model_calls": 1,
+    "operation_count": 1,
+    "wait_error": "PERSISTENCE_INVARIANT_BROKEN",
+    "recovery_error": {
+      "code": "PERSISTENCE_INVARIANT_BROKEN",
+      "field_path": "prompt_contract.request_records"
+    },
+    "resume_error": {
+      "code": "PERSISTENCE_INVARIANT_BROKEN",
+      "field_path": "prompt_contract.request_records"
+    },
+    "resume_model_calls": 0
+  },
+  {
+    "case": "model_intent",
+    "damage": "duplicate_record_ids",
+    "backend": "FileRuntimeStore",
+    "run_status": "running",
+    "model_calls": 1,
+    "operation_count": 1,
+    "wait_error": "PERSISTENCE_INVARIANT_BROKEN",
+    "recovery_error": {
+      "code": "PERSISTENCE_INVARIANT_BROKEN",
+      "field_path": "prompt_contract.request_records"
+    },
+    "resume_error": {
+      "code": "PERSISTENCE_INVARIANT_BROKEN",
+      "field_path": "prompt_contract.request_records"
+    },
+    "resume_model_calls": 0
+  },
+  {
+    "case": "model_intent",
+    "damage": "changed_sdk_text",
+    "backend": "FileRuntimeStore",
+    "run_status": "running",
+    "model_calls": 1,
+    "operation_count": 1,
+    "wait_error": "PERSISTENCE_INVARIANT_BROKEN",
+    "recovery_error": {
+      "code": "PERSISTENCE_INVARIANT_BROKEN",
+      "field_path": "prompt_contract.request_content"
+    },
+    "resume_error": {
+      "code": "PERSISTENCE_INVARIANT_BROKEN",
+      "field_path": "prompt_contract.request_content"
+    },
+    "resume_model_calls": 0
+  }
+]
