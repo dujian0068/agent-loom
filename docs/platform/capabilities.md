@@ -27,7 +27,7 @@ HTTP／OpenAPI、数据库查询、向量检索、浏览器操作、文件读写
 ```text
 ToolVersion
   resource_id, version, name, description
-  source_kind             registered_function | integration | workspace
+  source_kind             registered_function | integration | workspace | runtime
   registry_key, implementation_digest
   input_schema, output_schema?
   execution_location      worker | sandbox | remote_service
@@ -35,9 +35,36 @@ ToolVersion
   effect_policy           read_only | idempotent | non_idempotent
 ```
 
-这份 DTO 是平台设计，不是上游 `BaseTool` 的原始序列化格式。首版原型中的 11 项文件操作是平台准备提供的工具清单，不是 LangChain 默认自动安装的工具。文件 Tool 通过 WorkspaceService 实现；`exec` 单独登记，必须具备沙箱授权。
+这份 DTO 是平台设计，不是上游 `BaseTool` 的原始序列化格式。原型工具目录同时展示可复用的上游能力、平台扩展和外部集成模板；条目的资源版本与 Schema 是平台适配合同，不代表上游包版本或真实执行已经实现。文件 Tool 通过 WorkspaceService 提供授权视图，具体操作可复用上游组件；`exec` 单独登记，必须具备沙箱授权。
 
 发布时固定实际工具名称和 Schema，拒绝同角色名称冲突及系统委派名称覆盖。运行时再校验角色授权，不能只靠“模型没有看到这个工具”阻止越权。带外部副作用的重试遵循[运行接入](runtime-integration.md#3-新请求与故障恢复)。
+
+### 2.1 工具目录与可选能力
+
+工具页统一提供搜索、分类、来源、依赖、固定版本、详情和引用。预置工具无需重新填写注册表单，但仍须显式绑定到角色；新建应用默认不选择工具。模型通常从该角色可用工具中决定是否调用，流程必须执行的步骤由 LangGraph 控制。
+
+| 分类 | 目录条目 | 来源和启用条件 |
+| --- | --- | --- |
+| 文件与工作区 | read / read_file、list / ls、glob、grep、write / write_file、edit / edit_file、delete | Deep Agents 提供相应能力；经平台适配并受工作区读写权限限制，delete 需后端支持 |
+| 文件扩展 | stat、patch、mkdir、move | 平台自有扩展，不标记为上游默认工具 |
+| 命令执行 | exec | 可适配 LangChain ShellToolMiddleware 或 Deep Agents execute；平台 profile 强制要求已接入且启用的应用沙箱 |
+| 任务清单 | write_todos | 按角色选择 TodoListMiddleware 能力，只更新角色任务清单；不改变 Plan 的任务依赖与调度状态 |
+| 子 Agent 编排 | task／专业 Executor | 目录提供到 Plan 配置的入口，主图调度 Executor 子图；首版不向所有角色开放自由委派或递归创建 Agent |
+| 联网搜索 | web-search | Tavily、Exa、Google Search 适配模板，须配置服务与凭据 |
+| 网页正文 | web-extract | Firecrawl、Tavily Extract 适配模板 |
+| 浏览器操作 | browser | Stagehand、AgentQL、Browserless 适配模板，须配置浏览器服务和操作权限 |
+| 数据库查询 | sql-query | Sail SQL 适配模板；MCP Toolbox 的成员从 MCP 页面发现和授权 |
+| 远端代码解释器 | code-interpreter | AWS AgentCore、Azure Dynamic Sessions 适配模板；使用供应商的隔离环境，不由应用本地沙箱开关决定可用性 |
+| 邮件 | gmail-search、gmail-send | Gmail；读取与发送分别授权 |
+| 日历 | calendar-list、calendar-create | Google Calendar；读取与创建分别授权 |
+| 云盘 | drive-search | Google Drive；限制为连接授权的文件范围 |
+| 自定义工具 | 示例 project-changes 及管理员注册项 | 引用受信注册标识，按原有版本流程维护 |
+
+上游参考：[Deep Agents 工具](https://docs.langchain.com/oss/python/deepagents/tools)、[LangChain 中间件](https://docs.langchain.com/oss/python/langchain/middleware/built-in)、[工具集成目录](https://docs.langchain.com/oss/python/integrations/tools/index)。
+
+外部集成初始为「待配置连接」，不能绑定；管理员配置后产生新的就绪资源版本，编辑者选择该版本加入角色草稿。连接更新保留历史版本，不自动替换草稿或发布绑定。原型只模拟选择服务商、连接名称和凭据引用；真实平台还须按 provider 校验 endpoint／实例、OAuth scope、部署包与 Schema，并提供单独的连接测试。模板不等于所有 provider 已纳入首版实现承诺。
+
+Skill 加载与 MCP 接入依旧使用独立页面。Skill、MCP 服务、沙箱和工作空间不作为普通 Tool 混入本目录。原型中 `task` 是编排能力说明；普通可调用 Tool 的数量与授权列表不包含这个入口。
 
 ## 3. MCP 接入
 

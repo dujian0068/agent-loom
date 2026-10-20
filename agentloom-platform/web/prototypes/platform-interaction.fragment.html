@@ -114,6 +114,20 @@
 #loom-platform-preview .lp-resource-form pre, #loom-platform-preview .lp-schema { white-space: pre-wrap; overflow-wrap: anywhere; font-size: 12px; background: var(--lp-soft); padding: 12px; border-radius: 6px; }
 #loom-platform-preview .lp-resource-version { margin: 0 0 12px 27px; }
 #loom-platform-preview .lp-resource-section { margin-top: 24px; }
+#loom-platform-preview .lp-tool-list { display: grid; gap: 0; }
+#loom-platform-preview .lp-tool-row { display: grid; grid-template-columns: minmax(0,1.5fr) minmax(150px,.8fr) auto; gap: 18px; align-items: center; padding: 18px 0; border-bottom: 1px solid var(--lp-line); }
+#loom-platform-preview .lp-tool-row h3 { margin: 0 0 6px; }
+#loom-platform-preview .lp-tool-row p { margin: 6px 0 0; font-size: 13px; }
+#loom-platform-preview .lp-tool-row code { overflow-wrap: anywhere; }
+#loom-platform-preview .lp-tool-row .lp-row { gap: 6px; }
+#loom-platform-preview .lp-tool-section { margin: 26px 0; }
+#loom-platform-preview .lp-tool-section > h2 { margin-bottom: 4px; }
+#loom-platform-preview .lp-tool-filter { min-width: 160px; }
+#loom-platform-preview .lp-sr { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+@media (max-width: 900px) {
+  #loom-platform-preview .lp-tool-row { grid-template-columns: minmax(0,1fr); gap: 10px; }
+  #loom-platform-preview .lp-tool-row > .lp-row:last-child { justify-content: flex-start; }
+}
 #loom-platform-preview dialog.lp-resource-dialog { width: min(640px, calc(100% - 32px)); }
 #loom-platform-preview .lp-callout { padding: 12px 14px; background: var(--lp-soft); border-radius: 8px; color: var(--lp-muted); font-size: 13px; margin: 15px 0; }
 #loom-platform-preview .lp-callout.lp-warning { background: var(--lp-warn-bg); color: var(--lp-warn); }
@@ -302,9 +316,11 @@
   let editorSection = 'basics';
   let capabilityRole = 'main';
   let fileToolsExpanded = false;
+  let integrationToolsExpanded = false;
   let appFilter = '';
   let navOpen = false;
   let resourceFilter = '';
+  let toolCategory = 'all';
   let resourceContext = null;
   const applications = [
     { name: '研发周报助手', mode: 'ReAct', description: '整理研发进展，生成面向团队的周报。', version: 3, revision: 8, publishedRevision: 7, prompt: '根据用户提供的研发进展，整理本周完成事项、待解决问题与下周计划。缺少依据时明确标注，不补写未知事实。', model: '团队通用模型', tools: true, dirty: false, valid: false, conflict: false, conflictHandled: false, otherRuns: 1, job: null, run: { status: 'running', version: 3, input: '请把本周的 SDK 接入进展整理成研发周报。', supplements: [], typed: '', timer: null } },
@@ -319,6 +335,51 @@
     {id:'write',name:'写入文件',file:true,write:true}, {id:'edit',name:'替换文本',file:true,write:true}, {id:'patch',name:'应用文件补丁',file:true,write:true},
     {id:'mkdir',name:'新建目录',file:true,write:true}, {id:'move',name:'移动文件',file:true,write:true}, {id:'delete',name:'删除文件',file:true,write:true}
   ];
+  const fileToolDefinitions = {
+    read: ['read_file','Deep Agents','读取工作区文件，可按行分页。'],
+    list: ['ls','Deep Agents','列出工作区目录与文件。'],
+    stat: ['stat','平台扩展','读取文件大小、类型和更新时间。'],
+    glob: ['glob','Deep Agents','按路径模式查找工作区文件。'],
+    grep: ['grep','Deep Agents','按关键词或正则搜索文件内容。'],
+    write: ['write_file','Deep Agents','创建或写入工作区文件。'],
+    edit: ['edit_file','Deep Agents','精确替换文件中的文本。'],
+    patch: ['patch','平台扩展','对工作区文件应用补丁。'],
+    mkdir: ['mkdir','平台扩展','在工作区中创建目录。'],
+    move: ['move','平台扩展','移动或重命名工作区文件。'],
+    delete: ['delete','Deep Agents','删除工作区文件或目录；需支持删除的后端。']
+  };
+  toolCatalog.forEach(function(tool) {
+    if (!tool.file) { tool.category = 'custom'; tool.origin = '团队注册'; return; }
+    const definition = fileToolDefinitions[tool.id];
+    Object.assign(tool,{version:'1.0.0',category:'files',preset:true,toolName:definition[0],origin:definition[1],description:definition[2],registry:'platform.workspace.' + tool.id,requirements:tool.write ? '工作区读写权限' : '工作区读取权限',schema:{type:'object',properties:{path:{type:'string'}},required:['path']}});
+    if (tool.id === 'glob') tool.schema = {type:'object',properties:{pattern:{type:'string'}},required:['pattern']};
+    if (tool.id === 'grep') tool.schema.properties.pattern = {type:'string'};
+    if (tool.id === 'write') tool.schema.properties.content = {type:'string'};
+    if (tool.id === 'edit') Object.assign(tool.schema.properties,{old_text:{type:'string'},new_text:{type:'string'}});
+    if (tool.id === 'patch') tool.schema.properties.patch = {type:'string'};
+    if (tool.id === 'move') tool.schema.properties.destination = {type:'string'};
+    tool.schema.required = Object.keys(tool.schema.properties);
+  });
+  toolCatalog.push(
+    {id:'exec',name:'执行命令与脚本',version:'1.0.0',category:'execution',preset:true,toolName:'exec',origin:'LangChain / Deep Agents',description:'在应用沙箱中执行命令、运行脚本和测试。',requirements:'已接入并启用执行沙箱',registry:'platform.sandbox.exec',schema:{type:'object',properties:{command:{type:'string'}},required:['command']}},
+    {id:'write-todos',name:'任务清单',version:'1.0.0',category:'execution',preset:true,toolName:'write_todos',origin:'LangChain',description:'维护待办、执行中和已完成的任务，供运行过程展示。',requirements:'按角色显式授权；不替代 Plan 图调度',registry:'platform.tasks.write_todos',schema:{type:'object',properties:{todos:{type:'array',items:{type:'object',properties:{content:{type:'string'},status:{type:'string',enum:['pending','in_progress','completed']}},required:['content','status']}}},required:['todos']}},
+    {id:'task',name:'子 Agent 委派',version:'1.0.0',category:'orchestration',preset:true,system:true,toolName:'task',origin:'LangGraph / Deep Agents',status:'system',description:'由 Plan 主图调度专业 Executor 子图，分配任务并汇总结果。',requirements:'配置 Plan 应用的专业执行器；各角色独立授权',registry:'platform.plan.dispatch',schema:{type:'object',properties:{executor_key:{type:'string'},task:{type:'string'}},required:['executor_key','task']}}
+  );
+  [
+    {id:'web-search',name:'联网搜索',description:'搜索网页，返回标题、链接和摘要。',providers:['Tavily','Exa','Google Search'],fields:{query:{type:'string'}}},
+    {id:'web-extract',name:'网页正文提取',description:'读取指定网页并提取正文与来源。',providers:['Firecrawl','Tavily Extract'],fields:{url:{type:'string'}}},
+    {id:'browser',name:'浏览器操作',description:'打开网页、读取页面并执行已授权的交互。',providers:['Stagehand','AgentQL','Browserless'],fields:{task:{type:'string'}}},
+    {id:'sql-query',name:'数据库查询',description:'查询授权数据库；通过连接权限限定可访问的数据。',providers:['Sail SQL'],fields:{query:{type:'string'}},connectionHint:'通过 MCP Toolbox 接入的数据库工具，请在 MCP 页面发现并逐成员绑定。'},
+    {id:'code-interpreter',name:'远端代码解释器',description:'在服务提供的隔离会话中运行代码、分析数据。',providers:['AWS AgentCore','Azure Dynamic Sessions'],fields:{code:{type:'string'}},connectionHint:'使用远端服务自己的执行环境，不依赖应用本地沙箱开关。'},
+    {id:'gmail-search',name:'搜索邮件',description:'搜索已授权邮箱的邮件。',providers:['Gmail'],fields:{query:{type:'string'}}},
+    {id:'gmail-send',name:'发送邮件',description:'向指定收件人发送邮件，单独授权发送能力。',providers:['Gmail'],fields:{to:{type:'string'},subject:{type:'string'},body:{type:'string'}}},
+    {id:'calendar-list',name:'读取日历',description:'读取授权日历在指定时间范围内的事件。',providers:['Google Calendar'],fields:{start:{type:'string'},end:{type:'string'}}},
+    {id:'calendar-create',name:'创建日历事件',description:'创建日历事件，单独授权写入能力。',providers:['Google Calendar'],fields:{title:{type:'string'},start:{type:'string'},end:{type:'string'}}},
+    {id:'drive-search',name:'检索云盘文件',description:'检索已授权 Google Drive 中的文件。',providers:['Google Drive'],fields:{query:{type:'string'}}}
+  ].forEach(function(tool) {
+    toolCatalog.push(Object.assign({},tool,{version:'1.0.0',category:'integrations',integration:true,origin:'LangChain 集成',status:'unconfigured',requirements:'服务连接与对应权限的凭据',registry:'platform.integration.' + tool.id.replace(/-/g,'_'),schema:{type:'object',properties:tool.fields,required:Object.keys(tool.fields)}}));
+  });
+  const toolCategories = {files:'文件与工作区',execution:'命令与任务',integrations:'外部工具集成',custom:'自定义工具',orchestration:'子 Agent 编排'};
   const skillCatalog = [
     {id:'weekly-report',name:'周报写作规范',version:'1.0',description:'按需读取写作规范、示例与参考资料。',scripts:false,source:'git',url:'https://git.example.com/team/skills.git',ref:'v1.0',directory:'weekly-report'},
     {id:'spreadsheet-helper',name:'表格整理',version:'1.1',description:'读取表格处理说明与配套脚本；运行脚本需另行授权。',scripts:true,source:'git',url:'https://git.example.com/team/skills.git',ref:'v1.1',directory:'spreadsheet-helper'}
@@ -328,15 +389,18 @@
     {id:'read_document',name:'读取文档',description:'读取指定文档的完整内容。',schema:{type:'object',properties:{id:{type:'string'}},required:['id']}}
   ]}];
   const catalogs = {tools:toolCatalog,skills:skillCatalog,mcp:mcpCatalog};
-  const resourceTypes = {tools:{name:'Tool',title:'Tool · 工具',add:'注册工具',icon:'wrench',description:'注册受信业务工具，供 Agent 按需绑定。内置文件工具与 exec 单独授权。'},skills:{name:'Skill',title:'Skill · 技能',add:'导入 Skill',icon:'book-open',description:'先导入技能包，再绑定到 Agent；SKILL.md 与包内资源以只读方式提供。'},mcp:{name:'MCP',title:'MCP · 服务',add:'添加 MCP',icon:'plug',description:'先添加连接并发现工具，再把固定版本的指定成员授权给 Agent。'}};
+  const resourceTypes = {tools:{name:'Tool',title:'Tool · 工具',add:'注册工具',icon:'wrench',description:'按需选用预置工具、配置外部集成或注册业务工具，再绑定到具体 Agent 角色。'},skills:{name:'Skill',title:'Skill · 技能',add:'导入 Skill',icon:'book-open',description:'先导入技能包，再绑定到 Agent；SKILL.md 与包内资源以只读方式提供。'},mcp:{name:'MCP',title:'MCP · 服务',add:'添加 MCP',icon:'plug',description:'先添加连接并发现工具，再把固定版本的指定成员授权给 Agent。'}};
   function clone(value) { return JSON.parse(JSON.stringify(value)); }
-  Object.values(catalogs).forEach(function(catalog) { catalog.forEach(function(resource) { resource.status = 'ready'; if (!resource.file) resource.versions = [clone(resource)]; }); });
+  Object.values(catalogs).forEach(function(catalog) { catalog.forEach(function(resource) { resource.status = resource.status || 'ready'; resource.versions = [clone(resource)]; }); });
   function resourceVersion(kind,id,version) {
     const resource = catalogs[kind].find(function(item) { return item.id === id; });
-    if (!resource || resource.file) return resource;
+    if (!resource) return resource;
     return version ? resource.versions.find(function(item) { return item.version === version; }) : resource;
   }
-  function availableResource(resource) { return resource.file ? resource : resource.versions.filter(function(item) { return item.status === 'ready'; }).slice(-1)[0]; }
+  function availableResource(resource) { return resource && resource.versions.filter(function(item) { return item.status === 'ready'; }).slice(-1)[0]; }
+  function resourceStatus(resource) { return {ready:'可绑定',pending:'待发现',unconfigured:'待配置连接',system:'由 Plan 配置'}[resource.status] || '不可用'; }
+  function toolSelected(config,id) { return id === 'exec' ? config.exec : config.tools.includes(id); }
+  function toolDescription(tool) { return esc(tool.description) + '<br>' + esc(tool.origin || '团队注册') + (tool.provider ? ' · ' + esc(tool.provider) : '') + (tool.requirements ? ' · ' + esc(tool.requirements) : ''); }
   function boundResource(kind,id,config) { return resourceVersion(kind,id,config.versions[kind][id]); }
   function enabledMcp(config) { return config.mcpBindings.filter(function(binding) { return binding.enabled; }); }
   function emptyCapabilities() { return {tools:[],skills:[],versions:{tools:{},skills:{}},mcpBindings:[],exec:false}; }
@@ -362,7 +426,7 @@
     const roles = [{name:app.mode === 'Plan' ? 'Planner' : '主 Agent',capabilities:snapshot.capabilities}].concat(snapshot.executors || []);
     return '<details class="lp-details"><summary>查看固定的能力与成员</summary>' + roles.map(function(role) {
       const config = role.capabilities;
-      const tools = config.tools.map(function(id) { const tool = boundResource('tools',id,config); return esc(tool.name) + (tool.version ? ' · v' + esc(tool.version) : ' · 内置'); }).concat(config.exec ? ['exec · 团队 Python 环境 v1'] : []);
+      const tools = config.tools.concat(config.exec ? ['exec'] : []).map(function(id) { const tool = boundResource('tools',id,config); return esc(tool.name) + ' · v' + esc(tool.version) + (tool.provider ? ' · ' + esc(tool.provider) : ''); });
       const skills = config.skills.map(function(id) { const skill = boundResource('skills',id,config); return esc(skill.name) + ' · v' + esc(skill.version); });
       const connections = enabledMcp(config).map(function(binding) { const service = resourceVersion('mcp',binding.id,binding.version); return esc(service.name) + ' · v' + esc(binding.version) + '：' + binding.members.map(esc).join('、'); });
       return '<div class="lp-record"><h3>' + esc(role.name) + '</h3><p>Tool：' + (tools.join('；') || '未选择') + '</p><p>Skill：' + (skills.join('；') || '未选择') + '</p><p>MCP：' + (connections.join('；') || '未启用') + '</p></div>';
@@ -438,10 +502,10 @@
     return '<div class="lp-field lp-resource-version"><label for="lp-pin-' + kind + '-' + resource.id + '">绑定版本 · ' + esc(resource.name) + '</label><select id="lp-pin-' + kind + '-' + resource.id + '" data-binding-version="' + kind + '" data-resource-id="' + resource.id + '" data-focus-key="pin-' + kind + '-' + resource.id + '">' + versions.map(function(item) { return '<option value="' + esc(item.version) + '"' + (version === item.version ? ' selected' : '') + '>v' + esc(item.version) + '</option>'; }).join('') + '</select><small>新版本不会自动替换已有授权。</small></div>';
   }
   function resourceCapability(kind,resource,config) {
-    const checked = config[kind].includes(resource.id);
-    const pinned = checked ? boundResource(kind,resource.id,config) : availableResource(resource);
-    if (!pinned) return '';
-    return capabilityChoice(kind,resource.id,esc(pinned.name) + ' · v' + esc(pinned.version),esc(pinned.description) + (kind === 'skills' ? '<br><code>/skills/' + resource.id + '</code> · 只读' + (pinned.scripts ? ' · 包含脚本' : '') : ''),checked) + (checked ? bindingVersionPicker(kind,resource,pinned.version) : '');
+    const checked = kind === 'tools' ? toolSelected(config,resource.id) : config[kind].includes(resource.id);
+    const pinned = (checked ? boundResource(kind,resource.id,config) : availableResource(resource)) || resource;
+    const disabled = pinned.status !== 'ready' && !checked;
+    return capabilityChoice(kind,resource.id,esc(pinned.name) + (pinned.toolName ? ' <code>' + esc(pinned.toolName) + '</code>' : '') + ' · v' + esc(pinned.version),(kind === 'tools' ? toolDescription(pinned) : esc(pinned.description) + '<br><code>/skills/' + resource.id + '</code> · 只读' + (pinned.scripts ? ' · 包含脚本' : '')) + (disabled ? '<br>待管理员配置连接，完成后可选择。' : ''),checked,disabled) + (checked ? bindingVersionPicker(kind,resource,pinned.version) : '');
   }
   function mcpCapability(resource,config) {
     const binding = config.mcpBindings.find(function(item) { return item.id === resource.id; });
@@ -458,10 +522,13 @@
     return '<div class="lp-formsection"><div class="lp-row lp-spread"><h2>能力配置</h2><span class="lp-muted">' + capabilitySummary(config) + '</span></div>' +
       (app.mode === 'Plan' ? '<div class="lp-field"><label for="lp-capability-role">配置对象</label><select id="lp-capability-role" data-role-select data-focus-key="role-select">' + roles.map(function(role) { return '<option value="' + esc(role.key) + '"' + (role.key === capabilityRole ? ' selected' : '') + '>' + esc(role.name) + '</option>'; }).join('') + '</select><small>只授权给当前角色；Planner 与各执行器的能力分别配置。</small></div>' : '<p class="lp-muted">选择主 Agent 可调用的能力，发布时固定资源版本。</p>') +
       '<div class="lp-capabilities-grid"><section class="lp-capability-group"><div class="lp-row lp-spread"><h3>Tool · 工具</h3><div class="lp-row">' + badge((config.tools.length + (config.exec ? 1 : 0)) + ' 项已选') + button('管理 Tool','manage-resources','lp-quiet',false,' data-kind="tools"') + '</div></div>' +
-      toolCatalog.filter(function(tool) { return !tool.file; }).map(function(tool) { return resourceCapability('tools',tool,config); }).join('') +
-      '<details class="lp-details" data-disclosure="file-tools"' + (fileToolsExpanded ? ' open' : '') + '><summary>文件工具 · 已选 ' + selectedFiles + ' / 11 项</summary><p class="lp-muted" style="margin-top:10px">访问授权工作区；写入类工具还需工作区允许读写。</p><div class="lp-grid">' + toolCatalog.filter(function(tool) { return tool.file; }).map(function(tool) { return capabilityChoice('tools',tool.id,esc(tool.name) + ' <code>' + tool.id + '</code>',tool.write ? '写入 / 管理' : '只读 / 搜索',config.tools.includes(tool.id)); }).join('') + '</div></details>' +
-      capabilityChoice('exec','exec','执行命令与脚本 <code>exec</code>','仅在已授权沙箱内执行；勾选 Skill 不会自动开启此工具。',config.exec,!canExecute && !config.exec) +
-      (!canExecute ? '<div class="lp-row"><span class="lp-muted">' + (config.exec ? '已选 exec，但沙箱当前不可用。保存后校验会提示此依赖。' : '启用沙箱后才可选择脚本执行。') + '</span>' + button('配置沙箱','config-environment','lp-quiet') + '</div>' : '<p class="lp-muted">执行位置：团队隔离环境 · /work</p>') + '</section>' +
+      '<p class="lp-muted">仅当前角色获得所选工具；目录新增工具不会自动加入已有 Agent。</p>' +
+      toolCatalog.filter(function(tool) { return !tool.file && !tool.integration && !tool.system && tool.id !== 'exec'; }).map(function(tool) { return resourceCapability('tools',tool,config); }).join('') +
+      '<details class="lp-details" data-disclosure="file-tools"' + (fileToolsExpanded ? ' open' : '') + '><summary>文件工具 · 已选 ' + selectedFiles + ' / ' + toolCatalog.filter(function(tool) { return tool.file; }).length + ' 项</summary><p class="lp-muted" style="margin-top:10px">逐项授权工作区操作；标明上游能力与平台扩展，写入类还需读写权限。</p><div class="lp-grid">' + toolCatalog.filter(function(tool) { return tool.file; }).map(function(tool) { return resourceCapability('tools',tool,config); }).join('') + '</div></details>' +
+      capabilityChoice('exec','exec','执行命令与脚本 <code>exec</code>','LangChain / Deep Agents · 仅在应用沙箱内执行；勾选 Skill 不会自动开启。',config.exec,!canExecute && !config.exec) +
+      (!canExecute ? '<div class="lp-row"><span class="lp-muted">' + (config.exec ? '已选 exec，但沙箱当前不可用。保存后校验会提示此依赖。' : '启用沙箱后才可选择脚本执行。') + '</span>' + button('配置沙箱','config-environment','lp-quiet') + '</div>' : '<p class="lp-muted">执行位置：团队隔离环境 · /work</p>') +
+      '<details class="lp-details" data-disclosure="integration-tools"' + (integrationToolsExpanded ? ' open' : '') + '><summary>外部工具集成 · 已选 ' + config.tools.filter(function(id) { return toolCatalog.some(function(tool) { return tool.id === id && tool.integration; }); }).length + ' 项</summary><p class="lp-muted">管理员先在工具页配置服务与凭据，再按角色授权。远端代码解释器使用服务自己的隔离环境。</p>' + toolCatalog.filter(function(tool) { return tool.integration; }).map(function(tool) { return resourceCapability('tools',tool,config); }).join('') + '</details>' +
+      '<p class="lp-muted">子 Agent 委派由 Plan 主图控制，在基础配置中维护专业执行器；不向各角色自动开放 task 调用。</p></section>' +
       '<section class="lp-capability-group"><div class="lp-row lp-spread"><h3>Skill · 技能包</h3><div class="lp-row">' + badge(config.skills.length + ' 项已选') + button('管理 Skill','manage-resources','lp-quiet',false,' data-kind="skills"') + '</div></div>' + skillCatalog.map(function(skill) { return resourceCapability('skills',skill,config); }).join('') + '<p class="lp-muted">选中后可按需读取 SKILL.md 与包内资源。脚本执行授权独立配置。</p></section>' +
       '<section class="lp-capability-group"><div class="lp-row lp-spread"><h3>MCP · 服务连接</h3><div class="lp-row">' + badge(enabledMcp(config).length + ' 个服务已启用') + button('管理 MCP','manage-resources','lp-quiet',false,' data-kind="mcp"') + '</div></div>' +
       mcpCatalog.map(function(resource) { return mcpCapability(resource,config); }).join('') + '<p class="lp-muted">未发现工具的连接不可绑定，请先到 MCP 页面完成发现并固定版本。</p></section></div></div>';
@@ -495,6 +562,11 @@
         else if (!binding.members.length || binding.members.some(function(id) { return !resource.members.some(function(member) { return member.id === id; }); })) add('capabilities',role.name + '：MCP「' + resource.name + '」至少选择一个此版本已发现的工具成员。',role.key);
       });
       if (config.exec && (!app.environment.sandboxEnabled || !options.sandboxReady)) add('capabilities',role.name + '：exec 需要已启用且可用的执行沙箱。',role.key);
+      config.tools.forEach(function(id) {
+        const tool = boundResource('tools',id,config);
+        if (tool && tool.system) add('capabilities',role.name + '：子 Agent 委派须通过 Plan 执行器配置。',role.key);
+        if (tool && tool.integration && (!tool.provider || !tool.connectionName || !tool.credential)) add('capabilities',role.name + '：' + tool.name + ' 缺少服务连接与凭据。',role.key);
+      });
       if (app.environment.access === 'readonly' && toolCatalog.some(function(tool) { return tool.write && config.tools.includes(tool.id); })) add('capabilities',role.name + '：已选择写入类文件工具，请改为读写工作区或取消这些工具。',role.key);
     });
     return errors;
@@ -558,7 +630,7 @@
         if (!entry.snapshot) return;
         roleConfigurations(Object.assign({mode:app.mode},entry.snapshot)).forEach(function(role) {
           const config = role.capabilities;
-          const matches = kind === 'mcp' ? enabledMcp(config).some(function(binding) { return binding.id === id && (!version || binding.version === version); }) : config[kind].includes(id) && (!version || config.versions[kind][id] === version);
+          const matches = kind === 'mcp' ? enabledMcp(config).some(function(binding) { return binding.id === id && (!version || binding.version === version); }) : (kind === 'tools' ? toolSelected(config,id) : config[kind].includes(id)) && (!version || config.versions[kind][id] === version);
           if (matches) references.push({index:index,app:app.name,role:role.name,stage:entry.label});
         });
       });
@@ -566,6 +638,7 @@
     return references;
   }
   function resourcePage(kind) {
+    if (kind === 'tools') return toolsPage();
     const type = resourceTypes[kind];
     const resources = catalogs[kind].filter(function(resource) { return !resource.file; });
     const visible = resources.filter(function(resource) { return (resource.name + ' ' + resource.id).toLocaleLowerCase().includes(resourceFilter.trim().toLocaleLowerCase()); });
@@ -579,8 +652,53 @@
         const meta = kind === 'tools' ? '受信工具注册表 · ' + esc(resource.registry) : kind === 'skills' ? 'SKILL.md · ' + (resource.scripts ? '含脚本，执行需单独授权' : '规范与参考资料') : esc(resource.transport) + ' · ' + (ready ? resource.members.length + ' 个固定成员' : '尚未发现工具');
         return '<article class="lp-panel lp-resource-card" aria-label="' + esc(resource.name) + '"><div class="lp-row lp-spread"><div class="lp-row"><div class="lp-app-icon">' + icon(type.icon) + '</div><div><h2>' + esc(resource.name) + '</h2><code class="lp-muted">' + esc(resource.id) + '</code></div></div>' + badge(ready ? '可绑定' : '待发现',ready ? 'lp-good' : 'lp-warning') + '</div><p class="lp-description lp-muted">' + esc(resource.description) + '</p><div class="lp-row">' + badge('v' + resource.version) + '<span class="lp-muted">' + resource.versions.length + ' 个版本 · ' + count + ' 个应用引用</span></div><p class="lp-muted">' + meta + '</p><div class="lp-app-actions">' + button('详情与版本','resource-detail','',false,resourceAttributes(kind,resource)) + '<div class="lp-row">' + (!ready && canManageResources() ? button('发现工具','resource-discover','lp-primary',false,resourceAttributes(kind,resource)) : button('绑定到应用','resource-bind','lp-primary',!ready,resourceAttributes(kind,resource))) + '</div></div></article>';
       }).join('') + (!visible.length ? '<div class="lp-empty"><h2>' + (resourceFilter ? '没有匹配的资源' : '还没有 ' + type.name) + '</h2><p class="lp-muted">' + (resourceFilter ? '调整搜索条件后重试。' : '添加完成后，Agent 才能选择并绑定此类资源。') + '</p></div>' : '') + '</div>' +
-      (kind === 'tools' ? '<section class="lp-panel lp-resource-section"><div class="lp-row lp-spread"><h2>内置能力</h2>' + badge('平台提供，无需注册') + '</div><details class="lp-details"><summary>文件工具 · 11 项，按角色逐项授权</summary><div class="lp-grid">' + toolCatalog.filter(function(tool) { return tool.file; }).map(function(tool) { return '<p><code>' + tool.id + '</code> · ' + tool.name + ' <span class="lp-muted">（' + (tool.write ? '需要工作区写权限' : '只读 / 搜索') + '）</span></p>'; }).join('') + '</div></details><p class="lp-muted"><code>exec</code> · 执行命令与脚本。先在应用中启用可用的执行沙箱，再单独授权；导入 Skill 不会自动开启。</p></section>' : '') +
       '<p class="lp-caption" style="margin-top:20px">交互预览：注册、导入和发现使用本页示例数据。刷新后重置，不连接外部服务。</p>';
+  }
+  function toolActions(tool) {
+    const attributes = resourceAttributes('tools',tool);
+    if (tool.system) return button('配置执行器','tool-plan','',false,attributes);
+    if (tool.status === 'unconfigured') return canManageResources() ? button('配置连接','tool-connect','lp-primary',false,attributes) : button('待管理员配置','tool-connect','',true,attributes);
+    return button('绑定到应用','resource-bind','lp-primary',tool.status !== 'ready',attributes);
+  }
+  function toolsPage() {
+    const query = resourceFilter.trim().toLocaleLowerCase();
+    const visible = toolCatalog.filter(function(tool) {
+      return (toolCategory === 'all' || tool.category === toolCategory) && [tool.name,tool.id,tool.toolName,tool.origin,tool.description].concat(tool.providers || []).join(' ').toLocaleLowerCase().includes(query);
+    });
+    return '<div class="lp-header"><div class="lp-row lp-spread"><h1>Tool · 工具</h1>' + (canManageResources() ? button(icon('plus') + '注册工具','resource-create','lp-primary',false,' data-kind="tools"') : '') + '</div><p class="lp-muted">' + resourceTypes.tools.description + '</p></div>' +
+      '<div class="lp-toolbar"><label class="lp-search">' + icon('search') + '<input type="search" data-field="resource-search" aria-label="搜索资源名称或标识" placeholder="搜索名称、来源或服务商" value="' + esc(resourceFilter) + '"></label><div class="lp-field lp-tool-filter"><label class="lp-sr" for="lp-tool-category">工具分类</label><select id="lp-tool-category" data-tool-category data-focus-key="tool-category"><option value="all">全部分类</option>' + Object.keys(toolCategories).map(function(key) { return '<option value="' + key + '"' + (toolCategory === key ? ' selected' : '') + '>' + toolCategories[key] + '</option>'; }).join('') + '</select></div><span class="lp-muted">' + visible.length + ' / ' + toolCatalog.length + ' 项能力</span></div>' +
+      Object.keys(toolCategories).map(function(category) {
+        const tools = visible.filter(function(tool) { return tool.category === category; });
+        if (!tools.length) return '';
+        return '<section class="lp-tool-section"><div class="lp-row lp-spread"><h2>' + toolCategories[category] + '</h2>' + badge(tools.length + ' 项') + '</div><div class="lp-tool-list">' + tools.map(function(tool) {
+          const count = new Set(resourceReferences('tools',tool.id).map(function(reference) { return reference.index; })).size;
+          return '<article class="lp-tool-row" aria-label="' + esc(tool.name) + '"><div><h3>' + esc(tool.name) + '</h3><code class="lp-muted">' + esc(tool.toolName || tool.id) + '</code><p class="lp-muted">' + esc(tool.description) + '</p></div><div><div class="lp-row">' + badge(tool.origin) + badge(resourceStatus(tool),tool.status === 'ready' ? 'lp-good' : '') + '</div><p class="lp-muted">' + esc(tool.provider || (tool.providers || []).join(' / ') || tool.requirements || '受信业务实现') + '</p><p class="lp-muted">' + (tool.system ? '在 Plan 应用内配置' : '资源 v' + esc(tool.version) + ' · ' + count + ' 个应用引用') + '</p></div><div class="lp-row">' + button('详情','resource-detail','',false,resourceAttributes('tools',tool)) + toolActions(tool) + '</div></article>';
+        }).join('') + '</div></section>';
+      }).join('') +
+      (!visible.length ? '<div class="lp-empty"><h2>没有匹配的工具</h2><p class="lp-muted">调整搜索内容或工具分类后重试。</p></div>' : '') +
+      '<div class="lp-row">' + button('管理 Skill','manage-resources','lp-quiet',false,' data-kind="skills"') + button('管理 MCP','manage-resources','lp-quiet',false,' data-kind="mcp"') + '<span class="lp-muted">技能包和 MCP 服务分别管理，绑定时按角色授权。</span></div>' +
+      '<p class="lp-caption" style="margin-top:20px">交互预览：预置工具和集成模板演示选择与绑定，尚未实现真实执行。连接配置仅使用示例数据，刷新后重置。</p>';
+  }
+  function openToolConnection(id) {
+    if (!canManageResources()) return;
+    const tool = resourceVersion('tools',id);
+    if (!tool || !tool.integration) return;
+    resourceContext = {kind:'tools',id:id};
+    openDialog('配置连接 · ' + tool.name,'<div class="lp-callout">仅模拟连接配置，不访问外部服务。保存为新的资源版本，已有绑定保持原版本。</div><div class="lp-resource-form"><div class="lp-field"><label for="lp-tool-provider">服务商</label><select id="lp-tool-provider">' + tool.providers.map(function(provider) { return '<option' + (provider === tool.provider ? ' selected' : '') + '>' + esc(provider) + '</option>'; }).join('') + '</select></div>' + resourceField('lp-tool-connection','连接名称（必填）',tool.connectionName || '',' maxlength="100" placeholder="例如：团队搜索服务"') + '<div class="lp-field"><label for="lp-tool-credential">服务凭据（示例引用）</label><select id="lp-tool-credential"><option value="">请选择已授权凭据</option><option value="team-service"' + (tool.credential === 'team-service' ? ' selected' : '') + '>团队服务凭据 · 模拟</option><option value="team-oauth"' + (tool.credential === 'team-oauth' ? ' selected' : '') + '>团队 OAuth 授权 · 模拟</option></select><small>真实平台按服务商展示匹配的凭据及权限，不在此填写密钥。</small></div>' + (tool.connectionHint ? '<p class="lp-muted">' + esc(tool.connectionHint) + '</p>' : '') + '</div><p id="lp-resource-error" class="lp-form-error" role="alert"></p><div class="lp-dialog-actions">' + button('取消','close') + button('模拟配置并启用新版本','tool-connect-save','lp-primary') + '</div>','resource-tool-connection');
+  }
+  function saveToolConnection() {
+    if (!canManageResources() || modal !== 'resource-tool-connection' || !resourceContext) return;
+    const tool = resourceVersion('tools',resourceContext.id), connectionName = root.querySelector('#lp-tool-connection').value.trim(), credential = root.querySelector('#lp-tool-credential').value;
+    if (!connectionName || connectionName.length > 100) { resourceError('请填写 1–100 字的连接名称。','lp-tool-connection'); return; }
+    if (!credential) { resourceError('请选择服务凭据引用。','lp-tool-credential'); return; }
+    const record = clone(tool); delete record.versions;
+    Object.assign(record,{version:nextResourceVersion(tool.version),status:'ready',connectionName:connectionName,credential:credential,provider:root.querySelector('#lp-tool-provider').value});
+    tool.versions.push(record); Object.assign(tool,clone(record));
+    closeDialog(); render(); feedback('连接已模拟配置，可绑定到应用。已有发布与绑定版本保持不变。'); showResourceDetail('tools',tool.id,record.version);
+  }
+  function openPlanTool() {
+    const plans = applications.map(function(app,index) { return {app:app,index:index}; }).filter(function(item) { return item.app.mode === 'Plan'; });
+    openDialog('配置子 Agent 委派','<p class="lp-muted">在 Plan 应用中添加专业执行器，由主图调度 Executor 子图。任务清单和 task 工具不会自动创建或授权执行器。</p>' + (plans.length ? '<div class="lp-field"><label for="lp-plan-app">Plan 应用</label><select id="lp-plan-app">' + plans.map(function(item) { return '<option value="' + item.index + '">' + esc(item.app.name) + '</option>'; }).join('') + '</select></div>' : '<p class="lp-muted">尚无 Plan 应用。请新建应用并在填写名称时选择 Plan。</p>') + '<div class="lp-dialog-actions">' + button('关闭','close') + button('打开基础配置','tool-plan-open','lp-primary',!plans.length) + '</div>','resource-plan');
   }
   function resourceField(id,label,value,extra,textarea) {
     return '<div class="lp-field"><label for="' + id + '">' + label + '</label>' + (textarea ? '<textarea id="' + id + '"' + (extra || '') + '>' + esc(value) + '</textarea>' : '<input id="' + id + '" value="' + esc(value) + '"' + (extra || '') + '>') + '</div>';
@@ -591,6 +709,7 @@
   function openResourceForm(kind,id) {
     if (!canManageResources()) return;
     const resource = id ? resourceVersion(kind,id) : null;
+    if (kind === 'tools' && resource && (resource.preset || resource.integration)) return;
     const data = resource || {id:'',name:'',description:'',version:'1.0.0',registry:'',schema:{type:'object',properties:{},additionalProperties:false},source:'git',url:'',ref:'',directory:'',scripts:false,transport:'streamable-http',credential:'none'};
     resourceContext = {kind:kind,id:id || null};
     const fields = '<div class="lp-grid">' + resourceField('lp-resource-name','显示名称（必填）',data.name,' maxlength="100" required') + resourceField('lp-resource-id','资源标识（必填）',data.id,' maxlength="64" required placeholder="例如：issue-search"' + (id ? ' readonly' : '')) + '</div><p class="lp-muted">标识使用小写字母、数字或短横线，以字母开头，创建后固定。</p>' +
@@ -623,6 +742,7 @@
     if (!/^\d{1,6}(?:\.\d{1,6}){0,2}$/.test(version) || existing && existing.versions.some(function(item) { return item.version === version; })) { resourceError('请使用未占用的数字版本，例如 1.0.0。','lp-resource-version'); return; }
     const record = {id:id,name:name,version:version,description:description,status:kind === 'mcp' ? 'pending' : 'ready'};
     if (kind === 'tools') {
+      record.category = 'custom'; record.origin = '团队注册';
       record.registry = value('registry');
       if (!/^[A-Za-z_][A-Za-z0-9_.:-]{0,127}$/.test(record.registry)) { resourceError('请填写合法的受信工具注册标识，例如 team.issue_search。','lp-resource-registry'); return; }
       try { record.schema = JSON.parse(value('schema')); } catch (_) { resourceError('输入参数 Schema 不是有效的 JSON。','lp-resource-schema'); return; }
@@ -648,12 +768,12 @@
   function resourceDetailBody(kind,id,version) {
     const resource = resourceVersion(kind,id), data = resourceVersion(kind,id,version);
     const references = resourceReferences(kind,id,version);
-    return '<div class="lp-field" style="margin-top:16px"><label for="lp-detail-version">查看资源版本</label><select id="lp-detail-version" data-detail-version>' + resource.versions.map(function(item) { return '<option value="' + esc(item.version) + '"' + (version === item.version ? ' selected' : '') + '>v' + esc(item.version) + ' · ' + (item.status === 'ready' ? '可绑定' : '待发现') + '</option>'; }).join('') + '</select></div><dl class="lp-facts"><dt>资源标识</dt><dd><code>' + esc(id) + '</code></dd><dt>用途描述</dt><dd>' + esc(data.description) + '</dd>' +
-      (kind === 'tools' ? '<dt>注册标识</dt><dd><code>' + esc(data.registry) + '</code></dd>' :
+    return '<div class="lp-field" style="margin-top:16px"><label for="lp-detail-version">查看资源版本</label><select id="lp-detail-version" data-detail-version>' + resource.versions.map(function(item) { return '<option value="' + esc(item.version) + '"' + (version === item.version ? ' selected' : '') + '>v' + esc(item.version) + ' · ' + resourceStatus(item) + '</option>'; }).join('') + '</select></div><dl class="lp-facts"><dt>资源标识</dt><dd><code>' + esc(id) + '</code></dd><dt>用途描述</dt><dd>' + esc(data.description) + '</dd>' +
+      (kind === 'tools' ? '<dt>能力来源</dt><dd>' + esc(data.origin) + '</dd><dt>启用条件</dt><dd>' + esc(data.requirements || '绑定到应用角色') + '</dd><dt>注册标识</dt><dd><code>' + esc(data.registry) + '</code></dd>' + (data.integration ? '<dt>服务商</dt><dd>' + esc(data.provider || data.providers.join(' / ')) + '</dd><dt>服务连接</dt><dd>' + esc(data.connectionName || '尚未配置') + '</dd><dt>凭据引用</dt><dd>' + esc(data.credential || '尚未选择') + '</dd>' : '') :
       kind === 'skills' ? '<dt>导入来源</dt><dd>' + esc(data.url) + (data.ref ? '<br>' + esc(data.ref) + (data.directory ? ' · ' + esc(data.directory) : '') : '') + '</dd><dt>包内资源</dt><dd>SKILL.md · references/' + (data.scripts ? ' · scripts/' : '') + '</dd><dt>逻辑路径</dt><dd><code>/skills/' + esc(id) + '</code> · 只读</dd>' :
       '<dt>传输协议</dt><dd>' + esc(data.transport) + '</dd><dt>服务地址</dt><dd>' + esc(data.url) + '</dd><dt>认证凭据</dt><dd>' + (data.credential === 'none' ? '无需认证' : '团队 MCP 凭据 · 仅保存引用') + '</dd>') + '</dl>' +
-      (kind === 'tools' ? '<details class="lp-details"><summary>输入参数 Schema</summary><pre class="lp-schema">' + esc(JSON.stringify(data.schema,null,2)) + '</pre></details>' : kind === 'mcp' ? '<h3>固定工具成员 · ' + data.members.length + '</h3>' + (data.status === 'pending' ? '<div class="lp-callout lp-warning">此版本尚未完成发现，不能绑定到 Agent。其他已就绪版本仍可使用。</div>' : data.members.map(function(member) { return '<details class="lp-details"><summary>' + (member.name === member.id ? esc(member.id) : esc(member.name) + ' · ' + esc(member.id)) + '</summary><p>' + esc(member.description) + '</p><pre class="lp-schema">' + esc(JSON.stringify(member.schema,null,2)) + '</pre></details>'; }).join('')) : '<p class="lp-muted">绑定后可按需读取说明和资源；包含脚本不代表允许执行。</p>') +
-      '<div class="lp-resource-section"><h3>此版本的应用引用</h3>' + (references.length ? references.map(function(reference) { return '<div class="lp-record"><strong>' + esc(reference.app) + '</strong><p>' + esc(reference.role) + ' · ' + esc(reference.stage) + '</p></div>'; }).join('') : '<p class="lp-muted">暂无引用。绑定到应用后，在草稿中继续配置、校验并发布。</p>') + '</div><div class="lp-dialog-actions">' + button('关闭','close') + (canManageResources() ? button('添加新版本','resource-version','',false,resourceAttributes(kind,resource,version)) : '') + (kind === 'mcp' && data.status !== 'ready' && canManageResources() ? button('发现工具','resource-discover','lp-primary',false,resourceAttributes(kind,resource,version)) : button('绑定到应用','resource-bind','lp-primary',data.status !== 'ready',resourceAttributes(kind,resource,version))) + '</div>';
+      (kind === 'tools' ? '<p class="lp-muted">' + (data.preset || data.integration ? '此处展示平台适配合同与资源版本，不代表上游包版本或已实现的工具。' : '受信注册工具按固定版本提供参数定义。') + (data.connectionHint ? ' ' + esc(data.connectionHint) : '') + '</p><details class="lp-details"><summary>平台输入参数 Schema</summary><pre class="lp-schema">' + esc(JSON.stringify(data.schema,null,2)) + '</pre></details>' : kind === 'mcp' ? '<h3>固定工具成员 · ' + data.members.length + '</h3>' + (data.status === 'pending' ? '<div class="lp-callout lp-warning">此版本尚未完成发现，不能绑定到 Agent。其他已就绪版本仍可使用。</div>' : data.members.map(function(member) { return '<details class="lp-details"><summary>' + (member.name === member.id ? esc(member.id) : esc(member.name) + ' · ' + esc(member.id)) + '</summary><p>' + esc(member.description) + '</p><pre class="lp-schema">' + esc(JSON.stringify(member.schema,null,2)) + '</pre></details>'; }).join('')) : '<p class="lp-muted">绑定后可按需读取说明和资源；包含脚本不代表允许执行。</p>') +
+      '<div class="lp-resource-section"><h3>此版本的应用引用</h3>' + (references.length ? references.map(function(reference) { return '<div class="lp-record"><strong>' + esc(reference.app) + '</strong><p>' + esc(reference.role) + ' · ' + esc(reference.stage) + '</p></div>'; }).join('') : '<p class="lp-muted">暂无引用。绑定到应用后，在草稿中继续配置、校验并发布。</p>') + '</div><div class="lp-dialog-actions">' + button('关闭','close') + (canManageResources() && !resource.preset && !resource.integration ? button('添加新版本','resource-version','',false,resourceAttributes(kind,resource,version)) : '') + (canManageResources() && data.integration && data.status === 'ready' ? button('配置新版本连接','tool-connect','',false,resourceAttributes(kind,resource,version)) : '') + (kind === 'tools' ? toolActions(data) : kind === 'mcp' && data.status !== 'ready' && canManageResources() ? button('发现工具','resource-discover','lp-primary',false,resourceAttributes(kind,resource,version)) : button('绑定到应用','resource-bind','lp-primary',data.status !== 'ready',resourceAttributes(kind,resource,version))) + '</div>';
   }
   function showResourceDetail(kind,id,version) {
     resourceContext = {kind:kind,id:id,version:version};
@@ -708,7 +828,7 @@
     const resource = resourceVersion(kind,id,version);
     if (!resource || resource.status !== 'ready') return;
     resourceContext = {kind:kind,id:id,version:version};
-    openDialog('绑定到应用','<p class="lp-muted">' + esc(resource.name) + ' · v' + esc(version) + '。加入指定角色的草稿，保存并发布后生效；已有同名资源将切换到此版本。</p><div class="lp-resource-form"><div class="lp-field"><label for="lp-bind-app">目标应用</label><select id="lp-bind-app" data-bind-app>' + applications.map(function(app,index) { return '<option value="' + index + '"' + (index === selected ? ' selected' : '') + '>' + esc(app.name) + ' · ' + app.mode + '</option>'; }).join('') + '</select></div><div class="lp-field"><label for="lp-bind-role">授权角色</label><select id="lp-bind-role" data-bind-role>' + bindRoleOptions(selected) + '</select></div><div id="lp-bind-members"></div></div><p id="lp-resource-error" class="lp-form-error" role="alert"></p><div class="lp-dialog-actions">' + button('取消','close') + button('加入草稿并配置','resource-bind-save','lp-primary') + '</div>','resource-bind');
+    openDialog('绑定到应用','<p class="lp-muted">' + esc(resource.name) + ' · v' + esc(version) + '。加入指定角色的草稿，保存并发布后生效；已有同名资源将切换到此版本。</p>' + (resource.requirements ? '<p class="lp-muted">启用条件：' + esc(resource.requirements) + '。保存后校验会检查应用依赖。</p>' : '') + '<div class="lp-resource-form"><div class="lp-field"><label for="lp-bind-app">目标应用</label><select id="lp-bind-app" data-bind-app>' + applications.map(function(app,index) { return '<option value="' + index + '"' + (index === selected ? ' selected' : '') + '>' + esc(app.name) + ' · ' + app.mode + '</option>'; }).join('') + '</select></div><div class="lp-field"><label for="lp-bind-role">授权角色</label><select id="lp-bind-role" data-bind-role>' + bindRoleOptions(selected) + '</select></div><div id="lp-bind-members"></div></div><p id="lp-resource-error" class="lp-form-error" role="alert"></p><div class="lp-dialog-actions">' + button('取消','close') + button('加入草稿并配置','resource-bind-save','lp-primary') + '</div>','resource-bind');
     updateBindMembers();
   }
   function saveResourceBinding() {
@@ -721,9 +841,16 @@
       const previous = config.mcpBindings.find(function(binding) { return binding.id === context.id; });
       const binding = {id:context.id,version:context.version,enabled:true,members:members};
       if (previous) Object.assign(previous,binding); else config.mcpBindings.push(binding);
+    } else if (context.kind === 'tools' && context.id === 'exec') {
+      config.exec = true; config.versions.tools.exec = context.version;
     } else {
       config[context.kind] = Array.from(new Set(config[context.kind].concat(context.id)));
       config.versions[context.kind][context.id] = context.version;
+    }
+    if (context.kind === 'tools') {
+      const tool = resourceVersion('tools',context.id,context.version);
+      if (tool.file) fileToolsExpanded = true;
+      if (tool.integration) integrationToolsExpanded = true;
     }
     app.dirty = true; app.valid = false; app.validationErrors = [];
     closeDialog(); selected = index; capabilityRole = key; editorSection = 'capabilities'; view = 'editor'; navOpen = false; render(); saveState(); feedback('已加入指定角色的草稿。请保存、校验并发布后使用。');
@@ -815,7 +942,7 @@
       return;
     }
     if (selected !== nextIndex) { editorSection = 'basics'; capabilityRole = 'main'; }
-    if (destination !== view) resourceFilter = '';
+    if (destination !== view) { resourceFilter = ''; toolCategory = 'all'; }
     selected = nextIndex; view = destination; navOpen = false; feedback(''); render(); saveState();
   }
   function persistDraft(app) {
@@ -860,6 +987,7 @@
     const app = applications[selected];
     if (field === 'app-search') { appFilter = event.target.value; render(); return; }
     if (field === 'resource-search') { resourceFilter = event.target.value; render(); return; }
+    if (event.target.hasAttribute('data-tool-category')) { toolCategory = event.target.value; render(); return; }
     if (event.target.closest('#lp-dialog') && modal && modal.startsWith('resource-')) {
       const error = root.querySelector('#lp-resource-error'); if (error) error.textContent = '';
       event.target.removeAttribute('aria-invalid');
@@ -898,11 +1026,17 @@
     } else if (event.target.dataset.capability) {
       const config = selectedCapabilities(app);
       const kind = event.target.dataset.capability;
-      if (kind === 'exec') config.exec = event.target.checked;
+      if (kind === 'exec') {
+        config.exec = event.target.checked;
+        if (config.exec) config.versions.tools.exec = availableResource(resourceVersion('tools','exec')).version;
+        else delete config.versions.tools.exec;
+      }
       else if (['tools','skills'].includes(kind)) {
         const id = event.target.value;
+        const resource = availableResource(resourceVersion(kind,id));
+        if (event.target.checked && (!resource || resource.system)) return;
         config[kind] = event.target.checked ? Array.from(new Set(config[kind].concat(id))) : config[kind].filter(function(item) { return item !== id; });
-        if (event.target.checked) { const resource = availableResource(resourceVersion(kind,id)); if (!resource.file) config.versions[kind][id] = resource.version; }
+        if (event.target.checked) config.versions[kind][id] = resource.version;
         else delete config.versions[kind][id];
       } else if (kind === 'mcpConnection') {
         const id = event.target.value;
@@ -929,7 +1063,11 @@
       }
     }
   });
-  root.addEventListener('toggle', function(event) { if (event.target.dataset.disclosure === 'file-tools' && event.target.isConnected) fileToolsExpanded = event.target.open; }, true);
+  root.addEventListener('toggle', function(event) {
+    if (!event.target.isConnected) return;
+    if (event.target.dataset.disclosure === 'file-tools') fileToolsExpanded = event.target.open;
+    if (event.target.dataset.disclosure === 'integration-tools') integrationToolsExpanded = event.target.open;
+  }, true);
   root.addEventListener('keydown', function(event) {
     if (event.key === 'Enter' && !event.isComposing && event.target.matches('#lp-new-name, input[name="lp-new-mode"]')) {
       event.preventDefault(); createApplication(); return;
@@ -985,6 +1123,13 @@
     if (action.startsWith('select-')) { navigate(action.slice(7), Number(target.dataset.index)); return; }
     if (action === 'close') { closeDialog(); return; }
     if (action === 'manage-resources') { navigate(target.dataset.kind); return; }
+    if (action === 'tool-connect') { openToolConnection(target.dataset.resourceId); return; }
+    if (action === 'tool-connect-save') { saveToolConnection(); return; }
+    if (action === 'tool-plan') { openPlanTool(); return; }
+    if (action === 'tool-plan-open') {
+      const index = Number(root.querySelector('#lp-plan-app').value);
+      closeDialog(); editorSection = 'basics'; navigate('editor',index); return;
+    }
     if (action === 'resource-create') { openResourceForm(target.dataset.kind); return; }
     if (action === 'resource-version') { openResourceForm(target.dataset.kind,target.dataset.resourceId); return; }
     if (action === 'resource-save') { saveResource(); return; }
@@ -1078,6 +1223,7 @@
       {key:'research',name:'资料分析',prompt:'整理来源与事实，记录可追溯的依据。',capabilities:Object.assign(emptyCapabilities(),{tools:['read'],mcpBindings:[{id:'documents',version:'2',enabled:true,members:['search_documents','read_document']}]})},
       {key:'writer',name:'报告编写',prompt:'合并结论与待验证事项，生成结构清晰的报告。',capabilities:Object.assign(emptyCapabilities(),{tools:['read','write'],skills:['weekly-report'],versions:{tools:{},skills:{'weekly-report':'1.0'}}})}
     ] : [];
+    roleConfigurations(app).forEach(function(role) { role.capabilities.tools.forEach(function(id) { role.capabilities.versions.tools[id] = availableResource(resourceVersion('tools',id)).version; }); });
     delete app.tools;
     app.savedDraft = configurationSnapshot(app); app.publishedDraft = configurationSnapshot(app);
   });
