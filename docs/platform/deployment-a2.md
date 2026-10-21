@@ -2,11 +2,11 @@
 
 部署日期：2026-10-21。应用版本：`2e86aed9bb08f8e89ab053e9e0778194ae68c6ba`。
 
-新版已在 `oracle-a2` 启动，服务已设置开机自启。用户指定正式域名为 [agentloom.bmilk.cn](https://agentloom.bmilk.cn)，平台允许源与访问资料已更新，内部登录和 CSRF 检查通过。
+新版已在 `oracle-a2` 上线，正式入口为 [agentloom.bmilk.cn](https://agentloom.bmilk.cn)。公网浏览器登录成功，源站 HTTPS、登录退出及 CSRF 检查通过，五个常驻服务均运行并设置开机自启。
 
-**公网入口等待重新激活**：`agentloom.bmilk.cn` 的证书已成功签发，截止日期为 2027-01-19。首次激活在 Nginx 重载后的 HTTPS 检查中遇到证书域名不匹配，脚本已自动恢复原配置，因此新域名入口尚未启用。修正版仅复用现有证书、配置新域名的 Nginx 站点，并限时重试重载期间的 TLS 错误；当前 SSH 账号执行 sudo 仍要求密码，需要重新执行下方命令。
+**域名入口已激活并验证**：Nginx 已加载 `agentloom.bmilk.cn` 的现有证书，真实 TLS 握手验证证书链和域名均通过，协商为 TLS 1.3，证书截止日期为 2027-01-19。`certbot.timer` 已运行并启用，激活脚本已配置续期后的 Nginx 重载钩子。
 
-初次部署通过固定 IP 验证的是旧域名 `test-agentloom.bmilk.cn` 的源站 HTTPS，保留 SNI 和证书校验；不能将该结果当成新域名已经可用。旧域名无需再配置 DNS。
+首次激活曾在 Nginx 异步重载后立即检查 HTTPS，遇到旧证书而自动回滚。修正版复用已签发证书，并对重载期间的 TLS 错误限时重试；用户执行后，本次分别完成新域名的源站验证和公网浏览器验证。旧域名 `test-agentloom.bmilk.cn` 无需再配置 DNS。
 
 ## 部署结构
 
@@ -14,7 +14,7 @@
 
 | 组件 | 用户服务 | 监听地址 |
 | --- | --- | --- |
-| HTTPS 入口 | 系统 Nginx，新域名配置待 sudo 激活 | 443，转发至 8766 |
+| HTTPS 入口 | 系统 Nginx，`agentloom-platform.conf` 已启用 | 443，转发至 8766 |
 | 前端与 API 代理 | `agentloom-platform-web.service` | `127.0.0.1:8766` |
 | FastAPI | `agentloom-platform-api.service` | `127.0.0.1:18766` |
 | 执行 Worker | `agentloom-platform-worker.service` | 无 HTTP 端口 |
@@ -33,6 +33,7 @@ API 代理关闭响应缓冲以支持 SSE。数据库 `agentloom` 保存平台�
 | `/home/bmilk/agentloom-platform/shared/data` | 工作文件、运行锁和平台数据目录 |
 | `/home/bmilk/agentloom-platform/shared/log` | 前端代理访问与错误日志 |
 | `/home/bmilk/agentloom-platform/shared/deployment.json` | 发布版本、切换时间、验收结果与公网访问状态 |
+| `/home/bmilk/agentloom-platform/shared/https-verification.json` | 新域名源站 HTTPS、页面和认证检查结果，不含凭据 |
 | `/home/bmilk/agentloom-platform/backups/pre-platform-2e86aed` | 原服务单元、入口配置和版本记录 |
 | `/home/bmilk/agentloom-platform/backups/domain-agentloom-bmilk-cn` | 新域名切换前的平台私密配置备份 |
 | `/home/bmilk/agentloom-platform/shared/config/activate-domain.sh` | 已上传的域名激活脚本，需 sudo 执行 |
@@ -45,16 +46,18 @@ Cookie 设置为 `Secure`，允许源为目标 HTTPS 域名，测试模型关闭
 
 - a2 上使用独立 PostgreSQL 测试库完成 31 项回归，全部通过；记录保存在 `shared/postgresql-verification.txt`。
 - 6 条前端路由返回本次发布的静态文件；API 路由、登录退出、Secure／HttpOnly Cookie、CSRF、24 项 Tool 目录和测试模型禁用检查通过。
-- 使用指定源站 IP 的旧域名 HTTPS 请求完成校验，正常检查证书；未关闭 TLS 验证。新域名的允许源已更新，内部入口的登录与 CSRF 再次通过。
+- 使用新域名和源站地址验证 HTTPS，保留 Host、SNI、证书链和域名校验；登录退出、Secure／HttpOnly Cookie 以及携带正式 Origin 的 CSRF 退出请求通过。
+- 公网浏览器经正常域名登录成功，应用、Tool、Skill、MCP 页面均可正常加载；Tool 显示 24 项目录。该检查没有创建测试业务数据。
 - 五个常驻服务均启用开机自启；原 `agentloom-test.service` 已停用，内部预发布服务已停止。
+- 证书续期定时器 `certbot.timer` 运行并启用；实际自动续期尚未发生，不能视为已完成续期演练。
 - 新增两项真实 TLS 回归，在本机和 a2 均通过：先返回旧域名证书、随后切换为正确证书时检查可以恢复；持续错误的证书仍被拒绝，且不会继续解析空响应产生 JSON 错误。
 - a2 的证书预检回归通过，确认接受正确域名与证书链、拒绝错误域名。该项需要支持 `openssl verify -verify_hostname` 的 OpenSSL；本机系统 LibreSSL 不提供此参数，跳过该项，Linux CI 会执行。
 
-新域名的公网 HTTPS、真实供应商模型连接、整机重启、备份恢复演练尚未在本次验收中通过。代码层面的详细测试与限制见[回归记录](testing-2026-10-21.md)。
+真实供应商模型连接、整机重启、备份恢复演练尚未在本次验收中验证。代码层面的详细测试与限制见[回归记录](testing-2026-10-21.md)。
 
-## 激活新域名
+## 域名配置维护
 
-在本地终端运行以下命令，在 sudo 提示中输入 a2 的系统密码。无需将密码放入脚本或聊天。
+本次激活已经完成，无需重复执行。后续需要重新应用该域名站点配置时，可在本地终端运行以下命令，在 sudo 提示中输入 a2 的系统密码。无需将密码放入脚本或聊天。
 
 ```bash
 ssh -t oracle-a2 'sudo bash /home/bmilk/agentloom-platform/shared/config/activate-domain.sh'
@@ -68,7 +71,7 @@ ssh -t oracle-a2 'sudo bash /home/bmilk/agentloom-platform/shared/config/activat
 python3 agentloom-platform/tests/test_domain_activation.py -v
 ```
 
-脚本执行成功后，还需用正常域名验证公网登录及 CSRF，然后将 `shared/deployment.json` 的 `public_access` 更新为 `verified`。如果已有证书预检失败，脚本会在改动 Nginx 前退出，应先核对证书文件与域名；如果源站检查通过但 Cloudflare 仍报错，应检查该域名是否回源到 `137.131.3.202`。
+本次已完成公网登录、源站 HTTPS 与 CSRF 验证，`shared/deployment.json` 的 `public_access` 已更新为 `verified`。后续重新应用配置时，也应分别验证源站和公网入口。如果已有证书预检失败，脚本会在改动 Nginx 前退出，应先核对证书文件与域名；如果源站检查通过但 Cloudflare 仍报错，应检查该域名是否回源到 `137.131.3.202`。
 
 ## 检查与排障
 
