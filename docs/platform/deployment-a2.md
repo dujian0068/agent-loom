@@ -1,8 +1,10 @@
 # a2 部署记录
 
-部署日期：2026-10-21。应用版本：`2e86aed9bb08f8e89ab053e9e0778194ae68c6ba`。
+部署日期：2026-10-21。当前应用版本：`98f2e6614aa532fef152a141f538308f85c2f4a7`。
 
 新版已在 `oracle-a2` 上线，正式入口为 [agentloom.bmilk.cn](https://agentloom.bmilk.cn)。公网浏览器登录成功，源站 HTTPS、登录退出及 CSRF 检查通过，五个常驻服务均运行并设置开机自启。
+
+2026-10-21 23:24（北京时间）已升级模型列表获取与资源页面布局。升级前确认没有活动 Run，备份数据库、工作目录、加密配置和用户服务文件，再切换独立发布目录。现有 MiniMax 连接与凭据保持原值，真实列表接口返回 9 个模型；源站 HTTPS、登录退出与模型发现通过。前一应用版本 `2e86aed` 保留用于回退。
 
 **域名入口已激活并验证**：Nginx 已加载 `agentloom.bmilk.cn` 的现有证书，真实 TLS 握手验证证书链和域名均通过，协商为 TLS 1.3，证书截止日期为 2027-01-19。`certbot.timer` 已运行并启用，激活脚本已配置续期后的 Nginx 重载钩子。
 
@@ -25,7 +27,7 @@ API 代理关闭响应缓冲以支持 SSE。数据库 `agentloom` 保存平台�
 
 | 路径 | 用途 |
 | --- | --- |
-| `/home/bmilk/agentloom-platform/releases/2e86aed` | 固定版本代码、Python 虚拟环境、前端构建 |
+| `/home/bmilk/agentloom-platform/releases/98f2e66` | 当前版本代码、独立 Python 虚拟环境、前端构建 |
 | `/home/bmilk/agentloom-platform/current` | 当前发布的符号链接 |
 | `/home/bmilk/agentloom-platform/shared/platform.env` | 数据库连接、加密密钥和运行配置，权限 `0600` |
 | `/home/bmilk/agentloom-platform/shared/initial-admin.json` | 初始管理员访问资料，权限 `0600`，不得提交 Git |
@@ -34,26 +36,30 @@ API 代理关闭响应缓冲以支持 SSE。数据库 `agentloom` 保存平台�
 | `/home/bmilk/agentloom-platform/shared/log` | 前端代理访问与错误日志 |
 | `/home/bmilk/agentloom-platform/shared/deployment.json` | 发布版本、切换时间、验收结果与公网访问状态 |
 | `/home/bmilk/agentloom-platform/shared/https-verification.json` | 新域名源站 HTTPS、页面和认证检查结果，不含凭据 |
+| `/home/bmilk/agentloom-platform/shared/model-catalog-verification.json` | 本次升级的版本、备份位置、TLS／认证与真实模型列表验收 |
+| `/home/bmilk/agentloom-platform/backups/before-model-catalog-20261021-232425` | 本次升级前的数据库、工作文件、加密配置和用户服务备份，权限受限 |
 | `/home/bmilk/agentloom-platform/backups/pre-platform-2e86aed` | 原服务单元、入口配置和版本记录 |
 | `/home/bmilk/agentloom-platform/backups/domain-agentloom-bmilk-cn` | 新域名切换前的平台私密配置备份 |
 | `/home/bmilk/agentloom-platform/shared/config/activate-domain.sh` | 已上传的域名激活脚本，需 sudo 执行 |
 
-本次使用新数据库，初始化了管理员 `admin`、“团队空间”和 24 项 Tool 目录。**旧版账号和业务数据没有迁移**；原 `/home/bmilk/agent-loom`、原数据库和 `agentloom-db-tunnel.service` 均保留。未配置真实模型连接，需登录后在“模型与环境”添加连接及凭据。
+首次部署使用新数据库，初始化了管理员 `admin`、“团队空间”和 24 项 Tool 目录。**旧版账号和业务数据没有迁移**；原 `/home/bmilk/agent-loom`、原数据库和 `agentloom-db-tunnel.service` 均保留。管理员后来配置的 MiniMax 连接已保留，本次只读取模型列表，没有修改所选模型或发起文本生成。
 
 Cookie 设置为 `Secure`，允许源为目标 HTTPS 域名，测试模型关闭。沙箱及外部集成的实现边界见[当前实现](implementation.md)。
 
 ## 已完成的验收
 
 - a2 上使用独立 PostgreSQL 测试库完成 31 项回归，全部通过；记录保存在 `shared/postgresql-verification.txt`。
+- 模型列表与布局更新在同一专用测试库完成 56 项回归及 2 个子测试，全部通过；记录保存在 `shared/postgresql-verification-98f2e66.txt`。本机前端 14 项测试与生产构建通过。
 - 6 条前端路由返回本次发布的静态文件；API 路由、登录退出、Secure／HttpOnly Cookie、CSRF、24 项 Tool 目录和测试模型禁用检查通过。
 - 使用新域名和源站地址验证 HTTPS，保留 Host、SNI、证书链和域名校验；登录退出、Secure／HttpOnly Cookie 以及携带正式 Origin 的 CSRF 退出请求通过。
 - 公网浏览器经正常域名登录成功，应用、Tool、Skill、MCP 页面均可正常加载；Tool 显示 24 项目录。该检查没有创建测试业务数据。
+- 本次升级后，公网浏览器打开现有 MiniMax 连接的“选择模型”，自动获取 9 个模型，当前仍为 `MiniMax-M3.1-Flash`；关闭配置后确认资源列表与运行环境在页面顶部正常展示。
 - 五个常驻服务均启用开机自启；原 `agentloom-test.service` 已停用，内部预发布服务已停止。
 - 证书续期定时器 `certbot.timer` 运行并启用；实际自动续期尚未发生，不能视为已完成续期演练。
 - 新增两项真实 TLS 回归，在本机和 a2 均通过：先返回旧域名证书、随后切换为正确证书时检查可以恢复；持续错误的证书仍被拒绝，且不会继续解析空响应产生 JSON 错误。
 - a2 的证书预检回归通过，确认接受正确域名与证书链、拒绝错误域名。该项需要支持 `openssl verify -verify_hostname` 的 OpenSSL；本机系统 LibreSSL 不提供此参数，跳过该项，Linux CI 会执行。
 
-真实供应商模型连接、整机重启、备份恢复演练尚未在本次验收中验证。代码层面的详细测试与限制见[回归记录](testing-2026-10-21.md)。
+真实供应商的模型列表接口已验证；文本生成与工具调用、整机重启、完整备份恢复演练尚未在本次验收中验证。代码层面的详细测试与限制见[回归记录](testing-2026-10-21.md)。
 
 ## 域名配置维护
 
