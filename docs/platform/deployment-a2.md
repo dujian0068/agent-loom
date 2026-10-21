@@ -4,7 +4,7 @@
 
 新版已在 `oracle-a2` 启动，服务已设置开机自启。用户指定正式域名为 [agentloom.bmilk.cn](https://agentloom.bmilk.cn)，平台允许源与访问资料已更新，内部登录和 CSRF 检查通过。
 
-**公网入口等待源站证书激活**：新域名的 DNS 已解析至 Cloudflare，浏览器当前返回 `526 Invalid SSL certificate`。a2 现有系统 Nginx 只配置了旧域名证书；新域名的 Nginx 配置和证书需要 sudo，当前 SSH 账号执行 sudo 会要求密码。域名激活脚本已经上传并通过语法和校验和检查，见下方操作步骤。
+**公网入口等待重新激活**：`agentloom.bmilk.cn` 的证书已成功签发，截止日期为 2027-01-19。首次激活在 Nginx 重载后的 HTTPS 检查中遇到证书域名不匹配，脚本已自动恢复原配置，因此新域名入口尚未启用。修正版仅复用现有证书、配置新域名的 Nginx 站点，并限时重试重载期间的 TLS 错误；当前 SSH 账号执行 sudo 仍要求密码，需要重新执行下方命令。
 
 初次部署通过固定 IP 验证的是旧域名 `test-agentloom.bmilk.cn` 的源站 HTTPS，保留 SNI 和证书校验；不能将该结果当成新域名已经可用。旧域名无需再配置 DNS。
 
@@ -47,6 +47,8 @@ Cookie 设置为 `Secure`，允许源为目标 HTTPS 域名，测试模型关闭
 - 6 条前端路由返回本次发布的静态文件；API 路由、登录退出、Secure／HttpOnly Cookie、CSRF、24 项 Tool 目录和测试模型禁用检查通过。
 - 使用指定源站 IP 的旧域名 HTTPS 请求完成校验，正常检查证书；未关闭 TLS 验证。新域名的允许源已更新，内部入口的登录与 CSRF 再次通过。
 - 五个常驻服务均启用开机自启；原 `agentloom-test.service` 已停用，内部预发布服务已停止。
+- 新增两项真实 TLS 回归，在本机和 a2 均通过：先返回旧域名证书、随后切换为正确证书时检查可以恢复；持续错误的证书仍被拒绝，且不会继续解析空响应产生 JSON 错误。
+- a2 的证书预检回归通过，确认接受正确域名与证书链、拒绝错误域名。该项需要支持 `openssl verify -verify_hostname` 的 OpenSSL；本机系统 LibreSSL 不提供此参数，跳过该项，Linux CI 会执行。
 
 新域名的公网 HTTPS、真实供应商模型连接、整机重启、备份恢复演练尚未在本次验收中通过。代码层面的详细测试与限制见[回归记录](testing-2026-10-21.md)。
 
@@ -58,9 +60,15 @@ Cookie 设置为 `Secure`，允许源为目标 HTTPS 域名，测试模型关闭
 ssh -t oracle-a2 'sudo bash /home/bmilk/agentloom-platform/shared/config/activate-domain.sh'
 ```
 
-[脚本源码](../../agentloom-platform/deploy/a2-activate-domain.sh)会备份相关 Nginx 文件，添加 `agentloom.bmilk.cn` 的 HTTP 验证入口，使用服务器已安装的 Certbot 及现有账号申请证书，再启用 HTTPS、验证源站健康接口并安装续期后的 Nginx 重载钩子。原站点配置保留；失败会恢复修改前的 Nginx 文件并重载。脚本不会调整 Cloudflare 的 TLS 校验策略。
+[脚本源码](../../agentloom-platform/deploy/a2-activate-domain.sh)先验证已有证书，再备份相关 Nginx 文件，只新增或更新 `agentloom-platform.conf` 这个域名站点，重载并验证 HTTPS，最后安装续期后的 Nginx 重载钩子。现有证书不会重新申请，原站点配置保留。重载是异步的，检查会在保持证书验证的前提下限时重试，只有成功取得 HTTP 响应才解析 JSON；最终仍失败时恢复修改前的 Nginx 文件并重载。脚本不会调整 Cloudflare 的 TLS 校验策略。
 
-脚本执行成功后，还需用正常域名验证公网登录及 CSRF，然后将 `shared/deployment.json` 的 `public_access` 更新为 `verified`。如证书申请失败，先检查 Cloudflare 中该域名是否回源到 `137.131.3.202`，以及 ACME 验证路径是否能到达 a2；保留 Certbot 的错误信息用于排查。
+这次修正的 [TLS 回归测试](../../agentloom-platform/tests/test_domain_activation.py)可独立运行，不访问业务数据库：
+
+```bash
+python3 agentloom-platform/tests/test_domain_activation.py -v
+```
+
+脚本执行成功后，还需用正常域名验证公网登录及 CSRF，然后将 `shared/deployment.json` 的 `public_access` 更新为 `verified`。如果已有证书预检失败，脚本会在改动 Nginx 前退出，应先核对证书文件与域名；如果源站检查通过但 Cloudflare 仍报错，应检查该域名是否回源到 `137.131.3.202`。
 
 ## 检查与排障
 

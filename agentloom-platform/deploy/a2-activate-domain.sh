@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Run on oracle-a2 with sudo. Existing application services and the old host stay intact.
+# Activate an already issued certificate on oracle-a2. Existing services stay intact.
 set -Eeuo pipefail
 export PATH=/usr/sbin:/usr/bin:/sbin:/bin
 umask 077
@@ -8,13 +8,12 @@ readonly domain=agentloom.bmilk.cn
 readonly site=/etc/nginx/sites-available/agentloom-platform.conf
 readonly enabled=/etc/nginx/sites-enabled/agentloom-platform.conf
 readonly hook=/etc/letsencrypt/renewal-hooks/deploy/agentloom-platform-nginx.sh
-readonly webroot=/var/lib/agentloom-acme
 
 if [[ $EUID -ne 0 ]]; then
     printf 'Run this script with sudo on oracle-a2.\n' >&2
     exit 1
 fi
-for executable in nginx certbot systemctl curl python3; do
+for executable in nginx systemctl curl python3 openssl; do
     command -v "$executable" >/dev/null
 done
 if [[ -L "$site" || -d "$site" || -L "$hook" || -d "$hook" ]]; then
@@ -27,6 +26,15 @@ if [[ -e "$enabled" || -L "$enabled" ]]; then
         exit 1
     fi
 fi
+# Verify the existing certificate before changing any Nginx file. This script
+# deliberately does not request or replace certificates.
+# BEGIN CERTIFICATE VERIFICATION
+openssl verify -purpose sslserver -verify_hostname "$domain" -CApath /etc/ssl/certs \
+    -untrusted "/etc/letsencrypt/live/$domain/chain.pem" \
+    "/etc/letsencrypt/live/$domain/cert.pem"
+# END CERTIFICATE VERIFICATION
+openssl x509 -in "/etc/letsencrypt/live/$domain/cert.pem" -noout -subject -enddate
+printf 'Reusing the existing certificate; updating only the new domain Nginx site.\n'
 systemctl is-active --quiet nginx
 nginx -t
 curl --noproxy '*' --fail --silent --show-error --max-time 10 \
@@ -64,30 +72,6 @@ rollback() {
 trap rollback EXIT
 trap 'exit 130' INT
 trap 'exit 143' TERM
-
-install -d -o root -g root -m 755 "$webroot"
-cat >"$site" <<'NGINX_HTTP'
-server {
-    listen 80;
-    listen [::]:80;
-    server_name agentloom.bmilk.cn;
-    location ^~ /.well-known/acme-challenge/ {
-        root /var/lib/agentloom-acme;
-        default_type text/plain;
-    }
-    location / { return 503; }
-}
-NGINX_HTTP
-chmod 644 "$site"
-if [[ ! -L "$enabled" ]]; then
-    ln -s "$site" "$enabled"
-fi
-nginx -t
-systemctl reload nginx
-
-# Reuse the existing Certbot account; do not create an account or change TLS policy.
-certbot certonly --non-interactive --webroot --webroot-path "$webroot" \
-    --domain "$domain" --cert-name "$domain" --keep-until-expiring
 
 cat >"$site" <<'NGINX_HTTPS'
 server {
@@ -127,13 +111,28 @@ server {
     }
 }
 NGINX_HTTPS
+chmod 644 "$site"
+if [[ ! -L "$enabled" ]]; then
+    ln -s "$site" "$enabled"
+fi
 nginx -t
 systemctl reload nginx
 
-curl --noproxy '*' --fail --silent --show-error --max-time 15 \
-    --retry 3 --retry-delay 1 --retry-connrefused \
-    --resolve "$domain:443:127.0.0.1" "https://$domain/api/v1/health" |
-    python3 -c 'import json, sys; result=json.load(sys.stdin); assert result["status"]=="ok"; print("Origin HTTPS health check passed; certificate verification enabled.")'
+printf 'Waiting for Nginx to serve the new certificate; TLS verification remains enabled.\n'
+# Reload is asynchronous. Until new workers accept connections, the old default
+# host can still return its certificate. Retry TLS errors without relaxing trust.
+response_file=$(mktemp "$backup/https-health.XXXXXXXX")
+# BEGIN HTTPS READINESS CHECK
+if ! curl --noproxy '*' --fail --silent --show-error --connect-timeout 2 --max-time 5 \
+    --retry 10 --retry-delay 1 --retry-max-time 30 --retry-all-errors \
+    --resolve "$domain:443:127.0.0.1" --output "$response_file" "https://$domain/api/v1/health"; then
+    printf 'HTTPS did not become ready; certificate validation was not bypassed.\n' >&2
+    exit 1
+fi
+# Parse only a successful HTTP response, so a TLS error cannot cause a second,
+# misleading JSONDecodeError from an empty pipe.
+python3 -c 'import json, sys; result=json.load(open(sys.argv[1])); assert result["status"]=="ok"; print("Origin HTTPS health check passed; certificate verification enabled.")' "$response_file"
+# END HTTPS READINESS CHECK
 
 install -d -o root -g root -m 755 /etc/letsencrypt/renewal-hooks/deploy
 cat >"$hook" <<'RENEWAL_HOOK'
