@@ -4,6 +4,7 @@ import json
 from pathlib import PurePosixPath
 from urllib.parse import urlsplit
 
+import httpx
 import yaml
 from cryptography.fernet import Fernet
 from pydantic import ValidationError
@@ -102,6 +103,22 @@ def validate_url(value):
         raise Problem(422, "INVALID_ENDPOINT", "不能使用实例元数据地址")
 
 
+def model_endpoint(endpoint):
+    endpoint = endpoint.strip().rstrip("/")
+    try:
+        if not endpoint.isprintable():
+            raise ValueError("Invalid URL characters")
+        validate_url(endpoint)
+        url = urlsplit(endpoint)
+        _ = url.port
+        httpx.URL(endpoint)  # Check the same URL syntax used by the HTTP client.
+        if url.query or url.path.endswith(("/models", "/chat/completions", "/responses")):
+            raise ValueError("Expected a base URL")
+    except (ValueError, httpx.InvalidURL):
+        raise Problem(422, "INVALID_ENDPOINT", "请输入 API 基础地址，例如 https://api.example.com/v1")
+    return endpoint
+
+
 def validate_spec(kind, spec, settings):
     try:
         if kind == "tool":
@@ -112,7 +129,7 @@ def validate_spec(kind, spec, settings):
             return {**item.model_dump(), "category": row[3], "writes": row[5]}, "ready"
         if kind == "model":
             item = ModelSpec.model_validate(spec)
-            validate_url(item.endpoint)
+            item.endpoint = model_endpoint(item.endpoint)
             if item.provider == "test" and not settings.allow_test_model:
                 raise Problem(422, "TEST_MODEL_DISABLED", "部署未开启测试模型")
             return item.model_dump(), "ready"

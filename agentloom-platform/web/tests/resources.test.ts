@@ -68,12 +68,14 @@ it('creates the selected model and credential together instead of asking for a s
   expect(wrapper!.find('form[role="dialog"]').exists()).toBe(false)
 })
 
-it('ignores a delayed response from an old endpoint and does not reuse its saved key', async () => {
-  await open([existing])
+it('ignores a delayed response when the new connection address changes', async () => {
+  await open()
+  await click('添加模型连接')
   let resolveOld!: (value: any) => void
   vi.mocked(api).mockImplementation(async () => new Promise(resolve => { resolveOld = resolve }))
-  await click('选择模型')
   const dialog = wrapper!.find('form[role="dialog"]')
+  await dialog.find('input[type="url"]').setValue('https://old.example/v1')
+  await flushPromises()
   vi.mocked(api).mockResolvedValue({ items: [{ id: 'new-chat' }] } as any)
   await dialog.find('input[type="url"]').setValue('https://new.example/v1')
   await flushPromises()
@@ -127,4 +129,65 @@ it('closes the connection form when changing resource pages and discards stale r
   expect(wrapper!.find('form[role="dialog"]').exists()).toBe(false)
   expect(wrapper!.text()).toContain('Skill · 技能')
   expect(wrapper!.text()).not.toContain('old-chat')
+})
+
+it('submits only once while a model save is in flight', async () => {
+  await open([existing])
+  await click('选择模型')
+  let finish!: (value: any) => void
+  vi.mocked(api).mockImplementation(async (_path, method) => method === 'POST'
+    ? new Promise(resolve => { finish = resolve }) : { items: [existing] } as any)
+  const dialog = wrapper!.find('form[role="dialog"]')
+  await dialog.trigger('submit')
+  await dialog.trigger('submit')
+  expect(vi.mocked(api).mock.calls.filter(([path]) => path.endsWith('/versions'))).toHaveLength(1)
+  finish(existing)
+  await flushPromises()
+})
+
+it('does not close a new form or show an old detail after switching pages during a save', async () => {
+  const router = await open([existing])
+  await click('选择模型')
+  let finish!: (value: any) => void
+  vi.mocked(api).mockImplementation(async path => path.endsWith('/versions')
+    ? new Promise(resolve => { finish = resolve }) : { items: [] } as any)
+  await wrapper!.find('form[role="dialog"]').trigger('submit')
+  await router.push('/resources/skill')
+  await flushPromises()
+  await click('导入 Skill')
+  const dialog = wrapper!.find('form[role="dialog"]')
+  await dialog.find('input:not([type])').setValue('Unfinished skill')
+  finish(existing)
+  await flushPromises()
+  expect(wrapper!.find('form[role="dialog"]').exists()).toBe(true)
+  expect(wrapper!.find('form[role="dialog"] input:not([type])').element.value).toBe('Unfinished skill')
+  expect(wrapper!.text()).not.toContain('Team models · 详情与版本')
+})
+
+it('keeps the API address fixed for existing versions that share a credential', async () => {
+  await open([existing])
+  await click('选择模型')
+  const dialog = wrapper!.find('form[role="dialog"]')
+  expect(dialog.find('input[type="url"]').attributes('readonly')).toBeDefined()
+  expect(dialog.text()).toContain('更换服务地址请添加新连接')
+})
+
+it('requires an explicit manual choice for an empty model catalog', async () => {
+  await open([existing])
+  vi.mocked(api).mockResolvedValue({ items: [] } as any)
+  await click('选择模型')
+  const dialog = wrapper!.find('form[role="dialog"]')
+  expect(dialog.text()).toContain('此连接没有返回可用模型')
+  expect(dialog.find('select').element.value).toBe('')
+  expect(dialog.findAll('button').find(button => button.text() === '保存连接')!.attributes('disabled')).toBeDefined()
+})
+
+it('does not allow an editor to fetch or change stored model credentials', async () => {
+  state.spaces[0].role = 'editor'
+  await open([existing])
+  expect(wrapper!.findAll('button').some(button => ['选择模型', '添加模型连接'].includes(button.text()))).toBe(false)
+  await click('详情')
+  expect(wrapper!.text()).not.toContain('设置凭据')
+  expect(wrapper!.text()).not.toContain('添加新版本')
+  expect(vi.mocked(api).mock.calls.some(([path]) => path.endsWith('/model-catalog'))).toBe(false)
 })

@@ -132,7 +132,7 @@ def create_app(settings=None, database=None):
 
                 try:
                     json.loads(body, object_pairs_hook=unique_keys)
-                except (ValueError, UnicodeError):
+                except (ValueError, UnicodeError, RecursionError):
                     return error_response(
                         422, "INVALID_JSON", "JSON 无效或包含重复字段", request.state.request_id
                     )
@@ -512,13 +512,14 @@ def create_app(settings=None, database=None):
         def work(s):
             resource = resource_access(s, user.id, resource_id, "admin")
             spec, status = validate_spec(resource.kind, body.spec, settings)
-            if (
-                resource.kind == "model"
-                and s.get(Secret, resource_id)
-                and body.credential is None
-                and spec["endpoint"].rstrip("/") != latest_version(s, resource_id).spec["endpoint"].rstrip("/")
+            if resource.kind == "model" and spec["endpoint"] != catalog_endpoint(
+                latest_version(s, resource_id).spec["endpoint"]
             ):
-                raise Problem(422, "MODEL_CREDENTIAL_REQUIRED", "API 地址已改变，请为新地址重新填写 API Key")
+                # All pinned versions use this connection's current credential.
+                # Moving it to another host would also replace the key for old releases.
+                raise Problem(
+                    422, "MODEL_ENDPOINT_IMMUTABLE", "更换服务地址请添加新连接，以保留原版本的地址与凭据"
+                )
             version = latest_version(s, resource_id).version + 1
             s.add(ResourceVersion(resource_id=resource_id, version=version, status=status, spec=spec))
             store_resource_credential(s, resource, body.credential)
@@ -550,7 +551,9 @@ def create_app(settings=None, database=None):
                 current_endpoint = catalog_endpoint(latest_version(s, resource.id).spec["endpoint"])
                 if body.credential is None:
                     if endpoint != current_endpoint:
-                        raise Problem(422, "MODEL_CREDENTIAL_REQUIRED", "API 地址已改变，请为新地址重新填写 API Key")
+                        raise Problem(
+                            422, "MODEL_CREDENTIAL_REQUIRED", "API 地址已改变，请为新地址重新填写 API Key"
+                        )
                     credential = decrypt_secret(s, settings, resource.id)
         items = await fetch_model_catalog(endpoint, credential)
         # Discovery is read-only: no secrets or upstream payloads enter receipts.

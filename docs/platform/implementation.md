@@ -41,7 +41,7 @@
 
 实际 HTTP 路径使用 `/spaces/{id}/resources/{kind}` 注册资源、`/resources/{id}/discover` 发现 MCP、`/resources/{id}/enable-members` 固定成员。API 运行时的 `/api/v1/openapi.json` 是当前接口合同；[API 设计](api.md)中的异步导入、删除等目标接口尚未全部实现。
 
-模型列表使用 `POST /spaces/{id}/model-catalog`，仅空间管理员可调用，要求登录、Origin 和 CSRF 校验。请求包含 `endpoint`，可以带临时 `credential` 或同空间的 `resource_id`；只有地址与保存的连接一致时才复用其凭据。该接口只读，不保存密钥、列表或发现回执。注册资源和新建版本可以带 `credential`，凭据与模型配置在同一事务中保存；修改已有连接的 API 地址时要求重新填写密钥。列表只表示服务返回的模型 ID，不代表每个模型已经通过 Chat Completions 与工具调用验收。兼容协议示例见 [MiniMax 模型列表](https://platform.minimax.io/docs/api-reference/models/openai/list-models)。
+模型列表使用 `POST /spaces/{id}/model-catalog`，仅空间管理员可调用，要求登录、Origin 和 CSRF 校验。请求包含 `endpoint`，可以带临时 `credential` 或同空间的 `resource_id`；只有地址与保存的连接一致时才复用其凭据。该接口只读，不保存密钥、列表或发现回执。注册资源和新建版本可以带 `credential`，凭据与模型配置在同一事务中保存。同一连接的各版本共用轮换后的凭据，因此 API 地址在创建后固定，更换地址需添加新连接，避免将新服务的密钥用于旧发布版本。列表发现与手动配置使用相同的基础地址校验。列表只表示服务返回的模型 ID，不代表每个模型已经通过 Chat Completions 与工具调用验收。兼容协议示例见 [MiniMax 模型列表](https://platform.minimax.io/docs/api-reference/models/openai/list-models)。
 
 资源页面采用顶部标题、带表头的列表和独立环境卡片，模型连接使用右侧配置抽屉。已修复大屏 `margin: auto` 导致主内容竖直居中的问题；桌面与手机均从顶部排列。
 

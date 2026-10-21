@@ -2,25 +2,11 @@
 
 import asyncio
 import json
-from urllib.parse import urlsplit
 
 import httpx
 
-from .resources import validate_url
+from .resources import model_endpoint as catalog_endpoint
 from .security import Problem
-
-
-def catalog_endpoint(endpoint):
-    endpoint = endpoint.strip().rstrip("/")
-    try:
-        validate_url(endpoint)
-        url = urlsplit(endpoint)
-        _ = url.port  # Validate malformed ports before making a request.
-        if url.query or url.path.endswith(("/models", "/chat/completions", "/responses")):
-            raise ValueError("Expected a base URL")
-    except ValueError:
-        raise Problem(422, "INVALID_ENDPOINT", "请输入 API 基础地址，例如 https://api.example.com/v1")
-    return endpoint
 
 
 async def fetch_model_catalog(endpoint, credential):
@@ -53,7 +39,7 @@ async def fetch_model_catalog(endpoint, credential):
         payload = json.loads(data)
     except (TimeoutError, httpx.TimeoutException):
         raise Problem(504, "MODEL_CATALOG_TIMEOUT", "获取模型列表超时，请稍后重试")
-    except (httpx.HTTPError, ValueError, UnicodeError):
+    except (httpx.HTTPError, ValueError, UnicodeError, RecursionError):
         # Upstream errors and exception strings may contain credentials or URLs.
         raise Problem(502, "MODEL_CATALOG_FAILED", "模型列表获取失败，请核对地址、凭据和返回格式")
     rows = payload.get("data") if isinstance(payload, dict) else None
@@ -62,7 +48,12 @@ async def fetch_model_catalog(endpoint, credential):
     identifiers = set()
     for row in rows:
         identifier = row.get("id") if isinstance(row, dict) else None
-        if not isinstance(identifier, str) or not identifier.strip() or len(identifier) > 100:
+        if (
+            not isinstance(identifier, str)
+            or not identifier.strip()
+            or len(identifier) > 100
+            or not identifier.isprintable()
+        ):
             raise Problem(502, "MODEL_CATALOG_INVALID", "服务返回的模型 ID 格式不合法")
         identifiers.add(identifier.strip())
     return [{"id": identifier} for identifier in sorted(identifiers)]

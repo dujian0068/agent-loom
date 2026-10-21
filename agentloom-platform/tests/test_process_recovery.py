@@ -97,6 +97,70 @@ def start_worker(platform, run_id, log):
     )
 
 
+@pytest.mark.parametrize("mode", ["react", "plan_executor"])
+def test_discovered_model_runs_with_saved_key_and_published_version(platform, model_server, mode):
+    url, directory = model_server
+    client = platform["clients"]["admin"]
+    response = request(
+        client,
+        "POST",
+        f"/spaces/{platform['space']}/model-catalog",
+        {
+            "endpoint": url,
+            "credential": "catalog-e2e-key",
+        },
+    )
+    assert response.status_code == 200, response.text
+    models = response.json()["items"]
+    assert models == [{"id": "catalog-chat-a"}, {"id": "catalog-chat-b"}]
+    body = {
+        "name": "Discovered model",
+        "spec": {"endpoint": url, "model_id": models[0]["id"]},
+        "credential": "catalog-e2e-key",
+    }
+    created = request(client, "POST", f"/spaces/{platform['space']}/resources/model", body)
+    assert created.status_code == 201, created.text
+    resource = created.json()
+    app = configured_agent(platform, mode)
+    app["draft"]["model"] = {"resource_id": resource["id"], "version": 1, "members": []}
+    if mode == "plan_executor":
+        app["draft"]["executors"]["research"]["capabilities"] = [find_tool(platform, "write_file")]
+    updated = request(client, "PUT", f"/agents/{app['id']}/draft", app["draft"], app["revision"])
+    assert updated.status_code == 200, updated.text
+    app = updated.json()
+    publish(platform, app)
+    version = request(
+        client,
+        "POST",
+        f"/resources/{resource['id']}/versions",
+        {
+            "name": body["name"],
+            "spec": {**body["spec"], "model_id": models[1]["id"]},
+        },
+    )
+    assert version.status_code == 201, version.text
+    session, receipt = submit(platform, app)
+    with (directory / "worker.log").open("w+") as log:
+        process = start_worker(platform, receipt["run_id"], log)
+        try:
+            assert process.wait(timeout=30) == 0
+        finally:
+            if process.poll() is None:
+                process.kill()
+                process.wait(timeout=10)
+    with platform["db"].session() as s:
+        run = s.get(Run, receipt["run_id"])
+        assert run.status == "completed", (run.status, run.error)
+        if mode == "plan_executor":
+            assert run.tool_calls == 1
+    calls = [json.loads(line) for line in (directory / "requests.jsonl").read_text().splitlines()]
+    assert calls and all(call["model"] == "catalog-chat-a" for call in calls)
+    history = platform["clients"]["viewer"].get(f"/api/v1/sessions/{session['id']}/history")
+    assert history.status_code == 200
+    assert "catalog-e2e-key" not in history.text
+    assert history.json()["runs"][0]["status"] == "completed"
+
+
 def test_sigkill_mid_plan_recovers_checkpoint_without_repeating_completed_steps(platform, model_server):
     url, directory = model_server
     app = prepare_app(platform, url, "plan-crash")

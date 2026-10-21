@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
+import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { Plus, RefreshCw, Search, Server, FolderOpen, Shield, KeyRound, X } from 'lucide-vue-next'
 import { api } from '../api'
@@ -12,7 +12,7 @@ const form = ref({ name: '', description: '', registry_key: 'read_file', url: ''
 const skillFiles = ref<Record<string, string>>({}), memberSelection = ref<string[]>([])
 const modelCredential = ref(''), modelChoices = ref<{id: string}[]>([]), modelsLoading = ref(false)
 const modelsLoaded = ref(false), modelError = ref(''), manualModel = ref(false)
-let catalogGeneration = 0, loadGeneration = 0
+let catalogGeneration = 0, loadGeneration = 0, pageGeneration = 0
 const kind = computed(() => String(route.params.kind))
 const title = computed(() => ({ tool: 'Tool · 工具', skill: 'Skill · 技能', mcp: 'MCP · 服务', model: '模型与环境' }[kind.value] || '资源'))
 const addLabel = computed(() => ({ tool: '注册工具', skill: '导入 Skill', mcp: '添加 MCP', model: '添加模型连接' }[kind.value]))
@@ -76,10 +76,12 @@ async function upload(event: Event) {
   form.value.skill = skillFiles.value['SKILL.md'] || ''
 }
 async function save() {
+  if (busy.value) return
   if (kind.value === 'model' && (!form.value.model_id || (!manualModel.value && !modelChoices.value.some(item => item.id === form.value.model_id)))) {
     error.value = '请从可用模型中选择，或切换为手动输入模型 ID'; return
   }
   busy.value = true; error.value = ''
+  const generation = pageGeneration
   let spec: any
   if (kind.value === 'tool') spec = { registry_key: form.value.registry_key }
   else if (kind.value === 'skill') spec = { files: { ...skillFiles.value, 'SKILL.md': form.value.skill } }
@@ -89,35 +91,51 @@ async function save() {
     const resource = await api<Resource>(editing.value ? `/resources/${editing.value.id}/versions` : `/spaces/${state.spaceId}/resources/${kind.value}`,
       'POST', { name: form.value.name, description: form.value.description, spec,
         ...(kind.value === 'model' && modelCredential.value ? { credential: modelCredential.value } : {}) })
-    closeForm(); await load(); showDetail(resource)
-  } catch (e) { error.value = (e as Error).message } finally { busy.value = false }
+    if (generation !== pageGeneration) return
+    closeForm(); await load()
+    if (generation === pageGeneration) showDetail(resource)
+  } catch (e) { if (generation === pageGeneration) error.value = (e as Error).message }
+  finally { if (generation === pageGeneration) busy.value = false }
 }
 function showDetail(resource: Resource) {
   detail.value = resource; detailVersion.value = resource.versions[0].version; memberSelection.value = []
 }
 async function discover(resource: Resource) {
+  if (busy.value) return
   busy.value = true; error.value = ''
-  try { showDetail(await api<Resource>(`/resources/${resource.id}/discover`, 'POST')); await load() }
-  catch (e) { error.value = (e as Error).message } finally { busy.value = false }
+  const generation = pageGeneration
+  try {
+    const result = await api<Resource>(`/resources/${resource.id}/discover`, 'POST')
+    if (generation !== pageGeneration) return
+    showDetail(result); await load()
+  } catch (e) { if (generation === pageGeneration) error.value = (e as Error).message }
+  finally { if (generation === pageGeneration) busy.value = false }
 }
 async function enableMembers() {
-  if (!detail.value) return
+  if (!detail.value || busy.value) return
   busy.value = true; error.value = ''
+  const generation = pageGeneration
   try {
-    showDetail(await api<Resource>(`/resources/${detail.value.id}/enable-members`, 'POST',
-      { discovery_version: detailVersion.value, members: memberSelection.value }))
-    await load()
-  } catch (e) { error.value = (e as Error).message } finally { busy.value = false }
+    const result = await api<Resource>(`/resources/${detail.value.id}/enable-members`, 'POST',
+      { discovery_version: detailVersion.value, members: memberSelection.value })
+    if (generation !== pageGeneration) return
+    showDetail(result); await load()
+  } catch (e) { if (generation === pageGeneration) error.value = (e as Error).message }
+  finally { if (generation === pageGeneration) busy.value = false }
 }
 async function saveCredential() {
-  if (!credentialFor.value) return
+  if (!credentialFor.value || busy.value) return
   busy.value = true; error.value = ''
+  const generation = pageGeneration
   try {
     await api(`/resources/${credentialFor.value.id}/credential`, 'PUT', { secret: secret.value })
+    if (generation !== pageGeneration) return
     credentialFor.value = undefined; secret.value = ''; detail.value = undefined; await load()
-  } catch (e) { error.value = (e as Error).message } finally { busy.value = false }
+  } catch (e) { if (generation === pageGeneration) error.value = (e as Error).message }
+  finally { if (generation === pageGeneration) busy.value = false }
 }
-watch(kind, () => { closeForm(); detail.value = undefined; credentialFor.value = undefined; secret.value = ''; search.value = ''; category.value = 'all'; error.value = ''; load() }, { immediate: true })
+watch(kind, () => { pageGeneration++; busy.value = false; closeForm(); detail.value = undefined; credentialFor.value = undefined; secret.value = ''; search.value = ''; category.value = 'all'; error.value = ''; load() }, { immediate: true })
+onBeforeUnmount(() => { pageGeneration++; loadGeneration++; closeForm(); secret.value = '' })
 </script>
 <template>
   <div class="page-head"><div><h1>{{ title }}</h1><p class="muted">{{ kind === 'tool' ? '管理预置工具、外部集成和自定义工具。' : kind === 'skill' ? '导入技能说明与只读参考文件，在 Agent 能力配置中选择。' : kind === 'mcp' ? '添加连接、发现工具，再选择允许使用的成员。' : '连接模型服务，自动获取可用模型，管理团队的运行环境。' }}</p></div>
@@ -150,7 +168,7 @@ watch(kind, () => { closeForm(); detail.value = undefined; credentialFor.value =
     <label v-if="kind === 'mcp'">MCP 服务地址<input v-model="form.url" type="url" required placeholder="https://mcp.example.com/mcp"></label>
     <template v-if="kind === 'model'">
       <div class="form-section-label">服务连接</div>
-      <label>API 地址<input v-model="form.endpoint" type="url" required placeholder="https://api.example.com/v1" @change="fetchModels"><small class="muted">填写兼容 Chat Completions 的基础地址，通常以 /v1 结尾。</small></label>
+      <label>API 地址<input v-model="form.endpoint" type="url" required :readonly="!!editing" placeholder="https://api.example.com/v1" @change="fetchModels"><small class="muted">{{ editing ? '更换服务地址请添加新连接，原连接的应用配置继续保留。' : '填写兼容 Chat Completions 的基础地址，通常以 /v1 结尾。' }}</small></label>
       <label>API Key<input v-model="modelCredential" type="password" autocomplete="new-password" :placeholder="savedCredential ? '已保存，留空继续使用原密钥' : '填写服务密钥；无需认证的服务可留空'" @change="fetchModels"></label>
       <p class="muted credential-hint"><KeyRound :size="14" />{{ savedCredential ? '使用已保存的密钥获取模型，原密钥不会回显。' : '密钥仅由服务端使用，保存后加密存储。' }}</p>
       <div class="form-section-label">选择模型</div>

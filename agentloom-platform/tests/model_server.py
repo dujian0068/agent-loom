@@ -15,11 +15,23 @@ class Handler(BaseHTTPRequestHandler):
         pass
 
     def do_GET(self):
+        if self.path == "/v1/models":
+            if self.headers.get("Authorization") != "Bearer catalog-e2e-key":
+                self.send_json(401, {"error": "Fixture credential required"})
+                return
+            self.send_json(200, {"data": [{"id": "catalog-chat-a"}, {"id": "catalog-chat-b"}]})
+            return
         self.send_response(200)
         self.end_headers()
 
     def do_POST(self):
         body = json.loads(self.rfile.read(int(self.headers["Content-Length"])))
+        if (
+            body["model"].startswith("catalog-")
+            and self.headers.get("Authorization") != "Bearer catalog-e2e-key"
+        ):
+            self.send_json(401, {"error": "Fixture credential required"})
+            return
         names = [tool["function"]["name"] for tool in body.get("tools", [])]
         system = next((m["content"] for m in body["messages"] if m["role"] in {"system", "developer"}), "")
         phase = (
@@ -29,7 +41,17 @@ class Handler(BaseHTTPRequestHandler):
         )
         tool_results = [m for m in body["messages"] if m["role"] == "tool"]
         with (directory / "requests.jsonl").open("a") as log:
-            log.write(json.dumps({"phase": phase, "tools": names, "tool_results": len(tool_results)}) + "\n")
+            log.write(
+                json.dumps(
+                    {
+                        "phase": phase,
+                        "model": body["model"],
+                        "tools": names,
+                        "tool_results": len(tool_results),
+                    }
+                )
+                + "\n"
+            )
         if body["model"] == "http-failure":
             self.send_json(500, {"error": {"message": "private-provider-diagnostic", "type": "server_error"}})
             return

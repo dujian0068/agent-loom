@@ -95,9 +95,16 @@ class SkillSpec(DTO):
 
 class ModelSpec(DTO):
     provider: Literal["openai", "test"] = "openai"
-    endpoint: str = "https://api.openai.com/v1"
+    endpoint: str = Field(default="https://api.openai.com/v1", min_length=1, max_length=2048)
     model_id: str = Field(min_length=1, max_length=100)
     max_output_tokens: int = Field(default=4096, ge=128, le=32768)
+
+    @field_validator("model_id")
+    @classmethod
+    def printable_model_id(cls, value):
+        if not value.isprintable():
+            raise ValueError("模型 ID 不能包含控制字符或无效 Unicode")
+        return value
 
 
 class McpSpec(DTO):
