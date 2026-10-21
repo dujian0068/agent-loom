@@ -12,7 +12,7 @@
 | Tool | 独立目录；10 个工作区文件工具与 `write_todos` 可用；其他集成模板保留但禁用；列表不显示提供方或绑定按钮 |
 | Skill | 独立添加与版本；`SKILL.md` 基础元数据校验、文本目录导入、固定文件快照；按角色渐进读取，不执行脚本 |
 | MCP | HTTP 连接、凭据、真实发现、显式成员选择；固定成员、描述与 Schema；Schema 漂移时失败，不自动扩权 |
-| 模型 | OpenAI 兼容服务地址／模型 ID；凭据独立加密保存、不返回明文；测试模型必须由服务端显式开启 |
+| 模型 | 服务端读取兼容接口的 `/models`，新连接按地址与 API Key 获取列表，已有连接使用保存的凭据获取；列表选择与手动输入；连接和凭据原子保存，凭据独立加密、不回显；测试模型必须显式开启 |
 | 环境 | 工作区读写、run／session 文件保留；路径边界、符号链接防护；无沙箱时禁止发布带沙箱配置的应用 |
 | ReAct | 实际 `create_agent`；只装配当前角色所选 Tool、Skill、MCP |
 | Plan | 实际 `StateGraph`；结构化 Planner → 按顺序运行独立 Executor → Planner 汇总，校验执行器与任务数 |
@@ -32,6 +32,7 @@
 | [http.py](../../agentloom-platform/api/src/agentloom_platform/http.py) | 认证、空间权限、幂等、草稿、发布、资源、会话和 SSE |
 | [applications.py](../../agentloom-platform/api/src/agentloom_platform/applications.py) | 资源引用、校验和发布快照 |
 | [resources.py](../../agentloom-platform/api/src/agentloom_platform/resources.py) | 目录、Skill 校验、MCP 发现、凭据读取 |
+| [model_catalog.py](../../agentloom-platform/api/src/agentloom_platform/model_catalog.py) | 模型列表读取、响应大小与超时限制、脱敏错误、不携带密钥跟随重定向 |
 | [runtime.py](../../agentloom-platform/api/src/agentloom_platform/runtime.py) | 模型与角色装配、Plan 图、预算中间件、工具回执、检查点 |
 | [worker.py](../../agentloom-platform/api/src/agentloom_platform/worker.py) | 子进程、单写者、停止、恢复、清理及发布屏障 |
 | [tools.py](../../agentloom-platform/api/src/agentloom_platform/tools.py) | 授权工作区和只读 Skill 阅读 |
@@ -39,6 +40,10 @@
 | [web/src](../../agentloom-platform/web/src/) | 应用、配置、资源、会话及空间管理页面 |
 
 实际 HTTP 路径使用 `/spaces/{id}/resources/{kind}` 注册资源、`/resources/{id}/discover` 发现 MCP、`/resources/{id}/enable-members` 固定成员。API 运行时的 `/api/v1/openapi.json` 是当前接口合同；[API 设计](api.md)中的异步导入、删除等目标接口尚未全部实现。
+
+模型列表使用 `POST /spaces/{id}/model-catalog`，仅空间管理员可调用，要求登录、Origin 和 CSRF 校验。请求包含 `endpoint`，可以带临时 `credential` 或同空间的 `resource_id`；只有地址与保存的连接一致时才复用其凭据。该接口只读，不保存密钥、列表或发现回执。注册资源和新建版本可以带 `credential`，凭据与模型配置在同一事务中保存；修改已有连接的 API 地址时要求重新填写密钥。列表只表示服务返回的模型 ID，不代表每个模型已经通过 Chat Completions 与工具调用验收。兼容协议示例见 [MiniMax 模型列表](https://platform.minimax.io/docs/api-reference/models/openai/list-models)。
+
+资源页面采用顶部标题、带表头的列表和独立环境卡片，模型连接使用右侧配置抽屉。已修复大屏 `margin: auto` 导致主内容竖直居中的问题；桌面与手机均从顶部排列。
 
 依赖以 `api/requirements.lock` 和 `web/package-lock.json` 锁定。发布记录图版本、状态版本及后端依赖、运行图和工具实现的内容摘要；版本不兼容时拒绝恢复。当前检查点显式限制可反序列化的自定义类型，不启用 pickle fallback。
 

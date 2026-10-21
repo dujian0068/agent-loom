@@ -76,6 +76,13 @@ class ResourceCreate(DTO):
     name: str = Field(min_length=1, max_length=100)
     description: str = Field(default="", max_length=2000)
     spec: dict
+    credential: Password | None = Field(default=None, min_length=1, max_length=8192, repr=False)
+
+
+class ModelCatalogRequest(DTO):
+    endpoint: str = Field(min_length=1, max_length=2048)
+    resource_id: str | None = None
+    credential: Password | None = Field(default=None, min_length=1, max_length=8192, repr=False)
 
 
 class ToolSpec(DTO):

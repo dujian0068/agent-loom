@@ -24,6 +24,7 @@ from .applications import (
     validate_references,
 )
 from .config import Settings
+from .model_catalog import catalog_endpoint, fetch_model_catalog
 from .persistence import (
     Application,
     Audit,
@@ -53,6 +54,7 @@ from .schemas import (
     Login,
     MemberCreate,
     MemberRole,
+    ModelCatalogRequest,
     ResourceCreate,
     Revision,
     UserInput,
@@ -496,11 +498,12 @@ def create_app(settings=None, database=None):
             s.add(resource)
             s.flush()
             s.add(ResourceVersion(resource_id=resource.id, version=1, status=status, spec=spec))
+            store_resource_credential(s, resource, body.credential)
             audit(s, user, space_id, "resource.create", resource.id)
             s.flush()
             return resource_view(s, resource)
 
-        return mutate(request, user, body.model_dump(), work)
+        return mutate(request, user, body.model_dump(exclude_none=True), work)
 
     @api.post(PREFIX + "/resources/{resource_id}/versions", status_code=201)
     def resource_version(resource_id: str, body: ResourceCreate, request: Request):
@@ -509,13 +512,56 @@ def create_app(settings=None, database=None):
         def work(s):
             resource = resource_access(s, user.id, resource_id, "admin")
             spec, status = validate_spec(resource.kind, body.spec, settings)
+            if (
+                resource.kind == "model"
+                and s.get(Secret, resource_id)
+                and body.credential is None
+                and spec["endpoint"].rstrip("/") != latest_version(s, resource_id).spec["endpoint"].rstrip("/")
+            ):
+                raise Problem(422, "MODEL_CREDENTIAL_REQUIRED", "API 地址已改变，请为新地址重新填写 API Key")
             version = latest_version(s, resource_id).version + 1
             s.add(ResourceVersion(resource_id=resource_id, version=version, status=status, spec=spec))
+            store_resource_credential(s, resource, body.credential)
             audit(s, user, resource.space_id, "resource.version", resource_id)
             s.flush()
             return resource_view(s, resource)
 
-        return mutate(request, user, body.model_dump(), work)
+        return mutate(request, user, body.model_dump(exclude_none=True), work)
+
+    def store_resource_credential(s, resource, credential):
+        if credential is None:
+            return
+        if resource.kind not in {"model", "mcp"}:
+            raise Problem(422, "INVALID_KIND", "此资源不支持凭据")
+        encrypted = Fernet(settings.secret_key.encode()).encrypt(credential.encode()).decode()
+        s.merge(Secret(resource_id=resource.id, ciphertext=encrypted))
+
+    @api.post(PREFIX + "/spaces/{space_id}/model-catalog")
+    async def model_catalog(space_id: str, body: ModelCatalogRequest, request: Request):
+        user = actor(request)
+        endpoint = catalog_endpoint(body.endpoint)
+        credential = body.credential or ""
+        with db.session() as s:
+            require_role(s, user.id, space_id, "admin")
+            if body.resource_id:
+                resource = resource_access(s, user.id, body.resource_id, "admin")
+                if resource.kind != "model" or resource.space_id != space_id:
+                    raise Problem(404, "NOT_FOUND", "模型连接不存在")
+                current_endpoint = catalog_endpoint(latest_version(s, resource.id).spec["endpoint"])
+                if body.credential is None:
+                    if endpoint != current_endpoint:
+                        raise Problem(422, "MODEL_CREDENTIAL_REQUIRED", "API 地址已改变，请为新地址重新填写 API Key")
+                    credential = decrypt_secret(s, settings, resource.id)
+        items = await fetch_model_catalog(endpoint, credential)
+        # Discovery is read-only: no secrets or upstream payloads enter receipts.
+        user = actor(request)
+        with db.session() as s:
+            require_role(s, user.id, space_id, "admin")
+            if body.resource_id:
+                resource = resource_access(s, user.id, body.resource_id, "admin")
+                if resource.space_id != space_id:
+                    raise Problem(404, "NOT_FOUND", "模型连接不存在")
+        return {"items": items}
 
     @api.put(PREFIX + "/resources/{resource_id}/credential")
     def credential(resource_id: str, body: Credential, request: Request):
