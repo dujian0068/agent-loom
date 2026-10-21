@@ -44,6 +44,8 @@ npm run dev
 
 ## 独立部署
 
+2026-10-21 已部署至 a2，采用独立用户服务和 PostgreSQL 集群，公网域名等待 DNS 恢复。服务路径、验证结果与回滚方式见 [a2 部署记录](../docs/platform/deployment-a2.md)。
+
 前端镜像只包含静态页面与 Nginx；后端镜像只包含 Python 服务。`deploy/compose.yaml` 分别启动 Web、API、Worker、控制维护及 PostgreSQL，并把图检查点放在独立 `graph` schema。
 
 先在 `agentloom-platform` 目录生成部署密钥文件：
