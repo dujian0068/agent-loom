@@ -19,3 +19,18 @@
 检查 390 × 844、768 × 1024 和 1920 × 1080 视口：无横向溢出，手机可切换编辑／测试；平板与桌面两侧等宽，输入与保存操作固定可见。桌面 DOM 不存在全局 sidebar／topbar。测试结束恢复默认视口。
 
 运行记录依旧仅对创建者可见，草稿测试不出现在普通“我的会话”列表。测试中执行的工作区和工具权限来自固定草稿快照，仍受运行预算与期限限制。
+
+## a2 与真实 MiniMax 验收
+
+运行版本 `8e46cb99f26abb234fb3c87810a1e6a8fc8ce05f` 已部署至 a2。隔离 PostgreSQL 数据库上的完整回归为 **79 通过、2 个子测试通过**；严格 TLS、登录退出、现有连接的 9 项模型列表检查通过。
+
+在正式网站的独立编辑页右侧发送实际任务，使用现有 `MiniMax-M3.1-Flash`，未修改模型连接或凭据。两次测试均使用草稿 r2，Run 的 `release_id` 为 `NULL`，固定的草稿快照与正式发布相互独立。
+
+| 模式 | 模型调用 | 工具调用 | 实际结果 |
+| --- | --- | --- | --- |
+| ReAct | 5 | 4 | `write_todos`、`write_file`、`read_file`、`ls` 各 1 次，全部成功 |
+| Plan | 8 | 4 | writer 写文件，reviewer 读取、修改、再次读取；两个计划步骤依序完成 |
+
+ReAct 的会话 `de3f01b5246443719bbbc915783489c0` 与 Plan 的会话 `6a930f91b3ee4b4983dcdc91467071f9` 各有独立工作空间。直接核对服务端 `editor-preview.txt`：分别包含 `proof=editor-react-20261022`、`proof=editor-plan-20261022`，且均为 `status=verified`。工具操作记录及工具返回消息均成功，最终回答包含相应校验标识。刷新 Plan 编辑页后，回答、模型／工具计数及运行过程恢复正确。
+
+部署前保存完整备份并执行 `0002` 迁移；两份既有验收应用确认配置不变后重新发布为 v2，以匹配更新的运行代码。原 v1 和历史会话保留。部署与验收报告位于 a2 的 `shared/draft-editor-verification.json`、`shared/verification/draft-editor-20261022.json`，目录基准为 `/home/bmilk/agentloom-platform/`。

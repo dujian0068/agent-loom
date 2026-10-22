@@ -1,10 +1,12 @@
 # a2 部署记录
 
-部署日期：2026-10-21。当前应用版本：`eb183042e0d23d8d76ddda0cadf0d9660fce23db`。
+部署日期：2026-10-21。当前应用版本：`8e46cb99f26abb234fb3c87810a1e6a8fc8ce05f`。
 
 新版已在 `oracle-a2` 上线，正式入口为 [agentloom.bmilk.cn](https://agentloom.bmilk.cn)。公网浏览器登录成功，源站 HTTPS、登录退出及 CSRF 检查通过，五个常驻服务均运行并设置开机自启。
 
-2026-10-22 使用现有 `MiniMax-M3.1-Flash` 连接完成[真实 ReAct／Plan 验收](testing-minimax-2026-10-22.md)：ReAct 为 5 次模型调用、4 次工具调用，Plan 为 8 次模型调用、4 次工具调用。任务清单、文件写入、读取、修改、目录查询均有成功回执，工作空间的实际文件与预期一致；Plan 的两个执行器按顺序完成。此次未修改运行代码或重新部署。
+2026-10-22 09:05（北京时间）已上线独立编辑页与私有草稿测试。a2 隔离 PostgreSQL 回归 **79 项及 2 个子测试全部通过**，前端 **27 项通过**。切换前确认无活动 Run，完成数据库、工作文件、配置备份及 `0002` 数据迁移。两份现有 MiniMax 验收应用在确认草稿与原发布配置一致后重新发布为 v2，以匹配新运行代码；原 v1、会话和模型凭据均保留。正式页面右侧的真实 MiniMax ReAct、Plan 草稿测试全部完成，工具回执、实际文件和刷新后恢复均已核对。前一应用版本 `eb18304` 保留。详细行为与验证见[编辑与测试回归](testing-editor-2026-10-22.md)。
+
+2026-10-22 独立编辑页上线前，使用现有 `MiniMax-M3.1-Flash` 连接完成[真实 ReAct／Plan 验收](testing-minimax-2026-10-22.md)：ReAct 为 5 次模型调用、4 次工具调用，Plan 为 8 次模型调用、4 次工具调用。任务清单、文件写入、读取、修改、目录查询均有成功回执，工作空间的实际文件与预期一致；Plan 的两个执行器按顺序完成。这轮既有发布验收未修改运行代码或重新部署。
 
 2026-10-21 23:42（北京时间）已更新补充回归发现的修复：重复提交与跨页面响应、固定已有模型连接地址、统一地址和模型 ID 校验。a2 的独立 PostgreSQL 回归 **71 项及 2 个子测试全部通过**，前端 **19 项通过**。升级前完成数据库、工作文件和配置备份；源站 HTTPS、登录退出及现有 MiniMax 的 9 项模型列表再次验证通过。前一应用版本 `98f2e66` 保留用于回退。
 
@@ -31,7 +33,7 @@ API 代理关闭响应缓冲以支持 SSE。数据库 `agentloom` 保存平台�
 
 | 路径 | 用途 |
 | --- | --- |
-| `/home/bmilk/agentloom-platform/releases/eb18304` | 当前版本代码、独立 Python 虚拟环境、前端构建 |
+| `/home/bmilk/agentloom-platform/releases/8e46cb9` | 当前版本代码、独立 Python 虚拟环境、前端构建 |
 | `/home/bmilk/agentloom-platform/current` | 当前发布的符号链接 |
 | `/home/bmilk/agentloom-platform/shared/platform.env` | 数据库连接、加密密钥和运行配置，权限 `0600` |
 | `/home/bmilk/agentloom-platform/shared/initial-admin.json` | 初始管理员访问资料，权限 `0600`，不得提交 Git |
@@ -42,6 +44,8 @@ API 代理关闭响应缓冲以支持 SSE。数据库 `agentloom` 保存平台�
 | `/home/bmilk/agentloom-platform/shared/https-verification.json` | 新域名源站 HTTPS、页面和认证检查结果，不含凭据 |
 | `/home/bmilk/agentloom-platform/shared/model-catalog-verification.json` | 本次升级的版本、备份位置、TLS／认证与真实模型列表验收 |
 | `/home/bmilk/agentloom-platform/shared/verification/minimax-live-20261022/` | 真实 MiniMax ReAct／Plan 运行、工具回执、计划与工作文件核对报告 |
+| `/home/bmilk/agentloom-platform/shared/draft-editor-verification.json` | 独立编辑页发布、迁移、重新发布与真实草稿测试验收记录 |
+| `/home/bmilk/agentloom-platform/backups/before-draft-editor-20261022-090458` | 草稿测试上线前的完整数据库、工作文件和配置备份 |
 | `/home/bmilk/agentloom-platform/backups/before-model-regression-20261021-234227` | 补充回归修复上线前的完整备份，权限受限 |
 | `/home/bmilk/agentloom-platform/backups/before-model-catalog-20261021-232425` | 本次升级前的数据库、工作文件、加密配置和用户服务备份，权限受限 |
 | `/home/bmilk/agentloom-platform/backups/pre-platform-2e86aed` | 原服务单元、入口配置和版本记录 |
