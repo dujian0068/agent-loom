@@ -4,12 +4,21 @@ from pathlib import Path
 
 from sqlalchemy import func, select
 
-from .persistence import Application, Release, Resource, ResourceVersion, RunEvent, Secret
+from .persistence import Application, ChatSession, Release, Resource, ResourceVersion, RunEvent, Secret
 from .schemas import Draft
 from .security import Problem, require_role
 
 GRAPH_VERSION = "platform-graph-v1"
 TERMINAL = {"completed", "failed", "cancelled"}
+
+
+def run_snapshot(s, run):
+    if run.release_id:
+        return s.get(Release, run.release_id).snapshot
+    snapshot = s.get(ChatSession, run.session_id).preview_snapshot
+    if not snapshot:
+        raise RuntimeError("Run has neither a release nor a draft preview")
+    return snapshot
 
 
 def digest(value):

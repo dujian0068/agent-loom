@@ -235,19 +235,22 @@ def create_app(settings=None, database=None):
         session = s.get(ChatSession, run.session_id if run else object_id)
         if (is_run and not run) or not session or session.owner_id != actor_id:
             raise Problem(404, "NOT_FOUND", "会话不存在")
-        app = get_app(s, actor_id, session.app_id)
+        app = get_app(s, actor_id, session.app_id, "editor" if session.preview_snapshot else "viewer")
         return session, app, run
 
     def run_view(s, run):
         session = s.get(ChatSession, run.session_id)
-        release = s.get(Release, run.release_id)
+        release = s.get(Release, run.release_id) if run.release_id else None
         return {
             "id": run.id,
             "run_id": run.id,
             "session_id": run.session_id,
             "application_id": session.app_id,
             "release_id": run.release_id,
-            "release_version": release.version,
+            "release_version": release.version if release else None,
+            "draft_revision": session.preview_snapshot["draft_revision"]
+            if session.preview_snapshot
+            else None,
             "status": run.status,
             "result": run.result,
             "error": run.error,
@@ -660,7 +663,11 @@ def create_app(settings=None, database=None):
             rows = s.execute(
                 select(ChatSession, Application)
                 .join(Application)
-                .where(ChatSession.owner_id == user.id, Application.space_id == space_id)
+                .where(
+                    ChatSession.owner_id == user.id,
+                    Application.space_id == space_id,
+                    ChatSession.preview_snapshot.is_(None),
+                )
                 .order_by(ChatSession.created_at.desc())
             )
             return {
@@ -685,6 +692,62 @@ def create_app(settings=None, database=None):
 
         return mutate(request, user, {}, work)
 
+    @api.get(PREFIX + "/agents/{app_id}/previews")
+    def previews(app_id: str, request: Request):
+        user = actor(request)
+        with db.session() as s:
+            get_app(s, user.id, app_id, "editor")
+            rows = s.scalars(
+                select(ChatSession)
+                .where(
+                    ChatSession.app_id == app_id,
+                    ChatSession.owner_id == user.id,
+                    ChatSession.preview_snapshot.is_not(None),
+                )
+                .order_by(ChatSession.created_at.desc())
+                .limit(20)
+            )
+            return {
+                "items": [
+                    {
+                        "id": row.id,
+                        "draft_revision": row.preview_snapshot["draft_revision"],
+                        "title": row.title,
+                    }
+                    for row in rows
+                ]
+            }
+
+    @api.post(PREFIX + "/agents/{app_id}/previews", status_code=201)
+    def create_preview(app_id: str, body: Revision, request: Request):
+        user = actor(request)
+
+        def work(s):
+            app = get_app(s, user.id, app_id, "editor")
+            check_revision(request, app, body.draft_revision)
+            if app.lifecycle != "active":
+                raise Problem(409, "APP_NOT_READY", "应用正在发布，请等待发布完成后测试")
+            snapshot, violations = compile_snapshot(s, app, settings)
+            if violations:
+                raise Problem(422, "VALIDATION_FAILED", "请先完善配置后再测试", violations)
+            from .runtime import validate_graph
+
+            validate_graph(snapshot)
+            session = ChatSession(
+                app_id=app.id, owner_id=user.id, preview_snapshot={**snapshot, "draft_revision": app.revision}
+            )
+            s.add(session)
+            s.flush()
+            audit(s, user, app.space_id, "agent.preview", session.id)
+            return {
+                "id": session.id,
+                "app_id": app.id,
+                "draft_revision": app.revision,
+                "title": session.title,
+            }
+
+        return mutate(request, user, body.model_dump(), work)
+
     @api.post(PREFIX + "/sessions/{session_id}/inputs", status_code=202)
     def submit_input(session_id: str, body: UserInput, request: Request):
         user = actor(request)
@@ -700,15 +763,16 @@ def create_app(settings=None, database=None):
                 if existing.content != body.content:
                     raise Problem(409, "MESSAGE_CONFLICT", "相同消息编号对应了不同内容")
                 return {"input_id": existing.id, "run_id": existing.run_id, "status": existing.status}
-            if app.lifecycle != "active" or not app.release_id:
+            if app.lifecycle != "active" or not (session.preview_snapshot or app.release_id):
                 raise Problem(409, "APP_NOT_READY", "应用正在发布，暂不接收新问题")
             if s.scalar(select(Run.id).where(Run.session_id == session_id, Run.status.not_in(TERMINAL))):
                 raise Problem(409, "RUN_ACTIVE", "当前任务尚未结束；本阶段暂不支持运行中补充")
-            release = s.get(Release, app.release_id)
+            release = None if session.preview_snapshot else s.get(Release, app.release_id)
+            snapshot = session.preview_snapshot or release.snapshot
             run = Run(
                 session_id=session_id,
-                release_id=release.id,
-                deadline_at=time.time() + release.snapshot["draft"]["execution"]["timeout_seconds"],
+                release_id=release.id if release else None,
+                deadline_at=time.time() + snapshot["draft"]["execution"]["timeout_seconds"],
             )
             s.add(run)
             s.flush()
@@ -752,6 +816,9 @@ def create_app(settings=None, database=None):
                 "app_id": app.id,
                 "app_name": app.name,
                 "title": session.title,
+                "draft_revision": session.preview_snapshot["draft_revision"]
+                if session.preview_snapshot
+                else None,
                 "items": items,
                 "runs": [run_view(s, r) for r in runs],
                 "next_cursor": None,

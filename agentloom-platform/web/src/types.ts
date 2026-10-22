@@ -21,11 +21,13 @@ export interface Resource {
   enabled: boolean; credential_configured: boolean; versions: ResourceVersion[]
 }
 export interface Run {
-  id: string; status: string; result: string | null; error: string | null; release_version: number
+  id: string; status: string; result: string | null; error: string | null; release_version: number | null
+  draft_revision?: number | null
   cleanup_state: string; model_calls: number; tool_calls: number; last_event_seq: number
 }
 export interface History {
   id: string; app_id: string; app_name: string; title: string
+  draft_revision?: number | null
   items: { id: string; role: string; content: string; run_id: string; status?: string }[]
   runs: Run[]
 }

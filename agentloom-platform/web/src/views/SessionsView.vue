@@ -11,7 +11,7 @@ const progress = ref<{ id: number; kind: string; value: any }[]>([])
 const currentProgress = computed(() => {
   const latest = new Map<string, typeof progress.value[number]>()
   for (const item of progress.value) {
-    const key = item.kind === 'todos' ? `todos:${item.value.role}` : item.kind
+    const key = item.kind === 'tool' ? `tool:${item.value.call_id}` : item.kind === 'todos' ? `todos:${item.value.role}` : item.kind
     latest.set(key, item)
   }
   return [...latest.values()].sort((a, b) => a.id - b.id)
@@ -37,12 +37,12 @@ function connect(runId: string) {
   source = new EventSource(`${apiBase}/runs/${runId}/events`, { withCredentials: true })
   source.onopen = () => { connection.value = '实时更新已连接' }
   source.onerror = () => { connection.value = '连接已断开，正在重连。任务可能仍在继续。' }
-  for (const kind of ['status', 'input', 'plan', 'todos']) {
+  for (const kind of ['status', 'input', 'plan', 'todos', 'tool']) {
     source.addEventListener(kind, event => {
       const message = event as MessageEvent
       const id = Number(message.lastEventId)
       if (!progress.value.some(p => p.id === id)) progress.value.push({ id, kind, value: JSON.parse(message.data) })
-      if (kind === 'status' || kind === 'input') loadHistory().catch(e => { error.value = e.message })
+      if (['status', 'input', 'tool'].includes(kind)) loadHistory().catch(e => { error.value = e.message })
     })
   }
   source.addEventListener('finished', () => { source?.close(); source = undefined; connection.value = ''; loadHistory().catch(e => { error.value = e.message }) })
@@ -88,11 +88,12 @@ onBeforeUnmount(() => source?.close())
         <div class="row spread"><small class="muted">{{ active ? '当前任务结束后可继续提问。运行中补充将在后续阶段开放。' : 'Ctrl / ⌘ + Enter 发送' }}</small><button v-if="active" type="button" :disabled="busy || run?.status === 'stopping'" @click="stop"><Square :size="15" />停止</button><button v-else class="primary" :disabled="busy || !content.trim()"><Send :size="15" />发送</button></div>
       </form>
     </section>
-    <aside class="panel run-panel"><h2>运行过程</h2><template v-if="run"><div class="row"><span class="badge good">{{ labels[run.status] }}</span><span class="muted">发布 v{{ run.release_version }}</span></div><p class="muted">{{ connection }}</p>
+    <aside class="panel run-panel"><h2>运行过程</h2><template v-if="run"><div class="row"><span class="badge good">{{ labels[run.status] }}</span><span class="muted">{{ run.draft_revision ? `草稿测试 r${run.draft_revision}` : `发布 v${run.release_version}` }}</span></div><p class="muted">{{ connection }}</p>
       <dl><dt>模型调用</dt><dd>{{ run.model_calls }}</dd><dt>工具调用</dt><dd>{{ run.tool_calls }}</dd><dt>工作区清理</dt><dd>{{ { pending: '待处理', completed: '已完成', failed: '待重试' }[run.cleanup_state] || run.cleanup_state }}</dd></dl>
       <div v-for="item in currentProgress" :key="item.id" class="progress-item">
         <p v-if="item.kind === 'status'">{{ labels[item.value.status] }}</p>
         <p v-else-if="item.kind === 'input'">输入已接收</p>
+        <p v-else-if="item.kind === 'tool'"><code>{{ item.value.name }}</code> · {{ item.value.status === 'completed' ? '成功' : item.value.status === 'failed' ? '失败' : active ? '执行中' : '结果未确认' }}<small>{{ item.value.role }}</small></p>
         <template v-else-if="item.kind === 'plan'"><h3>执行计划</h3><ol><li v-for="(task, index) in item.value.tasks" :key="index">{{ task.executor }} · {{ task.status === 'completed' ? '已完成' : '待执行' }}<small>{{ task.instruction }}</small></li></ol></template>
         <template v-else-if="item.kind === 'todos'"><h3>{{ item.value.role }} · 任务清单</h3><ul><li v-for="todo in item.value.todos" :key="todo">{{ todo }}</li></ul></template>
       </div>

@@ -47,7 +47,7 @@ beforeEach(() => {
   state.spaceId = 'space'
   state.spaces = [{ id: 'space', name: 'Space', role: 'admin' }]
   mockedApi.mockImplementation(async (path: string) => {
-    if (path === '/spaces/space/resources' || path.endsWith('/releases')) return { items: [] } as any
+    if (path === '/spaces/space/resources' || path.endsWith('/releases') || path.endsWith('/previews')) return { items: [] } as any
     if (path.startsWith('/agents/')) return agent(path.split('/')[2]) as any
     throw new Error('Unexpected API request: ' + path)
   })

@@ -16,7 +16,7 @@ export const router = createRouter({
     { path: '/login', component: Login },
     { path: '/', redirect: '/apps' },
     { path: '/apps', component: Agents },
-    { path: '/apps/:id/config', component: Editor },
+    { path: '/apps/:id/config', component: Editor, meta: { standalone: true } },
     { path: '/resources/:kind', component: Resources },
     { path: '/sessions/:id?', component: Sessions },
     { path: '/settings', component: Settings },

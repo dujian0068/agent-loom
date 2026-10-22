@@ -86,6 +86,8 @@ class Control(AgentMiddleware):
                 raise RuntimeBlocked("任务执行权已关闭")
             if not membership or not owner or not owner.enabled or time.time() >= run.deadline_at:
                 raise RuntimeBlocked("授权已撤销或运行已超时")
+            if session.preview_snapshot and membership.role not in {"admin", "editor"}:
+                raise RuntimeBlocked("草稿测试权限已撤销")
             for resource in self.snapshot["resources"].values():
                 current = s.get(Resource, resource["id"])
                 if not current or not current.enabled:
@@ -133,12 +135,34 @@ class Control(AgentMiddleware):
             self.check("tool_calls")
             with self.db.session(write=True) as s:
                 s.add(Operation(run_id=self.run_id, call_id=call_id, status="pending"))
+                append_event(
+                    s,
+                    self.run_id,
+                    "tool",
+                    {
+                        "call_id": call_id,
+                        "role": self.role,
+                        "name": request.tool_call["name"],
+                        "status": "running",
+                    },
+                )
             result = await handler(request)
             if not isinstance(result, ToolMessage):
                 raise RuntimeBlocked("工具返回了不支持的状态修改")
             with self.db.session(write=True) as s:
                 operation = s.get(Operation, (self.run_id, call_id))
                 operation.status, operation.result = "completed", message_to_dict(result)
+                append_event(
+                    s,
+                    self.run_id,
+                    "tool",
+                    {
+                        "call_id": call_id,
+                        "role": self.role,
+                        "name": request.tool_call["name"],
+                        "status": "failed" if result.status == "error" else "completed",
+                    },
+                )
             return result
 
 

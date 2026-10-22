@@ -124,6 +124,7 @@ class ChatSession(Base):
     app_id: Mapped[str] = mapped_column(ForeignKey("applications.id"), index=True)
     owner_id: Mapped[str] = mapped_column(ForeignKey("users.id"), index=True)
     title: Mapped[str] = mapped_column(String(100), default="新会话")
+    preview_snapshot: Mapped[dict | None] = mapped_column(JSON(none_as_null=True), nullable=True)
     created_at: Mapped[float] = mapped_column(Float, default=time.time)
 
 
@@ -131,7 +132,7 @@ class Run(Base):
     __tablename__ = "runs"
     id: Mapped[str] = mapped_column(String(32), primary_key=True, default=uid)
     session_id: Mapped[str] = mapped_column(ForeignKey("chat_sessions.id"), index=True)
-    release_id: Mapped[str] = mapped_column(ForeignKey("releases.id"))
+    release_id: Mapped[str | None] = mapped_column(ForeignKey("releases.id"), nullable=True)
     thread_id: Mapped[str] = mapped_column(String(32), unique=True, default=uid)
     status: Mapped[str] = mapped_column(String(24), default="queued", index=True)
     generation: Mapped[int] = mapped_column(Integer, default=0)

@@ -26,13 +26,24 @@ def migrate(settings):
     db = Database(settings.database_url)
     with db.engine.connect() as connection:
         postgres = connection.dialect.name == "postgresql"
+        sqlite = connection.dialect.name == "sqlite"
+        if sqlite:
+            # Alembic batch migrations rebuild tables with inbound foreign keys.
+            # Restore enforcement and check every reference before returning.
+            connection.execute(text("PRAGMA foreign_keys=OFF"))
+            connection.commit()
         if postgres:
             connection.execute(text("SELECT pg_advisory_lock(781205320)"))
             connection.commit()
         try:
             config.attributes["connection"] = connection
             command.upgrade(config, "head")
+            if sqlite and connection.execute(text("PRAGMA foreign_key_check")).first():
+                raise RuntimeError("Migration left invalid foreign key references")
         finally:
+            if sqlite:
+                connection.commit()
+                connection.execute(text("PRAGMA foreign_keys=ON"))
             if postgres:
                 connection.execute(text("SELECT pg_advisory_unlock(781205320)"))
                 connection.commit()

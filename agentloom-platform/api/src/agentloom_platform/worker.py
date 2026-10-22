@@ -12,9 +12,9 @@ from contextlib import contextmanager, nullcontext
 
 from sqlalchemy import select
 
-from .applications import TERMINAL, append_event
+from .applications import TERMINAL, append_event, run_snapshot
 from .config import Settings
-from .persistence import Application, ChatSession, Database, Operation, Release, ReleaseJob, Run
+from .persistence import Application, ChatSession, Database, Operation, ReleaseJob, Run
 
 
 @contextmanager
@@ -53,7 +53,7 @@ def finish(db, run_id, generation, status, result=None, error=None):
 
 
 async def run_one(settings, db, run_id, *, lock_held=False):
-    with (nullcontext(True) if lock_held else run_lock(settings, run_id)) as acquired:
+    with nullcontext(True) if lock_held else run_lock(settings, run_id) as acquired:
         if not acquired:
             return
         with db.session(write=True) as s:
@@ -62,8 +62,8 @@ async def run_one(settings, db, run_id, *, lock_held=False):
                 return
             if run.host_id and run.host_id != settings.worker_host_id:
                 return
-            release = s.get(Release, run.release_id)
-            app = s.get(Application, release.app_id)
+            session = s.get(ChatSession, run.session_id)
+            app = s.get(Application, session.app_id)
             if run.status == "stopping" or app.lifecycle != "active":
                 run.status = "cancelled"
                 append_event(s, run.id, "status", {"status": "cancelled"})
@@ -71,7 +71,7 @@ async def run_one(settings, db, run_id, *, lock_held=False):
             run.status, run.generation = "running", run.generation + 1
             run.host_id = settings.worker_host_id
             append_event(s, run.id, "status", {"status": "running"})
-            snapshot = release.snapshot
+            snapshot = run_snapshot(s, run)
         from .runtime import RuntimeBlocked, execute
 
         async def settle(status, result=None, error=None):
@@ -132,8 +132,7 @@ def maintenance(settings, db):
                 finish(db, candidate.id, candidate.generation, "cancelled")
             with db.session() as s:
                 run = s.get(Run, candidate.id)
-                release = s.get(Release, run.release_id)
-                retention = release.snapshot["draft"]["environment"]["retention"]
+                retention = run_snapshot(s, run)["draft"]["environment"]["retention"]
             if run.status not in TERMINAL:
                 continue
             try:

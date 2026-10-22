@@ -1,6 +1,9 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import { onBeforeRouteLeave, onBeforeRouteUpdate, useRoute } from 'vue-router'
+import { ArrowLeft, Save } from 'lucide-vue-next'
+import DraftPlayground from '../components/DraftPlayground.vue'
+import '../editor.css'
 import { api, ApiError } from '../api'
 import { canEdit, state } from '../state'
 import { definition, type Agent, type Definition, type Resource, type Violation } from '../types'
@@ -8,12 +11,17 @@ const route = useRoute(), agent = ref<Agent>(), resources = ref<Resource[]>([]),
 const tab = ref('basic'), roleKey = ref('planner'), error = ref(''), notice = ref(''), busy = ref(false)
 const violations = ref<Violation[]>([]), validatedRevision = ref(0), confirmPublish = ref(false)
 const executorKey = ref(''), releases = ref<any[]>([]), jobStatus = ref('')
+const mobilePane = ref('edit')
 let poll: ReturnType<typeof setInterval> | undefined
 let loadGeneration = 0
 const dirty = computed(() => !!agent.value && JSON.stringify(agent.value.draft) !== baseline.value)
 const currentRole = computed<Definition | undefined>(() => roleKey.value === 'planner' ? agent.value?.draft.definition : agent.value?.draft.executors[roleKey.value])
 const groups = [{ key: 'tool', title: 'Tool · 工具' }, { key: 'skill', title: 'Skill · 技能' }, { key: 'mcp', title: 'MCP · 服务' }]
 const models = computed(() => resources.value.filter(r => r.kind === 'model'))
+const modelName = computed(() => {
+  const binding = agent.value?.draft.model, resource = models.value.find(item => item.id === binding?.resource_id)
+  return resource?.versions.find(item => item.version === binding?.version)?.spec.model_id || resource?.name || ''
+})
 const modelValue = computed({
   get: () => agent.value?.draft.model ? `${agent.value.draft.model.resource_id}:${agent.value.draft.model.version}` : '',
   set: (value: string) => {
@@ -92,6 +100,14 @@ async function validate() {
     notice.value = report.valid ? (dirty.value ? '已保存版本校验通过，当前修改尚未校验' : '配置校验通过') : ''
   } catch (e) { if (agent.value === current) error.value = (e as Error).message } finally { busy.value = false }
 }
+async function prepareTest() {
+  if (!agent.value || busy.value || agent.value.lifecycle !== 'active') return null
+  const id = agent.value.id
+  if (dirty.value && !await save()) return null
+  if (agent.value?.id !== id) return null
+  if (dirty.value) { notice.value = '还有新的修改尚未保存，请再次发送测试'; return null }
+  return agent.value.revision
+}
 async function publish() {
   if (!agent.value || busy.value || dirty.value || validatedRevision.value !== agent.value.revision) return
   const current = agent.value
@@ -140,12 +156,16 @@ window.addEventListener('beforeunload', beforeUnload)
 onBeforeUnmount(() => { ++loadGeneration; clearInterval(poll); window.removeEventListener('beforeunload', beforeUnload) })
 </script>
 <template>
-  <p v-if="error" class="error" role="alert">{{ error }} <button v-if="error.includes('草稿已被修改')" @click="load">重新加载草稿</button></p>
-  <template v-if="agent && canEdit">
-    <div class="page-head"><div><h1>{{ agent.name }}</h1><p class="muted">{{ agent.mode === 'react' ? 'ReAct' : 'Plan' }} 应用配置 · 执行模式创建后固定</p></div><RouterLink class="button" to="/apps">返回应用</RouterLink></div>
-    <div class="editor-layout"><section class="panel">
-      <div class="row spread"><span class="badge">草稿 r{{ agent.revision }}</span><span class="muted">{{ dirty ? '有未保存修改' : '草稿已保存' }}</span></div>
-      <nav class="tabs" aria-label="配置分组"><button v-for="item in [['basic','基础配置'],['capabilities','能力配置'],['environment','运行环境'],['releases','发布记录']]" :key="item[0]" :class="{ active: tab === item[0] }" @click="tab = item[0]">{{ item[1] }}</button></nav>
+  <div v-if="agent && canEdit" class="editor-workspace" :data-mobile-pane="mobilePane">
+    <nav class="editor-mobile-switch" aria-label="编辑与测试"><button :class="{ active: mobilePane === 'edit' }" @click="mobilePane = 'edit'">编辑配置</button><button :class="{ active: mobilePane === 'test' }" @click="mobilePane = 'test'">测试</button></nav>
+    <section class="editor-config" aria-label="应用配置">
+      <header class="editor-heading"><RouterLink class="icon-button button" to="/apps" aria-label="返回应用" title="返回应用"><ArrowLeft :size="18" /></RouterLink><h1 :title="agent.name">{{ agent.name }}</h1><span class="badge">{{ agent.mode === 'react' ? 'ReAct' : 'Plan' }}</span></header>
+      <nav class="editor-tabs" aria-label="配置分组"><button v-for="item in [['basic','基础配置'],['capabilities','能力配置'],['environment','运行环境'],['releases','发布记录']]" :key="item[0]" :class="{ active: tab === item[0] }" @click="tab = item[0]">{{ item[1] }}</button></nav>
+      <div class="editor-scroll">
+      <p v-if="error" class="error" role="alert">{{ error }} <button v-if="error.includes('草稿已被修改')" @click="load">重新加载草稿</button></p>
+      <p v-if="notice" class="success" role="status">{{ notice }}</p>
+      <ul v-if="violations.length" class="violations"><li v-for="v in violations" :key="v.path + v.code">{{ v.message }}<small>{{ v.path }}</small></li></ul>
+      <p v-if="agent.lifecycle === 'publishing'" class="callout">{{ jobStatus === 'needs_attention' ? '存在结果未确认的工具操作，需要管理员核对后才能完成发布。' : '正在等待旧任务停止与清理，完成后将启用新版本。' }}</p>
       <template v-if="tab === 'basic'">
         <h2>基本信息</h2><label>应用描述（选填）<textarea v-model="agent.draft.description" maxlength="2000" rows="3"></textarea></label>
         <h2>模型与行为</h2><label>模型连接<select v-model="modelValue"><option value="">请选择模型连接</option><template v-for="model in models" :key="model.id"><option v-for="version in model.versions" :key="version.version" :value="`${model.id}:${version.version}`">{{ model.name }} · v{{ version.version }}</option></template></select></label>
@@ -189,13 +209,11 @@ onBeforeUnmount(() => { ++loadGeneration; clearInterval(poll); window.removeEven
         <h2>运行额度</h2><div class="form-grid"><label>最多模型调用<input v-model.number="agent.draft.execution.model_calls" type="number" min="1" max="100"></label><label>最多工具调用<input v-model.number="agent.draft.execution.tool_calls" type="number" min="1" max="200"></label><label>任务期限（秒）<input v-model.number="agent.draft.execution.timeout_seconds" type="number" min="10" max="1800"></label><label v-if="agent.mode === 'plan_executor'">最多委派任务<input v-model.number="agent.draft.execution.max_tasks" type="number" min="1" max="20"></label></div>
       </template>
       <template v-if="tab === 'releases'"><h2>发布记录</h2><p v-if="!releases.length" class="muted">还没有发布记录。</p><details v-for="release in releases" :key="release.id" class="resource-block"><summary>v{{ release.version }} · 草稿 r{{ release.draft_revision }} · {{ new Date(release.created_at * 1000).toLocaleString() }}</summary><p class="muted">固定快照 · {{ release.content_hash.slice(0, 16) }}</p><pre>{{ JSON.stringify(release.snapshot.draft, null, 2) }}</pre></details></template>
+      </div>
+      <footer class="editor-footer"><span class="draft-status" :class="{ unsaved: dirty }"><i></i>{{ dirty ? '有未保存修改' : `草稿 r${agent.revision} 已保存` }}</span><div class="row"><button :disabled="busy || !dirty" @click="save"><Save :size="14" />保存草稿</button><button :disabled="busy" @click="validate">校验配置</button><button class="primary" :disabled="busy || dirty || validatedRevision !== agent.revision || agent.lifecycle !== 'active'" @click="confirmPublish = true">发布…</button></div></footer>
     </section>
-    <aside class="panel publish-panel"><h2>发布与使用</h2><p class="muted">保存草稿，通过校验后发布给空间成员。</p><dl><dt>当前发布</dt><dd>{{ agent.release_version ? `v${agent.release_version}` : '尚未发布' }}</dd><dt>运行模式</dt><dd>{{ agent.mode === 'react' ? 'ReAct' : 'Plan' }}</dd></dl>
-      <p v-if="notice" class="success" role="status">{{ notice }}</p>
-      <ul v-if="violations.length" class="violations"><li v-for="v in violations" :key="v.path + v.code">{{ v.message }}<small>{{ v.path }}</small></li></ul>
-      <p v-if="agent.lifecycle === 'publishing'" class="callout">{{ jobStatus === 'needs_attention' ? '存在结果未确认的工具操作，需要管理员核对后才能激活新版本。' : '正在等待旧任务结束和工作区清理。请保持 Worker 与维护服务运行。' }}</p>
-      <div class="stack"><button :disabled="busy || !dirty" @click="save">保存草稿</button><button :disabled="busy" @click="validate">校验配置</button><button class="primary" :disabled="busy || dirty || validatedRevision !== agent.revision || agent.lifecycle !== 'active'" @click="confirmPublish = true">发布…</button></div>
-    </aside></div>
+    <DraftPlayground :key="agent.id" :agent-id="agent.id" :revision="agent.revision" :dirty="dirty" :disabled="busy || agent.lifecycle !== 'active'" :mode="agent.mode" :model-name="modelName" :prepare="prepareTest" @violations="violations = $event" />
     <div v-if="confirmPublish" class="modal-backdrop"><section class="modal" role="dialog" aria-modal="true" aria-labelledby="publish-title"><h2 id="publish-title">发布 {{ agent.name }}</h2><p>将固定草稿 r{{ agent.revision }} 的模型、提示词、角色资源和运行环境。</p><p class="callout">发布会停止该应用的旧版本活动任务，确认停止与清理后才切换版本。期间暂不接收新提问。</p><div class="row end"><button :disabled="busy" @click="confirmPublish = false">取消</button><button class="primary" :disabled="busy" @click="publish">确认发布</button></div></section></div>
-  </template>
+  </div>
+  <div v-else class="editor-loading"><RouterLink to="/apps" class="text-link">← 返回应用</RouterLink><p v-if="error" class="error" role="alert">{{ error }}</p><p v-else class="muted">正在加载应用配置…</p></div>
 </template>

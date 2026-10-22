@@ -28,6 +28,10 @@ async function logout() {
 </script>
 <template>
   <RouterView v-if="route.path === '/login'" />
+  <div v-else-if="route.meta.standalone" class="standalone-page">
+    <RouterView v-if="state.spaceId" :key="state.spaceId" />
+    <div v-else class="empty">当前账号没有可访问的空间。<RouterLink to="/apps">返回应用</RouterLink></div>
+  </div>
   <div v-else class="shell">
     <aside class="sidebar" :class="{ open: menu }">
       <RouterLink to="/apps" class="brand"><span class="mark">织</span><div>AgentLoom<small>团队工作台</small></div></RouterLink>
