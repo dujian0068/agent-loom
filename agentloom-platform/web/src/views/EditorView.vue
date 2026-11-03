@@ -12,6 +12,7 @@ const tab = ref('basic'), roleKey = ref('planner'), error = ref(''), notice = re
 const violations = ref<Violation[]>([]), validatedRevision = ref(0), confirmPublish = ref(false)
 const executorKey = ref(''), releases = ref<any[]>([]), jobStatus = ref('')
 const mobilePane = ref('edit')
+const hostExecAvailable = ref(false)
 let poll: ReturnType<typeof setInterval> | undefined
 let loadGeneration = 0
 const dirty = computed(() => !!agent.value && JSON.stringify(agent.value.draft) !== baseline.value)
@@ -38,10 +39,13 @@ async function load() {
   if (!canEdit.value) { error.value = '当前角色不能编辑应用'; return }
   error.value = ''
   try {
-    const [app, catalog] = await Promise.all([
+    const [app, catalog, health] = await Promise.all([
       api<Agent>(`/agents/${id}`), api<{items: Resource[]}>(`/spaces/${state.spaceId}/resources`),
+      api<{host_exec_available: boolean}>('/health'),
     ])
     if (generation !== loadGeneration) return
+    app.draft.environment.command_execution ??= 'disabled'
+    hostExecAvailable.value = health.host_exec_available
     agent.value = app; resources.value = catalog.items; baseline.value = JSON.stringify(app.draft)
     validatedRevision.value = 0; roleKey.value = 'planner'
     const history = await api<{items: any[]}>(`/agents/${app.id}/releases`)
@@ -53,6 +57,10 @@ async function load() {
 function binding(resource: Resource) { return currentRole.value?.capabilities.find(b => b.resource_id === resource.id) }
 function currentVersion(resource: Resource) {
   return resource.versions.find(v => v.version === binding(resource)?.version) || resource.versions.find(v => v.status === 'ready') || resource.versions[0]
+}
+function canSelect(resource: Resource) {
+  return currentVersion(resource).status === 'ready' && (currentVersion(resource).spec.registry_key !== 'exec'
+    || (hostExecAvailable.value && agent.value?.draft.environment.command_execution === 'host'))
 }
 function toggle(resource: Resource, checked: boolean) {
   if (!currentRole.value) return
@@ -191,8 +199,9 @@ onBeforeUnmount(() => { ++loadGeneration; clearInterval(poll); window.removeEven
           <div class="row spread"><h3>{{ group.title }}</h3><RouterLink :to="`/resources/${group.key}`" class="text-link">管理{{ group.title.split(' · ')[0] }}</RouterLink></div>
           <p v-if="!resources.some(r => r.kind === group.key)" class="muted">请先在管理页添加资源。</p>
           <div v-for="resource in resources.filter(r => r.kind === group.key)" :key="resource.id" class="capability-item">
-            <label class="check"><input type="checkbox" :checked="!!binding(resource)" :disabled="!binding(resource) && currentVersion(resource).status !== 'ready'"
+            <label class="check"><input type="checkbox" :checked="!!binding(resource)" :disabled="!binding(resource) && !canSelect(resource)"
               @change="toggle(resource, ($event.target as HTMLInputElement).checked)"><span>{{ resource.name }}<small>{{ resource.description }}{{ currentVersion(resource).status !== 'ready' ? ' · 尚不可用' : '' }}</small></span></label>
+            <p v-if="currentVersion(resource).spec.registry_key === 'exec' && !canSelect(resource)" class="muted">{{ hostExecAvailable ? '请先在运行环境启用本机执行。' : '本机执行服务未连接，请联系管理员。' }}</p>
             <template v-if="binding(resource)">
               <label class="version-picker">固定版本<select :value="binding(resource)!.version" @change="setVersion(resource, $event)"><option v-for="version in resource.versions.filter(v => v.status === 'ready')" :key="version.version" :value="version.version">v{{ version.version }}</option></select></label>
               <div v-if="resource.kind === 'mcp'" class="members">
@@ -203,7 +212,10 @@ onBeforeUnmount(() => { ++loadGeneration; clearInterval(poll); window.removeEven
         </section>
       </template>
       <template v-if="tab === 'environment'">
-        <h2>执行沙箱</h2><label class="check"><input type="checkbox" disabled><span>启用执行沙箱<small>沙箱服务尚未接入，命令和脚本执行暂不可用。</small></span></label>
+        <h2>命令执行</h2><label>执行方式<select v-model="agent.draft.environment.command_execution"><option value="disabled">关闭</option><option value="host" :disabled="!hostExecAvailable">本机执行</option></select></label>
+        <p v-if="!hostExecAvailable" class="callout">本机执行服务未连接，请联系管理员。</p>
+        <p v-else-if="agent.draft.environment.command_execution === 'host'" class="callout">命令在服务器的工作空间运行，可访问执行账号有权限的文件和网络。启用后，还需在能力配置中为角色选择 exec 工具。</p>
+        <h2>执行沙箱</h2><label class="check"><input type="checkbox" disabled><span>启用执行沙箱<small>沙箱尚未接入，本机命令执行不依赖沙箱。</small></span></label>
         <h2>文件工作区</h2><label>访问权限<select v-model="agent.draft.environment.workspace_access"><option value="read_write">可读写</option><option value="read_only">只读</option></select></label>
         <label>文件保留策略<select v-model="agent.draft.environment.retention"><option value="run">任务结束后清理</option><option value="session">在同一会话中保留</option></select></label>
         <h2>运行额度</h2><div class="form-grid"><label>最多模型调用<input v-model.number="agent.draft.execution.model_calls" type="number" min="1" max="100"></label><label>最多工具调用<input v-model.number="agent.draft.execution.tool_calls" type="number" min="1" max="200"></label><label>任务期限（秒）<input v-model.number="agent.draft.execution.timeout_seconds" type="number" min="10" max="1800"></label><label v-if="agent.mode === 'plan_executor'">最多委派任务<input v-model.number="agent.draft.execution.max_tasks" type="number" min="1" max="20"></label></div>

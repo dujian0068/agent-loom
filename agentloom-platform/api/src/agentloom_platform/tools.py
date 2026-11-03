@@ -3,15 +3,53 @@
 import fnmatch
 import json
 import os
+import stat
 from pathlib import Path, PurePosixPath
 
 from langchain_core.tools import StructuredTool
 
 
+def share_workspace(root):
+    """Share only worker-owned workspace entries with the execution group.
+
+    Walk through directory descriptors, never through links supplied by a
+    command. Platform keys and parent directories keep their private modes.
+    """
+
+    def visit(directory):
+        own = os.fstat(directory)
+        if own.st_uid == os.getuid():
+            os.fchmod(directory, 0o2770)
+        for name in os.listdir(directory):
+            try:
+                fd = os.open(name, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK, dir_fd=directory)
+            except OSError:
+                continue
+            try:
+                info = os.fstat(fd)
+                if stat.S_ISDIR(info.st_mode):
+                    visit(fd)
+                elif stat.S_ISREG(info.st_mode) and info.st_uid == os.getuid():
+                    os.fchmod(fd, (info.st_mode & 0o770) | 0o660)
+            finally:
+                os.close(fd)
+
+    descriptor = os.open(root, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW)
+    try:
+        visit(descriptor)
+    finally:
+        os.close(descriptor)
+
+
 class Workspace:
-    def __init__(self, root: Path, writable: bool):
+    def __init__(self, root: Path, writable: bool, *, shared=False):
+        if root.is_symlink():
+            raise ValueError("工作区不能是符号链接")
         self.root, self.writable = root.resolve(), writable
+        self.shared = shared
         self.root.mkdir(parents=True, exist_ok=True)
+        if shared:
+            share_workspace(self.root)
 
     def path(self, name, write=False):
         if write and not self.writable:
@@ -82,9 +120,13 @@ class Workspace:
                 raise ValueError("文件不得超过 1 MB")
             target.parent.mkdir(parents=True, exist_ok=True)
             # O_NOFOLLOW adds a final guard on top of the path traversal checks.
-            fd = os.open(target, os.O_WRONLY | os.O_CREAT | os.O_TRUNC | os.O_NOFOLLOW, 0o600)
+            fd = os.open(
+                target, os.O_WRONLY | os.O_CREAT | os.O_TRUNC | os.O_NOFOLLOW, 0o660 if self.shared else 0o600
+            )
             with os.fdopen(fd, "w") as output:
                 output.write(content)
+            if self.shared:
+                share_workspace(self.root)
             return "已写入"
 
         def edit_file(path: str, old_text: str, new_text: str) -> str:
@@ -97,6 +139,8 @@ class Workspace:
         def mkdir(path: str) -> str:
             """Create a directory inside the writable workspace."""
             self.path(path, write=True).mkdir(parents=True, exist_ok=True)
+            if self.shared:
+                share_workspace(self.root)
             return "已创建"
 
         def move(source: str, destination: str) -> str:
@@ -106,6 +150,8 @@ class Workspace:
                 raise ValueError("源必须为文件且目标不能存在")
             destination_path.parent.mkdir(parents=True, exist_ok=True)
             source_path.rename(destination_path)
+            if self.shared:
+                share_workspace(self.root)
             return "已移动"
 
         def delete(path: str) -> str:

@@ -61,6 +61,13 @@ class Handler(BaseHTTPRequestHandler):
             if body["model"] == "unknown-executor":
                 tasks[0]["executor"] = "not-authorized"
             calls = [self.call("Plan", {"tasks": tasks})]
+        elif body["model"].startswith("host-exec") and "exec" in names and not tool_results:
+            command = 'python3 -c \'from pathlib import Path; Path("exec.txt").write_text("host-exec-verified"); print("EXEC_OK")\''
+            if body["model"] == "host-exec-stop":
+                command = "echo started > started.txt; (sleep 2; echo leaked > leaked.txt) & wait"
+            calls = [self.call("exec", {"command": command, "timeout_seconds": 20})]
+        elif body["model"].startswith("host-exec") and "read_file" in names and not tool_results:
+            calls = [self.call("read_file", {"path": "exec.txt"})]
         elif phase == "research" and not tool_results:
             calls = [self.call("write_file", {"path": "research.txt", "content": "Completed research"})]
         elif phase == "writer" and body["model"] == "plan-crash":

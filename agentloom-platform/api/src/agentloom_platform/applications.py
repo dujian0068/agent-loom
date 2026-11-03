@@ -29,7 +29,10 @@ def digest(value):
 
 def implementation_hash():
     package = Path(__file__).parent
-    files = [package.parents[1] / "requirements.lock", package / "runtime.py", package / "tools.py"]
+    files = [
+        package.parents[1] / "requirements.lock",
+        *[package / name for name in ("runtime.py", "tools.py", "host_exec.py", "exec_service.py")],
+    ]
     fingerprint = hashlib.sha256()
     for path in files:
         fingerprint.update(path.name.encode() + b"\0" + path.read_bytes() + b"\0")
@@ -136,6 +139,11 @@ def compile_snapshot(s, app, settings):
             tool_names = []
             if resource.kind == "tool":
                 tool_names = [version.spec["registry_key"]]
+                if (
+                    version.spec["registry_key"] == "exec"
+                    and draft["environment"]["command_execution"] != "host"
+                ):
+                    error("EXEC_NOT_ENABLED", path, "请在运行环境启用本机命令执行")
                 if version.spec.get("writes") and draft["environment"]["workspace_access"] == "read_only":
                     error("WORKSPACE_READ_ONLY", path, f"{resource.name} 需要读写工作区")
             elif resource.kind == "mcp":
@@ -151,6 +159,13 @@ def compile_snapshot(s, app, settings):
             error("EXECUTOR_INCOMPLETE", f"executors.{role_key}", "执行器需要名称与职责提示词")
     if draft["environment"]["sandbox_enabled"]:
         error("SANDBOX_UNAVAILABLE", "environment.sandbox_enabled", "执行沙箱尚未接入")
+    if draft["environment"]["command_execution"] == "host":
+        if not settings.exec_socket_path or not settings.exec_socket_path.is_socket():
+            error("EXEC_UNAVAILABLE", "environment.command_execution", "本机执行服务尚未连接")
+        if draft["environment"]["workspace_access"] != "read_write":
+            error(
+                "EXEC_REQUIRES_WRITABLE_WORKSPACE", "environment.workspace_access", "本机执行需要可读写工作区"
+            )
     snapshot = {
         "snapshot_version": 1,
         "graph_version": GRAPH_VERSION,

@@ -27,7 +27,7 @@ TOOL_CATALOG = [
     ("delete", "删除文件", "删除指定工作区文件", "files", True, True),
     ("patch", "应用文件补丁", "补丁适配器待实现", "files", False, True),
     ("write_todos", "任务清单", "更新当前角色的任务清单", "execution", True, False),
-    ("exec", "执行命令与脚本", "沙箱服务尚未接入", "execution", False, True),
+    ("exec", "执行命令与脚本", "在应用工作空间运行本机命令；需启用本机执行", "execution", True, True),
     ("task", "子 Agent 委派", "在 Plan 应用中配置专业执行器", "orchestration", False, False),
 ] + [
     (key, name, "外部连接适配器待接入", "integrations", False, False)

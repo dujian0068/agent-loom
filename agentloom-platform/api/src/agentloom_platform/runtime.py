@@ -371,8 +371,15 @@ async def assemble(settings, db, run, snapshot, saver):
             max_retries=0,
         )
     scope = run.id if draft["environment"]["retention"] == "run" else run.session_id
+    host_commands = draft["environment"].get("command_execution", "disabled") == "host"
+    if host_commands and (
+        not settings.exec_socket_path or draft["environment"]["workspace_access"] != "read_write"
+    ):
+        raise RuntimeBlocked("本机执行服务不可用或工作区不可写")
     workspace = Workspace(
-        settings.data_dir / "workspaces" / scope, draft["environment"]["workspace_access"] == "read_write"
+        settings.data_dir / "workspaces" / scope,
+        draft["environment"]["workspace_access"] == "read_write",
+        shared=host_commands,
     )
     local_tools = workspace.tools()
     role_tools, controls = {}, {}
@@ -397,6 +404,12 @@ async def assemble(settings, db, run, snapshot, saver):
                         return StructuredTool.from_function(write_todos)
 
                     selected.append(make_todos(role_key))
+                elif key == "exec":
+                    if not host_commands:
+                        raise RuntimeBlocked("应用未授权本机命令执行")
+                    from .host_exec import command_tool
+
+                    selected.append(command_tool(settings, scope, run.deadline_at))
                 elif key in local_tools:
                     selected.append(local_tools[key])
                 else:

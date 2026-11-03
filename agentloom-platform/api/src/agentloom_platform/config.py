@@ -17,6 +17,7 @@ class Settings(BaseSettings):
     allow_test_model: bool = False
     poll_seconds: float = 0.5
     worker_host_id: str = socket.gethostname()
+    exec_socket_path: Path | None = None
 
     def prepare(self):
         self.data_dir.mkdir(parents=True, exist_ok=True)

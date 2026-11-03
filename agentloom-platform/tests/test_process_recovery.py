@@ -84,7 +84,16 @@ def start_worker(platform, run_id, log):
         **{
             "PLATFORM_" + key.upper(): str(value)
             for key, value in platform["settings"].model_dump().items()
-            if key in {"database_url", "checkpoint_url", "data_dir", "secret_key", "worker_host_id"}
+            if key
+            in {
+                "database_url",
+                "checkpoint_url",
+                "data_dir",
+                "secret_key",
+                "worker_host_id",
+                "exec_socket_path",
+            }
+            and value is not None
         },
         "PYTHONPATH": str(Path(__file__).parents[1] / "api" / "src"),
         "PLATFORM_POLL_SECONDS": "0.01",

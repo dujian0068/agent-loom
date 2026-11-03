@@ -47,6 +47,7 @@ beforeEach(() => {
   state.spaceId = 'space'
   state.spaces = [{ id: 'space', name: 'Space', role: 'admin' }]
   mockedApi.mockImplementation(async (path: string) => {
+    if (path === '/health') return { host_exec_available: true } as any
     if (path === '/spaces/space/resources' || path.endsWith('/releases') || path.endsWith('/previews')) return { items: [] } as any
     if (path.startsWith('/agents/')) return agent(path.split('/')[2]) as any
     throw new Error('Unexpected API request: ' + path)
@@ -55,6 +56,44 @@ beforeEach(() => {
 afterEach(() => { wrapper?.unmount(); wrapper = undefined; vi.restoreAllMocks() })
 
 describe('editor persistence and navigation', () => {
+  it('requires enabling host execution before selecting exec and saves both choices', async () => {
+    const fallback = mockedApi.getMockImplementation()!
+    const tool = { id: 'exec-tool', kind: 'tool', name: '执行命令与脚本', description: '本机执行', enabled: true,
+      credential_configured: false, versions: [{ version: 2, status: 'ready', spec: { registry_key: 'exec' } }] }
+    mockedApi.mockImplementation(async (path, method, body, revision) => {
+      if (path === '/spaces/space/resources') return { items: [tool] } as any
+      if (method === 'PUT') return { ...agent('first'), revision: 2, draft: body } as any
+      return fallback(path, method, body, revision)
+    })
+    await openEditor()
+    await button('能力配置').trigger('click')
+    expect(wrapper!.find('input[type="checkbox"]').attributes('disabled')).toBeDefined()
+    expect(wrapper!.text()).toContain('请先在运行环境启用本机执行')
+    await button('运行环境').trigger('click')
+    await wrapper!.find('select').setValue('host')
+    expect(wrapper!.text()).toContain('命令在服务器的工作空间运行')
+    await button('能力配置').trigger('click')
+    expect(wrapper!.find('input[type="checkbox"]').attributes('disabled')).toBeUndefined()
+    await wrapper!.find('input[type="checkbox"]').setValue(true)
+    await button('保存草稿').trigger('click')
+    await flushPromises()
+    const saved = mockedApi.mock.calls.find(([, method]) => method === 'PUT')?.[2] as any
+    expect(saved.environment).toMatchObject({ command_execution: 'host', sandbox_enabled: false })
+    expect(saved.definition.capabilities).toEqual([{ resource_id: 'exec-tool', version: 2, members: [] }])
+  })
+
+  it('disables host execution when the execution service is unavailable', async () => {
+    const fallback = mockedApi.getMockImplementation()!
+    mockedApi.mockImplementation(async (path, method, body, revision) =>
+      path === '/health' ? { host_exec_available: false } as any : fallback(path, method, body, revision))
+    await openEditor()
+    await button('运行环境').trigger('click')
+    expect(wrapper!.find('option[value="host"]').attributes('disabled')).toBeDefined()
+    expect(wrapper!.text()).toContain('本机执行服务未连接')
+    expect((wrapper!.find('select').element as HTMLSelectElement).value).toBe('disabled')
+    expect(wrapper!.text()).toContain('本机命令执行不依赖沙箱')
+  })
+
   it('preserves edits made while a save is awaiting the server, and saves them on the next revision', async () => {
     const pending = deferred<Agent>()
     const savedBodies: { body: any; revision: number | undefined }[] = []

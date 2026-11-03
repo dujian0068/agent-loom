@@ -8,7 +8,7 @@ export interface Draft {
   model: Binding | null
   definition: Definition
   executors: Record<string, Definition>
-  environment: { sandbox_enabled: boolean; workspace_access: 'read_only' | 'read_write'; retention: 'run' | 'session' }
+  environment: { sandbox_enabled: boolean; command_execution?: 'disabled' | 'host'; workspace_access: 'read_only' | 'read_write'; retention: 'run' | 'session' }
   execution: { model_calls: number; tool_calls: number; timeout_seconds: number; max_tasks: number }
 }
 export interface Agent {

@@ -7,7 +7,7 @@ from cryptography.fernet import Fernet
 
 from agentloom_platform.cli import migrate
 from agentloom_platform.config import Settings
-from agentloom_platform.persistence import ChatSession, Database, Input, Run, RunEvent
+from agentloom_platform.persistence import ChatSession, Database, Input, ResourceVersion, Run, RunEvent
 from agentloom_platform.schemas import Draft
 
 
@@ -34,6 +34,24 @@ def test_upgrade_preserves_existing_runs_inputs_and_foreign_keys(tmp_path):
 
         insert("spaces", id="space", name="Existing space")
         insert("users", id="user", username="existing", password_hash="test-only", enabled=True)
+        insert(
+            "resources",
+            id="legacy-exec",
+            space_id="space",
+            kind="tool",
+            name="exec",
+            description="not implemented",
+            enabled=True,
+        )
+        insert(
+            "resource_versions",
+            id="legacy-exec-v1",
+            resource_id="legacy-exec",
+            version=1,
+            status="unavailable",
+            spec={"registry_key": "exec", "category": "execution", "writes": True},
+            created_at=1,
+        )
         insert(
             "applications",
             id="app",
@@ -99,6 +117,14 @@ def test_upgrade_preserves_existing_runs_inputs_and_foreign_keys(tmp_path):
         assert s.get(RunEvent, ("run", 1)).payload == {"status": "completed"}
         assert s.execute(sa.text("PRAGMA foreign_key_check")).all() == []
         assert s.scalar(sa.text("PRAGMA foreign_keys")) == 1
+        versions = list(
+            s.scalars(
+                sa.select(ResourceVersion)
+                .where(ResourceVersion.resource_id == "legacy-exec")
+                .order_by(ResourceVersion.version)
+            )
+        )
+        assert [(v.version, v.status) for v in versions] == [(1, "unavailable"), (2, "ready")]
     columns = {column["name"]: column for column in sa.inspect(db.engine).get_columns("runs")}
     assert columns["release_id"]["nullable"] is True
     db.engine.dispose()

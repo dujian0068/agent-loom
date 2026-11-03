@@ -268,10 +268,13 @@ def create_app(settings=None, database=None):
 
     @api.get(PREFIX + "/health")
     def health():
+        from .host_exec import exec_available
+
         return {
             "status": "ok",
             "version": "0.1.0",
             "sandbox_available": False,
+            "host_exec_available": exec_available(settings),
             "active_supplements_available": False,
         }
 

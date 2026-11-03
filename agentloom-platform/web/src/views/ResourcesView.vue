@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
-import { Plus, RefreshCw, Search, Server, FolderOpen, Shield, KeyRound, X } from 'lucide-vue-next'
+import { Plus, RefreshCw, Search, Server, FolderOpen, Shield, Terminal, KeyRound, X } from 'lucide-vue-next'
 import { api } from '../api'
 import { state, isAdmin, canEdit } from '../state'
 import type { Resource, ResourceVersion } from '../types'
@@ -158,7 +158,7 @@ onBeforeUnmount(() => { pageGeneration++; loadGeneration++; closeForm(); secret.
       <div class="row resource-actions"><button v-if="kind === 'model' && isAdmin" class="text-link" @click="openForm(resource)">选择模型</button><button class="text-link" @click="showDetail(resource)">详情</button><button v-if="kind === 'mcp' && isAdmin" :disabled="busy" @click="discover(resource)">发现工具</button></div>
     </article>
   </div></section>
-  <section v-if="kind === 'model'" class="environment-section"><div class="section-caption"><h2>运行环境</h2><span class="muted">在应用配置中按需启用</span></div><div class="environment-grid"><article class="environment-card"><FolderOpen :size="21" /><div><h3>工作空间</h3><p class="muted">支持只读或读写权限，文件可按任务清理或按会话保留。</p></div><span class="badge good">可配置</span></article><article class="environment-card"><Shield :size="21" /><div><h3>执行沙箱</h3><p class="muted">隔离执行命令与脚本，沙箱服务接入后可启用。</p></div><span class="badge">尚未接入</span></article></div></section>
+  <section v-if="kind === 'model'" class="environment-section"><div class="section-caption"><h2>运行环境</h2><span class="muted">在应用配置中按需启用</span></div><div class="environment-grid"><article class="environment-card"><FolderOpen :size="21" /><div><h3>工作空间</h3><p class="muted">支持只读或读写权限，文件可按任务清理或按会话保留。</p></div><span class="badge good">可配置</span></article><article class="environment-card"><Terminal :size="21" /><div><h3>命令执行</h3><p class="muted">在应用中启用本机执行，并为角色选择 exec 工具。</p></div><span class="badge">按需授权</span></article><article class="environment-card"><Shield :size="21" /><div><h3>执行沙箱</h3><p class="muted">沙箱尚未接入，本机执行不依赖沙箱。</p></div><span class="badge">尚未接入</span></article></div></section>
   <div v-if="modal" class="modal-backdrop" :class="{ 'drawer-backdrop': kind === 'model' }"><form class="modal" :class="{ 'connection-drawer': kind === 'model' }" role="dialog" aria-modal="true" aria-labelledby="resource-title" @submit.prevent="save">
     <div class="row spread dialog-heading"><div><h2 id="resource-title">{{ editing ? kind === 'model' ? '配置模型连接' : '添加资源新版本' : addLabel }}</h2><p v-if="kind === 'model'" class="muted">填写连接信息，获取并选择可用模型。</p></div><button type="button" class="icon-button" aria-label="关闭配置" :disabled="busy" @click="closeForm"><X :size="20" /></button></div>
     <label>名称<input v-model="form.name" required maxlength="100" :readonly="!!editing"></label>

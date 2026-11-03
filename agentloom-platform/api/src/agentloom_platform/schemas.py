@@ -35,6 +35,7 @@ class Definition(DTO):
 
 class Environment(DTO):
     sandbox_enabled: bool = False
+    command_execution: Literal["disabled", "host"] = "disabled"
     workspace_access: Literal["read_only", "read_write"] = "read_write"
     retention: Literal["run", "session"] = "run"
 
