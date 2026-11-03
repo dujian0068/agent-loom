@@ -1,8 +1,12 @@
 # a2 部署记录
 
-部署日期：2026-10-21。当前应用版本：`8e46cb99f26abb234fb3c87810a1e6a8fc8ce05f`。
+首次部署：2026-10-21。最近升级：2026-11-03。当前应用版本：`b1c9f77cf2d7788493e2322b6216fb48ecfaffb4`。
 
 新版已在 `oracle-a2` 上线，正式入口为 [agentloom.bmilk.cn](https://agentloom.bmilk.cn)。公网浏览器登录成功，源站 HTTPS、登录退出及 CSRF 检查通过，五个常驻服务均运行并设置开机自启。
+
+2026-11-03 22:50（北京时间）已部署可选本机 `exec`。a2 独立 PostgreSQL 回归 **97 项及 2 个子测试全部通过**，前端 **29 项通过**。升级前确认无活动 Run，并备份数据库、工作文件和配置；迁移 `0003` 保留旧 `exec` v1，追加可用 v2。两份原有 MiniMax 验收应用配置未变，重新发布为 v3 以匹配新运行代码，命令执行仍默认关闭。五个用户服务、源站 HTTPS、登录退出和前端版本均核对通过；前一版本 `8e46cb9` 保留。
+
+**本机执行尚待系统服务激活**：API／Worker 已配置 Unix socket，但 `host_exec_available=false`。创建独立 `agentloom-exec` 系统账号及服务需要 sudo，激活命令见下文；安装及生产账号验收完成前，不能使用线上 `exec`。行为和验收边界见 [exec 说明](host-exec.md)与[本机执行验收](testing-host-exec-2026-11-03.md)。
 
 2026-10-22 09:05（北京时间）已上线独立编辑页与私有草稿测试。a2 隔离 PostgreSQL 回归 **79 项及 2 个子测试全部通过**，前端 **27 项通过**。切换前确认无活动 Run，完成数据库、工作文件、配置备份及 `0002` 数据迁移。两份现有 MiniMax 验收应用在确认草稿与原发布配置一致后重新发布为 v2，以匹配新运行代码；原 v1、会话和模型凭据均保留。正式页面右侧的真实 MiniMax ReAct、Plan 草稿测试全部完成，工具回执、实际文件和刷新后恢复均已核对。前一应用版本 `eb18304` 保留。详细行为与验证见[编辑与测试回归](testing-editor-2026-10-22.md)。
 
@@ -33,7 +37,7 @@ API 代理关闭响应缓冲以支持 SSE。数据库 `agentloom` 保存平台�
 
 | 路径 | 用途 |
 | --- | --- |
-| `/home/bmilk/agentloom-platform/releases/8e46cb9` | 当前版本代码、独立 Python 虚拟环境、前端构建 |
+| `/home/bmilk/agentloom-platform/releases/b1c9f77` | 当前版本代码、独立 Python 虚拟环境、前端构建 |
 | `/home/bmilk/agentloom-platform/current` | 当前发布的符号链接 |
 | `/home/bmilk/agentloom-platform/shared/platform.env` | 数据库连接、加密密钥和运行配置，权限 `0600` |
 | `/home/bmilk/agentloom-platform/shared/initial-admin.json` | 初始管理员访问资料，权限 `0600`，不得提交 Git |
@@ -45,12 +49,16 @@ API 代理关闭响应缓冲以支持 SSE。数据库 `agentloom` 保存平台�
 | `/home/bmilk/agentloom-platform/shared/model-catalog-verification.json` | 本次升级的版本、备份位置、TLS／认证与真实模型列表验收 |
 | `/home/bmilk/agentloom-platform/shared/verification/minimax-live-20261022/` | 真实 MiniMax ReAct／Plan 运行、工具回执、计划与工作文件核对报告 |
 | `/home/bmilk/agentloom-platform/shared/draft-editor-verification.json` | 独立编辑页发布、迁移、重新发布与真实草稿测试验收记录 |
+| `/home/bmilk/agentloom-platform/shared/host-exec-verification.json` | 本机执行版本部署、重新发布与系统服务激活状态，不含凭据 |
+| `/home/bmilk/agentloom-platform/shared/postgresql-verification-b1c9f77.txt` | 本机执行版本的独立 PostgreSQL 完整回归结果 |
+| `/home/bmilk/agentloom-platform/backups/before-host-exec-20261103-224953` | 本机执行上线前的完整数据库、工作文件和配置备份 |
 | `/home/bmilk/agentloom-platform/backups/before-draft-editor-20261022-090458` | 草稿测试上线前的完整数据库、工作文件和配置备份 |
 | `/home/bmilk/agentloom-platform/backups/before-model-regression-20261021-234227` | 补充回归修复上线前的完整备份，权限受限 |
 | `/home/bmilk/agentloom-platform/backups/before-model-catalog-20261021-232425` | 本次升级前的数据库、工作文件、加密配置和用户服务备份，权限受限 |
 | `/home/bmilk/agentloom-platform/backups/pre-platform-2e86aed` | 原服务单元、入口配置和版本记录 |
 | `/home/bmilk/agentloom-platform/backups/domain-agentloom-bmilk-cn` | 新域名切换前的平台私密配置备份 |
 | `/home/bmilk/agentloom-platform/shared/config/activate-domain.sh` | 已上传的域名激活脚本，需 sudo 执行 |
+| `/home/bmilk/agentloom-platform/shared/config/activate-host-exec.sh` | 已上传的独立执行账号与系统服务安装入口，待 sudo 执行 |
 
 首次部署使用新数据库，初始化了管理员 `admin`、“团队空间”和 24 项 Tool 目录。**旧版账号和业务数据没有迁移**；原 `/home/bmilk/agent-loom`、原数据库和 `agentloom-db-tunnel.service` 均保留。管理员后来配置的 MiniMax 连接已保留；2026-10-21 升级时只读取模型列表，2026-10-22 按用户要求新增两个独立验收应用，使用该连接完成真实文本生成与工具调用。
 
@@ -58,6 +66,7 @@ Cookie 设置为 `Secure`，允许源为目标 HTTPS 域名，测试模型关闭
 
 ## 已完成的验收
 
+- 本机执行版本 `b1c9f77` 在 a2 专用测试库完成 97 项回归及 2 个子测试，全部通过。测试执行器使用显式测试参数；这一结果不代表生产独立账号已验收。前端 29 项、TypeScript 与生产构建通过，覆盖开关、角色绑定和服务不可用时禁用；实际进程覆盖 ReAct／Plan、超时、取消、断开连接、崩溃恢复及禁止不确定重放。
 - a2 上使用独立 PostgreSQL 测试库完成 31 项回归，全部通过；记录保存在 `shared/postgresql-verification.txt`。
 - 模型列表与布局更新在同一专用测试库完成 56 项回归及 2 个子测试，全部通过；记录保存在 `shared/postgresql-verification-98f2e66.txt`。本机前端 14 项测试与生产构建通过。
 - 补充回归修复版本 `eb18304` 在专用测试库完成 71 项回归及 2 个子测试，全部通过；记录保存在 `shared/postgresql-verification-eb18304.txt`。前端 19 项测试、TypeScript 与生产构建通过，覆盖模型发现到独立 Worker 执行的 ReAct／Plan 流程。
@@ -91,6 +100,14 @@ python3 agentloom-platform/tests/test_domain_activation.py -v
 本次已完成公网登录、源站 HTTPS 与 CSRF 验证，`shared/deployment.json` 的 `public_access` 已更新为 `verified`。后续重新应用配置时，也应分别验证源站和公网入口。如果已有证书预检失败，脚本会在改动 Nginx 前退出，应先核对证书文件与域名；如果源站检查通过但 Cloudflare 仍报错，应检查该域名是否回源到 `137.131.3.202`。
 
 ## 检查与排障
+
+本机执行的代码已部署；系统服务首次安装需要管理员在本地终端运行以下命令，并在 sudo 提示中输入 a2 的系统密码。无需重复配置 Nginx 或申请证书：
+
+```bash
+ssh -t oracle-a2 'sudo bash /home/bmilk/agentloom-platform/shared/config/activate-host-exec.sh'
+```
+
+安装脚本验证不同执行 UID、Unix socket、干净命令环境和共享文件写入。成功后检查 `systemctl status agentloom-exec`，并确认健康接口的 `host_exec_available=true`。既有应用不会自动获得命令权限，仍须在运行环境启用本机执行并为角色绑定 `exec`。
 
 通过 `ssh oracle-a2` 登录后执行：
 
