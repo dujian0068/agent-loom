@@ -1,4 +1,4 @@
-# 本机执行验收 · 2026-11-03
+# 本机执行验收 · 2026-11-03／11-06
 
 本机执行实现和部署方式见 [exec 说明](host-exec.md)。应用默认关闭命令执行；启用后仍须为角色显式绑定 `exec`，不需要启用沙箱。
 
@@ -20,8 +20,30 @@
 
 切换前无活动 Run，完成数据库、工作文件及配置备份，应用迁移 `0003`。原两份 MiniMax 验收应用由 v2 重新发布为 v3，配置未变，命令执行关闭；旧发布和历史会话保留。源站 HTTPS 保留真实域名、SNI 和证书校验，登录退出通过，五个用户服务均运行，前端文件与本次构建一致。
 
-生产 API／Worker 已设置执行 socket；独立系统服务仍待 sudo 安装，因此健康接口正确返回 `host_exec_available=false`。激活脚本已上传至 `shared/config/activate-host-exec.sh`。部署详情和备份位置见 [a2 部署记录](deployment-a2.md)。
+11 月 3 日部署时，生产 API／Worker 已设置执行 socket，系统服务尚未安装，健康接口返回 `host_exec_available=false`。11 月 6 日管理员执行 `shared/config/activate-host-exec.sh` 后完成激活及以下生产验收。部署详情和备份位置见 [a2 部署记录](deployment-a2.md)。
+
+## 生产执行账号与真实 MiniMax · 2026-11-06
+
+系统服务 `agentloom-exec` 运行并启用开机启动，健康接口为 `host_exec_available=true`、`sandbox_available=false`。实际命令 UID 为 999，与 Worker UID 1002 不同。命令环境只有 `HOME`、`LANG`、`LC_ALL`、`PATH`、`PWD`、`TMPDIR`；服务内不可读取平台配置或初始管理员凭据。生成文件权限为 `0660`，由执行账号持有、Worker 所在组可读写。平台配置文件保持 `0600`。
+
+直接通过生产执行服务验证了退出码 7、stderr 回执，以及超时后清理忽略 TERM 的后台进程组；等待后未产生应被阻止的延迟写入文件。临时探测工作空间已清理。
+
+使用现有 `MiniMax-M3.1-Flash` v1 连接，不修改模型地址和凭据，创建两个未发布的验收应用，均采用草稿 r2 和会话保留工作区：
+
+| 模式 | 模型调用 | 工具调用 | 验收结果 |
+| --- | --- | --- | --- |
+| ReAct | 4 | 3 | `write_file`、`exec`、`read_file` 各一次，全部成功 |
+| Plan | 8 | 4 | writer 调用 `write_file` 一次、`exec` 两次，reviewer 调用 `read_file` 一次；两个步骤依序完成 |
+
+文件工具写入 `host-exec-input.txt`，命令中的 Python 读取输入、将 `status=pending` 改为 `status=verified`，生成 `host-exec-result.txt` 和执行账号元数据，再由文件工具读回结果。输入文件属 UID 1002，结果文件属 UID 999，跨账号读写通过；实际工作目录位于执行服务的工作空间挂载路径。两份结果分别包含 `proof=host-exec-react-20261106`、`proof=host-exec-plan-20261106`，命令退出码为 0，stdout 含 `EXEC_OK`。所有持久工具回执均完成且成功，Run 状态和清理状态均为 `completed`。
+
+- ReAct 应用 `f383c7258bc040b1ab6d30b797b09559`，会话 `34f24a77a21a4cf48eb41ddb4c07841c`，Run `a79140c875574b2e99df800a62554b7f`。
+- Plan 应用 `d9cc226bca2946a391dcf703a68a3f84`，会话 `120662f18c7d4bb3bf50b4626ea6bd3d`，Run `7c0a11676db04f54a15b3035ac3af4af`。
+
+验收通过正式 HTTPS API 提交，保持域名、SNI 和证书校验，真实常驻 Worker 调用 MiniMax 和独立执行服务。草稿测试没有生成正式发布，旧两份已发布应用仍关闭命令执行。报告位于 a2 的 `shared/verification/host-exec-live-20261106.json`，部署状态记录位于 `shared/host-exec-verification.json`，不含模型凭据。
+
+公网浏览器登录后核对 Plan 编辑页：运行环境显示「本机执行」，沙箱未开启；刷新后恢复草稿 r2 的回答、模型 8 次／工具 4 次计数、两个已完成步骤和全部成功的工具记录。此次公网加载出现较明显延迟；同一历史接口在源站约 10 毫秒返回 200，浏览器刷新后最终恢复，未重跑任务或更改业务配置。
 
 ## 验收边界
 
-上述本机进程测试使用显式测试启动参数，以当前开发账号运行独立执行进程，不代表生产低权限账号已验收。生产安装脚本默认禁止 root 或与 Worker 相同 UID 运行服务；脚本另有真实 UID、共享文件权限和环境检查。a2 的账号及系统服务安装需要 sudo，生产启用与模型联调结果另行记录，未启用前不能宣称线上命令执行可用。
+本机和隔离测试库的进程回归使用显式测试启动参数，以当前测试账号运行独立执行进程；11 月 6 日的生产验收使用实际独立 UID，未启用该测试参数。安装脚本禁止 root 或与 Worker 相同 UID 运行服务。本机模式不提供每应用或会话沙箱，同一执行账号可访问其他已共享工作空间；有意脱离进程组的程序不在逐命令进程组清理保证内。本次没有进行整机重启演练。
